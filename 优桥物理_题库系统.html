@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>优桥物理 · 题库系统</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#0a0a1a;color:#e0e0e0;min-height:100vh;
+  }
+  header{
+    background:linear-gradient(135deg,#0d0d2b,#1a0a2e);
+    padding:20px 24px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid rgba(255,107,53,0.15);
+    flex-wrap:wrap;gap:10px;
+  }
+  header .left{display:flex;align-items:center;gap:14px}
+  header h1{font-size:1.3em;background:linear-gradient(90deg,#ff6b35,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  header .stats{display:flex;gap:16px;font-size:.78em;color:#667}
+  header .stats span{background:#12122a;padding:4px 12px;border-radius:6px;border:1px solid #1a1a3e}
+  header .stats strong{color:#ffd700}
+
+  .toolbar{
+    display:flex;gap:6px;padding:8px 20px;background:#0f0f22;
+    flex-wrap:wrap;align-items:center;border-bottom:1px solid #1a1a3e;
+    position:sticky;top:0;z-index:50;
+  }
+  .toolbar .btn{
+    padding:5px 14px;border-radius:5px;border:1px solid #2a2a45;
+    background:transparent;color:#aaa;cursor:pointer;font-size:.78em;
+    transition:.15s;white-space:nowrap;
+  }
+  .toolbar .btn:hover{border-color:#ff6b35;color:#fff}
+  .toolbar .btn.primary{background:#ff6b35;border-color:#ff6b35;color:#fff}
+  .toolbar .btn.primary:hover{background:#ff8255}
+  .toolbar .btn.danger{border-color:#e74c3c;color:#e74c3c}
+  .toolbar .btn.danger:hover{background:#e74c3c;color:#fff}
+
+  .layout{display:flex;height:calc(100vh - 105px);overflow:hidden}
+
+  /* ===== 侧栏 ===== */
+  .sidebar{
+    width:230px;background:#0d0d20;border-right:1px solid #151530;
+    overflow-y:auto;flex-shrink:0;
+  }
+  .sidebar .sec-title{
+    font-size:.72em;color:#556;padding:14px 16px 6px;letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .sidebar .topic{
+    display:flex;align-items:center;gap:8px;padding:8px 16px;
+    cursor:pointer;transition:.1s;border-left:2px solid transparent;
+    font-size:.82em;
+  }
+  .sidebar .topic:hover{background:#12122e}
+  .sidebar .topic.active{background:#161638;border-left-color:#ff6b35;color:#fff}
+  .sidebar .topic .icon{font-size:1em;width:20px;text-align:center}
+  .sidebar .topic .name{flex:1;color:#bbb}
+  .sidebar .topic.active .name{color:#fff}
+  .sidebar .topic .cnt{
+    font-size:.75em;background:#1a1a3a;padding:1px 8px;border-radius:8px;color:#667;
+  }
+  .sidebar .topic.active .cnt{background:#ff6b3520;color:#ff6b35}
+  .sidebar .topic.all-topic{border-bottom:1px solid #1a1a35;padding-bottom:10px;margin-bottom:4px}
+  .sidebar .topic.all-topic .name{font-weight:bold}
+
+  /* ===== 主页 ===== */
+  .main{flex:1;overflow-y:auto;padding:16px 20px 40px}
+
+  /* 首页仪表盘 */
+  .dashboard{display:none}
+  .dashboard.show{display:block}
+  .dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+  .dash-card{
+    background:linear-gradient(135deg,#12122a,#161638);border-radius:10px;
+    padding:16px;border:1px solid #1a1a3e;text-align:center;
+  }
+  .dash-card .num{font-size:2em;font-weight:bold;background:linear-gradient(90deg,#ff6b35,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .dash-card .label{font-size:.78em;color:#667;margin-top:2px}
+
+  .dash-topics{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+  .dash-topic{
+    background:#12122a;border-radius:8px;padding:12px 14px;
+    border:1px solid #1a1a3e;cursor:pointer;transition:.15s;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .dash-topic:hover{border-color:#ff6b3550;background:#161638}
+  .dash-topic .name{font-size:.85em;color:#ccc}
+  .dash-topic .count{font-size:.78em;color:#ff6b35}
+
+  /* 题目列表视图 */
+  .topic-view{display:none}
+  .topic-view.show{display:block}
+  .topic-view .view-header{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-bottom:14px;flex-wrap:wrap;gap:8px;
+  }
+  .topic-view .view-header h2{font-size:1.1em;color:#ffd700}
+  .topic-view .view-header h2 small{font-size:.6em;color:#667;font-weight:normal;margin-left:8px}
+  .topic-view .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .topic-view .filters input,.topic-view .filters select{
+    padding:6px 10px;border-radius:5px;border:1px solid #2a2a45;
+    background:#0d0d2b;color:#bbb;font-size:.78em;
+  }
+  .topic-view .filters input{min-width:140px}
+
+  /* 两列卡片网格 */
+  .q-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  }
+  .q-grid .q-card{
+    background:#12122a;border-radius:8px;padding:12px 14px;
+    border:1px solid #1a1a3e;transition:.15s;break-inside:avoid;
+  }
+  .q-grid .q-card:hover{border-color:#2a2a55}
+  .q-card .tags{display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap}
+  .q-card .tag{
+    font-size:.65em;padding:1px 7px;border-radius:3px;
+    background:rgba(255,107,53,.12);color:#ff6b35;
+  }
+  .q-card .tag.d1{background:rgba(46,204,113,.12);color:#2ecc71}
+  .q-card .tag.d2{background:rgba(255,215,0,.12);color:#ffd700}
+  .q-card .tag.d3{background:rgba(231,76,60,.12);color:#e74c3c}
+  .q-card .tag.ty{background:rgba(20,184,166,.12);color:#14b8a6}
+  .q-card .q-text{font-size:.85em;line-height:1.6;color:#ddd;margin-bottom:6px}
+  .q-card .options{margin:4px 0 4px 8px;font-size:.8em;line-height:1.5}
+  .q-card .options .opt{color:#999}
+  .q-card .options .opt.correct{color:#2ecc71;font-weight:bold}
+  .q-card .ans-box{
+    margin-top:6px;padding:6px 10px;border-radius:4px;
+    background:#0a0a20;border:1px dashed #1a1a45;font-size:.78em;color:#889;
+    display:none;max-height:120px;overflow-y:auto;
+  }
+  .q-card .ans-box.show{display:block}
+  .q-card .ans-box strong{color:#2ecc71}
+  .q-card .q-actions{
+    display:flex;gap:6px;margin-top:6px;padding-top:6px;
+    border-top:1px solid #1a1a35;
+  }
+  .q-card .q-actions button{
+    font-size:.7em;color:#667;cursor:pointer;border:none;background:none;padding:2px 4px;
+  }
+  .q-card .q-actions button:hover{color:#ff6b35}
+  .q-card .q-actions button.del:hover{color:#e74c3c}
+
+  @media(max-width:780px){
+    .q-grid{grid-template-columns:1fr}
+    .layout{flex-direction:column;height:auto}
+    .sidebar{width:100%;max-height:160px;border-right:none;border-bottom:1px solid #151530}
+    .main{height:calc(100vh - 266px)}
+    header h1{font-size:1.1em}
+    .dash-grid{grid-template-columns:repeat(2,1fr)}
+  }
+
+  /* 模态框 */
+  .modal-overlay{
+    display:none;position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,.7);z-index:1000;justify-content:center;align-items:center;
+  }
+  .modal-overlay.show{display:flex}
+  .modal{
+    background:#161632;border-radius:12px;padding:24px;
+    width:90%;max-width:680px;max-height:80vh;overflow-y:auto;
+    border:1px solid #2a2a45;
+  }
+  .modal h2{font-size:1.05em;margin-bottom:12px;color:#ffd700}
+  .modal label{font-size:.78em;color:#889;display:block;margin:6px 0 2px}
+  .modal textarea,.modal input,.modal select{
+    width:100%;padding:7px 12px;margin-bottom:6px;border-radius:5px;
+    border:1px solid #2a2a45;background:#0d0d2b;color:#ddd;font-size:.85em;resize:vertical;
+    font-family:inherit;
+  }
+  .modal textarea{min-height:60px}
+  .modal .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+  .modal .btn-row .btn{padding:6px 20px;border-radius:5px;border:1px solid #2a2a45;background:transparent;color:#ccc;cursor:pointer;font-size:.82em}
+  .modal .btn-row .btn:hover{border-color:#ff6b35;color:#fff}
+  .modal .btn-row .btn.primary{background:#ff6b35;border-color:#ff6b35;color:#fff}
+  .modal .btn-row .btn.primary:hover{background:#ff8255}
+
+  .import-area{
+    border:2px dashed #2a2a45;border-radius:8px;padding:24px;
+    text-align:center;margin-bottom:12px;cursor:pointer;transition:.2s;
+  }
+  .import-area:hover{border-color:#ff6b35}
+  .import-area p{color:#667;font-size:.82em}
+  .import-area .label{color:#ff6b35;font-size:.85em;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="left">
+    <h1>📝 优桥物理题库</h1>
+  </div>
+  <div class="stats">
+    <span>📦 共 <strong id="totalCount">0</strong> 题</span>
+    <span>📂 <strong id="topicCount">0</strong> 个知识点</span>
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="btn primary" onclick="showAddQ()">➕ 新增</button>
+  <button class="btn" onclick="showImport()">📥 导入JSON</button>
+  <button class="btn" onclick="exportJSON()">📤 导出JSON</button>
+  <button class="btn danger" onclick="clearAll()">🗑 清空</button>
+</div>
+
+<div class="layout">
+  <!-- 侧栏 -->
+  <div class="sidebar" id="sidebar"></div>
+
+  <!-- 主区域 -->
+  <div class="main" id="mainArea">
+    <!-- 仪表盘 -->
+    <div class="dashboard show" id="dashboard"></div>
+    <!-- 题目列表 -->
+    <div class="topic-view" id="topicView"></div>
+  </div>
+</div>
+
+<!-- 模态框 -->
+<div class="modal-overlay" id="modal">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+let questions = [];
+let currentTopic = 'all';
+let currentView = 'dashboard'; // 'dashboard' | 'topic'
+
+const STORAGE_KEY = 'youqiao_physics_tiku2';
+
+const DEMO = [
+  {id:'d1', topic:'运动的描述', type:'choice', difficulty:1,
+   question:'下列选项中，表示时间间隔的是（　　）',
+   options:['A. 第3秒初','B. 第3秒末','C. 第3秒内','D. 3秒末'],
+   answer:'C', explain:'时间间隔对应时间段，"第3秒内"指第3个1秒的时间段。'},
+  {id:'d2', topic:'运动的描述', type:'choice', difficulty:1,
+   question:'关于质点，下列说法正确的是（　　）',
+   options:['A. 体积很小的物体一定能看作质点','B. 质量很大的物体一定不能看作质点','C. 研究地球公转时地球可看作质点','D. 研究原子内部结构时原子可看作质点'],
+   answer:'C', explain:'质点看研究问题是否需要考虑形状大小，与体积质量无关。'},
+  {id:'d3', topic:'匀变速直线运动', type:'choice', difficulty:2,
+   question:'一物体做匀加速直线运动，初速度v₀=2m/s，加速度a=0.5m/s²，则第3s末的速度为（　　）',
+   options:['A. 2.5m/s','B. 3m/s','C. 3.5m/s','D. 4m/s'],
+   answer:'C', explain:'v=v₀+at=2+0.5×3=3.5m/s'},
+  {id:'d4', topic:'匀变速直线运动', type:'fill', difficulty:2,
+   question:'自由落体运动中，第1s内、第2s内、第3s内的位移之比为______ : ______ : ______。',
+   options:[], answer:'1:3:5', explain:'初速度为0的匀加速，连续相等时间位移比=1:3:5。'},
+  {id:'d5', topic:'相互作用', type:'choice', difficulty:1,
+   question:'关于重力，下列说法正确的是（　　）',
+   options:['A. 重力的方向总是指向地心','B. 同一物体在不同地点重力相同','C. 重心是重力的作用点，一定在物体上','D. 重力的方向总是竖直向下'],
+   answer:'D', explain:'重力方向竖直向下（垂直于水平面），不是指向地心（两极除外）。'},
+  {id:'d6', topic:'牛顿运动定律', type:'calc', difficulty:3,
+   question:'质量为2kg的物体放在水平地面上，μ=0.2。用10N水平拉力，求：(1)加速度；(2)撤去拉力后还能滑行多远？(g=10m/s²)',
+   options:[], answer:'(1) 3m/s² (2) 22.5m',
+   explain:'(1) F-μmg=ma → a=3m/s²\n(2) 撤去后a\'=-2m/s²，v=at=9m/s，x=v²/2a\'=22.5m'},
+  {id:'d7', topic:'圆周运动', type:'choice', difficulty:2,
+   question:'汽车通过拱形桥最高点时，下列说法正确的是（　　）',
+   options:['A. 压力等于重力','B. 压力大于重力','C. 压力小于重力','D. 速度越大压力越大'],
+   answer:'C', explain:'最高点mg-N=mv²/R，N=mg-mv²/R＜mg，失重状态。'},
+];
+
+function init() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) { try { questions = JSON.parse(saved); } catch(e) {} }
+  if (questions.length === 0) questions = JSON.parse(JSON.stringify(DEMO));
+  renderAll();
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(questions));
+  renderAll();
+}
+
+function getTopics() {
+  const set = new Set(questions.map(q => q.topic));
+  return Array.from(set).sort();
+}
+
+// ===== 渲染 =====
+function renderAll() {
+  document.getElementById('totalCount').textContent = questions.length;
+  document.getElementById('topicCount').textContent = getTopics().length;
+  renderSidebar();
+  if (currentView === 'dashboard') renderDashboard();
+  else renderTopicView();
+}
+
+function renderSidebar() {
+  const topics = getTopics();
+  let html = `<div class="sec-title">📂 知识点</div>
+    <div class="topic all-topic ${currentTopic==='all'?'active':''}"
+         onclick="switchTopic('all')">
+      <span class="icon">📋</span>
+      <span class="name">全部题目</span>
+      <span class="cnt">${questions.length}</span>
+    </div>`;
+
+  // Group topics with icons
+  const topicIcons = {
+    '运动的描述':'📐','匀变速直线运动':'📊','相互作用':'🔗',
+    '牛顿运动定律':'⚡','圆周运动':'🔄','万有引力':'🌍',
+    '机械能':'⚙️','动量':'💥','实验':'🔬','选修':'📖',
+    '静电场':'⚡','恒定电流':'🔌','磁场':'🧲','电磁感应':'⚙️',
+    '交变电流':'🔋','热学':'🔥','光学':'💡','近代物理':'☢'
+  };
+
+  topics.forEach(t => {
+    const cnt = questions.filter(q => q.topic === t).length;
+    const icon = topicIcons[t] || '📂';
+    html += `<div class="topic ${currentTopic===t?'active':''}" onclick="switchTopic('${t}')">
+      <span class="icon">${icon}</span>
+      <span class="name">${t}</span>
+      <span class="cnt">${cnt}</span>
+    </div>`;
+  });
+  document.getElementById('sidebar').innerHTML = html;
+}
+
+function switchTopic(topic) {
+  currentTopic = topic;
+  if (topic === 'all') {
+    currentView = 'dashboard';
+    renderAll();
+  } else {
+    currentView = 'topic';
+    renderAll();
+  }
+}
+
+// ===== 仪表盘 =====
+function renderDashboard() {
+  currentView = 'dashboard';
+  document.getElementById('dashboard').classList.add('show');
+  document.getElementById('topicView').classList.remove('show');
+
+  const topics = getTopics();
+  const diffs = [0,0,0];
+  const types = {};
+  topics.forEach(t => {
+    const qs = questions.filter(q => q.topic === t);
+    qs.forEach(q => { if(q.difficulty) diffs[q.difficulty-1]++; if(q.type) types[q.type] = (types[q.type]||0)+1; });
+  });
+
+  const typeNames = {choice:'选择题',fill:'填空题',calc:'计算题'};
+
+  let html = `
+  <div class="dash-grid">
+    <div class="dash-card"><div class="num">${questions.length}</div><div class="label">📦 总题数</div></div>
+    <div class="dash-card"><div class="num">${topics.length}</div><div class="label">📂 知识点</div></div>
+    <div class="dash-card"><div class="num">${diffs[0]}</div><div class="label">⭐ 基础题</div></div>
+    <div class="dash-card"><div class="num">${diffs[1]}</div><div class="label">⭐⭐ 中等题</div></div>
+    <div class="dash-card"><div class="num">${diffs[2]}</div><div class="label">⭐⭐⭐ 难题</div></div>
+  </div>`;
+
+  // Topic cards
+  html += `<div style="margin-bottom:10px;color:#889;font-size:.78em">📂 知识点一览（点击进入）</div>
+  <div class="dash-topics">`;
+  topics.forEach(t => {
+    const cnt = questions.filter(q => q.topic === t).length;
+    html += `<div class="dash-topic" onclick="switchTopic('${t}')">
+      <span class="name">${t}</span>
+      <span class="count">${cnt}题 →</span>
+    </div>`;
+  });
+  html += `</div>`;
+  document.getElementById('dashboard').innerHTML = html;
+}
+
+// ===== 知识点详情视图 =====
+function renderTopicView() {
+  currentView = 'topic';
+  document.getElementById('dashboard').classList.remove('show');
+  document.getElementById('topicView').classList.add('show');
+
+  const qs = questions.filter(q => q.topic === currentTopic);
+  const typeNames = {choice:'选择题',fill:'填空题',calc:'计算题'};
+
+  let html = `<div class="view-header">
+    <h2>📂 ${currentTopic} <small>${qs.length} 题</small></h2>
+    <div class="filters">
+      <input id="kw" placeholder="🔍 关键词" oninput="filterCards()">
+      <select id="difFilter" onchange="filterCards()">
+        <option value="all">全部难度</option>
+        <option value="1">⭐ 基础</option>
+        <option value="2">⭐⭐ 中等</option>
+        <option value="3">⭐⭐⭐ 难题</option>
+      </select>
+      <select id="typeFilter" onchange="filterCards()">
+        <option value="all">全部题型</option>
+        <option value="choice">选择题</option>
+        <option value="fill">填空题</option>
+        <option value="calc">计算题</option>
+      </select>
+    </div>
+  </div>
+  <div class="q-grid" id="qGrid"></div>`;
+
+  document.getElementById('topicView').innerHTML = html;
+  filterCards();
+}
+
+function filterCards() {
+  const kw = (document.getElementById('kw')?.value||'').trim().toLowerCase();
+  const df = document.getElementById('difFilter')?.value||'all';
+  const tf = document.getElementById('typeFilter')?.value||'all';
+
+  let list = questions.filter(q => q.topic === currentTopic).filter(q => {
+    if (df !== 'all' && q.difficulty != df) return false;
+    if (tf !== 'all' && q.type !== tf) return false;
+    if (kw) {
+      const s = (q.question+q.topic+q.answer+(q.explain||'')).toLowerCase();
+      return s.includes(kw);
+    }
+    return true;
+  });
+
+  const difMap = {1:'d1',2:'d2',3:'d3'};
+  const typeNames = {choice:'选择题',fill:'填空题',calc:'计算题'};
+
+  if (list.length === 0) {
+    document.getElementById('qGrid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:#445">🔍 没有匹配的题目</div>';
+    return;
+  }
+
+  document.getElementById('qGrid').innerHTML = list.map(q => `
+    <div class="q-card">
+      <div class="tags">
+        <span class="tag ${difMap[q.difficulty]||'d1'}">${'⭐'.repeat(q.difficulty||1)}</span>
+        <span class="tag ty">${typeNames[q.type]||q.type}</span>
+      </div>
+      <div class="q-text">${q.question}</div>
+      ${q.options&&q.options.length?`<div class="options">${q.options.map(o=>`<div class="opt${o.startsWith(q.answer)?' correct':''}">${o}</div>`).join('')}</div>`:''}
+      <div class="q-actions">
+        <button onclick="toggleAns('a_${q.id}')">📖 答案</button>
+        <button onclick="editQ('${q.id}')">✏️ 编辑</button>
+        <button class="del" onclick="deleteQ('${q.id}')">🗑 删除</button>
+      </div>
+      <div class="ans-box" id="a_${q.id}">
+        <strong>答案：</strong>${q.answer}<br>
+        ${q.explain?`<strong>解析：</strong>${q.explain.replace(/\n/g,'<br>')}`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAns(id) {
+  document.getElementById(id).classList.toggle('show');
+}
+
+// ===== 新增 =====
+function showAddQ() {
+  showModal(`
+    <h2>➕ 新增题目</h2>
+    <label>题型</label>
+    <select id="mqType"><option value="choice">选择题</option><option value="fill">填空题</option><option value="calc">计算题</option></select>
+    <label>知识点</label>
+    <input id="mqTopic" value="${currentTopic!=='all'?currentTopic:''}" placeholder="如：运动的描述">
+    <label>题目内容</label>
+    <textarea id="mqQuestion" rows="2"></textarea>
+    <label>选项（每行一个，选填）</label>
+    <textarea id="mqOptions" rows="3"></textarea>
+    <label>答案</label>
+    <input id="mqAnswer">
+    <label>解析（选填）</label>
+    <textarea id="mqExplain" rows="2"></textarea>
+    <label>难度</label>
+    <select id="mqDifficulty"><option value="1">⭐ 基础</option><option value="2">⭐⭐ 中等</option><option value="3">⭐⭐⭐ 难题</option></select>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="addQ()">保存</button>
+    </div>
+  `);
+}
+
+function addQ() {
+  const type = document.getElementById('mqType').value;
+  const topic = document.getElementById('mqTopic').value.trim();
+  const question = document.getElementById('mqQuestion').value.trim();
+  const optText = document.getElementById('mqOptions').value.trim();
+  const answer = document.getElementById('mqAnswer').value.trim();
+  const explain = document.getElementById('mqExplain').value.trim();
+  const difficulty = parseInt(document.getElementById('mqDifficulty').value);
+  if (!topic||!question||!answer) { alert('知识点、题目、答案为必填'); return; }
+  questions.push({id:'q_'+Date.now(),topic,type,difficulty,question,options:optText?optText.split('\n').filter(s=>s.trim()):[],answer,explain});
+  save(); closeModal();
+}
+
+function editQ(id) {
+  const q = questions.find(x=>x.id===id); if(!q) return;
+  showModal(`
+    <h2>✏️ 编辑题目</h2>
+    <label>题型</label>
+    <select id="eqType"><option value="choice" ${q.type==='choice'?'selected':''}>选择题</option><option value="fill" ${q.type==='fill'?'selected':''}>填空题</option><option value="calc" ${q.type==='calc'?'selected':''}>计算题</option></select>
+    <label>知识点</label><input id="eqTopic" value="${q.topic}">
+    <label>题目</label><textarea id="eqQuestion" rows="2">${q.question}</textarea>
+    <label>选项</label><textarea id="eqOptions" rows="3">${(q.options||[]).join('\n')}</textarea>
+    <label>答案</label><input id="eqAnswer" value="${q.answer}">
+    <label>解析</label><textarea id="eqExplain" rows="2">${q.explain||''}</textarea>
+    <label>难度</label>
+    <select id="eqDifficulty"><option value="1" ${q.difficulty===1?'selected':''}>⭐ 基础</option><option value="2" ${q.difficulty===2?'selected':''}>⭐⭐ 中等</option><option value="3" ${q.difficulty===3?'selected':''}>⭐⭐⭐ 难题</option></select>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="saveEdit('${id}')">保存</button>
+    </div>
+  `);
+}
+
+function saveEdit(id) {
+  const q = questions.find(x=>x.id===id); if(!q) return;
+  q.type=document.getElementById('eqType').value;
+  q.topic=document.getElementById('eqTopic').value.trim();
+  q.question=document.getElementById('eqQuestion').value.trim();
+  const opts=document.getElementById('eqOptions').value.trim();
+  q.options=opts?opts.split('\n').filter(s=>s.trim()):[];
+  q.answer=document.getElementById('eqAnswer').value.trim();
+  q.explain=document.getElementById('eqExplain').value.trim();
+  q.difficulty=parseInt(document.getElementById('eqDifficulty').value);
+  if(!q.topic||!q.question||!q.answer){alert('必填项不能为空');return;}
+  save(); closeModal();
+}
+
+function deleteQ(id) {
+  if(!confirm('确定删除这道题？')) return;
+  questions=questions.filter(q=>q.id!==id);
+  if(currentView==='topic'&&questions.filter(q=>q.topic===currentTopic).length===0){
+    currentView='dashboard'; currentTopic='all';
+  }
+  save();
+}
+
+// ===== 导入导出 =====
+function showImport() {
+  showModal(`
+    <h2>📥 导入题库</h2>
+    <div class="import-area" onclick="document.getElementById('f').click()">
+      <div class="label">点击选择 .json 文件</div>
+      <p>或粘贴JSON数据到下方文本框</p>
+    </div>
+    <input type="file" id="f" accept=".json" style="display:none" onchange="loadFile(event)">
+    <textarea id="importText" rows="8" placeholder='[{"topic":"运动的描述","type":"choice","question":"...","answer":"A"}]'></textarea>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="importJSON()">导入</button>
+    </div>
+  `);
+}
+
+function loadFile(e) {
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=ev=>document.getElementById('importText').value=ev.target.result;
+  reader.readAsText(file);
+}
+
+function importJSON() {
+  const text=document.getElementById('importText').value.trim();
+  if(!text){alert('请粘贴JSON或选择文件');return;}
+  try{
+    const data=JSON.parse(text);
+    if(!Array.isArray(data)){alert('需要JSON数组');return;}
+    data.forEach((item,i)=>{if(!item.id)item.id='q_'+Date.now()+'_'+i;if(!item.type)item.type='choice';if(!item.difficulty)item.difficulty=1;});
+    questions=questions.concat(data);
+    save(); closeModal();
+    alert('成功导入 '+data.length+' 道题！');
+  }catch(e){alert('JSON格式错误：'+e.message);}
+}
+
+function exportJSON() {
+  const blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='优桥物理题库.json';a.click();
+  URL.revokeObjectURL(url);
+}
+
+function clearAll() {
+  if(!confirm('确定清空全部题目？'))return;
+  if(!confirm('再次确认：将删除所有题目！'))return;
+  questions=[];currentView='dashboard';currentTopic='all';save();
+}
+
+// ===== 模态框 =====
+function showModal(html) {
+  document.getElementById('modalContent').innerHTML=html;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
+
+init();
+</script>
+</body>
+</html>
