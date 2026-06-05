@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>结合能与比结合能 — 高中物理</title>
+<style>
+  /* ===== Reset & Base ===== */
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;height:100%;overflow:hidden;font-family:'Microsoft YaHei','PingFang SC',sans-serif;background:#0a0e27;color:#e0e6ff;}
+
+  /* ===== Slide Container ===== */
+  .deck{position:relative;width:100%;height:100%;}
+  .slide{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 60px;opacity:0;transform:translateX(60px);transition:opacity .5s,transform .5s;pointer-events:none;}
+  .slide.active{opacity:1;transform:translateX(0);pointer-events:auto;}
+
+  /* ===== Typography ===== */
+  h1{font-size:2.8em;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px;text-align:center;}
+  h2{font-size:2.2em;color:#93c5fd;margin-bottom:18px;text-align:center;}
+  h3{font-size:1.5em;color:#a78bfa;margin:12px 0 8px;}
+  p,.desc{font-size:1.25em;line-height:1.7;color:#c4ccf0;text-align:center;max-width:900px;}
+  .subtitle{font-size:1.3em;color:#7c8add;margin-bottom:10px;text-align:center;}
+
+  /* ===== Cards / Boxes ===== */
+  .card-grid{display:grid;gap:20px;width:100%;max-width:1000px;margin-top:18px;}
+  .card-grid.cols2{grid-template-columns:1fr 1fr;}
+  .card-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+  .card-grid.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+  .card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:22px 18px;backdrop-filter:blur(6px);transition:transform .25s,box-shadow .25s;}
+  .card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(96,165,250,.18);}
+  .card .icon{font-size:2.4em;margin-bottom:8px;}
+  .card h4{font-size:1.2em;color:#93c5fd;margin-bottom:6px;}
+  .card p{font-size:1em;color:#b0b8e0;text-align:left;line-height:1.55;}
+
+  /* ===== Highlight / Formula ===== */
+  .formula-box{background:rgba(96,165,250,.1);border:2px solid rgba(96,165,250,.35);border-radius:14px;padding:24px 32px;margin:18px 0;font-size:1.6em;color:#60a5fa;font-weight:bold;text-align:center;}
+  .highlight{color:#facc15;font-weight:bold;}
+  .key-point{background:rgba(250,204,21,.08);border-left:4px solid #facc15;padding:14px 20px;border-radius:0 12px 12px 0;margin:14px 0;font-size:1.15em;color:#e0d6a0;text-align:left;max-width:850px;}
+
+  /* ===== Think Box ===== */
+  .think-box{background:rgba(168,85,247,.1);border:2px dashed rgba(168,85,247,.5);border-radius:16px;padding:22px 28px;margin:18px 0;max-width:850px;}
+  .think-box .label{font-size:1em;color:#c084fc;font-weight:bold;margin-bottom:8px;}
+  .think-box p{color:#d4b8f0;font-size:1.15em;text-align:left;line-height:1.6;}
+
+  /* ===== Table ===== */
+  .data-table{border-collapse:collapse;margin:14px 0;font-size:1.05em;max-width:800px;}
+  .data-table th{background:rgba(96,165,250,.18);color:#93c5fd;padding:10px 18px;border:1px solid rgba(255,255,255,.1);}
+  .data-table td{padding:10px 18px;border:1px solid rgba(255,255,255,.08);color:#c4ccf0;text-align:center;}
+  .data-table tr:hover td{background:rgba(255,255,255,.04);}
+
+  /* ===== Canvas for Chart ===== */
+  canvas.chart{background:rgba(255,255,255,.03);border-radius:14px;border:1px solid rgba(255,255,255,.1);margin:14px 0;}
+
+  /* ===== Force Diagram ===== */
+  .force-diagram{display:flex;align-items:center;justify-content:center;gap:40px;margin:20px 0;}
+  .nucleon{width:70px;height:70px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4em;font-weight:bold;position:relative;}
+  .nucleon.proton{background:radial-gradient(circle at 35% 35%,#60a5fa,#2563eb);box-shadow:0 0 20px rgba(96,165,250,.5);}
+  .nucleon.neutron{background:radial-gradient(circle at 35% 35%,#a78bfa,#7c3aed);box-shadow:0 0 20px rgba(167,139,250,.5);}
+  .arrow-line{width:120px;height:4px;position:relative;}
+  .arrow-line::after{content:'';position:absolute;right:-6px;top:-6px;border:8px solid transparent;border-left:12px solid;}
+  .arrow-attract{background:#4ade80;}
+  .arrow-attract::after{border-left-color:#4ade80;}
+  .arrow-repel{background:#f87171;}
+  .arrow-repel::after{border-left-color:#f87171;}
+  .arrow-label{position:absolute;top:-28px;left:50%;transform:translateX(-50%);font-size:.9em;white-space:nowrap;}
+
+  /* ===== Animated Nucleus ===== */
+  .nucleus-anim{position:relative;width:220px;height:220px;margin:10px auto;}
+  .nucleus-anim .core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.3),rgba(96,165,250,.05));animation:pulse 2s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.6;}50%{transform:translate(-50%,-50%) scale(1.15);opacity:1;}}
+  .nucleus-anim .ball{position:absolute;width:26px;height:26px;border-radius:50%;animation:orbit 3s linear infinite;}
+  @keyframes orbit{0%{transform:rotate(0deg) translateX(55px) rotate(0deg);}100%{transform:rotate(360deg) translateX(55px) rotate(-360deg);}}
+
+  /* ===== Navigation ===== */
+  .nav{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px;z-index:99;align-items:center;}
+  .nav button{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#c4ccf0;padding:10px 22px;border-radius:10px;font-size:1em;cursor:pointer;transition:background .2s;}
+  .nav button:hover{background:rgba(96,165,250,.25);}
+  .nav .page-info{color:#7c8add;font-size:.95em;min-width:70px;text-align:center;}
+
+  /* ===== Progress Bar ===== */
+  .progress{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,#60a5fa,#a78bfa);transition:width .4s;z-index:100;}
+
+  /* ===== Slide-specific ===== */
+  .title-slide h1{font-size:3.2em;margin-bottom:10px;}
+  .title-slide .subtitle{font-size:1.5em;color:#7c8add;}
+
+  .split-slide{flex-direction:row;gap:40px;align-items:flex-start;padding:40px 50px;}
+  .split-slide .left,.split-slide .right{flex:1;}
+
+  /* list */
+  .feature-list{list-style:none;max-width:850px;text-align:left;}
+  .feature-list li{padding:8px 0;font-size:1.15em;color:#c4ccf0;display:flex;align-items:flex-start;gap:10px;}
+  .feature-list li::before{content:'▸';color:#60a5fa;font-weight:bold;flex-shrink:0;}
+
+  /* Energy bar chart */
+  .bar-chart{display:flex;align-items:flex-end;gap:30px;height:220px;margin:20px 0;}
+  .bar-group{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .bar{width:50px;border-radius:6px 6px 0 0;transition:height .8s ease-out;position:relative;}
+  .bar span{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:.85em;white-space:nowrap;color:#c4ccf0;}
+  .bar-label{font-size:.9em;color:#7c8add;margin-top:4px;}
+
+  /* fade-in children */
+  .slide.active .fade-item{animation:fadeUp .5s ease-out both;}
+  .fade-item:nth-child(1){animation-delay:.1s;}
+  .fade-item:nth-child(2){animation-delay:.25s;}
+  .fade-item:nth-child(3){animation-delay:.4s;}
+  .fade-item:nth-child(4){animation-delay:.55s;}
+  .fade-item:nth-child(5){animation-delay:.7s;}
+  .fade-item:nth-child(6){animation-delay:.85s;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+</style>
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<div class="deck" id="deck">
+
+  <!-- ==================== Slide 0: 标题 ==================== -->
+  <div class="slide title-slide active" data-index="0">
+    <h1>结合能与比结合能</h1>
+    <p class="subtitle">—— 核力·质量亏损·原子核的能量密码</p>
+    <p style="margin-top:30px;color:#5b6494;font-size:1em;">高中物理 · 原子核物理</p>
+    <div style="margin-top:50px;color:#7c8add;font-size:1em;">按键 <kbd style="background:rgba(255,255,255,.1);padding:2px 10px;border-radius:4px;">→</kbd> 或点击按钮开始</div>
+  </div>
+
+  <!-- ==================== Slide 1: 引入问题 ==================== -->
+  <div class="slide" data-index="1">
+    <h2 class="fade-item">从一个问题开始</h2>
+    <div class="think-box fade-item">
+      <div class="label">思考</div>
+      <p>原子核由质子和中子组成。质子之间存在库仑斥力，那么——</p>
+      <p style="margin-top:10px;font-size:1.3em;color:#c084fc;font-weight:bold;text-align:center;">
+        是什么力把它们"粘"在一起的？
+      </p>
+    </div>
+    <p class="fade-item" style="margin-top:20px;font-size:1.1em;color:#7c8add;">
+      要回答这个问题，我们需要先了解自然界中的四种基本相互作用力。
+    </p>
+  </div>
+
+  <!-- ==================== Slide 2: 四种基本相互作用力 ==================== -->
+  <div class="slide" data-index="2">
+    <h2 class="fade-item">四种基本相互作用力</h2>
+    <div class="card-grid cols4 fade-item">
+      <div class="card">
+        <div class="icon">🌍</div>
+        <h4>万有引力</h4>
+        <p>作用于所有有质量的物体之间</p>
+        <p style="margin-top:6px;color:#60a5fa;">强度：10⁻³⁸</p>
+        <p style="margin-top:4px;font-size:.9em;color:#7c8add;">范围：无限远</p>
+      </div>
+      <div class="card">
+        <div class="icon">⚡</div>
+        <h4>电磁相互作用</h4>
+        <p>作用于带电粒子之间</p>
+        <p style="margin-top:6px;color:#60a5fa;">强度：10⁻²</p>
+        <p style="margin-top:4px;font-size:.9em;color:#7c8add;">范围：无限远</p>
+      </div>
+      <div class="card">
+        <div class="icon">⚛️</div>
+        <h4>强相互作用</h4>
+        <p>作用于核子之间（核力）</p>
+        <p style="margin-top:6px;color:#60a5fa;">强度：1</p>
+        <p style="margin-top:4px;font-size:.9em;color:#7c8add;">范围：≈10⁻¹⁵ m</p>
+      </div>
+      <div class="card">
+        <div class="icon">☢️</div>
+        <h4>弱相互作用</h4>
+        <p>引起β衰变等过程</p>
+        <p style="margin-top:6px;color:#60a5fa;">强度：10⁻⁶</p>
+        <p style="margin-top:4px;font-size:.9em;color:#7c8add;">范围：＜10⁻¹⁷ m</p>
+      </div>
+    </div>
+    <div class="key-point fade-item">
+      关键：把质子和中子束缚在原子核内的力——<span class="highlight">核力</span>，属于<span class="highlight">强相互作用</span>的"剩余"表现。
+    </div>
+  </div>
+
+  <!-- ==================== Slide 3: 核力特点 ==================== -->
+  <div class="slide" data-index="3">
+    <h2 class="fade-item">核力的特点</h2>
+    <ul class="feature-list fade-item">
+      <li><strong>短程力</strong>：作用范围约 10⁻¹⁵ m（~1 fm），超出此距离迅速衰减为零</li>
+      <li><strong>强相互作用</strong>：在短程内比库仑力大两个数量级，足以克服质子间的电磁斥力</li>
+      <li><strong>饱和性</strong>：每个核子只与相邻的几个核子发生作用，不与核内所有核子作用</li>
+      <li><strong>与电荷无关</strong>：质子-质子、中子-中子、质子-中子之间的核力近似相等</li>
+    </ul>
+    <div class="think-box fade-item">
+      <div class="label">思考</div>
+      <p>既然核力这么强，为什么原子核不能无限增大？为什么过重的原子核不稳定？</p>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 4: 核力示意 ==================== -->
+  <div class="slide" data-index="4">
+    <h2 class="fade-item">核力与库仑力的竞争</h2>
+    <div class="fade-item" style="display:flex;align-items:center;justify-content:center;gap:60px;margin:20px 0;">
+      <div style="text-align:center;">
+        <div style="display:flex;align-items:center;gap:20px;">
+          <div class="nucleon proton">p⁺</div>
+          <div class="arrow-line arrow-repel" style="width:80px;">
+            <span class="arrow-label" style="color:#f87171;">库仑斥力</span>
+          </div>
+          <div class="nucleon proton">p⁺</div>
+        </div>
+        <p style="font-size:.95em;color:#f87171;margin-top:10px;">长程 · 无限远</p>
+      </div>
+      <div style="text-align:center;">
+        <div style="display:flex;align-items:center;gap:20px;">
+          <div class="nucleon proton">p⁺</div>
+          <div class="arrow-line arrow-attract" style="width:80px;">
+            <span class="arrow-label" style="color:#4ade80;">核力吸引</span>
+          </div>
+          <div class="nucleon neutron">n</div>
+        </div>
+        <p style="font-size:.95em;color:#4ade80;margin-top:10px;">短程 · ≈10⁻¹⁵ m</p>
+      </div>
+    </div>
+    <div class="key-point fade-item">
+      在原子核尺度内，核力 ＞＞ 库仑斥力 → 原子核得以稳定存在。<br>
+      但随着质子数增加，库仑斥力"累加"效应增强 → 重核不稳定。
+    </div>
+  </div>
+
+  <!-- ==================== Slide 5: 质量亏损 ==================== -->
+  <div class="slide" data-index="5">
+    <h2 class="fade-item">质量亏损</h2>
+    <p class="fade-item desc">将核子结合成原子核时，原子核的质量<span class="highlight">小于</span>组成它的核子质量之和。</p>
+    <div class="formula-box fade-item">
+      Δm = [ Z·mₚ + (A−Z)·mₙ ] − m<sub>核</sub>
+    </div>
+    <table class="data-table fade-item">
+      <tr><th>粒子</th><th>质量 / u</th></tr>
+      <tr><td>质子 mₚ</td><td>1.007276</td></tr>
+      <tr><td>中子 mₙ</td><td>1.008665</td></tr>
+      <tr><td>氘核 ²H</td><td>2.013553</td></tr>
+    </table>
+    <div class="key-point fade-item">
+      <strong>例：氘核的质量亏损</strong><br>
+      Δm = (1.007276 + 1.008665) − 2.013553 = <span class="highlight">0.002388 u</span><br>
+      那"消失"的质量去哪了？
+    </div>
+  </div>
+
+  <!-- ==================== Slide 6: 爱因斯坦质能方程 ==================== -->
+  <div class="slide" data-index="6">
+    <h2 class="fade-item">爱因斯坦质能方程</h2>
+    <div class="formula-box fade-item" style="font-size:2.2em;">
+      E = mc²
+    </div>
+    <p class="fade-item desc">质量与能量是同一事物的两种表现形式。质量"亏损"的部分转化为了能量。</p>
+    <div class="key-point fade-item">
+      "消失"的质量 Δm 以能量的形式释放：<br>
+      <span class="highlight">ΔE = Δm · c²</span><br>
+      这个能量就是把原子核拆散所需要提供的能量——<span class="highlight">结合能</span>。
+    </div>
+    <div class="think-box fade-item">
+      <div class="label">类比理解</div>
+      <p>想象两块磁铁"啪"地吸在一起，它们的势能降低了，释放了能量。类似地，核子结合成原子核时也会释放能量，只不过"代价"是质量的微小减少。</p>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 7: 结合能定义 ==================== -->
+  <div class="slide" data-index="7">
+    <h2 class="fade-item">结合能</h2>
+    <div class="fade-item" style="max-width:850px;">
+      <div class="key-point" style="border-left-color:#60a5fa;">
+        <strong>定义：</strong>将原子核拆解为<span class="highlight">自由的、静止的</span>核子，所需要吸收的最小能量，叫做原子核的<span class="highlight">结合能</span>（Binding Energy）。
+      </div>
+    </div>
+    <div class="formula-box fade-item">
+      B = Δm · c² = [ Z·mₚ + (A−Z)·mₙ − m<sub>核</sub> ] · c²
+    </div>
+    <div class="fade-item" style="display:flex;gap:30px;margin-top:10px;">
+      <div class="card" style="flex:1;text-align:center;">
+        <h4>结合成核时</h4>
+        <p style="color:#4ade80;font-size:1.8em;">释放能量 ↑</p>
+        <p>质量亏损 → 放能</p>
+      </div>
+      <div class="card" style="flex:1;text-align:center;">
+        <h4>拆解成核子时</h4>
+        <p style="color:#f87171;font-size:1.8em;">吸收能量 ↓</p>
+        <p>需要外界提供能量</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 8: 计算实例 ==================== -->
+  <div class="slide" data-index="8">
+    <h2 class="fade-item">计算实例：氘核的结合能</h2>
+    <div class="fade-item" style="max-width:800px;">
+      <p style="font-size:1.1em;color:#c4ccf0;line-height:1.8;">
+        已知：mₚ = 1.007276 u，mₙ = 1.008665 u，m(²H) = 2.013553 u
+      </p>
+    </div>
+    <div class="fade-item" style="max-width:800px;margin-top:14px;">
+      <p style="font-size:1.1em;color:#c4ccf0;line-height:2;">
+        ① 质量亏损：Δm = (1.007276 + 1.008665) − 2.013553 = <span class="highlight">0.002388 u</span>
+      </p>
+    </div>
+    <div class="fade-item" style="max-width:800px;">
+      <p style="font-size:1.1em;color:#c4ccf0;line-height:2;">
+        ② 利用 1 u = 931.5 MeV/c²
+      </p>
+    </div>
+    <div class="formula-box fade-item">
+      B = 0.002388 × 931.5 ≈ <span class="highlight">2.22 MeV</span>
+    </div>
+    <p class="fade-item" style="color:#7c8add;margin-top:10px;">含义：要把氘核拆成一个自由质子和一个自由中子，至少需要提供 2.22 MeV 的能量。</p>
+  </div>
+
+  <!-- ==================== Slide 9: 比结合能定义 ==================== -->
+  <div class="slide" data-index="9">
+    <h2 class="fade-item">比结合能（结合能密度）</h2>
+    <div class="fade-item" style="max-width:850px;">
+      <div class="key-point" style="border-left-color:#a78bfa;">
+        <strong>问题：</strong>结合能的大小与核子数有关，直接比较不同原子核的稳定性公平吗？
+      </div>
+    </div>
+    <div class="formula-box fade-item" style="font-size:1.8em;">
+      比结合能 = B / A<br>
+      <span style="font-size:.7em;color:#7c8add;">（结合能 ÷ 核子数）</span>
+    </div>
+    <div class="fade-item" style="max-width:850px;">
+      <div class="key-point" style="border-left-color:#4ade80;">
+        <strong>物理意义：</strong>平均每个核子对结合能的贡献。<br>
+        比结合能越大 → 核子结合得越紧密 → 原子核<span class="highlight">越稳定</span>。
+      </div>
+    </div>
+    <div class="think-box fade-item">
+      <div class="label">类比</div>
+      <p>就像"人均GDP"比"GDP总量"更能反映一个国家的富裕程度一样，"比结合能"比"结合能"更能反映原子核的稳定程度。</p>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 10: 比结合能数据表 ==================== -->
+  <div class="slide" data-index="10">
+    <h2 class="fade-item">常见原子核的比结合能</h2>
+    <table class="data-table fade-item">
+      <tr><th>原子核</th><th>核子数 A</th><th>结合能 / MeV</th><th>比结合能 / MeV</th></tr>
+      <tr><td>²H（氘）</td><td>2</td><td>2.22</td><td>1.11</td></tr>
+      <tr><td>⁴He（α）</td><td>4</td><td>28.30</td><td>7.07</td></tr>
+      <tr><td>¹²C</td><td>12</td><td>92.16</td><td>7.68</td></tr>
+      <tr><td>¹⁶O</td><td>16</td><td>127.62</td><td>7.98</td></tr>
+      <tr><td>⁵⁶Fe</td><td>56</td><td>492.26</td><td><span class="highlight">8.79</span></td></tr>
+      <tr><td>²³⁸U</td><td>238</td><td>1801.7</td><td>7.57</td></tr>
+    </table>
+    <div class="key-point fade-item">
+      注意观察：⁵⁶Fe 的比结合能最大 → 铁核是最稳定的原子核！
+    </div>
+  </div>
+
+  <!-- ==================== Slide 11: 比结合能曲线 ==================== -->
+  <div class="slide" data-index="11">
+    <h2 class="fade-item">比结合能曲线</h2>
+    <canvas class="chart fade-item" id="bindingCurve" width="750" height="360"></canvas>
+    <div class="fade-item" style="display:flex;gap:30px;max-width:750px;">
+      <div class="key-point" style="flex:1;border-left-color:#60a5fa;">
+        <strong>轻核聚变</strong>：轻核结合 → 比结合能增大 → <span class="highlight">释放能量</span>
+      </div>
+      <div class="key-point" style="flex:1;border-left-color:#a78bfa;">
+        <strong>重核裂变</strong>：重核分裂 → 比结合能增大 → <span class="highlight">释放能量</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 12: 曲线解读 ==================== -->
+  <div class="slide" data-index="12">
+    <h2 class="fade-item">比结合能曲线的解读</h2>
+    <div class="fade-item" style="max-width:850px;">
+      <ul class="feature-list">
+        <li>曲线呈"中间高、两头低"的特征，峰值在 <span class="highlight">A ≈ 56（铁附近）</span></li>
+        <li>轻核区（A＜30）：曲线陡升，聚变可大幅提高比结合能</li>
+        <li>中等核区（A≈40~100）：比结合能接近最大值，核最稳定</li>
+        <li>重核区（A＞150）：缓慢下降，裂变可提高比结合能</li>
+      </ul>
+    </div>
+    <div class="think-box fade-item">
+      <div class="label">核心结论</div>
+      <p>无论是<span class="highlight">轻核聚变</span>还是<span class="highlight">重核裂变</span>，只要使产物的比结合能比反应物更大，就会有质量亏损，就能<span class="highlight">释放核能</span>。</p>
+    </div>
+    <div class="think-box fade-item">
+      <div class="label">思考</div>
+      <p>为什么恒星内部主要发生聚变反应，而核电站主要使用裂变反应？这与比结合能曲线有什么关系？</p>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 13: 能量来源对比 ==================== -->
+  <div class="slide" data-index="13">
+    <h2 class="fade-item">核能 vs 化学能</h2>
+    <div class="fade-item bar-chart">
+      <div class="bar-group">
+        <div class="bar" style="height:8px;background:#7c8add;"><span>~5 eV</span></div>
+        <div class="bar-label">化学反应<br>(每个分子)</div>
+      </div>
+      <div class="bar-group">
+        <div class="bar" style="height:50px;background:#60a5fa;"><span>~1 MeV</span></div>
+        <div class="bar-label">核裂变<br>(每个核子)</div>
+      </div>
+      <div class="bar-group">
+        <div class="bar" style="height:160px;background:linear-gradient(#4ade80,#22d3ee);"><span>~7 MeV</span></div>
+        <div class="bar-label">核聚变<br>(每个核子)</div>
+      </div>
+    </div>
+    <div class="key-point fade-item">
+      核反应中每个粒子释放的能量是化学反应的<span class="highlight">百万倍</span>以上！<br>
+      这就是为什么 1 kg 核燃料释放的能量相当于数千吨煤。
+    </div>
+  </div>
+
+  <!-- ==================== Slide 14: 应用 ==================== -->
+  <div class="slide" data-index="14">
+    <h2 class="fade-item">应用与前沿</h2>
+    <div class="card-grid cols2 fade-item">
+      <div class="card">
+        <div class="icon">☀️</div>
+        <h4>太阳的能量来源</h4>
+        <p>太阳核心发生氢核聚变（4个¹H → ¹He + 2e⁺ + 2ν + 能量），每秒将约 400 万吨质量转化为能量。</p>
+      </div>
+      <div class="card">
+        <div class="icon">💡</div>
+        <h4>核电站</h4>
+        <p>利用 ²³⁵U 的裂变反应，1 kg 铀燃料 ≈ 2700 吨标准煤的能量。中国"华龙一号"等三代核电技术。</p>
+      </div>
+      <div class="card">
+        <div class="icon">🔬</div>
+        <h4>ITER 可控核聚变</h4>
+        <p>国际热核实验堆，目标是实现可控聚变反应，为人类提供几乎"无限"的清洁能源。</p>
+      </div>
+      <div class="card">
+        <div class="icon">🏥</div>
+        <h4>医学应用</h4>
+        <p>PET 扫描利用正电子湮灭（质量转化为能量）进行医学成像，用于癌症等疾病的早期诊断。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 15: 思考题 ==================== -->
+  <div class="slide" data-index="15">
+    <h2 class="fade-item">课堂思考</h2>
+    <div class="think-box fade-item" style="max-width:850px;">
+      <div class="label">问题 1</div>
+      <p>为什么说"比结合能"比"结合能"更能反映原子核的稳定程度？请举例说明。</p>
+    </div>
+    <div class="think-box fade-item" style="max-width:850px;">
+      <div class="label">问题 2</div>
+      <p>一个 ²³⁵U 原子核裂变为两个中等质量的原子核后，总质量是增大还是减小？为什么？</p>
+    </div>
+    <div class="think-box fade-item" style="max-width:850px;">
+      <div class="label">问题 3</div>
+      <p>既然铁核的比结合能最大，为什么宇宙中还有比铁更重的元素？它们是怎么形成的？</p>
+    </div>
+  </div>
+
+  <!-- ==================== Slide 16: 总结 ==================== -->
+  <div class="slide" data-index="16">
+    <h2 class="fade-item">本节总结</h2>
+    <div class="card-grid cols3 fade-item">
+      <div class="card" style="text-align:center;">
+        <h4>四种基本力</h4>
+        <p>引力、电磁力、<span style="color:#60a5fa;">强力</span>、弱力</p>
+        <p style="margin-top:8px;color:#7c8add;">核力 = 强力的剩余效应</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <h4>质量亏损 & 结合能</h4>
+        <p>Δm → ΔE = Δm·c²</p>
+        <p style="margin-top:8px;color:#7c8add;">结合 = 释放能量</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <h4>比结合能</h4>
+        <p>B/A → 稳定性判据</p>
+        <p style="margin-top:8px;color:#7c8add;">铁核最稳定（8.79 MeV）</p>
+      </div>
+    </div>
+    <div class="formula-box fade-item" style="font-size:1.3em;">
+      聚变（轻→重） &nbsp; 和 &nbsp; 裂变（重→中） → 都能释放核能
+    </div>
+    <p class="fade-item" style="margin-top:30px;color:#5b6494;font-size:1.1em;">感谢聆听 · 欢迎讨论</p>
+  </div>
+
+</div>
+
+<!-- ===== Navigation ===== -->
+<div class="nav">
+  <button onclick="go(-1)">◀ 上一页</button>
+  <span class="page-info" id="pageInfo">1 / 17</span>
+  <button onclick="go(1)">下一页 ▶</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+  let cur = 0;
+
+  function show(i){
+    slides.forEach(s=>s.classList.remove('active'));
+    slides[i].classList.add('active');
+    document.getElementById('pageInfo').textContent = (i+1)+' / '+total;
+    document.getElementById('progress').style.width = ((i+1)/total*100)+'%';
+    // draw chart when slide 11 is shown
+    if(i===11) drawCurve();
+  }
+  function go(d){cur=Math.max(0,Math.min(total-1,cur+d));show(cur);}
+
+  // keyboard
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowRight'||e.key===' ')go(1);
+    if(e.key==='ArrowLeft')go(-1);
+  });
+
+  // touch swipe
+  let tx=0;
+  document.addEventListener('touchstart',e=>tx=e.touches[0].clientX);
+  document.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx;
+    if(Math.abs(dx)>50) go(dx<0?1:-1);
+  });
+
+  // ===== Drawing the binding energy curve =====
+  function drawCurve(){
+    const c=document.getElementById('bindingCurve');
+    if(!c)return;
+    const ctx=c.getContext('2d');
+    const W=c.width, H=c.height;
+    ctx.clearRect(0,0,W,H);
+
+    // data points (A, B/A in MeV)
+    const data=[
+      [1,0],[2,1.11],[3,2.83],[4,7.07],[6,5.33],[8,7.06],
+      [12,7.68],[16,7.98],[20,8.04],[24,8.23],[28,8.44],
+      [32,8.52],[40,8.56],[48,8.67],[56,8.79],[64,8.76],
+      [72,8.73],[80,8.70],[88,8.69],[96,8.66],[104,8.63],
+      [120,8.58],[140,8.53],[160,8.48],[180,8.43],[200,8.38],
+      [220,8.30],[238,7.57]
+    ];
+
+    const pad={l:60,r:30,t:30,b:50};
+    const xMin=0,xMax=250,yMin=0,yMax=10;
+    const sx=x=>pad.l+(x-xMin)/(xMax-xMin)*(W-pad.l-pad.r);
+    const sy=y=>H-pad.b-(y-yMin)/(yMax-yMin)*(H-pad.t-pad.b);
+
+    // grid
+    ctx.strokeStyle='rgba(255,255,255,.08)';
+    ctx.lineWidth=1;
+    for(let y=0;y<=10;y+=2){ctx.beginPath();ctx.moveTo(sx(0),sy(y));ctx.lineTo(sx(250),sy(y));ctx.stroke();}
+    for(let x=0;x<=250;x+=50){ctx.beginPath();ctx.moveTo(sx(x),sy(0));ctx.lineTo(sx(x),sy(10));ctx.stroke();}
+
+    // axes
+    ctx.strokeStyle='rgba(255,255,255,.3)';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(250),sy(0));ctx.stroke();
+    ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(0),sy(10));ctx.stroke();
+
+    // labels
+    ctx.fillStyle='#7c8add';ctx.font='13px Microsoft YaHei';
+    ctx.fillText('A（核子数）',W/2-30,H-10);
+    ctx.save();ctx.translate(16,H/2+30);ctx.rotate(-Math.PI/2);ctx.fillText('B/A（MeV）',0,0);ctx.restore();
+
+    // axis numbers
+    ctx.fillStyle='#5b6494';ctx.font='12px sans-serif';
+    for(let x=0;x<=250;x+=50) ctx.fillText(x,sx(x)-10,sy(0)+18);
+    for(let y=0;y<=10;y+=2) ctx.fillText(y,sx(0)-22,sy(y)+5);
+
+    // curve
+    const grad=ctx.createLinearGradient(sx(0),0,sx(250),0);
+    grad.addColorStop(0,'#60a5fa');grad.addColorStop(0.25,'#4ade80');grad.addColorStop(0.5,'#facc15');grad.addColorStop(1,'#a78bfa');
+    ctx.strokeStyle=grad;ctx.lineWidth=3;ctx.lineJoin='round';
+    ctx.beginPath();
+    data.forEach(([a,b],i)=>{i===0?ctx.moveTo(sx(a),sy(b)):ctx.lineTo(sx(a),sy(b));});
+    ctx.stroke();
+
+    // dots
+    data.forEach(([a,b])=>{
+      ctx.beginPath();ctx.arc(sx(a),sy(b),4,0,Math.PI*2);
+      ctx.fillStyle='#fff';ctx.fill();
+    });
+
+    // peak label
+    ctx.fillStyle='#facc15';ctx.font='bold 14px Microsoft YaHei';
+    ctx.fillText('⁵⁶Fe 峰值 8.79 MeV',sx(56)-30,sy(8.79)-14);
+
+    // annotation arrows
+    ctx.fillStyle='#60a5fa';ctx.font='bold 13px Microsoft YaHei';
+    ctx.fillText('← 聚变释能 →',sx(20),sy(9.2));
+    ctx.fillStyle='#a78bfa';
+    ctx.fillText('← 裂变释能 →',sx(170),sy(9.2));
+  }
+</script>
+
+</body>
+</html>
