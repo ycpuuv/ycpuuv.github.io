@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B站精选 · 核聚变与核裂变</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #0f0f23;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+  header {
+    background: linear-gradient(135deg, #1a1a3e 0%, #0d0d2b 50%, #1a0a2e 100%);
+    padding: 40px 20px 30px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,107,53,0.3);
+  }
+  header h1 {
+    font-size: 2.2em;
+    background: linear-gradient(90deg, #ff6b35, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  header p {
+    color: #8899aa;
+    margin-top: 8px;
+    font-size: 0.95em;
+  }
+  header p span {
+    color: #fb7299;
+    -webkit-text-fill-color: #fb7299;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+  .section-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 28px;
+    justify-content: center;
+  }
+  .section-tab {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: 1px solid #334;
+    background: transparent;
+    color: #889;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.2s;
+  }
+  .section-tab:hover { border-color: #fb7299; color: #fb7299; }
+  .section-tab.active {
+    background: linear-gradient(135deg, #ff6b35, #fb7299);
+    border-color: transparent;
+    color: #fff;
+  }
+  .section {
+    display: none;
+  }
+  .section.active { display: block; }
+  .section-title {
+    font-size: 1.3em;
+    margin-bottom: 16px;
+    padding-left: 12px;
+    border-left: 4px solid #ff6b35;
+  }
+  .section-title .count {
+    font-size: 0.7em;
+    color: #667;
+    font-weight: normal;
+  }
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .video-card {
+    background: #1a1a35;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #2a2a45;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .video-card:hover {
+    border-color: #fb7299;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(251,114,153,0.1);
+  }
+  .video-card .badge {
+    display: inline-block;
+    background: rgba(251,114,153,0.15);
+    color: #fb7299;
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    align-self: flex-start;
+  }
+  .video-card a {
+    color: #e0e0f0;
+    text-decoration: none;
+    font-size: 0.95em;
+    line-height: 1.5;
+    flex: 1;
+  }
+  .video-card a:hover { color: #fb7299; }
+  .video-card .meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 0.8em;
+    color: #667;
+    border-top: 1px solid #252540;
+    padding-top: 10px;
+  }
+  .video-card .meta .author { color: #8899aa; }
+  .video-card .meta .plays { color: #ffd700; }
+  .video-card .meta .bvid {
+    font-family: monospace;
+    color: #445;
+    font-size: 0.85em;
+  }
+  .section-desc {
+    color: #667;
+    font-size: 0.85em;
+    margin-bottom: 16px;
+    padding-left: 16px;
+  }
+  footer {
+    text-align: center;
+    padding: 20px;
+    color: #445;
+    font-size: 0.8em;
+    border-top: 1px solid #1a1a35;
+  }
+  footer a { color: #fb7299; text-decoration: none; }
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.5em; }
+    .video-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚛ 核聚变 &amp; 核裂变</h1>
+  <p>B站精选视频导航 · <span>适合高中物理教学与拓展</span></p>
+</header>
+
+<div class="container">
+
+<div class="section-tabs" id="tabs">
+  <button class="section-tab active" data-section="all">全部</button>
+  <button class="section-tab" data-section="school">📚 高中物理教学</button>
+  <button class="section-tab" data-section="science">🔬 深度科普</button>
+  <button class="section-tab" data-section="visual">🎬 动画/可视化</button>
+  <button class="section-tab" data-section="classroom">🏫 课堂实录</button>
+</div>
+
+<!-- ==================== 全部 ==================== -->
+<div class="section active" id="sec-all">
+  <div class="section-title">全部视频 <span class="count">共43个</span></div>
+  <div class="section-desc">点击标题直接跳转到B站对应视频</div>
+  <div class="video-grid" id="all-grid"></div>
+</div>
+
+<!-- ==================== 高中物理教学 ==================== -->
+<div class="section" id="sec-school">
+  <div class="section-title">📚 高中物理教学 <span class="count">直接对应教材考点</span></div>
+  <div class="section-desc">适合课堂播放、学生自学、复习备考</div>
+  <div class="video-grid" id="school-grid"></div>
+</div>
+
+<!-- ==================== 深度科普 ==================== -->
+<div class="section" id="sec-science">
+  <div class="section-title">🔬 深度科普 <span class="count">拓展视野、前沿科技</span></div>
+  <div class="section-desc">了解可控核聚变最新进展、核能工程原理、科研前沿</div>
+  <div class="video-grid" id="science-grid"></div>
+</div>
+
+<!-- ==================== 动画/可视化 ==================== -->
+<div class="section" id="sec-visual">
+  <div class="section-title">🎬 动画 &amp; 可视化 <span class="count">直观理解微观过程</span></div>
+  <div class="section-desc">3D动画、特效演示、过程模拟——一看就懂</div>
+  <div class="video-grid" id="visual-grid"></div>
+</div>
+
+<!-- ==================== 课堂实录 ==================== -->
+<div class="section" id="sec-classroom">
+  <div class="section-title">🏫 课堂实录 <span class="count">真实教学场景</span></div>
+  <div class="section-desc">看看其他老师怎么讲这一节</div>
+  <div class="video-grid" id="classroom-grid"></div>
+</div>
+
+<footer>
+  数据来源：<a href="https://search.bilibili.com/all?keyword=核聚变" target="_blank">Bilibili 搜索</a> ｜ 点击视频标题跳转B站 ｜ 生成日期：2026-06-03
+</footer>
+
+</div>
+
+<script>
+const videos = [
+  // ===== 高中物理教学 =====
+  {bvid:"BV11A411q77s", title:"【五分钟高中物理】3.4 核裂变和核聚变", author:"大宽物理", plays:126281, badge:"⭐ 必看", section:"school"},
+  {bvid:"BV1z84y1S7pN", title:"核裂变和核聚变的原理", author:"科普创世纪", plays:88018, badge:"⭐ 推荐", section:"school"},
+  {bvid:"BV1b7411R7fa", title:"【高中物理】374 核裂变与核聚变", author:"陈老师敲黑板", plays:73376, badge:"", section:"school"},
+  {bvid:"BV1XY411d7iJ", title:"高中物理动画第38章原子核 | 14核裂变巨大的能量来源", author:"一起来UP", plays:24701, badge:"", section:"school"},
+  {bvid:"BV1zY4y1b7mq", title:"选择性必修三 5.3核力与核能 5.4核裂变与核聚变 5.5基本粒子", author:"物理老周", plays:22575, badge:"", section:"school"},
+  {bvid:"BV12sNmzuELv", title:"原子核：组成/衰变/半衰期/核力/结合能/比结合能/核裂变/核聚变", author:"不对称的楷开", plays:21904, badge:"⭐ 知识梳理", section:"school"},
+  {bvid:"BV1ut4y1U7TP", title:"【科普/双语】核裂变 核聚变原理", author:"司机托夫斯基", plays:52525, badge:"双语", section:"school"},
+  {bvid:"BV16wGS6MEtt", title:"5.4 核裂变和核聚变1：怎么造原子弹！链式反应/核电站", author:"拜托土豆", plays:2602, badge:"", section:"school"},
+  {bvid:"BV1PqS3BhEmT", title:"原子弹的工作原理 及核裂变与核聚变的区别", author:"-凯旋本人-", plays:4143, badge:"", section:"school"},
+  {bvid:"BV11jLz6fECH", title:"核裂变vs核聚变：一个毁灭世界，一个孕育太阳", author:"想不起来了ing", plays:985, badge:"", section:"school"},
+
+  // ===== 深度科普 =====
+  {bvid:"BV1NM9YBvE1Z", title:"为什么说可控核聚变真的快要实现了？聚变三重积告诉你一切", author:"新石器公园", plays:1109807, badge:"🔥 百万播放", section:"science"},
+  {bvid:"BV1Mg411Q7qb", title:"【硬核科普】"人造太阳"——全超导托卡马克核聚变实验装置", author:"新华社", plays:793001, badge:"🔥 官方", section:"science"},
+  {bvid:"BV1Wa4y1N7jE", title:"人类科技的尽头是"烧开水"？连核聚变也逃不过", author:"环球军科", plays:411273, badge:"", section:"science"},
+  {bvid:"BV1DiV86TE4A", title:"核聚变2050生死劫！降成本太慢了，可能打不过风光储", author:"科学透镜", plays:298235, badge:"", section:"science"},
+  {bvid:"BV1KR4y1g7tv", title:"美国核聚变重大突破？激光惯性约束核聚变【可控核聚变系列第四集】", author:"新石器公园", plays:279333, badge:"⭐", section:"science"},
+  {bvid:"BV1Qj411V7oi", title:"什么是核聚变？如何实现可控聚变？专业视角详解", author:"集智说", plays:237484, badge:"", section:"science"},
+  {bvid:"BV1SW41197Yx", title:"【教程】如何DIY一台核聚变反应堆（可产生中子与高能光子）", author:"生化环材", plays:186401, badge:"⚠️ 仅供参考", section:"science"},
+  {bvid:"BV11A411q7rs", title:"【90秒动画】了解什么是核裂变", author:"央视纪录", plays:58166, badge:"", section:"science"},
+  {bvid:"BV1RM411D7Th", title:"核聚变-托卡马克技术方案动画", author:"plasma2022", plays:13392, badge:"", section:"science"},
+  {bvid:"BV1yD4y1r7EL", title:"【作死物理兄弟篇】真·核能！在家模拟核聚变反应堆！瓶中小太阳", author:"暗星244", plays:51379, badge:"", section:"science"},
+  {bvid:"BV1judBY2EF6", title:"可控核聚变的工作原理", author:"胖虎说科普", plays:73503, badge:"", section:"science"},
+  {bvid:"BV13c411r7rs", title:"90秒动画了解什么是核裂变", author:"央视纪录", plays:58166, badge:"", section:"science"},
+
+  // ===== 动画/可视化 =====
+  {bvid:"BV1VjQ2BSE1k", title:"量子力学(#17)-核裂变是如何被发现的？慢中子/铀核裂变/链式反应", author:"讲科普的丑豆妈", plays:3021, badge:"", section:"visual"},
+  {bvid:"BV14xkEBiEDR", title:"一口气看完《可控核聚变》高清蓝光修剪版（1-56集）", author:"ZHTNB007", plays:31611, badge:"", section:"visual"},
+  {bvid:"BV11L4y1n7rx", title:"这样解释核聚变会对你有所帮助吗？", author:"蜗壳世界观", plays:19054, badge:"", section:"visual"},
+  {bvid:"BV1RM411D7Th", title:"核聚变-托卡马克技术方案动画", author:"plasma2022", plays:13392, badge:"", section:"visual"},
+  {bvid:"BV1fmoWY7Ez1", title:"核聚变基本原理（动画演示）", author:"火星人123wwww213", plays:1624, badge:"", section:"visual"},
+  {bvid:"BV1z84y1S7pN", title:"核裂变和核聚变的原理（动画解说）", author:"科普创世纪", plays:88018, badge:"", section:"visual"},
+  {bvid:"BV1XY411d7iJ", title:"高中物理动画 | 核裂变巨大的能量来源", author:"一起来UP", plays:24701, badge:"", section:"visual"},
+
+  // ===== 课堂实录 =====
+  {bvid:"BV1SXoxBwEQb", title:"核裂变与核聚变（第2届一层次班级）", author:"川哥物理", plays:1083, badge:"", section:"classroom"},
+  {bvid:"BV12E3EzGEPW", title:"核裂变与核聚变-20250627课堂实录", author:"物理Yang老师", plays:1791, badge:"", section:"classroom"},
+  {bvid:"BV187iFBBEYf", title:"核裂变与核聚变-课堂实录（完整版）", author:"物理Yang老师", plays:1791, badge:"", section:"classroom"},
+];
+
+// ====== Render ======
+function renderCard(v) {
+  const url = `https://www.bilibili.com/video/${v.bvid}`;
+  const plays = v.plays >= 10000 ? (v.plays/10000).toFixed(1)+'万' : v.plays;
+  const badgeHtml = v.badge ? `<span class="badge">${v.badge}</span>` : '';
+  return `
+    <div class="video-card">
+      ${badgeHtml}
+      <a href="${url}" target="_blank" title="${v.title}">${v.title}</a>
+      <div class="meta">
+        <span class="author">👤 ${v.author}</span>
+        <span class="plays">▶ ${plays}</span>
+        <span class="bvid">${v.bvid}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderGrid(containerId, section) {
+  const list = section ? videos.filter(v => v.section === section) : videos;
+  document.getElementById(containerId).innerHTML = list.map(renderCard).join('');
+}
+
+renderGrid('all-grid', null);
+renderGrid('school-grid', 'school');
+renderGrid('science-grid', 'science');
+renderGrid('visual-grid', 'visual');
+renderGrid('classroom-grid', 'classroom');
+
+// ====== Tab switching ======
+const tabs = document.querySelectorAll('.section-tab');
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-' + tab.dataset.section).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
