@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运动学 · 课堂视频集锦</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#0a0a1a;color:#e0e0e0;min-height:100vh;
+  }
+  header{
+    background:linear-gradient(135deg,#0d0d2b 0%,#1a0a2e 50%,#0f1a2e 100%);
+    padding:36px 20px 28px;text-align:center;
+    border-bottom:1px solid rgba(255,107,53,0.2);
+    position:relative;overflow:hidden;
+  }
+  header::before{
+    content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+    width:300px;height:300px;
+    background:radial-gradient(circle,rgba(255,107,53,0.08) 0%,transparent 70%);
+    border-radius:50%;
+  }
+  header h1{font-size:2em;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative}
+  header p{color:#8899aa;margin-top:6px;font-size:.9em;position:relative}
+  header p span{color:#fb7299;font-weight:bold}
+  .nav-bar{
+    display:flex;gap:4px;padding:10px 16px;background:#12122a;
+    overflow-x:auto;position:sticky;top:0;z-index:100;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    -webkit-overflow-scrolling:touch;
+    justify-content:center;flex-wrap:wrap;
+  }
+  .nav-btn{
+    flex-shrink:0;padding:7px 16px;border-radius:16px;border:1px solid #2a2a45;
+    background:transparent;color:#889;cursor:pointer;font-size:.82em;
+    transition:all .2s;white-space:nowrap;
+  }
+  .nav-btn:hover,.nav-btn.active{color:#fff}
+  .nav-btn.active{
+    background:linear-gradient(135deg,#ff6b35,#fb7299);border-color:transparent;
+    box-shadow:0 2px 12px rgba(255,107,53,0.3);
+  }
+  .container{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+  .section{display:none}.section.active{display:block}
+  .section-title{font-size:1.2em;margin-bottom:6px;padding-left:12px;border-left:4px solid #ff6b35}
+  .section-title .tagline{font-size:.65em;color:#667;font-weight:normal;margin-left:8px}
+  .section-intro{color:#667;font-size:.82em;margin-bottom:16px;padding-left:16px;line-height:1.6}
+  .video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+  .card{
+    background:#161632;border-radius:10px;padding:14px;
+    border:1px solid #252545;transition:all .2s;
+    display:flex;flex-direction:column;
+  }
+  .card:hover{border-color:#fb7299;transform:translateY(-2px);box-shadow:0 6px 20px rgba(251,114,153,0.08)}
+  .card .tag{
+    display:inline-block;font-size:.7em;padding:2px 10px;border-radius:3px;
+    margin-bottom:6px;align-self:flex-start;font-weight:500;
+  }
+  .tag.core{background:rgba(255,107,53,.2);color:#ff6b35}
+  .tag.hot{background:rgba(251,114,153,.2);color:#fb7299}
+  .tag.app{background:rgba(20,184,166,.2);color:#14b8a6}
+  .tag.warn{background:rgba(255,215,0,.15);color:#ffd700}
+  .tag.exp{background:rgba(110,168,254,.2);color:#6ea8fe}
+  .card a{
+    color:#ddd;text-decoration:none;font-size:.92em;line-height:1.5;flex:1;
+  }
+  .card a:hover{color:#fb7299}
+  .card .meta{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:8px;font-size:.75em;color:#556;
+    border-top:1px solid #222240;padding-top:8px;
+  }
+  .card .meta .author{color:#8899aa}
+  .card .meta .plays{color:#ffd700}
+  .card .desc{font-size:.78em;color:#667;margin-top:4px;line-height:1.4}
+  .topic-banner{
+    background:linear-gradient(135deg,#1a1a35,#0d0d2b);border-radius:10px;
+    padding:14px 18px;margin-bottom:16px;border:1px solid #2a2a45;
+  }
+  .topic-banner .qs{font-size:.85em;color:#8899aa;line-height:1.6}
+  .topic-banner .qs strong{color:#ffd700}
+  .flow-arrow{
+    text-align:center;padding:12px 0 4px;color:#334;font-size:1.2em;
+  }
+  .flow-arrow span{display:inline-block;animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.3}50%{opacity:.8}}
+  footer{text-align:center;padding:20px;color:#334;font-size:.75em;border-top:1px solid #1a1a35}
+  .progress-bar{
+    display:flex;justify-content:space-between;margin-bottom:20px;
+    padding:0 4px;flex-wrap:wrap;gap:4px;
+  }
+  .progress-bar .step{
+    flex:1;min-width:60px;text-align:center;padding:6px 4px;
+    background:#161632;border-radius:6px;border:1px solid #252545;
+    font-size:.7em;color:#667;
+  }
+  .progress-bar .step .num{
+    display:block;font-size:1.1em;font-weight:bold;color:#ff6b35;margin-bottom:2px;
+  }
+  .progress-bar .step.active{border-color:#ff6b35;background:rgba(255,107,53,.08)}
+  .progress-bar .step.active .num{color:#ffd700}
+  @media(max-width:600px){
+    header h1{font-size:1.3em}
+    .video-grid{grid-template-columns:1fr}
+    .nav-btn{padding:5px 12px;font-size:.78em}
+    .progress-bar .step{min-width:50px;font-size:.65em}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📐 运动学 · 课堂视频集锦</h1>
+  <p>必修一 · <span>精挑细选</span> · 按逻辑顺序排列</p>
+</header>
+
+<div class="nav-bar" id="navBar">
+  <button class="nav-btn active" data-sec="all">🏠 全部</button>
+  <button class="nav-btn" data-sec="concept">📐 基本概念</button>
+  <button class="nav-btn" data-sec="formula">📊 匀变速</button>
+  <button class="nav-btn" data-sec="graph">📈 运动图像</button>
+  <button class="nav-btn" data-sec="deduction">🧩 推论</button>
+  <button class="nav-btn" data-sec="freefall">🔬 自由落体</button>
+  <button class="nav-btn" data-sec="pursuit">🚗 追及相遇</button>
+  <button class="nav-btn" data-sec="experiment">🔧 实验</button>
+</div>
+
+<div class="container">
+
+<!-- 进度条 -->
+<div class="progress-bar">
+  <div class="step active"><span class="num">①</span>基本概念</div>
+  <div class="step"><span class="num">②</span>匀变速</div>
+  <div class="step"><span class="num">③</span>图像</div>
+  <div class="step"><span class="num">④</span>推论</div>
+  <div class="step"><span class="num">⑤</span>自由落体</div>
+  <div class="step"><span class="num">⑥</span>追及相遇</div>
+  <div class="step"><span class="num">⑦</span>实验</div>
+</div>
+
+<!-- ========== 全部 ========== -->
+<div class="section active" id="sec-all">
+  <div class="section-title">🏠 全部视频 <span class="tagline">共12个，按课堂逻辑排列</span></div>
+  <div class="section-intro">
+    从<b style="color:#ffd700">基本概念</b>出发 ➜ <b style="color:#fb7299">公式与图像</b> ➜ <b style="color:#ff6b35">推论技巧</b> ➜ <b style="color:#14b8a6">综合应用</b>，一条线串通运动学。
+  </div>
+  <div class="video-grid" id="allGrid"></div>
+</div>
+
+<!-- ========== 基本概念 ========== -->
+<div class="section" id="sec-concept">
+  <div class="section-title">📐 基本概念 <span class="tagline">运动的描述 · 质点 · 位移 · 速度 · 加速度</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 为什么研究地球公转可以把地球看成一个点，但研究地球自转就不行？<br>
+      <strong>👉 看视频找答案：</strong> 什么时候能忽略物体的大小形状？速度变化快慢用什么描述？"加速度"大就一定在加速吗？
+    </div>
+  </div>
+  <div class="video-grid" id="conceptGrid"></div>
+  <div class="flow-arrow"><span>↓ 有了基础，学公式</span></div>
+</div>
+
+<!-- ========== 匀变速直线运动 ========== -->
+<div class="section" id="sec-formula">
+  <div class="section-title">📊 匀变速直线运动 <span class="tagline">四大基本公式 · 知三求二</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 刹车时速度越来越慢，自由落体时速度越来越快——这两种运动的共同规律是什么？<br>
+      <strong>👉 看视频找答案：</strong> 四个公式都涉及哪五个量？什么情况下用哪个公式最方便？
+    </div>
+  </div>
+  <div class="video-grid" id="formulaGrid"></div>
+  <div class="flow-arrow"><span>↓ 公式记住了，看图说话</span></div>
+</div>
+
+<!-- ========== 运动图像 ========== -->
+<div class="section" id="sec-graph">
+  <div class="section-title">📈 运动图像 <span class="tagline">x-t图 · v-t图 · a-t图</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 都说"一图胜千言"——一张v-t图能读出哪些信息？怎么一眼看出加速还是减速？<br>
+      <strong>👉 看视频找答案：</strong> 斜率和面积分别代表什么？x-t图是物体的运动轨迹吗？
+    </div>
+  </div>
+  <div class="video-grid" id="graphGrid"></div>
+  <div class="flow-arrow"><span>↓ 图像过关，学推论技巧</span></div>
+</div>
+
+<!-- ========== 重要推论 ========== -->
+<div class="section" id="sec-deduction">
+  <div class="section-title">🧩 重要推论 <span class="tagline">Δx=aT² · 中间时刻速度 · 比例关系</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 打点计时器的纸带上一堆数据，怎么快速求加速度？为什么连续相等时间内位移差是常数？<br>
+      <strong>👉 看视频找答案：</strong> 初速度为0的匀加速直线运动，1s内、2s内、3s内的位移比是多少？第1s内、第2s内、第3s内呢？
+    </div>
+  </div>
+  <div class="video-grid" id="deductionGrid"></div>
+  <div class="flow-arrow"><span>↓ 推论在手，实战不愁</span></div>
+</div>
+
+<!-- ========== 自由落体与竖直上抛 ========== -->
+<div class="section" id="sec-freefall">
+  <div class="section-title">🔬 自由落体 &amp; 竖直上抛 <span class="tagline">v₀=0 · a=g · 对称性</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 伽利略在比萨斜塔上扔了两个铁球——重的和轻的哪个先落地？<br>
+      <strong>👉 看视频找答案：</strong> 自由落体运动为什么是匀加速？竖直上抛"上升"和"下落"过程是对称的吗？
+    </div>
+  </div>
+  <div class="video-grid" id="freefallGrid"></div>
+  <div class="flow-arrow"><span>↓ 最后两个实战难点</span></div>
+</div>
+
+<!-- ========== 追及相遇 ========== -->
+<div class="section" id="sec-pursuit">
+  <div class="section-title">🚗 追及相遇问题 <span class="tagline">速度相等时距离最远/最近</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 交警骑摩托追超速轿车——什么时候距离最远？什么时候能追上？<br>
+      <strong>👉 看视频找答案：</strong> 为什么"速度相等"是追及问题的核心临界条件？两种解法（公式法vs图像法）各有什么优势？
+    </div>
+  </div>
+  <div class="video-grid" id="pursuitGrid"></div>
+  <div class="flow-arrow"><span>↓ 实验是必考题</span></div>
+</div>
+
+<!-- ========== 实验 ========== -->
+<div class="section" id="sec-experiment">
+  <div class="section-title">🔧 实验专题 <span class="tagline">打点计时器 · 纸带分析 · 逐差法</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 纸带上密密麻麻的点——怎么通过这些点算出物体的速度和加速度？<br>
+      <strong>👉 看视频找答案：</strong> 为什么要用逐差法而不是直接Δx=aT²？中间时刻速度=平均速度这个结论在实验中怎么用？
+    </div>
+  </div>
+  <div class="video-grid" id="experimentGrid"></div>
+</div>
+
+<footer>B站链接以 b23.tv 短链形式提供，手机点开即看 ｜ 课堂视频集锦 ｜ 精挑12个，每个都是精品</footer>
+</div>
+
+<script>
+const videos = [
+  // ===== 基本概念 =====
+  {bvid:"BV1u1421o7Pz", title:"【质点 参考系】基本概念精讲", author:"启梦纸意啦", plays:"2.8万", section:"concept", tag:"⭐ 必看", tagType:"core", desc:"质点条件+参考系选择，0基础入门"},
+  {bvid:"BV1LK4mebE8k", title:"【速度概念】平均速度vs瞬时速度辨析", author:"物理老师", plays:"8.2万", section:"concept", tag:"⭐ 必看", tagType:"core", desc:"速度vs速率、平均vs瞬时的核心区别"},
+  {bvid:"BV1sw4m1R7cz", title:"李永乐《必修一 1.4 加速度》", author:"李永乐老师", plays:"16.5万", section:"concept", tag:"🏆 名师", tagType:"hot", desc:"用生活实例讲透加速度——a大≠加速快"},
+  {bvid:"BV1qKWGzgEiJ", title:"【10分钟速通】加速度，0基础秒懂", author:"物理速通", plays:"12.1万", section:"concept", tag:"🚀 速通", tagType:"core", desc:"加速度方向与v方向的关系，一句话讲清"},
+
+  // ===== 匀变速直线运动 =====
+  {bvid:"BV11P4y1W7LP", title:"【黄夫人】匀变速直线运动公式推导", author:"HuangFuRen", plays:"471万", section:"formula", tag:"🔥🔥 顶流", tagType:"hot", desc:"全网最火的运动学课程，公式推导+例题一气呵成"},
+  {bvid:"BV1HK4mebE8k", title:"【一口气搞懂】匀变速直线运动所有公式+推论", author:"物理老师", plays:"68万", section:"formula", tag:"⭐ 必看", tagType:"core", desc:"四个基本公式+两个推论，系统梳理"},
+
+  // ===== 运动图像 =====
+  {bvid:"BV1zcWGzCErz", title:"【20分钟搞懂】x-t图/v-t图/a-t图所有考点", author:"皮到没物理", plays:"25.4万", section:"graph", tag:"📈 超干", tagType:"core", desc:"斜率×面积×截距，一张图全搞定"},
+
+  // ===== 重要推论 =====
+  {bvid:"BV1Mf42197Ug", title:"【一轮复习】匀变速直线运动推论", author:"北大学长跳跳", plays:"47.7万", section:"deduction", tag:"🧩 必考", tagType:"core", desc:"Δx=aT² + 中间时刻速度 + 比例推论，一节课拿下"},
+
+  // ===== 自由落体 =====
+  {bvid:"BV15xn1zREeW", title:"【20分钟掌握】自由落体/竖直上抛", author:"皮到没物理", plays:"19.4万", section:"freefall", tag:"🔬 经典", tagType:"core", desc:"落体公式+对称性+相遇问题，20分钟吃透"},
+
+  // ===== 追及相遇 =====
+  {bvid:"BV16B3RzNEGG", title:"【公式法+图像法】两种方法彻底讲透追及相遇", author:"一物儿", plays:"59.2万", section:"pursuit", tag:"🚗 核心", tagType:"hot", desc:"速度相等临界条件+图像分析，最强实战课"},
+
+  // ===== 实验 =====
+  {bvid:"BV1qJStYqEhD", title:"高一期中必考实验！打点计时器，白拿6~9分", author:"夏梦迪", plays:"29.4万", section:"experiment", tag:"🔧 必考", tagType:"exp", desc:"纸带读取+数据处理，看完直接拿分"},
+  {bvid:"BV1wZ4y1N7Uz", title:"【逐差法】求纸带加速度（力学实验）", author:"小怀怀", plays:"95.4万", section:"experiment", tag:"🔥 热门", tagType:"hot", desc:"逐差法原理+步骤+例题，实验满分必看"},
+];
+
+// ===== Render =====
+function renderCards(list, gridId) {
+  const g = document.getElementById(gridId);
+  if (!g) return;
+  g.innerHTML = list.map(v => {
+    const url = `https://b23.tv/${v.bvid}`;
+    const tagCls = v.tagType || 'core';
+    return `<div class="card">
+      <span class="tag ${tagCls}">${v.tag || '🎬'}</span>
+      <a href="${url}" target="_blank" title="点我看视频">${v.title}</a>
+      <div class="desc">${v.desc || ''}</div>
+      <div class="meta">
+        <span class="author">👤 ${v.author}</span>
+        <span class="plays">▶ ${v.plays}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Render all sections
+renderCards(videos, 'allGrid');
+renderCards(videos.filter(v=>v.section==='concept'), 'conceptGrid');
+renderCards(videos.filter(v=>v.section==='formula'), 'formulaGrid');
+renderCards(videos.filter(v=>v.section==='graph'), 'graphGrid');
+renderCards(videos.filter(v=>v.section==='deduction'), 'deductionGrid');
+renderCards(videos.filter(v=>v.section==='freefall'), 'freefallGrid');
+renderCards(videos.filter(v=>v.section==='pursuit'), 'pursuitGrid');
+renderCards(videos.filter(v=>v.section==='experiment'), 'experimentGrid');
+
+// ===== Navigation =====
+document.getElementById('navBar').addEventListener('click', e => {
+  const btn = e.target.closest('.nav-btn');
+  if (!btn) return;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const secId = 'sec-'+btn.dataset.sec;
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(secId).classList.add('active');
+
+  // Update progress bar
+  const stepOrder = {all:0, concept:0, formula:1, graph:2, deduction:3, freefall:4, pursuit:5, experiment:6};
+  const idx = stepOrder[btn.dataset.sec] ?? -1;
+  document.querySelectorAll('.progress-bar .step').forEach((s,i)=>{
+    s.classList.toggle('active', i <= idx);
+  });
+});
+</script>
+</body>
+</html>
