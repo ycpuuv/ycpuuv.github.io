@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>结合能→比结合能→平均质量·课件</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#060a18;display:flex;justify-content:center;align-items:center;min-height:100dvh;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;padding:6px}
+.card{max-width:1120px;width:100%;background:linear-gradient(145deg,#0b1020,#080c18);border-radius:18px;border:1px solid rgba(99,102,241,0.15);box-shadow:0 20px 60px rgba(0,0,0,0.8);padding:8px 10px 12px}
+#canvas-container{display:flex;justify-content:center;margin-bottom:4px}
+canvas{display:block;border-radius:12px;width:100%!important;height:auto!important}
+.tabs{display:flex;gap:2px;justify-content:center;margin-bottom:4px;flex-wrap:wrap}
+.tab{padding:4px 10px;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;font-family:inherit;background:rgba(255,255,255,0.05);color:#667799}
+.tab:hover{color:#dde8ff;background:rgba(255,255,255,0.1)}
+.tab.act{background:rgba(99,102,241,0.25);color:#b8c6ff}
+@media(max-width:600px){.tab{padding:3px 6px;font-size:10px}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="tabs" id="tabs">
+    <button class="tab act" onclick="sw(0)">① 质量亏损</button>
+    <button class="tab" onclick="sw(1)">② 四种力</button>
+    <button class="tab" onclick="sw(2)">③ 比结合能+平均质量</button>
+    <button class="tab" onclick="sw(3)">④ 比结合能曲线</button>
+    <button class="tab" onclick="sw(4)">⑤ 聚变vs裂变</button>
+    <button class="tab" onclick="sw(5)">⑥ 实际应用</button>
+  </div>
+  <div id="canvas-container"></div>
+</div>
+<script>
+const W=1100,H=680;let page=0,t=0;
+const NUCL=[
+  [2,1.1,'²H'],[3,2.8,'³He'],[4,7.1,'⁴He'],[6,5.3,'⁶Li'],[7,5.6,'⁷Li'],[9,6.5,'⁹Be'],
+  [12,7.7,'¹²C'],[14,7.5,'¹⁴N'],[16,8.0,'¹⁶O'],[20,8.0,'²⁰Ne'],[24,8.3,'²⁴Mg'],[28,8.4,'²⁸Si'],[32,8.5,'³²S'],
+  [40,8.6,'⁴⁰Ca'],[48,8.7,'⁴⁸Ti'],[56,8.8,'⁵⁶Fe'],[63,8.7,'⁶³Cu'],[84,8.7,'⁸⁴Kr'],
+  [100,8.5,'¹⁰⁰Mo'],[120,8.5,'¹²⁰Sn'],[150,8.2,'¹⁵⁰Sm'],[180,8.0,'¹⁸⁰Hf'],[200,7.9,'²⁰⁰Hg'],[208,7.9,'²⁰⁸Pb'],
+  [235,7.6,'²³⁵U'],[238,7.6,'²³⁸U'],[250,7.4,'²⁵⁰Cf']];
+function sw(n){page=n;t=0;document.querySelectorAll('.tab').forEach((x,i)=>x.classList.toggle('act',i===n))}
+function setup(){createCanvas(W,H).parent('canvas-container');pixelDensity(1)}
+function draw(){t+=0.01;background(6,10,24);translate(W/2,H/2);
+  if(page===0)pg0();else if(page===1)pg1();else if(page===2)pg2();else if(page===3)pg3();else if(page===4)pg4();else pg5();}
+function T(str,y){noStroke();fill(180,210,255,240);textSize(20);textStyle(BOLD);textAlign(CENTER,TOP);text(str,0,y||-H/2+10);}
+function S(str,y){fill(180,210,255,80);textSize(13);textStyle(NORMAL);textAlign(CENTER);text(str,0,y);}
+function Bx(x,y,w,h){noStroke();fill(60,80,160,18);rect(x,y,w,h,8);}
+function nt(str){fill(255,220,120,50);textSize(11);textStyle(NORMAL);textAlign(CENTER);text('→ '+str,0,H/2-6);}
+
+// ======== 页0 ========
+function pg0(){
+  T('① 质量亏损 · 核子结合后总质量减少');
+  S('以 ¹²C 为例：6p+6n 散装总质量 > 拼好的原子核质量',-H/2+48);
+  let pr=sin(t*0.5)*0.5+0.5;
+  let cx=-W/4;let r=lerp(20,80,pr);
+  for(let i=0;i<12;i++){let a=i*PI*2/12+t*0.2*(1-pr);let x=cx+cos(a)*r,y=sin(a)*r-15;
+    let iP=i<6;let co=iP?[255,80,80]:[60,140,255];let sz=lerp(12,8,pr);
+    noStroke();fill(co[0],co[1],co[2],15);circle(x,y,sz*2.8);fill(co[0],co[1],co[2]);circle(x,y,sz*2.2);
+    fill(255,255,255,60);circle(x-sz*0.2,y-sz*0.2,sz*0.4);
+    fill(255,255,255,220);textSize(sz*0.6);textStyle(BOLD);textAlign(CENTER,CENTER);noStroke();text(iP?'p':'n',x,y+1);}
+  fill(255,220,220,150);textSize(15);textStyle(BOLD);textAlign(CENTER,TOP);text('∑m=12.099u',cx,60);
+  fill(255,255,255,50);textSize(12);textAlign(CENTER,TOP);text('6p+6n 散装',cx,80);
+  fill(255,255,255,50);textSize(26);textStyle(BOLD);textAlign(CENTER,CENTER);text('→',0,-15);
+  cx=W/4;let rr=lerp(22,5,pr);
+  for(let i=0;i<12;i++){let a=i*PI*2/12+t*0.06;let x=cx+cos(a)*rr,y=sin(a)*rr-15;
+    let iP=i<6;let co=iP?[255,80,80]:[60,140,255];let sz=lerp(9,13,pr);
+    noStroke();fill(co[0],co[1],co[2],12);circle(x,y,sz*2.2);fill(co[0],co[1],co[2]);circle(x,y,sz*1.8);
+    fill(255,255,255,50);circle(x-sz*0.15,y-sz*0.15,sz*0.3);
+    fill(255,255,255,200);textSize(sz*0.5);textStyle(BOLD);textAlign(CENTER,CENTER);noStroke();text(iP?'p':'n',x,y+1);}
+  noStroke();fill(80,180,255,8);circle(cx,-15,50);fill(80,180,255,4);circle(cx,-15,70);
+  fill(180,220,255,150);textSize(15);textStyle(BOLD);textAlign(CENTER,TOP);text('m(¹²C)=12.000u',cx,60);
+  fill(255,255,255,50);textSize(12);textAlign(CENTER,TOP);text('结合成核',cx,80);
+  Bx(-W/2+30,H/2-140,W-60,108);
+  fill(255,220,120,230);textSize(17);textStyle(BOLD);textAlign(LEFT,TOP);text('📐 质量亏损 Δm',-W/2+48,H/2-133);
+  fill(200,230,255,200);textSize(15);textStyle(NORMAL);text('Δm=12.099−12.000=0.099u  →  E=Δm·c²=92.2MeV (结合能)',-W/2+48,H/2-105);
+  fill(255,220,120,230);textSize(15);textStyle(BOLD);text('92.2MeV 是 ¹²C 的总结合能。但不同核的核子数不同——',-W/2+48,H/2-78);
+  fill(180,210,255,160);textSize(13);text('直接比总结合能行吗？→ 下一页',-W/2+48,H/2-50);
+  nt('下一页：比结合能 + 平均质量');
+}
+
+// ======== 页1 ========
+function pg1(){
+  T('② 四种基本相互作用力 · 谁在"粘"着原子核？');
+  S('质子都带正电互相排斥——原子核为什么没散架？',-H/2+48);
+  fill(255,120,120,120);textSize(16);textStyle(BOLD);textAlign(CENTER);text('❌ 电磁斥力',-W/4,-20);
+  fill(255,120,120,40);textSize(12);textStyle(NORMAL);text('同种电荷相斥',-W/4,3);
+  let sep1=70+sin(t*1.2)*12;let px1=-W/4-sep1/2,py1=58;let px2=-W/4+sep1/2;
+  noStroke();fill(255,80,80,12);circle(px1,py1,36);fill(255,80,80);circle(px1,py1,18);fill(255,255,255,60);circle(px1-3,py1-3,7);
+  fill(255,255,255,220);textSize(10);textStyle(BOLD);textAlign(CENTER,CENTER);text('p⁺',px1,py1+1);
+  noStroke();fill(255,80,80,12);circle(px2,py1,36);fill(255,80,80);circle(px2,py1,18);fill(255,255,255,60);circle(px2-3,py1-3,7);
+  fill(255,255,255,220);textSize(10);textStyle(BOLD);textAlign(CENTER,CENTER);text('p⁺',px2,py1+1);
+  for(let i=0;i<5;i++){let a=i*PI*2/5+t*0.4;noStroke();fill(255,120,120,25+20*sin(t+i));circle(-W/4+cos(a)*(20+20),py1+sin(a)*(20+20),4);}
+  stroke(255,120,120,60);strokeWeight(2);line(-W/4,py1-28,-W/4,py1-55);line(-W/4,py1+28,-W/4,py1+55);
+  fill(255,120,120,80);noStroke();textSize(11);textStyle(BOLD);textAlign(CENTER);text('斥力→',-W/4,py1-60);text('←斥力',-W/4,py1+62);
+  fill(120,255,120,120);textSize(16);textStyle(BOLD);textAlign(CENTER);text('✅ 强相互作用',W/4,-20);
+  fill(120,255,120,40);textSize(12);textStyle(NORMAL);text('核力·吸引力·短程',W/4,3);
+  let nx1=W/4-28,ny1=58;let nx2=W/4+28;
+  noStroke();fill(255,80,80,12);circle(nx1,ny1,36);fill(255,80,80);circle(nx1,ny1,18);fill(255,255,255,60);circle(nx1-3,ny1-3,7);
+  fill(255,255,255,220);textSize(10);textStyle(BOLD);textAlign(CENTER,CENTER);text('p⁺',nx1,ny1+1);
+  noStroke();fill(60,140,255,12);circle(nx2,ny1,36);fill(60,140,255);circle(nx2,ny1,18);fill(255,255,255,60);circle(nx2-3,ny1-3,7);
+  fill(255,255,255,220);textSize(10);textStyle(BOLD);textAlign(CENTER,CENTER);text('n',nx2,ny1+1);
+  stroke(120,255,120,80);strokeWeight(3);line(nx1+12,ny1,nx2-12,ny1);stroke(120,255,120,25);strokeWeight(8);line(nx1+12,ny1,nx2-12,ny1);
+  fill(120,255,120,100);noStroke();push();translate(nx1+16,ny1);rotate(PI);triangle(0,0,-7,-3.5,-7,3.5);pop();
+  push();translate(nx2-16,ny1);rotate(0);triangle(0,0,-7,-3.5,-7,3.5);pop();
+  fill(120,255,120,80);textSize(11);textStyle(BOLD);textAlign(CENTER);text('←引力·比电磁力强100倍→',W/4,ny1-6);
+  Bx(-W/2+30,H/2-175,W-60,145);
+  fill(255,220,120,230);textSize(16);textStyle(BOLD);textAlign(LEFT,TOP);text('📐 四种基本相互作用',-W/2+48,H/2-168);
+  let fs=[{n:'强相互作用',c:'#78e078',r:'最强·粘合核子·短程(10⁻¹⁵m)',m:'结合能的根源'},
+    {n:'电磁力',c:'#ff8888',r:'同号相斥·质子间排斥·长程',m:'使重核不稳定'},
+    {n:'弱相互作用',c:'#ffaa44',r:'引起β衰变',m:'控制衰变速度'},
+    {n:'引力',c:'#8888aa',r:'最弱·原子核尺度可忽略',m:'宏观才重要'}];
+  for(let i=0;i<4;i++){let f=fs[i];let yy=H/2-143+i*34;let c=color(f.c);
+    noStroke();fill(red(c),green(c),blue(c),25);rect(-W/2+48,yy,275,28,5);
+    fill(red(c),green(c),blue(c),200);textSize(13);textStyle(BOLD);textAlign(LEFT,CENTER);text(f.n,-W/2+55,yy+14);
+    fill(180,210,255,90);textSize(11);textStyle(NORMAL);text(f.r,-W/2+55+78,yy+14);
+    fill(255,220,120,90);textSize(11);text('→ '+f.m,-W/2+55+78+320,yy+14);}
+  fill(255,255,255,35);textSize(12);textAlign(LEFT,TOP);
+  text('💡 强相互作用 > 电磁斥力 → 核子结合 ·  反之 → 原子核不稳定',-W/2+48,H/2-30);
+  nt('下一页：比结合能 + 平均质量');
+}
+
+// ======== 页2（核心新页）：比结合能 + 平均质量 ========
+function pg2(){
+  T('③ 比结合能 + 平均质量 · 一体两面');
+  S('核子数不同→总结合能不能直接比·引入"每个核子"的平均值',-H/2+48);
+
+  let pr=sin(t*0.3)*0.5+0.5;
+
+  // ---- 上方：三个核的对比表 ----
+  // 先画表头
+  let colX=[-310,-90,130];
+  let cNames=['⁴He','¹²C','⁵⁶Fe'];
+  let cNums=[4,12,56];
+  let cBE=[27.4,92.2,492.8];
+  let cBEPN=[6.85,7.7,8.8];
+  let cMass=[(4.0026/4).toFixed(4),(12.000/12).toFixed(4),(55.935/56).toFixed(4)];
+  let cMassFull=[4.0026,12.000,55.935];
+  let cSumMass=[4.032,12.099,56.498]; // 自由核子总质量近似
+
+  // 表格区域
+  let tblX=-W/2+55,tblY=70,tblW=W-110,tblH=175;
+
+  // 三列标题
+  for(let i=0;i<3;i++){
+    let x=colX[i];
+    noStroke();fill(60,80,160,20);rect(x-60,tblY-20,135,190,8);
+    fill(255,220,120,180);textSize(14);textStyle(BOLD);textAlign(CENTER,TOP);
+    text(cNames[i]+'（'+cNums[i]+'核子）',x+7,tblY-12);
+  }
+
+  // 行：散装总质量
+  let rY=tblY+22;
+  fill(255,220,220,80);textSize(11);textStyle(NORMAL);textAlign(LEFT);text('散装∑m',colX[0]-50,rY);
+  for(let i=0;i<3;i++){fill(255,255,255,70);text(cSumMass[i]+' u',colX[i]-15,rY);}
+
+  // 行：结合后质量
+  rY+=24;
+  fill(180,220,255,80);text('结合后m',colX[0]-50,rY);
+  for(let i=0;i<3;i++){fill(255,255,255,70);text(cMassFull[i]+' u',colX[i]-15,rY);}
+
+  // 行：Δm
+  rY+=24;
+  fill(255,220,120,80);text('质量亏损',colX[0]-50,rY);
+  for(let i=0;i<3;i++){let dm=(cSumMass[i]-cMassFull[i]);fill(255,220,120,120);text(dm.toFixed(4)+' u',colX[i]-15,rY);}
+
+  // 行：总结合能
+  rY+=24;
+  fill(120,220,255,80);text('总结合能',colX[0]-50,rY);
+  for(let i=0;i<3;i++){fill(120,220,255,120);text(cBE[i]+' MeV',colX[i]-15,rY);}
+
+  // ===== 关键行：比结合能 → 向上箭头 =====
+  rY+=26;
+  fill(255,220,120,200);textSize(13);textStyle(BOLD);text('➗ 核子数',colX[0]-50,rY);
+  for(let i=0;i<3;i++){
+    fill(255,220,120,230);textSize(14);textStyle(BOLD);
+    text('= '+cBEPN[i]+' MeV/核子',colX[i]-15,rY);
+  }
+
+  // 比结合能下方 → 箭头指向"平均质量"
+  let arrowY=rY+26;
+  for(let i=0;i<3;i++){
+    stroke(120,255,120,40);strokeWeight(1.5);
+    line(colX[i]+30,arrowY,colX[i]+30,arrowY+24);
+    noStroke();fill(120,255,120,100);textSize(11);textStyle(BOLD);textAlign(CENTER);
+    text('⇅',colX[i]+30,arrowY+28);
+  }
+
+  // ===== 关键行：平均质量 → 向下箭头 =====
+  rY=arrowY+40;
+  fill(120,255,120,200);textSize(13);textStyle(BOLD);text('平均质量/核子',colX[0]-50,rY);
+  for(let i=0;i<3;i++){
+    let col=i===2?color(120,255,120):color(180,210,255);
+    fill(col);textSize(14);textStyle(BOLD);
+    text(cMass[i]+' u',colX[i]-15,rY);
+  }
+
+  // ---- 核心结论 ----
+  let cy1=rY+32;
+  Bx(-W/2+30,cy1,W-60,115);
+  fill(120,255,120,230);textSize(16);textStyle(BOLD);textAlign(LEFT,TOP);
+  text('📐 核心关系 · 一体两面',-W/2+48,cy1+7);
+  fill(200,230,255,180);textSize(14);textStyle(NORMAL);
+  text('自由核子平均质量 ≈ 1.0089 u  →  结合后平均质量降低',-W/2+48,cy1+35);
+  fill(255,220,120,200);textSize(14);
+  text('降低的部分 × c² = 比结合能',-W/2+48,cy1+58);
+  fill(120,255,120,180);textSize(14);
+  text('⁵⁶Fe 平均质量最低 = 0.9988 u/核子 → 比结合能最高 = 8.8 MeV/核子 → 最稳定！',-W/2+48,cy1+84);
+
+  // 质量-能量天平示意
+  let tx=-W/2+48,tyR=cy1+108;
+  fill(255,255,255,20);textSize(10);textAlign(LEFT,TOP);
+  text('平均质量 ↓   ⟶   比结合能 ↑   ⟶   原子核越稳定',tx,tyR);
+
+  nt('下一页：比结合能曲线');
+}
+
+// ======== 页3 ========
+function pg3(){
+  T('④ 比结合能曲线 · 每个核素的"成绩单"');
+  S('比结合能越大 → 核子粘得越紧 → 原子核越稳定',-H/2+48);
+  let gx=-W/2+60,gy=40,gw=W-140,gh=H-185;let mx=gx+50,mx2=gx+gw-25,my=gy+10,my2=gy+gh-20;
+  stroke(100,140,200,50);strokeWeight(1.2);line(mx,my2,mx2,my2);line(mx,my,mx,my2);
+  noStroke();fill(120,160,220,80);textSize(12);textAlign(CENTER,TOP);
+  for(let a=0;a<=250;a+=50){let x=map(a,2,250,mx,mx2);stroke(100,140,200,12);line(x,my,x,my2);noStroke();fill(120,160,220,50);text(a,x,my2+3)}
+  noStroke();fill(120,160,220,80);textSize(12);textAlign(RIGHT,CENTER);
+  for(let e=0;e<=9;e+=1){let y=map(e,0,9,my2,my);stroke(100,140,200,12);line(mx,y,mx2,y);noStroke();fill(120,160,220,50);text(e,mx-6,y)}
+  fill(120,160,220,70);textSize(13);textAlign(CENTER,TOP);text('质量数 A',mx+gw/2-30,my2+8);
+  textAlign(CENTER,BOTTOM);text('比结合能 (MeV/核子)',mx-5,my-6);
+  fill(255,220,120,60);textSize(12);textAlign(CENTER);text('↑稳定',mx+gw*0.35,my-28);fill(255,120,120,60);text('↓不稳定',mx+gw*0.7,my-28);
+
+  let pr=sin(t*0.35)*0.5+0.5;let total=NUCL.length;let show=floor(pr*total);let frac=pr*total-show;
+  for(let i=0;i<min(show,total-1);i++){let d1=NUCL[i],d2=NUCL[i+1];
+    let x1=map(d1[0],2,250,mx,mx2),y1=map(d1[1],0,9,my2,my);
+    let x2=map(d2[0],2,250,mx,mx2),y2=map(d2[1],0,9,my2,my);
+    stroke(80,200,255,200);strokeWeight(3.5);line(x1,y1,x2,y2);stroke(80,200,255,18);strokeWeight(8);line(x1,y1,x2,y2);}
+  if(show<total-1){let d1=NUCL[show],d2=NUCL[min(show+1,total-1)];let x1=map(d1[0],2,250,mx,mx2),y1=map(d1[1],0,9,my2,my);
+    let x2=map(d2[0],2,250,mx,mx2),y2=map(d2[1],0,9,my2,my);let cx=lerp(x1,x2,frac),cy=lerp(y1,y2,frac);
+    noStroke();fill(255,255,255,180);circle(cx,cy,10);fill(80,200,255,80);circle(cx,cy,20);}
+  for(let i=0;i<=show&&i<total;i++){let d=NUCL[i];let x=map(d[0],2,250,mx,mx2),y=map(d[1],0,9,my2,my);
+    noStroke();fill(80,200,255,180);circle(x,y,6);fill(80,200,255,25);circle(x,y,14);
+    if([4,12,16,56,84,208,235,238].includes(d[0])){fill(255,255,255,80);textSize(9);textAlign(CENTER,BOTTOM);noStroke();text(d[2],x,y-9);}}
+  if(pr>0.55){let feX=map(56,2,250,mx,mx2),feY=map(8.8,0,9,my2,my);let p=sin(t*2.5)*0.3+0.7;
+    noStroke();fill(255,220,80,70*p);circle(feX,feY,30*p);fill(255,220,80,200);circle(feX,feY,12);
+    fill(255,220,80,255);textSize(16);textStyle(BOLD);textAlign(CENTER,BOTTOM);text('⁵⁶Fe',feX,feY-14);
+    fill(255,220,80,160);textSize(11);textStyle(NORMAL);textAlign(CENTER,TOP);text('8.8 MeV/核子',feX,feY+16);}
+  if(pr>0.2){fill(255,200,100,30);textSize(13);textStyle(BOLD);textAlign(CENTER);text('聚变区',map(10,2,250,mx,mx2),map(7.5,0,9,my2,my)-15);}
+  if(pr>0.6){fill(120,255,120,30);textSize(13);textStyle(BOLD);text('最稳定区',map(80,2,250,mx,mx2),map(8.5,0,9,my2,my)-15);}
+  if(pr>0.8){fill(255,120,120,30);textSize(13);textStyle(BOLD);text('裂变区',map(220,2,250,mx,mx2),map(7.5,0,9,my2,my)-15);}
+
+  // 曲线下部：平均质量对应
+  noStroke();fill(60,80,160,20);rect(-W/2+30,my2+28,W-60,72,10);
+  fill(120,255,120,180);textSize(14);textStyle(BOLD);textAlign(LEFT,TOP);
+  text('📐 背后是平均质量的变化',-W/2+48,my2+34);
+  fill(180,220,255,170);textSize(13);textStyle(NORMAL);
+  text('曲线上升 = 核子结合越来越紧 = 平均质量越来越低',-W/2+48,my2+58);
+  text('曲线下降 = 电磁斥力开始占优 = 平均质量略有回升',-W/2+48,my2+78);
+  fill(255,255,255,25);textSize(11);
+  text('铁的平均质量最低（0.9988 u/核子），所以比结合能最大（8.8 MeV/核子）',-W/2+48,my2+96);
+  nt('下一页：聚变和裂变');
+}
+
+// ======== 页4 ========
+function pg4(){
+  T('⑤ 聚变与裂变 · 用比结合能曲线"导航"');
+  S('往铁峰方向走 = 比结合能增大 = 平均质量降低 = 释放能量',-H/2+48);
+  let pr=sin(t*0.4)*0.5+0.5;
+  fill(255,200,80,120);textSize(18);textStyle(BOLD);textAlign(CENTER);text('☀ 聚变 · 轻核→中核',-W/4,12);
+  fill(255,200,80,50);textSize(12);textStyle(NORMAL);text('引力>斥力→合并',-W/4,36);
+  let fx=-W/4;let sep=lerp(90,25,pr);
+  drawNuke(fx-sep,95,4,0.7,'²H','#ff5050');drawNuke(fx+sep,95,4,0.7,'³H','#3b82f6');
+  if(pr>0.5){let br=sin((pr-0.5)/0.5*PI)*100+40;
+    noStroke();fill(255,220,80,br);circle(fx,95,90);fill(255,220,80,br*0.4);circle(fx,95,130);
+    drawNuke(fx,95,8,0.9,'⁴He+n','#f59e0b');for(let i=0;i<5;i++){let a=t*1.8+i*PI/2.5;let r=50+sin(t*3+i)*15;fill(255,220,80,50+sin(t+i)*30);noStroke();circle(fx+cos(a)*r,95+sin(a)*r,4);}
+    fill(255,220,80,200);textSize(14);textStyle(BOLD);textAlign(CENTER);text('释放 17.6 MeV',fx+120,100);
+    fill(120,255,120,40);textSize(11);textStyle(BOLD);text('平均质量↓',fx,148);}
+  fill(255,120,120,120);textSize(18);textStyle(BOLD);textAlign(CENTER);text('⚡ 裂变 · 重核→中核',W/4,12);
+  fill(255,120,120,50);textSize(12);textStyle(NORMAL);text('斥力>引力→分裂',W/4,36);
+  let fx2=W/4;drawNuke(fx2,95,6,0.9,'²³⁵U','#a78bfa');
+  let nx=fx2-110+pr*80;let ny=95-25+sin(t*2)*5;
+  noStroke();fill(100,200,255,180);circle(nx,ny,9);fill(255,255,255,220);textSize(9);textStyle(BOLD);textAlign(CENTER,CENTER);text('n',nx,ny+1);
+  if(pr>0.3){let sp=lerp(0,70,(pr-0.3)/0.7);
+    drawNuke(fx2-sp*1.2,95+sin(t)*5,5,0.8,'¹⁴¹Ba','#60a5fa');drawNuke(fx2+sp*1.2,95+cos(t)*5,5,0.8,'⁹²Kr','#60a5fa');
+    for(let i=0;i<3;i++){let a=t*1.5+i*PI*1.5;let r=sp*1.4+15;noStroke();fill(100,200,255,70);circle(fx2+cos(a)*r,95+sin(a)*r,5);}
+    if(pr>0.5){let br=sin((pr-0.5)/0.5*PI)*120;noStroke();fill(255,220,80,br);circle(fx2,95,65);
+      fill(255,220,80,200);textSize(14);textStyle(BOLD);textAlign(CENTER);text('释放 ≈200 MeV',fx2+120,100);
+      fill(120,255,120,40);textSize(11);textStyle(BOLD);text('平均质量↓',fx2,148);}}
+  Bx(-W/2+30,H/2-108,W-60,78);
+  fill(255,220,120,230);textSize(15);textStyle(BOLD);textAlign(LEFT,TOP);text('📐 本质：在比结合能曲线上"往高处走"',-W/2+48,H/2-101);
+  fill(200,230,255,180);textSize(14);textStyle(NORMAL);
+  text('聚变（轻→中）：比结合能↑ 平均质量↓ → E=Δm·c² → 释放能量',-W/2+48,H/2-76);
+  text('裂变（重→中）：比结合能↑ 平均质量↓ → E=Δm·c² → 释放能量',-W/2+48,H/2-52);
+  fill(255,255,255,30);textSize(12);text('两者本质相同：走向"铁峰" = 释放能量',-W/2+48,H/2-28);
+  nt('下一页：实际应用');
+}
+
+function drawNuke(cx,cy,n,sz,label,col){
+  let off=t*0.25;let c=typeof col==='string'?color(col):color(col[0],col[1],col[2]);let rc=[red(c),green(c),blue(c)];
+  for(let i=0;i<n;i++){let a=i*PI*2/n+off;let r=12*sz;let x=cx+cos(a)*r,y=cy+sin(a)*r;
+    fill(rc[0],rc[1],rc[2],10);circle(x,y,18*sz);fill(rc[0],rc[1],rc[2]);circle(x,y,11*sz);fill(255,255,255,40);circle(x-2,y-2,4*sz);}
+  noStroke();fill(rc[0],rc[1],rc[2],5);circle(cx,cy,30*sz);
+  if(label){fill(255,255,255,170);textSize(9);textStyle(BOLD);textAlign(CENTER,TOP);text(label,cx,cy+14*sz+4);}
+}
+
+// ======== 页5 ========
+function pg5(){
+  T('⑥ 实际应用 · 结合能理论能做什么？');
+  S('从核电站到考古，从医学到太空——比结合能无处不在',-H/2+48);
+  let pr=sin(t*0.2)*0.5+0.5;
+  let apps=[
+    {icon:'⚡',t:'核能发电',c:'#78e078',d:'²³⁵U 裂变→链式反应→热能→发电',x:'1kg铀≈2500吨煤。中国核电占比约5%'},
+    {icon:'☀',t:'可控核聚变',c:'#ffdd66',d:'²H+³H 聚变→清洁几乎无限能源',x:'EAST(东方超环)·ITER——原理就是比结合能曲线'},
+    {icon:'🏥',t:'医用同位素',c:'#ff8888',d:'利用衰变射线诊断治疗',x:'PET-CT(¹⁸F)·放疗(⁶⁰Co)·甲状腺治疗(¹³¹I)'},
+    {icon:'🔬',t:'C14测年法',c:'#88bbff',d:'¹⁴C的β衰变→测定文物年代',x:'5730年半衰期。考古学核心工具'},
+    {icon:'💥',t:'核武器',c:'#ff6644',d:'原子弹(裂变)+氢弹(聚变)',x:'理解结合能就懂了"为什么威力这么大"'},
+  ];
+  let showN=floor(pr*apps.length);let cw=310,ch=118,gapX=20,gapY=16,cols=3;
+  let sx=-W/2+45,sy=-45;
+  for(let i=0;i<=showN&&i<apps.length;i++){
+    let a=apps[i];let col=i%cols;let row=floor(i/cols);let x=sx+col*(cw+gapX);let y=sy+row*(ch+gapY);
+    let c=color(a.c);
+    noStroke();fill(red(c),green(c),blue(c),8);rect(x,y,cw,ch,8);fill(red(c),green(c),blue(c),18);rect(x,y,cw,26,8,8,0,0);
+    fill(red(c),green(c),blue(c),170);textSize(20);textStyle(BOLD);textAlign(LEFT,CENTER);text(a.icon,x+10,y+13);
+    fill(255,255,255,190);textSize(13);textStyle(BOLD);textAlign(LEFT,CENTER);text(a.t,x+36,y+13);
+    fill(180,210,255,160);textSize(11);textStyle(NORMAL);textAlign(LEFT);text(a.d,x+10,y+46);
+    fill(180,210,255,50);textSize(10);text(a.x,x+10,y+70);
+  }
+  Bx(-W/2+30,H/2-88,W-60,60);
+  fill(255,220,120,230);textSize(15);textStyle(BOLD);textAlign(LEFT,TOP);text('📐 整条逻辑链',-W/2+48,H/2-81);
+  fill(180,230,255,160);textSize(12);textStyle(NORMAL);
+  text('质量亏损 → E=mc² → 结合能 ÷ 核子数 = 比结合能 → 平均质量降低 = 比结合能增大',-W/2+48,H/2-57);
+  text('→ 比结合能曲线(铁峰最高) → 聚变/裂变都往铁峰走 → 释放能量 → 核能应用',-W/2+48,H/2-38);
+  fill(255,255,255,25);textSize(11);text('1u=931.5MeV/c²  ·  E=Δm·c²  ·  平均质量越低→比结合能越大→核越稳定',-W/2+48,H/2-18);
+}
+</script>
+</body>
+</html>
