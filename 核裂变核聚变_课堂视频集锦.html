@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>核裂变与核聚变 · 课堂视频集锦</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#0a0a1a;color:#e0e0e0;min-height:100vh;
+  }
+  header{
+    background:linear-gradient(135deg,#0d0d2b 0%,#1a0a2e 50%,#0f1a2e 100%);
+    padding:36px 20px 28px;text-align:center;
+    border-bottom:1px solid rgba(255,107,53,0.2);
+    position:relative;overflow:hidden;
+  }
+  header::before{
+    content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+    width:300px;height:300px;
+    background:radial-gradient(circle,rgba(255,107,53,0.08) 0%,transparent 70%);
+    border-radius:50%;
+  }
+  header h1{font-size:2em;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;position:relative}
+  header p{color:#8899aa;margin-top:6px;font-size:.9em;position:relative}
+  header p span{color:#fb7299}
+  .nav-bar{
+    display:flex;gap:4px;padding:10px 16px;background:#12122a;
+    overflow-x:auto;position:sticky;top:0;z-index:100;
+    border-bottom:1px solid rgba(255,255,255,0.05);
+    -webkit-overflow-scrolling:touch;
+  }
+  .nav-btn{
+    flex-shrink:0;padding:7px 16px;border-radius:16px;border:1px solid #2a2a45;
+    background:transparent;color:#889;cursor:pointer;font-size:.82em;
+    transition:all .2s;white-space:nowrap;
+  }
+  .nav-btn:hover,.nav-btn.active{color:#fff}
+  .nav-btn.active{
+    background:linear-gradient(135deg,#ff6b35,#fb7299);border-color:transparent;
+    box-shadow:0 2px 12px rgba(255,107,53,0.3);
+  }
+  .container{max-width:1100px;margin:0 auto;padding:20px 16px 60px}
+  .section{display:none}.section.active{display:block}
+  .section-title{font-size:1.2em;margin-bottom:6px;padding-left:12px;border-left:4px solid #ff6b35}
+  .section-title .tagline{font-size:.65em;color:#667;font-weight:normal;margin-left:8px}
+  .section-intro{color:#667;font-size:.82em;margin-bottom:16px;padding-left:16px;line-height:1.6}
+  .video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+  .card{
+    background:#161632;border-radius:10px;padding:14px;
+    border:1px solid #252545;transition:all .2s;
+    display:flex;flex-direction:column;
+  }
+  .card:hover{border-color:#fb7299;transform:translateY(-2px);box-shadow:0 6px 20px rgba(251,114,153,0.08)}
+  .card .tag{
+    display:inline-block;font-size:.7em;padding:2px 10px;border-radius:3px;
+    margin-bottom:6px;align-self:flex-start;font-weight:500;
+  }
+  .tag.core{background:rgba(255,107,53,.2);color:#ff6b35}
+  .tag.hot{background:rgba(251,114,153,.2);color:#fb7299}
+  .tag.app{background:rgba(20,184,166,.2);color:#14b8a6}
+  .tag.warn{background:rgba(251,133,181,.15);color:#fb8585}
+  .tag.history{background:rgba(110,168,254,.2);color:#6ea8fe}
+  .card a{
+    color:#ddd;text-decoration:none;font-size:.92em;line-height:1.5;flex:1;
+  }
+  .card a:hover{color:#fb7299}
+  .card .meta{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:8px;font-size:.75em;color:#556;
+    border-top:1px solid #222240;padding-top:8px;
+  }
+  .card .meta .author{color:#8899aa}
+  .card .meta .plays{color:#ffd700}
+  .card .desc{font-size:.78em;color:#667;margin-top:4px;line-height:1.4}
+  .topic-banner{
+    background:linear-gradient(135deg,#1a1a35,#0d0d2b);border-radius:10px;
+    padding:14px 18px;margin-bottom:16px;border:1px solid #2a2a45;
+  }
+  .topic-banner .qs{font-size:.85em;color:#8899aa;line-height:1.6}
+  .topic-banner .qs strong{color:#ffd700}
+  footer{text-align:center;padding:20px;color:#334;font-size:.75em;border-top:1px solid #1a1a35}
+  @media(max-width:600px){
+    header h1{font-size:1.3em}
+    .video-grid{grid-template-columns:1fr}
+    .nav-btn{padding:5px 12px;font-size:.78em}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>☢ 核裂变 &amp; 核聚变</h1>
+  <p>B站精选 · 课堂视频集锦 · 从原理到应用</p>
+</header>
+
+<div class="nav-bar" id="navBar">
+  <button class="nav-btn active" data-sec="all">🏠 全部</button>
+  <button class="nav-btn" data-sec="textbook">📖 教材同步</button>
+  <button class="nav-btn" data-sec="fission">⚡ 核裂变</button>
+  <button class="nav-btn" data-sec="fusion">☀️ 核聚变</button>
+  <button class="nav-btn" data-sec="weapon">💣 核武器</button>
+  <button class="nav-btn" data-sec="power">🏭 核电站</button>
+  <button class="nav-btn" data-sec="life">🔬 生活应用</button>
+</div>
+
+<div class="container">
+
+<!-- ========== 全部 ========== -->
+<div class="section active" id="sec-all">
+  <div class="section-title">全部视频 <span class="tagline">共25个，按上课逻辑排列</span></div>
+  <div class="section-intro">
+    从<b style="color:#ffd700">教材考点</b>出发，经<b style="color:#fb7299">裂变/聚变原理</b>，到<b style="color:#ff6b35">核武器</b>和<b style="color:#14b8a6">生活应用</b>，符合课堂讲学逻辑。
+  </div>
+  <div class="video-grid" id="allGrid"></div>
+</div>
+
+<!-- ========== 教材同步 ========== -->
+<div class="section" id="sec-textbook">
+  <div class="section-title">📖 教材同步 <span class="tagline">对应高中物理选择性必修三</span></div>
+  <div class="section-intro">最贴近教材考点的视频，适合课堂播放和学生自学，按知识点顺序排列。</div>
+  <div class="video-grid" id="textbookGrid"></div>
+</div>
+
+<!-- ========== 核裂变 ========== -->
+<div class="section" id="sec-fission">
+  <div class="section-title">⚡ 核裂变 <span class="tagline">链式反应 · 能量释放</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 1g 铀-235 裂变释放的能量 = 2.5吨标准煤。是什么让原子核"分裂"时爆发出如此巨大的能量？<br>
+      <strong>👉 看视频找答案：</strong> 链式反应如何持续？为什么用铀-235？裂变产物是什么？
+    </div>
+  </div>
+  <div class="video-grid" id="fissionGrid"></div>
+</div>
+
+<!-- ========== 核聚变 ========== -->
+<div class="section" id="sec-fusion">
+  <div class="section-title">☀️ 核聚变 <span class="tagline">太阳的能量来源</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 太阳每秒消耗 6.2亿吨 氢，释放的能量相当于 910亿颗 百万吨级原子弹。为什么我们还没造出"人造太阳"？<br>
+      <strong>👉 看视频找答案：</strong> 聚变需要什么条件？托卡马克是什么？为什么聚变比裂变更难实现？
+    </div>
+  </div>
+  <div class="video-grid" id="fusionGrid"></div>
+</div>
+
+<!-- ========== 核武器 ========== -->
+<div class="section" id="sec-weapon">
+  <div class="section-title">💣 核武器 <span class="tagline">裂变弹 · 聚变弹 · 威力与毁伤</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 原子弹用裂变，氢弹用聚变。氢弹的威力为什么可以做到原子弹的 千倍以上？<br>
+      <strong>👉 看视频找答案：</strong> "氢弹"里为什么先装一颗原子弹？核武器的毁伤范围到底有多大？
+    </div>
+  </div>
+  <div class="video-grid" id="weaponGrid"></div>
+</div>
+
+<!-- ========== 核电站 ========== -->
+<div class="section" id="sec-power">
+  <div class="section-title">🏭 核电站 <span class="tagline">核能 → 热能 → 机械能 → 电能</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 核电站本质上也是"烧开水"？那和火电站有什么区别？<br>
+      <strong>👉 看视频找答案：</strong> 反应堆如何控制链式反应速度？核废料怎么处理？中国核电安全吗？
+    </div>
+  </div>
+  <div class="video-grid" id="powerGrid"></div>
+</div>
+
+<!-- ========== 生活中的应用 ========== -->
+<div class="section" id="sec-life">
+  <div class="section-title">🔬 生活中的核应用 <span class="tagline">核医学 · 辐照 · 测年 · 更多</span></div>
+  <div class="topic-banner">
+    <div class="qs">
+      <strong>❓ 课堂引入：</strong> 除了发电和造炸弹，核技术还悄悄渗透在医疗、考古、农业中——你知道吗？<br>
+      <strong>👉 看视频找答案：</strong> 碳-14如何测出千年文物的年龄？辐照过的食物有辐射吗？PET-CT是什么原理？
+    </div>
+  </div>
+  <div class="video-grid" id="lifeGrid"></div>
+</div>
+
+<footer>B站链接以 b23.tv 短链形式提供，手机点开即看 ｜ 课堂视频集锦 ｜ 点击标题跳转B站</footer>
+</div>
+
+<script>
+const videos = [
+  // ===== 教材同步 =====
+  {bvid:"BV11A411q77s", title:"大宽物理《3.4 核裂变和核聚变》", author:"大宽物理", plays:"12.6万", section:"textbook", tag:"⭐ 必看", tagType:"core", desc:"5分钟精讲，直接对应教材考点"},
+  {bvid:"BV1b7411R7fa", title:"陈老师敲黑板《核裂变与核聚变》", author:"陈老师敲黑板", plays:"7.3万", section:"textbook", tag:"📖 考点", tagType:"core", desc:"板书+讲解，系统梳理考点"},
+  {bvid:"BV12sNmzuELv", title:"不对称的楷开《原子核全章梳理》", author:"不对称的楷开", plays:"2.2万", section:"textbook", tag:"📖 梳理", tagType:"core", desc:"核力→结合能→裂变聚变一口气讲完"},
+  {bvid:"BV1ut4y1U7TP", title:"司机托夫斯基《核裂变核聚变原理（双语）》", author:"司机托夫斯基", plays:"5.3万", section:"textbook", tag:"🌐 双语", tagType:"core", desc:"中英字幕，双语教学参考"},
+  {bvid:"BV1zY4y1b7mq", title:"物理老周《选择性必修三5.3-5.5》", author:"物理老周", plays:"2.3万", section:"textbook", tag:"📖 全章", tagType:"core", desc:"核力→核能→裂变→聚变→基本粒子完整讲解"},
+
+  // ===== 核裂变 =====
+  {bvid:"BV1z84y1S7pN", title:"科普创世纪《核裂变和核聚变的原理》", author:"科普创世纪", plays:"8.8万", section:"fission", tag:"🎬 动画", tagType:"core", desc:"逐帧动画，微观过程直观易懂"},
+  {bvid:"BV1XY411d7iJ", title:"一起来UP《核裂变——巨大的能量来源》", author:"一起来UP", plays:"2.5万", section:"fission", tag:"🎬 高中动画", tagType:"core", desc:"高中物理动画系列，适合课堂播放"},
+  {bvid:"BV1VjQ2BSE1k", title:"丑豆妈《核裂变是如何被发现的？》", author:"讲科普的丑豆妈", plays:"3000", section:"fission", tag:"📜 科学史", tagType:"history", desc:"慢中子/铀核裂变/链式反应发现史"},
+  {bvid:"BV16wGS6MEtt", title:"拜托土豆《怎么造原子弹！链式反应》", author:"拜托土豆", plays:"2600", section:"fission", tag:"💣 引子", tagType:"warn", desc:"链式反应原理、核电站反应堆工作原理"},
+
+  // ===== 核聚变 =====
+  {bvid:"BV1NM9YBvE1Z", title:"新石器公园《可控核聚变真要实现了？三重积》", author:"新石器公园", plays:"111万", section:"fusion", tag:"🔥 百万播放", tagType:"hot", desc:"用聚变三重积讲清聚变门槛，逻辑极强"},
+  {bvid:"BV1Mg411Q7qb", title:"新华社《人造太阳——托卡马克装置》", author:"新华社", plays:"79万", section:"fusion", tag:"🔥 官方", tagType:"hot", desc:"EAST全超导托卡马克装置实拍+原理"},
+  {bvid:"BV1KR4y1g7tv", title:"新石器公园《激光惯性约束核聚变》", author:"新石器公园", plays:"28万", section:"fusion", tag:"🔬 前沿", tagType:"hot", desc:"NIF点火原理，可控核聚变系列"},
+  {bvid:"BV1Qj411V7oi", title:"集智说《什么是核聚变？专业详解》", author:"集智说", plays:"24万", section:"fusion", tag:"🎓 深度", tagType:"core", desc:"从物理原理到工程需求，完整讲解"},
+  {bvid:"BV1judBY2EF6", title:"胖虎说科普《可控核聚变的工作原理》", author:"胖虎说科普", plays:"7.4万", section:"fusion", tag:"🎬 3D", tagType:"core", desc:"3D动画演示聚变工作原理"},
+  {bvid:"BV14dxDzMEJW", title:"上将王司徒《可控核聚变发电，还是只能烧开水》", author:"上将王司徒", plays:"102万", section:"fusion", tag:"🔥 百万", tagType:"hot", desc:"聚变发电也逃不过烧开水？有趣角度"},
+
+  // ===== 核武器 =====
+  {bvid:"BV166whzVE5o", title:"《原子弹和氢弹的原理》", author:"缺赞", plays:"8.4万", section:"weapon", tag:"💣 原理", tagType:"core", desc:"裂变弹与聚变弹的结构对比"},
+  {bvid:"BV1Vs4y1p7zV", title:"NONO频道《氢弹的工作原理》", author:"NONO频道", plays:"25.8万", section:"weapon", tag:"🔥 热门", tagType:"hot", desc:"氢弹构型与工作原理详解"},
+  {bvid:"BV1xf4y167Z5", title:"爱较真的戴老师《如何制造一颗氢弹？》", author:"爱较真的戴老师", plays:"75万", section:"weapon", tag:"🔥 热门", tagType:"hot", desc:"氢弹的T-U构型与聚变点火过程"},
+  {bvid:"BV1pzRFYUEZ6", title:"《现代核武器的真正威力》", author:"尽整没用的", plays:"143万", section:"weapon", tag:"🔥🔥 顶流", tagType:"hot", desc:"核爆毁伤范围真实模拟"},
+  {bvid:"BV1ZNjHzjEND", title:"《一口气看完广岛长崎原子弹全过程》", author:"松猫来了", plays:"23.5万", section:"weapon", tag:"📜 历史", tagType:"history", desc:"广岛·长崎原子弹爆炸历史回顾"},
+
+  // ===== 核电站 =====
+  {bvid:"BV1sH4y1B7F7", title:"科普创世纪《核电站的工作原理》", author:"科普创世纪", plays:"11.3万", section:"power", tag:"🎬 动画", tagType:"core", desc:"从核裂变到发电的完整流程动画"},
+  {bvid:"BV1rR4y1T72e", title:"《核电站的工作原理，全网最详细》", author:"机电原理", plays:"10万", section:"power", tag:"🎓 深度", tagType:"core", desc:"反应堆堆芯、控制棒、冷却系统详解"},
+  {bvid:"BV1FGApzsE6m", title:"知理科普《核电站就是高级烧开水》", author:"知理科普", plays:"2.9万", section:"power", tag:"🔥 有趣", tagType:"app", desc:"类比法讲核电站工作原理"},
+  {bvid:"BV1MM4y1y7Ru", title:"科学探照灯《核能发电的原理是什么》", author:"科学探照灯", plays:"5.6万", section:"power", tag:"🔬 解析", tagType:"core", desc:"核电站发电原理与安全机制"},
+
+  // ===== 生活应用 =====
+  {bvid:"BV1mK4y1U7HT", title:"《核技术应用，你身边有哪些？》", author:"弓长小二郎", plays:"2581", section:"life", tag:"🔬 入门", tagType:"app", desc:"核技术在医疗、农业、考古中的应用概览"},
+  {bvid:"BV1Nj411b75T", title:"《两分钟讲清楚碳14测年》", author:"至止穆穆", plays:"3.7万", section:"life", tag:"⏳ 考古", tagType:"app", desc:"C14测年原理，2分钟讲清"},
+  {bvid:"BV19fwVeoEnY", title:"《食品辐照保鲜技术》", author:"崆峒岛练气士", plays:"494", section:"life", tag:"🍎 农业", tagType:"app", desc:"辐照杀菌保鲜——你吃过的某些食品可能辐照过"},
+  {bvid:"BV1egwMzvEyd", title:"中核集团《一分钟了解核能》", author:"中核集团", plays:"1.9万", section:"life", tag:"🏢 官方", tagType:"app", desc:"核能科普，来自中核集团的官方讲解"},
+];
+
+// ===== Render =====
+function renderCards(list, gridId) {
+  const g = document.getElementById(gridId);
+  g.innerHTML = list.map(v => {
+    const url = `https://b23.tv/${v.bvid}`;
+    const tagCls = v.tagType || 'core';
+    return `<div class="card">
+      <span class="tag ${tagCls}">${v.tag || '🎬'}</span>
+      <a href="${url}" target="_blank" title="点我看视频">${v.title}</a>
+      <div class="desc">${v.desc || ''}</div>
+      <div class="meta">
+        <span class="author">👤 ${v.author}</span>
+        <span class="plays">▶ ${v.plays}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Render all sections
+renderCards(videos, 'allGrid');
+renderCards(videos.filter(v=>v.section==='textbook'), 'textbookGrid');
+renderCards(videos.filter(v=>v.section==='fission'), 'fissionGrid');
+renderCards(videos.filter(v=>v.section==='fusion'), 'fusionGrid');
+renderCards(videos.filter(v=>v.section==='weapon'), 'weaponGrid');
+renderCards(videos.filter(v=>v.section==='power'), 'powerGrid');
+renderCards(videos.filter(v=>v.section==='life'), 'lifeGrid');
+
+// ===== Navigation =====
+document.getElementById('navBar').addEventListener('click', e => {
+  const btn = e.target.closest('.nav-btn');
+  if (!btn) return;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+btn.dataset.sec).classList.add('active');
+});
+</script>
+</body>
+</html>
