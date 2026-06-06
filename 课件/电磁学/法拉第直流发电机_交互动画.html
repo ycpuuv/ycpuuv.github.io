@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>法拉第直流发电机 (全自适应终极版)</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #ffffff; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; color: #333; }
+        
+        #error-box {
+            display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(200, 0, 0, 0.95); color: white; padding: 20px;
+            border: 1px solid white; border-radius: 8px; z-index: 9999; max-width: 80%;
+            box-shadow: 0 0 30px rgba(255,0,0,0.6);
+        }
+
+        #container { width: 100vw; height: 100vh; display: block; }
+
+        #main-header {
+            position: absolute; top: 20px; left: 30px; z-index: 50; pointer-events: none;
+        }
+        #main-header h1 {
+            margin: 0; font-size: 42px; font-weight: 800; color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(255,255,255,0.8); letter-spacing: 2px;
+        }
+
+        #ui-panel {
+            position: absolute; top: 0; right: 0;
+            width: 500px; height: 100%;
+            background: rgba(248, 249, 250, 0.98);
+            color: #333; padding: 30px;
+            box-sizing: border-box; border-left: 1px solid #ccc;
+            display: flex; flex-direction: column; gap: 20px; 
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1); z-index: 100;
+        }
+
+        h2 { margin: 0 0 10px 0; font-size: 28px; color: #0056b3; border-bottom: 2px solid #ddd; padding-bottom: 15px; }
+        .desc-text { font-size: 16px; color: #555; line-height: 1.6; margin-bottom: 10px; }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 10px; font-size: 18px; font-weight: 500; color: #444; }
+        input[type="range"] { width: 100%; cursor: pointer; height: 8px; -webkit-appearance: none; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 24px; width: 24px; border-radius: 50%; background: #007bff; cursor: pointer; margin-top: -10px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 6px; cursor: pointer; background: #ddd; border-radius: 3px; }
+        .val-display { float: right; color: #0056b3; font-weight: bold; font-size: 20px; }
+
+        .btn-group { display: flex; gap: 15px; margin-top: 10px; margin-bottom: 20px; }
+        button { 
+            flex: 1; padding: 15px; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; font-size: 18px; 
+            transition: 0.2s; color:white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        #btn-start { background-color: #28a745; }
+        #btn-pause { background-color: #ffc107; color: #333; }
+        #btn-reset { background-color: #dc3545; }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); filter: brightness(1.05); }
+
+        #chart-wrapper {
+            margin-top: auto; width: 100%; height: 300px;
+            background: rgba(255, 255, 255, 1);
+            border: 1px solid #ccc; border-radius: 12px; padding: 15px;
+            box-sizing: border-box; display: flex; flex-direction: column;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+        }
+        canvas { width: 100% !important; height: 100% !important; }
+    </style>
+</head>
+<body>
+
+    <div id="error-box">
+        <h3>程序运行出错</h3>
+        <div id="error-msg" style="font-family: monospace; background: #330000; padding: 10px; margin-top:10px;"></div>
+    </div>
+
+    <header id="main-header">
+        <h1>法拉第直流发电机</h1>
+    </header>
+
+    <div id="container"></div>
+
+    <div id="ui-panel">
+        <h2>控制面板</h2>
+        <div class="desc-text">
+            原理演示：闭合电路的一部分导体在磁场中做切割磁感线运动时，导体中就产生电流。<br>
+            <span style="color:#d9534f; font-size:14px;">* 圆盘上的红色标记可辅助观察旋转方向。</span>
+        </div>
+
+        <div class="control-group">
+            <label>转速 (ω) <span id="val-speed" class="val-display">5.0</span></label>
+            <input type="range" id="input-speed" min="-20" max="20" step="0.5" value="5">
+        </div>
+        <div class="control-group">
+            <label>磁场强度 (B) <span id="val-magnet" class="val-display">1.0</span></label>
+            <input type="range" id="input-magnet" min="0" max="5" step="0.1" value="1">
+        </div>
+        <div class="btn-group">
+            <button id="btn-start">开始</button>
+            <button id="btn-pause">暂停</button>
+            <button id="btn-reset">还原</button>
+        </div>
+
+        <div id="chart-wrapper">
+            <div style="color:#666; font-size:14px; font-weight:bold; text-align:center; margin-bottom:10px;">:: 感应电动势 (V) 实时监控 ::</div>
+            <canvas id="voltageChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        window.onerror = function(message, source, lineno) {
+            document.getElementById('error-box').style.display = 'block';
+            document.getElementById('error-msg').innerHTML = "错误: " + message + "<br>行号: " + lineno;
+        };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        if (typeof THREE === 'undefined') {
+            document.getElementById('error-msg').innerText = "Three.js 加载失败，请检查网络连接";
+            document.getElementById('error-box').style.display = 'block';
+        }
+
+        let scene, camera, renderer, controls;
+        let discMesh, loadMesh, bulbLight;
+        let isRunning = true;
+        let physicsSpeed = 5.0;
+        let magneticField = 1.0;
+        let time = 0;
+        let voltageChart;
+        
+        const maxDataPoints = 60; 
+        const initialData = Array(maxDataPoints).fill(0);
+        const initialLabels = Array(maxDataPoints).fill('');
+
+        // 基础视角参数
+        const PANEL_WIDTH = 500; // 右侧面板宽度
+        const MODEL_SAFE_WIDTH = 16; // 模型大概的物理宽度 (预留空间)
+        
+        initThree();
+        initModel();
+        document.addEventListener('DOMContentLoaded', () => { initChart(); });
+        initEvents();
+        animate();
+
+        function initThree() {
+            const container = document.getElementById('container');
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xffffff);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            if (THREE.OrbitControls) controls = new THREE.OrbitControls(camera, renderer.domElement);
+            if (controls) { 
+                controls.enableDamping = true; 
+                controls.dampingFactor = 0.05;
+            }
+
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.2); 
+            scene.add(ambientLight);
+            
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+            dirLight.position.set(5, 10, 5);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            const grid = new THREE.GridHelper(100, 100, 0xcccccc, 0xeeeeee);
+            grid.position.y = -4;
+            scene.add(grid);
+
+            // 初始化相机位置
+            updateCameraPosition();
+        }
+
+        // 【核心算法】动态计算相机位置，确保模型在剩余空间居中且完整
+        function updateCameraPosition() {
+            if (!camera || !controls) return;
+
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            
+            // 1. 计算剩余的“安全显示区域”宽度
+            // 至少保留 300px，防止面板占满屏幕时出错
+            const availableWidth = Math.max(w - PANEL_WIDTH, 300);
+            
+            // 2. 计算需要的相机距离 (Z轴)
+            // 目标：让 MODEL_SAFE_WIDTH (16单位) 能够完整显示在 availableWidth 中
+            // 公式：visibleWidth = 2 * dist * tan(fov/2) * aspect
+            // aspect 这里要用 availableWidth / h
+            const fovRad = camera.fov * Math.PI / 180;
+            const aspect = availableWidth / h;
+            
+            // 计算刚好能放下模型所需的距离
+            let requiredDist = MODEL_SAFE_WIDTH / (2 * Math.tan(fovRad / 2) * aspect);
+            
+            // 限制最小距离为 14，防止太近；如果屏幕窄，requiredDist 会自动变大，拉远相机
+            const finalDist = Math.max(requiredDist, 14);
+
+            // 3. 计算 X 轴偏移量 (居中校正)
+            // 屏幕中心在 w/2，但我们希望模型显示在 availableWidth/2 的位置
+            // 偏移量 = (w/2) - (availableWidth/2) = PANEL_WIDTH / 2
+            // 这个偏移量是像素值，需要转换成世界坐标单位
+            const pixelOffset = PANEL_WIDTH / 2;
+            
+            // 在 finalDist 距离下，屏幕高度对应的世界高度
+            const visibleHeight = 2 * finalDist * Math.tan(fovRad / 2);
+            // 像素到世界单位的比例
+            const worldUnitPerPixel = visibleHeight / h;
+            
+            // 计算出相机需要向右移动多少，才能让原点看起来在左侧中心
+            const worldXOffset = pixelOffset * worldUnitPerPixel;
+
+            // 4. 应用位置
+            // 相机位置：X偏移 + 稍微侧视的角度(8)，Y高度(9)，Z距离
+            camera.position.set(worldXOffset + 8, 9, finalDist);
+            
+            // 控制器目标：必须也向右偏移，这样旋转中心才是视觉上的中心
+            controls.target.set(worldXOffset, 0, 0);
+            
+            camera.updateProjectionMatrix();
+        }
+
+        function createCopperTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512;
+            canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#b87333';
+            ctx.fillRect(0, 0, 512, 512);
+            for (let i = 0; i < 800; i++) {
+                ctx.fillStyle = Math.random() > 0.5 ? '#a05a2c' : '#cd853f';
+                ctx.fillRect(Math.random() * 512, Math.random() * 512, 3, 3);
+            }
+            ctx.strokeStyle = '#8B4513';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            const centerX = 256;
+            const centerY = 256;
+            const radius = 250;
+            ctx.arc(centerX, centerY, 150, 0, Math.PI * 2);
+            ctx.stroke();
+            for (let i = 0; i < 12; i++) {
+                const angle = (i / 12) * Math.PI * 2;
+                ctx.moveTo(centerX, centerY);
+                let len = radius * (0.8 + Math.random()*0.2);
+                ctx.lineTo(centerX + Math.cos(angle) * len, centerY + Math.sin(angle) * len);
+            }
+            ctx.stroke();
+            
+            ctx.fillStyle = "rgba(0,0,0,0.3)";
+            ctx.font = "40px Arial";
+            ctx.fillText("Faraday", 300, 300);
+
+            const gradient = ctx.createRadialGradient(256, 256, 200, 256, 256, 256);
+            gradient.addColorStop(0, 'rgba(0,0,0,0)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.3)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0,0,512,512);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function initModel() {
+            const copperTexture = createCopperTexture();
+            const copperMat = new THREE.MeshStandardMaterial({ map: copperTexture, color: 0xffffff, metalness: 0.6, roughness: 0.4 });
+            const plasticMat = new THREE.MeshLambertMaterial({ color: 0x333333 });
+            const magnetRed = new THREE.MeshStandardMaterial({ color: 0xcc0000, transparent: true, opacity: 0.9 });
+            const magnetBlue = new THREE.MeshStandardMaterial({ color: 0x0000cc, transparent: true, opacity: 0.4 });
+            const blackMat = new THREE.MeshBasicMaterial({ color: 0x000000 }); 
+            const markerMat = new THREE.MeshBasicMaterial({ color: 0xff0000 }); 
+
+            // 不再使用偏移组，直接在原点构建
+            const group = new THREE.Group();
+            group.position.set(0, 0, 0); 
+            scene.add(group);
+
+            // 1. 圆盘
+            discMesh = new THREE.Mesh(new THREE.CylinderGeometry(4, 4, 0.2, 64), copperMat);
+            discMesh.rotation.x = Math.PI / 2;
+            discMesh.castShadow = true;
+            group.add(discMesh);
+
+            const marker = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.3), markerMat);
+            marker.position.set(3.0, 0.15, 0); 
+            discMesh.add(marker);
+
+            // 2. 辐条
+            const numSpokes = 8;
+            const spokeGeo = new THREE.BoxGeometry(3.9, 0.15, 0.05); 
+            for (let i = 0; i < numSpokes; i++) {
+                const spoke = new THREE.Mesh(spokeGeo, blackMat);
+                const angle = (i / numSpokes) * Math.PI * 2;
+                spoke.rotation.y = angle; 
+                spoke.position.z = 0.11; 
+                discMesh.add(spoke); 
+                const spokeBack = new THREE.Mesh(spokeGeo, blackMat);
+                spokeBack.rotation.y = angle;
+                spokeBack.position.z = -0.11;
+                discMesh.add(spokeBack);
+            }
+            
+            const centerCap = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.25, 32), plasticMat);
+            centerCap.rotation.x = Math.PI/2;
+            group.add(centerCap);
+
+            // 3. 磁铁
+            const magGeo = new THREE.BoxGeometry(5, 5, 1);
+            const mBack = new THREE.Mesh(magGeo, magnetRed);
+            mBack.position.set(0, 0, -3.0);
+            group.add(mBack);
+            const mFront = new THREE.Mesh(magGeo, magnetBlue);
+            mFront.position.set(0, 0, 3.0);
+            group.add(mFront);
+
+            // 4. 支架
+            const base = new THREE.Mesh(new THREE.BoxGeometry(4, 1, 10), plasticMat);
+            base.position.set(0, -4.5, 0);
+            group.add(base);
+            const pillarGeo = new THREE.BoxGeometry(1, 4.5, 1);
+            const p1 = new THREE.Mesh(pillarGeo, plasticMat); p1.position.set(0, -2.25, -4.5); group.add(p1);
+            const p2 = new THREE.Mesh(pillarGeo, plasticMat); p2.position.set(0, -2.25, 4.5); group.add(p2);
+
+            // 5. 电路
+            const brush = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 1), plasticMat);
+            brush.position.set(0, 4.2, 0);
+            group.add(brush);
+
+            const wirePoints = [
+                new THREE.Vector3(0, 0, 0.2),
+                new THREE.Vector3(0, 0, 3.5),
+                new THREE.Vector3(4.0, 0, 3.5),
+                new THREE.Vector3(4.0, 4.5, 3.5),
+                new THREE.Vector3(0, 4.5, 0)
+            ];
+            const wireGeo = new THREE.BufferGeometry().setFromPoints(wirePoints);
+            const wire = new THREE.Line(wireGeo, new THREE.LineBasicMaterial({ color: 0xcccc00, linewidth: 2 }));
+            group.add(wire);
+
+            const bulbGeo = new THREE.SphereGeometry(0.6, 32, 32);
+            const bulbMat = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x000000, emissiveIntensity: 0.0, roughness: 0.2 });
+            loadMesh = new THREE.Mesh(bulbGeo, bulbMat);
+            loadMesh.position.set(4.0, 2.5, 3.5);
+            group.add(loadMesh);
+
+            bulbLight = new THREE.PointLight(0xffaa00, 0, 15);
+            loadMesh.add(bulbLight);
+        }
+
+        function initChart() {
+            if (typeof Chart === 'undefined') return;
+            const ctx = document.getElementById('voltageChart').getContext('2d');
+            
+            if (voltageChart) voltageChart.destroy();
+
+            voltageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [...initialLabels],
+                    datasets: [{
+                        label: '感应电动势 (E)',
+                        borderColor: '#007bff',
+                        borderWidth: 3,
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)',
+                        fill: true,
+                        data: [...initialData],
+                        pointRadius: 0,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    animation: false, 
+                    interaction: { mode: 'none' },
+                    scales: {
+                        y: { 
+                            suggestedMin: -10, suggestedMax: 10, 
+                            grid: { color: '#eee' }, 
+                            ticks: { color: '#666', font: { size: 14 } } 
+                        },
+                        x: { display: false }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function initEvents() {
+            document.getElementById('input-speed').oninput = (e) => { 
+                physicsSpeed = parseFloat(e.target.value); 
+                document.getElementById('val-speed').innerText = physicsSpeed.toFixed(1);
+            };
+            document.getElementById('input-magnet').oninput = (e) => {
+                magneticField = parseFloat(e.target.value);
+                document.getElementById('val-magnet').innerText = magneticField.toFixed(1);
+            };
+            document.getElementById('btn-pause').onclick = () => isRunning = false;
+            document.getElementById('btn-start').onclick = () => isRunning = true;
+            document.getElementById('btn-reset').onclick = () => { 
+                isRunning = false; physicsSpeed=5; magneticField=1;
+                document.getElementById('input-speed').value=5;
+                document.getElementById('val-speed').innerText="5.0";
+                document.getElementById('input-magnet').value=1;
+                document.getElementById('val-magnet').innerText="1.0";
+                discMesh.rotation.y = 0;
+                if(voltageChart) {
+                    voltageChart.data.datasets[0].data = Array(maxDataPoints).fill(0);
+                    voltageChart.update();
+                }
+            };
+            
+            window.onresize = () => {
+                camera.aspect = window.innerWidth/window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                
+                // 窗口变化时，重新计算最佳相机位置
+                updateCameraPosition();
+            };
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (controls) controls.update();
+
+            let voltage = 0;
+            if (isRunning) {
+                const speed = physicsSpeed * 0.03; 
+                if(discMesh) {
+                    discMesh.rotation.y += speed;
+                }
+                voltage = physicsSpeed * magneticField;
+                if(Math.abs(voltage) > 0.1) voltage += (Math.random()-0.5)*0.5;
+            } else {
+                voltage = 0;
+            }
+
+            if (loadMesh && bulbLight) {
+                let brightness = Math.min(Math.abs(voltage) / 10.0, 1.0); 
+                const glowColor = new THREE.Color();
+                glowColor.setHSL(0.12, 1.0, 0.5);
+                loadMesh.material.emissive = glowColor;
+                loadMesh.material.emissiveIntensity = brightness * 2.5;
+                loadMesh.material.color.setHSL(0.12, 1.0, 0.1 + brightness * 0.9);
+                bulbLight.intensity = brightness * 5.0;
+            }
+
+            time++;
+            if (time % 2 === 0 && voltageChart) { 
+                const dataset = voltageChart.data.datasets[0];
+                dataset.data.push(voltage);
+                dataset.data.shift(); 
+                voltageChart.update('none'); 
+            }
+
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
