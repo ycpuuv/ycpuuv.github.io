@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>必修一 · 前两章复习 · 三天冲刺</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
+  header{background:linear-gradient(135deg,#0a1628,#1a0a2e);padding:30px 20px 24px;text-align:center;border-bottom:1px solid rgba(255,107,53,.2)}
+  header h1{font-size:1.8em;background:linear-gradient(90deg,#ff6b35,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  header p{color:#889;margin-top:4px;font-size:.85em}
+  header .badge{display:inline-block;background:rgba(255,107,53,.15);color:#ff6b35;padding:2px 12px;border-radius:10px;font-size:.75em;margin-top:6px}
+  .container{max-width:960px;margin:0 auto;padding:16px 16px 40px}
+  .plan-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+  .plan-day{padding:8px 16px;border-radius:8px;background:#161632;border:1px solid #252545;flex:1;min-width:120px}
+  .plan-day .day{font-size:.8em;color:#ff6b35;font-weight:bold}
+  .plan-day .task{font-size:.75em;color:#889;margin-top:2px}
+
+  .chapter{background:#12122a;border-radius:12px;padding:18px;margin-bottom:16px;border:1px solid #1a1a3e}
+  .chapter h2{font-size:1.1em;color:#ffd700;margin-bottom:4px}
+  .chapter .sub{font-size:.78em;color:#667;margin-bottom:12px}
+  .section{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #1a1a35}
+  .section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+  .section h3{font-size:.95em;color:#fff;margin-bottom:4px;padding-left:10px;border-left:3px solid #ff6b35}
+  .section .explain{font-size:.82em;color:#889aab;line-height:1.7;margin:6px 0 8px 10px}
+  .formula-box{background:#0d0d2b;border:1px solid #ff6b3540;border-radius:6px;padding:8px 12px;margin:6px 0 8px 10px}
+  .formula-box .f{font-size:1em;color:#ffd700;font-family:"Times New Roman",serif;font-style:italic;margin:2px 0}
+  .formula-box .note{font-size:.72em;color:#667;margin-top:2px}
+  .video-list{display:flex;flex-direction:column;gap:6px;margin:6px 0 6px 10px}
+  .v-item{display:flex;align-items:center;gap:8px;background:#161632;border-radius:6px;padding:8px 12px;border:1px solid #252545;transition:.2s}
+  .v-item:hover{border-color:#fb7299}
+  .v-item .vtag{font-size:.65em;padding:1px 6px;border-radius:3px;background:rgba(255,107,53,.2);color:#ff6b35;white-space:nowrap;flex-shrink:0}
+  .v-item a{color:#ccc;text-decoration:none;font-size:.82em;flex:1}
+  .v-item a:hover{color:#fb7299}
+  .v-item .vmeta{font-size:.7em;color:#556;white-space:nowrap;flex-shrink:0}
+  .practice-box{background:#0d0d2b;border:1px solid #14b8a640;border-radius:6px;padding:10px 14px;margin:8px 0 4px 10px}
+  .practice-box .pq{font-size:.82em;color:#ccc;line-height:1.7;margin-bottom:4px}
+  .practice-box .pq .num{color:#14b8a6;font-weight:bold;margin-right:4px}
+  .practice-box .answer{font-size:.75em;color:#667;border-top:1px dashed #252545;padding-top:6px;margin-top:4px}
+  .practice-box .answer strong{color:#14b8a6}
+  .tip{background:rgba(255,215,0,.08);border-left:3px solid #ffd700;padding:8px 12px;margin:10px 0 4px 10px;font-size:.8em;color:#ccb}
+  .end-link{text-align:center;padding:16px;color:#556;font-size:.75em}
+  .print-note{background:#1a1a35;border-radius:8px;padding:10px 14px;margin-top:16px;font-size:.78em;color:#889;text-align:center}
+  @media(max-width:600px){header h1{font-size:1.3em}.v-item{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📐 必修一 · 运动学复习</h1>
+  <p>三天冲刺计划 · 看视频 → 理解概念 → 做题巩固</p>
+  <span class="badge">🔥 高考前 · 回归基础</span>
+</header>
+<div class="container">
+
+<!-- 复习计划 -->
+<div class="plan-bar">
+  <div class="plan-day"><div class="day">📅 第一天</div><div class="task">第一章：运动的描述<br>质点·位移·速度·加速度</div></div>
+  <div class="plan-day"><div class="day">📅 第二天</div><div class="task">第二章：匀变速直线运动<br>公式·图像·推论</div></div>
+  <div class="plan-day"><div class="day">📅 第三天</div><div class="task">实验+综合练习<br>自由落体·打点计时器<br></div></div>
+</div>
+
+<!-- ======================== 第一章 ======================== -->
+<div class="chapter">
+<h2>📖 第一章 · 运动的描述</h2>
+<div class="sub">核心：如何描述一个物体的运动？—— 质点→参考系→位移→速度→加速度</div>
+
+<!-- 1.1 质点 参考系 -->
+<div class="section">
+<h3>1.1 质点 &amp; 参考系</h3>
+<div class="explain">
+<strong>质点</strong>：忽略形状和大小，只考虑质量的理想化模型。<br>
+<strong>条件</strong>：物体的大小形状对研究问题影响可忽略。<br>
+<strong>参考系</strong>：描述运动时选作参考的物体。选择不同参考系，运动描述不同。
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV1u1421o7Pz" target="_blank">【质点 参考系】基本概念精讲</a>
+    <span class="vmeta">2.8万</span>
+  </div>
+</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 研究火车从北京到上海的平均速度，能否将火车视为质点？研究火车过桥的时间呢？</div>
+  <div class="pq"><span class="num">Q2.</span> "坐在行驶的公交车里，看到路边的树在往后走"——这是以什么为参考系？</div>
+  <div class="answer"><strong>提示：</strong> 质点条件看"形状大小是否影响研究问题"；参考系关键词"往后走"说明自己在往前。</div>
+</div>
+</div>
+
+<!-- 1.2 位移 时间 -->
+<div class="section">
+<h3>1.2 时间 &amp; 位移</h3>
+<div class="explain">
+<strong>时刻 vs 时间间隔</strong>：时刻是时间轴上的<strong>点</strong>，时间间隔是<strong>段</strong>。<br>
+<strong>位移</strong>（矢量）：从初位置指向末位置的有向线段。<strong>路程</strong>（标量）：轨迹长度。<br>
+⚠️ 位移 ≤ 路程，只有单向直线运动时两者相等。
+</div>
+<div class="formula-box">
+  <div class="f">x = x₂ − x₁</div>
+  <div class="note">位移 = 末位置 − 初位置（一维直线坐标系中）</div>
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV15H3QzJE9A" target="_blank">【位移—时间图像】基础讲解</a>
+    <span class="vmeta">3.4万</span>
+  </div>
+</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 某人绕400m跑道跑了1圈回到起点，位移为____，路程为____。</div>
+  <div class="pq"><span class="num">Q2.</span> 物体从点A(2m)运动到点B(-3m)，位移为多少？</div>
+  <div class="answer"><strong>关键：</strong> 位移只看初末位置，不看路径！方向用正负表示。</div>
+</div>
+</div>
+
+<!-- 1.3 速度 -->
+<div class="section">
+<h3>1.3 位置变化快慢——速度</h3>
+<div class="explain">
+<strong>平均速度</strong> = 位移 ÷ 时间（矢量，描述整体快慢）<br>
+<strong>瞬时速度</strong> = 某时刻的速度（矢量，描述瞬间快慢）<br>
+<strong>速率</strong> = 瞬时速度的大小（标量）<br>
+⚠️ 区别：平均速度看位移，平均速率看路程。
+</div>
+<div class="formula-box">
+  <div class="f">v = Δx / Δt</div>
+  <div class="note">平均速度公式；Δt → 0 时即为瞬时速度</div>
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV1LK4mebE8k" target="_blank">【速度概念】平均速度vs瞬时速度—辨析</a>
+    <span class="vmeta">8.2万</span>
+  </div>
+</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 百米赛跑中，运动员10s跑完全程，平均速度____m/s。他冲线时的速度是瞬时还是平均？</div>
+  <div class="pq"><span class="num">Q2.</span> 物体沿直线运动，前一半位移速度4m/s，后一半位移速度6m/s，求全程平均速度。</div>
+  <div class="answer"><strong>易错：</strong> 平均速度 ≠ 速度的平均值！用总位移÷总时间。</div>
+</div>
+</div>
+
+<!-- 1.4 加速度 -->
+<div class="section">
+<h3>1.4 速度变化快慢——加速度</h3>
+<div class="explain">
+<strong>加速度</strong>：描述速度变化快慢的物理量。<br>
+a > 0 时：物体不一定加速——还要看初速度方向！<br>
+a 与 v 同向 → 加速；a 与 v 反向 → 减速。
+</div>
+<div class="formula-box">
+  <div class="f">a = Δv / Δt = (v − v₀) / t</div>
+  <div class="note">加速度单位：m/s²；方向与 Δv 方向相同</div>
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV1sw4m1R7cz" target="_blank">李永乐《必修一 1.4 加速度》</a>
+    <span class="vmeta">16.5万</span>
+  </div>
+  <div class="v-item">
+    <span class="vtag">🚀 速通</span>
+    <a href="https://b23.tv/BV1qKWGzgEiJ" target="_blank">【10分钟速通】加速度，0基础秒懂</a>
+    <span class="vmeta">12.1万</span>
+  </div>
+</div>
+<div class="tip">💡 <strong>加速度理解关键：</strong> 加速度不是"加速"！刹车时速度减小，但加速度可以很大（急刹车）。</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 汽车以36km/h行驶，刹车后2s停下，求加速度大小和方向。</div>
+  <div class="pq"><span class="num">Q2.</span> 下列说法正确的是：A. 加速度越大速度越大 B. 加速度减小速度一定减小 C. 加速度方向与速度方向相同则加速 D. 加速度为0时速度也为0</div>
+  <div class="answer"><strong>易错：</strong> 加速度看速度变化率，与速度大小无关。C对。</div>
+</div>
+</div>
+</div>
+
+<!-- ======================== 第二章 ======================== -->
+<div class="chapter">
+<h2>📖 第二章 · 匀变速直线运动的研究</h2>
+<div class="sub">核心：匀变速直线运动的规律及其应用——四大公式+两个推论+自由落体</div>
+
+<!-- 2.1 基本公式 -->
+<div class="section">
+<h3>2.1 匀变速直线运动——四大基本公式</h3>
+<div class="explain">
+<strong>条件：</strong>加速度 a 恒定不变（大小方向都不变）。<br>
+四组公式一共涉及 v₀, v, a, t, x 五个物理量，<strong>知三求二</strong>。
+</div>
+<div class="formula-box">
+  <div class="f">v = v₀ + at</div>
+  <div class="f">x = v₀t + ½at²</div>
+  <div class="f">v² − v₀² = 2ax</div>
+  <div class="f">x = (v₀ + v)·t / 2</div>
+  <div class="note">四个公式：速度-时间、位移-时间、速度-位移、平均速度公式</div>
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV1HK4mebE8k" target="_blank">【一口气搞懂】匀变速直线运动所有公式+推论</a>
+    <span class="vmeta">68万</span>
+  </div>
+</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 汽车以10m/s匀速行驶，突然以2m/s²加速行驶5s，求5s末的速度和5s内位移。</div>
+  <div class="pq"><span class="num">Q2.</span> 物体以20m/s初速度做匀减速，加速度大小为4m/s²，求物体停止前通过的位移。</div>
+  <div class="answer"><strong>提示：</strong> Q1用v=v₀+at和x=v₀t+½at²；Q2注意"停止"→v=0，用v²−v₀²=2ax。</div>
+</div>
+</div>
+
+<!-- 2.2 重要推论 -->
+<div class="section">
+<h3>2.2 匀变速直线运动——两个重要推论</h3>
+<div class="explain">
+<strong>推论一：</strong> 连续相等时间内的位移差恒等（纸带实验原理）<br>
+<strong>推论二：</strong> 某段时间中间时刻的瞬时速度 = 该段的平均速度
+</div>
+<div class="formula-box">
+  <div class="f">Δx = aT²</div>
+  <div class="note">任意连续相等时间间隔 T 内的位移差为定值 aT²</div>
+  <div class="f" style="margin-top:6px">v<sub>t/2</sub> = (v₀ + v)/2 = x/t</div>
+  <div class="note">中间时刻速度 = 平均速度（重要！实验和计算中频繁使用）</div>
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV1Mf42197Ug" target="_blank">【一轮复习】1.6 匀变速直线运动推论</a>
+    <span class="vmeta">47.7万</span>
+  </div>
+</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 物体做匀加速直线运动，第1s内位移2m，第2s内位移3m，求加速度大小。</div>
+  <div class="pq"><span class="num">Q2.</span> 一物体从静止开始匀加速，第3s内的位移为5m，求加速度大小。</div>
+  <div class="answer"><strong>关键：</strong> Q1用Δx=aT²→a=1m/s²；Q2第3s内=前3s−前2s，或用中间时刻速度法。</div>
+</div>
+</div>
+
+<!-- 2.3 v-t图像 x-t图像 -->
+<div class="section">
+<h3>2.3 运动图像（v-t &amp; x-t）</h3>
+<div class="explain">
+<strong>x-t图像：</strong> 斜率 = 速度。直线→匀速，曲线→变速。<br>
+<strong>v-t图像：</strong> 斜率 = 加速度，<strong>面积 = 位移</strong>。<br>
+⚠️ 图像不是运动轨迹！x-t不是物体的行走路线。
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV15H3QzJE9A" target="_blank">【位移—时间图像】基础讲解</a>
+    <span class="vmeta">3.4万</span>
+  </div>
+  <div class="v-item">
+    <span class="vtag">📐 进阶</span>
+    <a href="https://b23.tv/BV18L4y137KW" target="_blank">v-t图中看相对位移——高三还在犯错？</a>
+    <span class="vmeta">3万</span>
+  </div>
+</div>
+<div class="tip">💡 <strong>图像口诀：</strong> 看斜率（速度/加速度），看面积（位移），看截距（初位置/初速度）。</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> v-t图像中，图线在t轴上方表示向正方向运动，在t轴下方表示____；图线与t轴围成的面积表示____。</div>
+  <div class="pq"><span class="num">Q2.</span> 某物体的v-t图像是一条斜向下的直线，说明物体在做____运动，加速度方向与速度方向____。</div>
+  <div class="answer"><strong>答案：</strong> t轴下方=负方向运动；面积=位移；斜向下=减速，a与v反向。</div>
+</div>
+</div>
+
+<!-- 2.4 自由落体 -->
+<div class="section">
+<h3>2.4 自由落体运动</h3>
+<div class="explain">
+<strong>条件：</strong> ① 只受重力  ② 初速度为0  ③ v₀=0, a=g<br>
+<strong>g：</strong> 重力加速度，约9.8m/s²（方向竖直向下）<br>
+⚠️ 不同物体在真空中下落一样快（比萨斜塔实验）！
+</div>
+<div class="formula-box">
+  <div class="f">v = gt</div>
+  <div class="f">h = ½gt²</div>
+  <div class="f">v² = 2gh</div>
+  <div class="note">自由落体 = v₀=0, a=g 的匀加速直线运动！直接用前面公式代入a=g即可。</div>
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">⭐ 必看</span>
+    <a href="https://b23.tv/BV1eRtSe4EMV" target="_blank">【一口气搞懂】自由落体运动所有知识点</a>
+    <span class="vmeta">31.5万</span>
+  </div>
+  <div class="v-item">
+    <span class="vtag">🏆 优质课</span>
+    <a href="https://b23.tv/BV1Gd4y127FK" target="_blank">省赛优质课《自由落体运动》</a>
+    <span class="vmeta">7.1万</span>
+  </div>
+</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 一石子从45m高处自由下落，求落地时间和落地速度（g=10m/s²）。</div>
+  <div class="pq"><span class="num">Q2.</span> 自由落体运动中，第1s内、第2s内、第3s内的位移之比为____。</div>
+  <div class="answer"><strong>提示：</strong> Q1用h=½gt²和v=gt；Q2经典结论——1:3:5（连续相等时间位移比）。</div>
+</div>
+</div>
+
+<!-- 2.5 实验 -->
+<div class="section">
+<h3>2.5 实验：打点计时器 &amp; 研究匀变速直线运动</h3>
+<div class="explain">
+<strong>打点计时器：</strong> 频率50Hz → 相邻点间隔0.02s。<br>
+<strong>处理方法：</strong>
+① 用中间时刻速度=平均速度 求各点瞬时速度<br>
+② 用 Δx = aT² 求加速度（逐差法更精确！）
+</div>
+<div class="formula-box">
+  <div class="f">v<sub>n</sub> = (x<sub>n</sub> + x<sub>n+1</sub>) / 2T</div>
+  <div class="f">a = (x₄+x₅+x₆) − (x₁+x₂+x₃) / 9T²</div>
+  <div class="note">逐差法：用全部数据减小偶然误差</div>
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">🔬 实验</span>
+    <a href="https://b23.tv/BV1xG411P7B1" target="_blank">【必修一实验】用打点计时器测速度</a>
+    <span class="vmeta">7.6万</span>
+  </div>
+  <div class="v-item">
+    <span class="vtag">🔬 必考</span>
+    <a href="https://b23.tv/BV17y4y1V7N1" target="_blank">【打点计时器】纸带分析·高考必考实验</a>
+    <span class="vmeta">320万</span>
+  </div>
+</div>
+<div class="practice-box">
+  <div class="pq"><span class="num">Q1.</span> 纸带上相邻两点间距离分别为2.00cm、2.50cm、3.00cm、3.50cm，T=0.1s。求第3点的瞬时速度和加速度。</div>
+  <div class="pq"><span class="num">Q2.</span> 为什么用逐差法求加速度比直接用Δx=aT²更好？</div>
+  <div class="answer"><strong>提示：</strong> Q1用中间时刻速度求v₃=(3.00+3.50)/(2×0.1)=32.5cm/s；a=Δx/T²=0.5m/s²。逐差法用更多数据，误差更小。</div>
+</div>
+</div>
+
+<!-- 2.6 追击相遇 -->
+<div class="section">
+<h3>2.6 追及相遇问题（选学·能力提升）</h3>
+<div class="explain">
+<strong>核心思路：</strong> 速度相等时距离最远/最近（临界条件）<br>
+① 画示意图  ② 列位移方程  ③ 判断是否相遇
+</div>
+<div class="video-list">
+  <div class="v-item">
+    <span class="vtag">🚀 提升</span>
+    <a href="https://b23.tv/BV1VM4m167JN" target="_blank">【追及相遇问题】系统性讲解</a>
+    <span class="vmeta">37.1万</span>
+  </div>
+</div>
+</div>
+
+</div>
+
+<!-- ======================== 公式总表 ======================== -->
+<div class="chapter" style="border-color:#ff6b3540">
+<h2>📋 核心公式速查表</h2>
+<div class="sub">三天复习中反复对照——做题时先看涉及几个已知量，再选公式</div>
+<div class="formula-box" style="margin-left:0">
+  <div class="f">v = v₀ + at</div>
+  <div class="note">不含x——已知v₀,a,t求v</div>
+  <div class="f" style="margin-top:6px">x = v₀t + ½at²</div>
+  <div class="note">不含v——已知v₀,a,t求x</div>
+  <div class="f" style="margin-top:6px">v² − v₀² = 2ax</div>
+  <div class="note">不含t——已知v₀,a,x求v</div>
+  <div class="f" style="margin-top:6px">x = (v₀ + v)·t / 2</div>
+  <div class="note">不含a——已知v₀,v,t求x</div>
+  <div class="f" style="margin-top:6px;color:#14b8a6">Δx = aT²</div>
+  <div class="note">纸带实验求加速度 ｜ 推论一</div>
+  <div class="f" style="margin-top:6px;color:#14b8a6">v<sub>t/2</sub> = (v₀ + v)/2 = x/t</div>
+  <div class="note">中间时刻速度 = 平均速度 ｜ 推论二</div>
+</div>
+</div>
+
+<div class="print-note">
+📌 配合打印版Word文档使用：先看视频理解概念，再填写文档中的练习<br>
+三天时间：每天1~2小时，第一天第一章，第二天第二章，第三天实验+综合
+</div>
+
+<div class="end-link">高考加油！💪 回归基础，稳拿运动学满分</div>
+</div>
+</body>
+</html>
