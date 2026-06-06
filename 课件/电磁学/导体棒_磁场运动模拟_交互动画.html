@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导体棒在磁场中运动模拟（增强版）</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #0f1b3a, #2a0a3e, #1e3c72);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: linear-gradient(to bottom right, rgba(15, 27, 58, 0.9), rgba(42, 10, 62, 0.9));
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        header {
+            background: linear-gradient(to right, rgba(15, 27, 58, 0.9), rgba(42, 10, 62, 0.9));
+            padding: 25px;
+            text-align: center;
+            border-bottom: 2px solid #ff9d00;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #ff9d00, transparent);
+        }
+        
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 10px;
+            color: #ff9d00;
+            text-shadow: 0 0 15px rgba(255, 157, 0, 0.5);
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            color: #e0e0ff;
+        }
+        
+        .content {
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            gap: 25px;
+        }
+        
+        .simulation-section {
+            width: 100%;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(10, 15, 35, 0.6);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .bottom-section {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+        }
+        
+        .left-column {
+            flex: 1;
+            min-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .right-column {
+            flex: 2;
+            min-width: 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .canvas-container {
+            background: linear-gradient(to bottom right, rgba(15, 27, 58, 0.7), rgba(42, 10, 62, 0.7));
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: linear-gradient(135deg, #0a0f25, #1a1a3a);
+            border-radius: 8px;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+            cursor: crosshair;
+        }
+        
+        .graph-title {
+            text-align: center;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+            color: #ff9d00;
+            font-weight: 600;
+            text-shadow: 0 0 8px rgba(255, 157, 0, 0.3);
+        }
+        
+        .controls {
+            background: linear-gradient(to bottom right, rgba(15, 27, 58, 0.8), rgba(42, 10, 62, 0.8));
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls h3 {
+            color: #ff9d00;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(255, 157, 0, 0.3);
+        }
+        
+        .control-group {
+            margin-bottom: 18px;
+            padding: 10px;
+            background: rgba(10, 15, 35, 0.4);
+            border-radius: 8px;
+            border-left: 3px solid #ff9d00;
+        }
+        
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e0e0ff;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .slider-container input {
+            flex: 1;
+            margin-right: 12px;
+            height: 8px;
+            border-radius: 4px;
+            background: #1a1a3a;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider-container input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff9d00;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 157, 0, 0.5);
+        }
+        
+        .value-display {
+            min-width: 70px;
+            text-align: right;
+            font-weight: 600;
+            color: #ff9d00;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            background: linear-gradient(to right, #1a2a6c, #b21f1f);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        button:hover::before {
+            left: 100%;
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .data-display {
+            background: linear-gradient(to bottom right, rgba(15, 27, 58, 0.8), rgba(42, 10, 62, 0.8));
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .data-display h3 {
+            color: #ff9d00;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(255, 157, 0, 0.3);
+        }
+        
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .data-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .data-label {
+            font-weight: 600;
+            color: #e0e0ff;
+        }
+        
+        .data-value {
+            color: #ff9d00;
+            font-weight: 600;
+        }
+        
+        .explanation {
+            background: linear-gradient(to bottom right, rgba(15, 27, 58, 0.8), rgba(42, 10, 62, 0.8));
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .explanation h3 {
+            margin-bottom: 15px;
+            color: #ff9d00;
+            font-size: 1.4rem;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(255, 157, 0, 0.3);
+        }
+        
+        .explanation p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+            color: #e0e0ff;
+        }
+        
+        .graphs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        @media (max-width: 1000px) {
+            .bottom-section {
+                flex-direction: column;
+            }
+            
+            .left-column, .right-column {
+                min-width: 100%;
+            }
+        }
+        
+        .highlight {
+            background-color: rgba(255, 157, 0, 0.2);
+            padding: 4px 8px;
+            border-radius: 5px;
+            color: #ff9d00;
+            font-weight: 600;
+        }
+        
+        .simulation-title {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.6rem;
+            color: #ff9d00;
+            text-shadow: 0 0 10px rgba(255, 157, 0, 0.4);
+            font-weight: 600;
+        }
+        
+        .graph-row {
+            display: flex;
+            gap: 25px;
+        }
+        
+        .graph-item {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-running {
+            background-color: #4CAF50;
+            box-shadow: 0 0 8px #4CAF50;
+        }
+        
+        .status-paused {
+            background-color: #ff9800;
+            box-shadow: 0 0 8px #ff9800;
+        }
+        
+        .status-stopped {
+            background-color: #f44336;
+            box-shadow: 0 0 8px #f44336;
+        }
+        
+        .point-info {
+            position: absolute;
+            background: rgba(10, 15, 35, 0.9);
+            border: 1px solid #ff9d00;
+            border-radius: 8px;
+            padding: 10px;
+            color: #fff;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            max-width: 200px;
+        }
+        
+        .point-info h4 {
+            margin: 0 0 5px 0;
+            color: #ff9d00;
+            font-size: 16px;
+        }
+        
+        .point-info p {
+            margin: 2px 0;
+        }
+        
+        .slope-line {
+            position: absolute;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>导体棒在磁场中运动模拟</h1>
+            <p class="subtitle">增强版 - 点击图表显示坐标及斜率</p>
+        </header>
+        
+        <div class="content">
+            <section class="simulation-section">
+                <div class="simulation-title">
+                    <span class="status-indicator status-stopped" id="statusIndicator"></span>
+                    导体棒运动模拟
+                </div>
+                <div class="canvas-container">
+                    <canvas id="simulationCanvas" width="700" height="400"></canvas>
+                </div>
+            </section>
+            
+            <div class="bottom-section">
+                <div class="left-column">
+                    <div class="controls">
+                        <h3>控制面板</h3>
+                        
+                        <div class="control-group">
+                            <label for="forceSlider">恒力 F (N)</label>
+                            <div class="slider-container">
+                                <input type="range" id="forceSlider" min="0.5" max="5" step="0.1" value="2.0">
+                                <span class="value-display" id="forceValue">2.0 N</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="massSlider">导体棒质量 m (kg)</label>
+                            <div class="slider-container">
+                                <input type="range" id="massSlider" min="0.1" max="1" step="0.05" value="0.2">
+                                <span class="value-display" id="massValue">0.2 kg</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="resistanceSlider">电阻 R (Ω)</label>
+                            <div class="slider-container">
+                                <input type="range" id="resistanceSlider" min="0.5" max="5" step="0.1" value="2.0">
+                                <span class="value-display" id="resistanceValue">2.0 Ω</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="magneticSlider">磁感应强度 B (T)</label>
+                            <div class="slider-container">
+                                <input type="range" id="magneticSlider" min="0.5" max="3" step="0.1" value="1.0">
+                                <span class="value-display" id="magneticValue">1.0 T</span>
+                            </div>
+                        </div>
+                        
+                        <div class="control-group">
+                            <label for="speedSlider">动画速度</label>
+                            <div class="slider-container">
+                                <input type="range" id="speedSlider" min="0.1" max="2" step="0.1" value="1.0">
+                                <span class="value-display" id="speedValue">1.0x</span>
+                            </div>
+                        </div>
+                        
+                        <div class="buttons">
+                            <button id="startBtn">开始模拟</button>
+                            <button id="pauseBtn">暂停</button>
+                            <button id="resetBtn">重置</button>
+                        </div>
+                    </div>
+                    
+                    <div class="data-display">
+                        <h3>实时数据</h3>
+                        <div class="data-item">
+                            <span class="data-label">时间 t:</span>
+                            <span class="data-value" id="timeValue">0.00 s</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">速度 v:</span>
+                            <span class="data-value" id="velocityValue">0.00 m/s</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">加速度 a:</span>
+                            <span class="data-value" id="accelerationValue">0.00 m/s²</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">感应电动势 E:</span>
+                            <span class="data-value" id="emfValue">0.00 V</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">位移 x:</span>
+                            <span class="data-value" id="displacementValue">0.00 m</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">安培力 Fₐ:</span>
+                            <span class="data-value" id="ampereForceValue">0.00 N</span>
+                        </div>
+                        <div class="data-item">
+                            <span class="data-label">终端速度 vₜ:</span>
+                            <span class="data-value" id="terminalVelocityValue">0.00 m/s</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="right-column">
+                    <div class="graphs-container">
+                        <div class="graph-row">
+                            <div class="graph-item canvas-container">
+                                <div class="graph-title">速度-时间关系图</div>
+                                <canvas id="velocityCanvas" width="300" height="250"></canvas>
+                                <div id="velocityPointInfo" class="point-info" style="display: none;"></div>
+                            </div>
+                            
+                            <div class="graph-item canvas-container">
+                                <div class="graph-title">位移-时间关系图</div>
+                                <canvas id="displacementCanvas" width="300" height="250"></canvas>
+                                <div id="displacementPointInfo" class="point-info" style="display: none;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="explanation">
+                        <h3>物理原理说明</h3>
+                        <p>导体棒在恒力F作用下向右运动，切割磁感线产生感应电动势 <span class="highlight">E = BLv</span>。</p>
+                        <p>感应电流 <span class="highlight">I = E/R</span>，导体棒受到安培力 <span class="highlight">Fₐ = BIL = B²L²v/R</span>，方向与运动方向相反。</p>
+                        <p>运动方程：<span class="highlight">F - Fₐ = ma</span>，随着速度增加，安培力增大，加速度减小。</p>
+                        <p>最终速度趋近于终端速度：<span class="highlight">vₜ = FR/(B²L²)</span>。</p>
+                        <p style="margin-top: 10px; font-style: italic; color: #ff9d00;">提示：点击图表曲线可查看对应点的坐标及斜率，点击空白处可隐藏信息</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取Canvas元素和上下文
+        const simCanvas = document.getElementById('simulationCanvas');
+        const velocityCanvas = document.getElementById('velocityCanvas');
+        const displacementCanvas = document.getElementById('displacementCanvas');
+        const simCtx = simCanvas.getContext('2d');
+        const velocityCtx = velocityCanvas.getContext('2d');
+        const displacementCtx = displacementCanvas.getContext('2d');
+        
+        // 获取控制元素
+        const forceSlider = document.getElementById('forceSlider');
+        const massSlider = document.getElementById('massSlider');
+        const resistanceSlider = document.getElementById('resistanceSlider');
+        const magneticSlider = document.getElementById('magneticSlider');
+        const speedSlider = document.getElementById('speedSlider');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusIndicator = document.getElementById('statusIndicator');
+        
+        // 获取数据显示元素
+        const forceValue = document.getElementById('forceValue');
+        const massValue = document.getElementById('massValue');
+        const resistanceValue = document.getElementById('resistanceValue');
+        const magneticValue = document.getElementById('magneticValue');
+        const speedValue = document.getElementById('speedValue');
+        const timeValue = document.getElementById('timeValue');
+        const velocityValue = document.getElementById('velocityValue');
+        const accelerationValue = document.getElementById('accelerationValue');
+        const emfValue = document.getElementById('emfValue');
+        const displacementValue = document.getElementById('displacementValue');
+        const ampereForceValue = document.getElementById('ampereForceValue');
+        const terminalVelocityValue = document.getElementById('terminalVelocityValue');
+        
+        // 获取点信息显示元素
+        const velocityPointInfo = document.getElementById('velocityPointInfo');
+        const displacementPointInfo = document.getElementById('displacementPointInfo');
+        
+        // 物理常量
+        const L = 1.0; // 导轨间距 (m)
+        
+        // 模拟变量
+        let F = 2.0; // 恒力 (N)
+        let m = 0.2; // 导体棒质量 (kg)
+        let R = 2.0; // 电阻 (Ω)
+        let B = 1.0; // 磁感应强度 (T)
+        let animationSpeed = 1.0; // 动画速度因子
+        
+        let t = 0; // 时间 (s)
+        let v = 0; // 速度 (m/s)
+        let x = 0; // 位移 (m)
+        let a = 0; // 加速度 (m/s²)
+        let E = 0; // 感应电动势 (V)
+        let Fa = 0; // 安培力 (N)
+        let terminalVelocity = 0; // 终端速度 (m/s)
+        
+        let isRunning = false;
+        let animationId;
+        let lastTimestamp = 0;
+        
+        // 速度-时间数据点
+        const velocityDataPoints = [];
+        const displacementDataPoints = [];
+        
+        // 图表显示范围
+        let maxTime = 5; // 最大显示时间
+        let maxVelocity = 5; // 最大显示速度
+        let maxDisplacement = 20; // 最大显示位移
+        
+        // 选中的点信息
+        let selectedVelocityPoint = null;
+        let selectedDisplacementPoint = null;
+        
+        // 更新滑块显示
+        function updateSliders() {
+            forceValue.textContent = F.toFixed(1) + " N";
+            massValue.textContent = m.toFixed(2) + " kg";
+            resistanceValue.textContent = R.toFixed(1) + " Ω";
+            magneticValue.textContent = B.toFixed(1) + " T";
+            speedValue.textContent = animationSpeed.toFixed(1) + "x";
+        }
+        
+        // 更新状态指示器
+        function updateStatusIndicator() {
+            if (isRunning) {
+                statusIndicator.className = 'status-indicator status-running';
+            } else if (t > 0) {
+                statusIndicator.className = 'status-indicator status-paused';
+            } else {
+                statusIndicator.className = 'status-indicator status-stopped';
+            }
+        }
+        
+        // 更新数据显示
+        function updateDataDisplay() {
+            timeValue.textContent = t.toFixed(2) + " s";
+            velocityValue.textContent = v.toFixed(2) + " m/s";
+            accelerationValue.textContent = a.toFixed(2) + " m/s²";
+            emfValue.textContent = E.toFixed(2) + " V";
+            displacementValue.textContent = x.toFixed(2) + " m";
+            ampereForceValue.textContent = Fa.toFixed(2) + " N";
+            terminalVelocityValue.textContent = terminalVelocity.toFixed(2) + " m/s";
+        }
+        
+        // 绘制网格函数
+        function drawGrid(ctx, width, height, margin, xTicks, yTicks) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 0.5;
+            
+            // 水平网格线
+            for (let i = 0; i <= yTicks; i++) {
+                const y = margin.top + (i / yTicks) * (height - margin.top - margin.bottom);
+                ctx.beginPath();
+                ctx.moveTo(margin.left, y);
+                ctx.lineTo(width - margin.right, y);
+                ctx.stroke();
+            }
+            
+            // 垂直网格线
+            for (let i = 0; i <= xTicks; i++) {
+                const x = margin.left + (i / xTicks) * (width - margin.left - margin.right);
+                ctx.beginPath();
+                ctx.moveTo(x, margin.top);
+                ctx.lineTo(x, height - margin.bottom);
+                ctx.stroke();
+            }
+        }
+        
+        // 绘制模拟场景
+        function drawSimulation() {
+            simCtx.clearRect(0, 0, simCanvas.width, simCanvas.height);
+            
+            // 绘制背景
+            const gradient = simCtx.createLinearGradient(0, 0, 0, simCanvas.height);
+            gradient.addColorStop(0, '#0a0f25');
+            gradient.addColorStop(1, '#1a1a3a');
+            simCtx.fillStyle = gradient;
+            simCtx.fillRect(0, 0, simCanvas.width, simCanvas.height);
+            
+            // 绘制导轨（进一步增大尺寸）
+            const trackHeight = L * 140; // 进一步增大轨道间距
+            const trackTop = 80; // 轨道顶部位置
+            const trackBottom = trackTop + trackHeight; // 轨道底部位置
+            
+            // 绘制轨道阴影
+            simCtx.shadowColor = 'rgba(255, 157, 0, 0.3)';
+            simCtx.shadowBlur = 15;
+            simCtx.strokeStyle = '#ff9d00';
+            simCtx.lineWidth = 10; // 增加轨道宽度
+            simCtx.beginPath();
+            simCtx.moveTo(50, trackTop);
+            simCtx.lineTo(simCanvas.width - 50, trackTop);
+            simCtx.stroke();
+            
+            simCtx.beginPath();
+            simCtx.moveTo(50, trackBottom);
+            simCtx.lineTo(simCanvas.width - 50, trackBottom);
+            simCtx.stroke();
+            
+            // 绘制左端闭合
+            simCtx.beginPath();
+            simCtx.moveTo(50, trackTop);
+            simCtx.lineTo(50, trackBottom);
+            simCtx.stroke();
+            
+            // 重置阴影
+            simCtx.shadowColor = 'transparent';
+            simCtx.shadowBlur = 0;
+            
+            // 绘制导体棒（进一步增大尺寸）
+            const rodWidth = 18; // 进一步增加导体棒宽度
+            // 使用更大的缩放系数，使位移视觉上更大
+            const rodX = 50 + (x * 15); // 进一步增加位移缩放比例
+            const rodGradient = simCtx.createLinearGradient(rodX - rodWidth/2, trackTop, rodX - rodWidth/2, trackBottom);
+            rodGradient.addColorStop(0, '#ff9d00');
+            rodGradient.addColorStop(0.3, '#ffb347');
+            rodGradient.addColorStop(0.7, '#ffb347');
+            rodGradient.addColorStop(1, '#ff9d00');
+            
+            simCtx.fillStyle = rodGradient;
+            simCtx.shadowColor = 'rgba(255, 157, 0, 0.7)';
+            simCtx.shadowBlur = 20;
+            simCtx.fillRect(rodX - rodWidth/2, trackTop, rodWidth, trackHeight);
+            simCtx.shadowColor = 'transparent';
+            simCtx.shadowBlur = 0;
+            
+            // 绘制导体棒边框
+            simCtx.strokeStyle = '#ff9d00';
+            simCtx.lineWidth = 2;
+            simCtx.strokeRect(rodX - rodWidth/2, trackTop, rodWidth, trackHeight);
+            
+            // 绘制力箭头
+            simCtx.strokeStyle = '#ff4444';
+            simCtx.lineWidth = 5;
+            simCtx.beginPath();
+            simCtx.moveTo(rodX + rodWidth/2 + 5, trackTop + trackHeight/2);
+            simCtx.lineTo(rodX + rodWidth/2 + 5 + F * 10, trackTop + trackHeight/2);
+            simCtx.stroke();
+            
+            // 绘制力箭头头部
+            simCtx.beginPath();
+            simCtx.moveTo(rodX + rodWidth/2 + 5 + F * 10, trackTop + trackHeight/2);
+            simCtx.lineTo(rodX + rodWidth/2 + 5 + F * 10 - 15, trackTop + trackHeight/2 - 10);
+            simCtx.lineTo(rodX + rodWidth/2 + 5 + F * 10 - 15, trackTop + trackHeight/2 + 10);
+            simCtx.closePath();
+            simCtx.fillStyle = '#ff4444';
+            simCtx.fill();
+            
+            // 绘制安培力箭头
+            simCtx.strokeStyle = '#4a86e8';
+            simCtx.lineWidth = 5;
+            simCtx.beginPath();
+            simCtx.moveTo(rodX - rodWidth/2 - 5, trackTop + trackHeight/2);
+            simCtx.lineTo(rodX - rodWidth/2 - 5 - Fa * 10, trackTop + trackHeight/2);
+            simCtx.stroke();
+            
+            // 绘制安培力箭头头部
+            simCtx.beginPath();
+            simCtx.moveTo(rodX - rodWidth/2 - 5 - Fa * 10, trackTop + trackHeight/2);
+            simCtx.lineTo(rodX - rodWidth/2 - 5 - Fa * 10 + 15, trackTop + trackHeight/2 - 10);
+            simCtx.lineTo(rodX - rodWidth/2 - 5 - Fa * 10 + 15, trackTop + trackHeight/2 + 10);
+            simCtx.closePath();
+            simCtx.fillStyle = '#4a86e8';
+            simCtx.fill();
+            
+            // 绘制标签
+            simCtx.fillStyle = '#fff';
+            simCtx.font = 'bold 16px Arial';
+            simCtx.fillText(`F = ${F.toFixed(1)} N`, rodX + 35, trackTop + trackHeight/2 - 20);
+            simCtx.fillText(`Fₐ = ${Fa.toFixed(2)} N`, rodX - 90, trackTop + trackHeight/2 - 20);
+            simCtx.fillText(`v = ${v.toFixed(2)} m/s`, rodX - 25, trackTop - 20);
+            
+            // 绘制磁场方向（增加密度和视觉效果）
+            simCtx.fillStyle = 'rgba(0, 255, 150, 0.7)';
+            simCtx.font = '16px Arial';
+            // 增加磁场符号密度
+            for (let i = 50; i < simCanvas.width - 50; i += 15) {
+                for (let j = trackTop + 15; j < trackBottom; j += 15) {
+                    simCtx.fillText('×', i, j);
+                }
+            }
+            
+            // 绘制磁场方向指示
+            simCtx.fillStyle = 'rgba(0, 255, 150, 0.9)';
+            simCtx.font = 'bold 18px Arial';
+            simCtx.fillText('B: 垂直纸面向里', simCanvas.width - 180, 70);
+            
+            // 绘制轨道标签
+            simCtx.fillStyle = '#e0e0ff';
+            simCtx.font = '16px Arial';
+            simCtx.fillText('左端闭合', 60, trackTop - 25);
+            simCtx.fillText('右端开放', simCanvas.width - 130, trackTop - 25);
+            
+            // 绘制轨道长度指示
+            simCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            simCtx.setLineDash([5, 5]);
+            simCtx.lineWidth = 1;
+            simCtx.beginPath();
+            simCtx.moveTo(50, trackTop - 35);
+            simCtx.lineTo(simCanvas.width - 50, trackTop - 35);
+            simCtx.stroke();
+            simCtx.setLineDash([]);
+            
+            simCtx.fillStyle = '#e0e0ff';
+            simCtx.font = '14px Arial';
+            simCtx.fillText('0 m', 45, trackTop - 40);
+            simCtx.fillText(`${((simCanvas.width - 100) / 15).toFixed(1)} m`, simCanvas.width - 75, trackTop - 40);
+        }
+        
+        // 绘制速度-时间图
+        function drawVelocityGraph() {
+            velocityCtx.clearRect(0, 0, velocityCanvas.width, velocityCanvas.height);
+            
+            // 绘制背景
+            const gradient = velocityCtx.createLinearGradient(0, 0, 0, velocityCanvas.height);
+            gradient.addColorStop(0, '#0a0f25');
+            gradient.addColorStop(1, '#1a1a3a');
+            velocityCtx.fillStyle = gradient;
+            velocityCtx.fillRect(0, 0, velocityCanvas.width, velocityCanvas.height);
+            
+            // 定义边距
+            const margin = {top: 20, right: 20, bottom: 30, left: 40};
+            
+            // 绘制网格
+            drawGrid(velocityCtx, velocityCanvas.width, velocityCanvas.height, margin, 10, 5);
+            
+            // 绘制坐标轴
+            velocityCtx.strokeStyle = '#e0e0ff';
+            velocityCtx.lineWidth = 2;
+            velocityCtx.beginPath();
+            velocityCtx.moveTo(margin.left, margin.top);
+            velocityCtx.lineTo(margin.left, velocityCanvas.height - margin.bottom);
+            velocityCtx.lineTo(velocityCanvas.width - margin.right, velocityCanvas.height - margin.bottom);
+            velocityCtx.stroke();
+            
+            // 绘制坐标轴标签
+            velocityCtx.fillStyle = '#e0e0ff';
+            velocityCtx.font = '12px Arial';
+            velocityCtx.fillText('v (m/s)', 10, 15);
+            velocityCtx.fillText('t (s)', velocityCanvas.width - 25, velocityCanvas.height - 10);
+            
+            // 绘制刻度
+            for (let i = 0; i <= 5; i++) {
+                const x = margin.left + (i / 5) * (velocityCanvas.width - margin.left - margin.right);
+                velocityCtx.beginPath();
+                velocityCtx.moveTo(x, velocityCanvas.height - margin.bottom);
+                velocityCtx.lineTo(x, velocityCanvas.height - margin.bottom + 5);
+                velocityCtx.stroke();
+                velocityCtx.fillText(i.toString(), x - 5, velocityCanvas.height - margin.bottom + 20);
+            }
+            
+            for (let i = 0; i <= 5; i++) {
+                const y = velocityCanvas.height - margin.bottom - (i / 5) * (velocityCanvas.height - margin.top - margin.bottom);
+                velocityCtx.beginPath();
+                velocityCtx.moveTo(margin.left, y);
+                velocityCtx.lineTo(margin.left - 5, y);
+                velocityCtx.stroke();
+                velocityCtx.fillText(i.toString(), margin.left - 15, y + 5);
+            }
+            
+            // 绘制终端速度线
+            velocityCtx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
+            velocityCtx.setLineDash([5, 5]);
+            velocityCtx.beginPath();
+            const terminalY = velocityCanvas.height - margin.bottom - (terminalVelocity / maxVelocity) * (velocityCanvas.height - margin.top - margin.bottom);
+            velocityCtx.moveTo(margin.left, terminalY);
+            velocityCtx.lineTo(velocityCanvas.width - margin.right, terminalY);
+            velocityCtx.stroke();
+            velocityCtx.setLineDash([]);
+            
+            velocityCtx.fillStyle = '#ff4444';
+            velocityCtx.font = 'bold 12px Arial';
+            velocityCtx.fillText(`vₜ = ${terminalVelocity.toFixed(2)} m/s`, velocityCanvas.width - 120, terminalY - 5);
+            
+            // 绘制数据点
+            if (velocityDataPoints.length > 1) {
+                velocityCtx.strokeStyle = '#ff9d00';
+                velocityCtx.lineWidth = 3;
+                velocityCtx.shadowColor = 'rgba(255, 157, 0, 0.5)';
+                velocityCtx.shadowBlur = 5;
+                velocityCtx.beginPath();
+                
+                for (let i = 0; i < velocityDataPoints.length; i++) {
+                    const point = velocityDataPoints[i];
+                    const x = margin.left + (point.t / maxTime) * (velocityCanvas.width - margin.left - margin.right);
+                    const y = velocityCanvas.height - margin.bottom - (point.v / maxVelocity) * (velocityCanvas.height - margin.top - margin.bottom);
+                    
+                    if (i === 0) {
+                        velocityCtx.moveTo(x, y);
+                    } else {
+                        velocityCtx.lineTo(x, y);
+                    }
+                }
+                
+                velocityCtx.stroke();
+                velocityCtx.shadowColor = 'transparent';
+                velocityCtx.shadowBlur = 0;
+                
+                // 绘制当前点
+                if (t <= maxTime) {
+                    const currentX = margin.left + (t / maxTime) * (velocityCanvas.width - margin.left - margin.right);
+                    const currentY = velocityCanvas.height - margin.bottom - (v / maxVelocity) * (velocityCanvas.height - margin.top - margin.bottom);
+                    
+                    velocityCtx.fillStyle = '#ff4444';
+                    velocityCtx.beginPath();
+                    velocityCtx.arc(currentX, currentY, 5, 0, Math.PI * 2);
+                    velocityCtx.fill();
+                }
+                
+                // 绘制选中的点
+                if (selectedVelocityPoint) {
+                    const pointX = margin.left + (selectedVelocityPoint.t / maxTime) * (velocityCanvas.width - margin.left - margin.right);
+                    const pointY = velocityCanvas.height - margin.bottom - (selectedVelocityPoint.v / maxVelocity) * (velocityCanvas.height - margin.top - margin.bottom);
+                    
+                    // 绘制选中的点
+                    velocityCtx.fillStyle = '#4CAF50';
+                    velocityCtx.beginPath();
+                    velocityCtx.arc(pointX, pointY, 7, 0, Math.PI * 2);
+                    velocityCtx.fill();
+                    
+                    // 绘制切线
+                    if (selectedVelocityPoint.slope !== undefined) {
+                        const slope = selectedVelocityPoint.slope;
+                        const lineLength = 50;
+                        const angle = Math.atan(slope * (velocityCanvas.height - margin.top - margin.bottom) / 
+                                              (maxVelocity / maxTime * (velocityCanvas.width - margin.left - margin.right)));
+                        
+                        velocityCtx.strokeStyle = '#4CAF50';
+                        velocityCtx.setLineDash([5, 5]);
+                        velocityCtx.lineWidth = 2;
+                        velocityCtx.beginPath();
+                        velocityCtx.moveTo(pointX - lineLength * Math.cos(angle), pointY - lineLength * Math.sin(angle));
+                        velocityCtx.lineTo(pointX + lineLength * Math.cos(angle), pointY + lineLength * Math.sin(angle));
+                        velocityCtx.stroke();
+                        velocityCtx.setLineDash([]);
+                    }
+                }
+            }
+        }
+        
+        // 绘制位移-时间图
+        function drawDisplacementGraph() {
+            displacementCtx.clearRect(0, 0, displacementCanvas.width, displacementCanvas.height);
+            
+            // 绘制背景
+            const gradient = displacementCtx.createLinearGradient(0, 0, 0, displacementCanvas.height);
+            gradient.addColorStop(0, '#0a0f25');
+            gradient.addColorStop(1, '#1a1a3a');
+            displacementCtx.fillStyle = gradient;
+            displacementCtx.fillRect(0, 0, displacementCanvas.width, displacementCanvas.height);
+            
+            // 定义边距
+            const margin = {top: 20, right: 20, bottom: 30, left: 40};
+            
+            // 绘制网格
+            drawGrid(displacementCtx, displacementCanvas.width, displacementCanvas.height, margin, 10, 5);
+            
+            // 绘制坐标轴
+            displacementCtx.strokeStyle = '#e0e0ff';
+            displacementCtx.lineWidth = 2;
+            displacementCtx.beginPath();
+            displacementCtx.moveTo(margin.left, margin.top);
+            displacementCtx.lineTo(margin.left, displacementCanvas.height - margin.bottom);
+            displacementCtx.lineTo(displacementCanvas.width - margin.right, displacementCanvas.height - margin.bottom);
+            displacementCtx.stroke();
+            
+            // 绘制坐标轴标签
+            displacementCtx.fillStyle = '#e0e0ff';
+            displacementCtx.font = '12px Arial';
+            displacementCtx.fillText('x (m)', 10, 15);
+            displacementCtx.fillText('t (s)', displacementCanvas.width - 25, displacementCanvas.height - 10);
+            
+            // 绘制刻度
+            for (let i = 0; i <= 5; i++) {
+                const x = margin.left + (i / 5) * (displacementCanvas.width - margin.left - margin.right);
+                displacementCtx.beginPath();
+                displacementCtx.moveTo(x, displacementCanvas.height - margin.bottom);
+                displacementCtx.lineTo(x, displacementCanvas.height - margin.bottom + 5);
+                displacementCtx.stroke();
+                displacementCtx.fillText(i.toString(), x - 5, displacementCanvas.height - margin.bottom + 20);
+            }
+            
+            for (let i = 0; i <= 5; i++) {
+                const y = displacementCanvas.height - margin.bottom - (i / 5) * (displacementCanvas.height - margin.top - margin.bottom);
+                displacementCtx.beginPath();
+                displacementCtx.moveTo(margin.left, y);
+                displacementCtx.lineTo(margin.left - 5, y);
+                displacementCtx.stroke();
+                displacementCtx.fillText((i*4).toString(), margin.left - 15, y + 5);
+            }
+            
+            // 绘制数据点
+            if (displacementDataPoints.length > 1) {
+                displacementCtx.strokeStyle = '#4CAF50';
+                displacementCtx.lineWidth = 3;
+                displacementCtx.shadowColor = 'rgba(76, 175, 80, 0.5)';
+                displacementCtx.shadowBlur = 5;
+                displacementCtx.beginPath();
+                
+                for (let i = 0; i < displacementDataPoints.length; i++) {
+                    const point = displacementDataPoints[i];
+                    const x = margin.left + (point.t / maxTime) * (displacementCanvas.width - margin.left - margin.right);
+                    const y = displacementCanvas.height - margin.bottom - (point.x / maxDisplacement) * (displacementCanvas.height - margin.top - margin.bottom);
+                    
+                    if (i === 0) {
+                        displacementCtx.moveTo(x, y);
+                    } else {
+                        displacementCtx.lineTo(x, y);
+                    }
+                }
+                
+                displacementCtx.stroke();
+                displacementCtx.shadowColor = 'transparent';
+                displacementCtx.shadowBlur = 0;
+                
+                // 绘制当前点
+                if (t <= maxTime) {
+                    const currentX = margin.left + (t / maxTime) * (displacementCanvas.width - margin.left - margin.right);
+                    const currentY = displacementCanvas.height - margin.bottom - (x / maxDisplacement) * (displacementCanvas.height - margin.top - margin.bottom);
+                    
+                    displacementCtx.fillStyle = '#ff4444';
+                    displacementCtx.beginPath();
+                    displacementCtx.arc(currentX, currentY, 5, 0, Math.PI * 2);
+                    displacementCtx.fill();
+                }
+                
+                // 绘制选中的点
+                if (selectedDisplacementPoint) {
+                    const pointX = margin.left + (selectedDisplacementPoint.t / maxTime) * (displacementCanvas.width - margin.left - margin.right);
+                    const pointY = displacementCanvas.height - margin.bottom - (selectedDisplacementPoint.x / maxDisplacement) * (displacementCanvas.height - margin.top - margin.bottom);
+                    
+                    // 绘制选中的点
+                    displacementCtx.fillStyle = '#ff9d00';
+                    displacementCtx.beginPath();
+                    displacementCtx.arc(pointX, pointY, 7, 0, Math.PI * 2);
+                    displacementCtx.fill();
+                    
+                    // 绘制切线
+                    if (selectedDisplacementPoint.slope !== undefined) {
+                        const slope = selectedDisplacementPoint.slope;
+                        const lineLength = 50;
+                        const angle = Math.atan(slope * (displacementCanvas.height - margin.top - margin.bottom) / 
+                                              (maxDisplacement / maxTime * (displacementCanvas.width - margin.left - margin.right)));
+                        
+                        displacementCtx.strokeStyle = '#ff9d00';
+                        displacementCtx.setLineDash([5, 5]);
+                        displacementCtx.lineWidth = 2;
+                        displacementCtx.beginPath();
+                        displacementCtx.moveTo(pointX - lineLength * Math.cos(angle), pointY - lineLength * Math.sin(angle));
+                        displacementCtx.lineTo(pointX + lineLength * Math.cos(angle), pointY + lineLength * Math.sin(angle));
+                        displacementCtx.stroke();
+                        displacementCtx.setLineDash([]);
+                    }
+                }
+            }
+        }
+        
+        // 更新物理量
+        function updatePhysics(deltaTime) {
+            // 限制时间步长，避免数值不稳定
+            const dt = Math.min(deltaTime, 0.1) * animationSpeed;
+            
+            // 更新时间和位移
+            t += dt;
+            x += v * dt;
+            
+            // 计算终端速度
+            terminalVelocity = (F * R) / (B * B * L * L);
+            
+            // 计算感应电动势
+            E = B * L * v;
+            
+            // 计算安培力
+            Fa = (B * B * L * L * v) / R;
+            
+            // 计算加速度
+            a = (F - Fa) / m;
+            
+            // 更新速度
+            v += a * dt;
+            
+            // 添加数据点（每0.1秒添加一个点）
+            if (velocityDataPoints.length === 0 || t - velocityDataPoints[velocityDataPoints.length - 1].t >= 0.1) {
+                velocityDataPoints.push({ t: t, v: v });
+                displacementDataPoints.push({ t: t, x: x });
+            }
+            
+            // 限制数据点数量
+            if (velocityDataPoints.length > 100) {
+                velocityDataPoints.shift();
+                displacementDataPoints.shift();
+            }
+            
+            // 动态调整图表范围
+            if (v > maxVelocity * 0.8) {
+                maxVelocity = Math.ceil(v * 1.2);
+            }
+            
+            if (x > maxDisplacement * 0.8) {
+                maxDisplacement = Math.ceil(x * 1.2);
+            }
+            
+            if (t > maxTime * 0.8) {
+                maxTime = Math.ceil(t * 1.2);
+            }
+        }
+        
+        // 查找最近的数据点
+        function findNearestPoint(dataPoints, targetT) {
+            if (dataPoints.length === 0) return null;
+            
+            let nearestPoint = dataPoints[0];
+            let minDiff = Math.abs(dataPoints[0].t - targetT);
+            
+            for (let i = 1; i < dataPoints.length; i++) {
+                const diff = Math.abs(dataPoints[i].t - targetT);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    nearestPoint = dataPoints[i];
+                }
+            }
+            
+            return nearestPoint;
+        }
+        
+        // 计算斜率
+        function calculateSlope(dataPoints, targetPoint) {
+            const index = dataPoints.findIndex(p => p.t === targetPoint.t);
+            if (index === -1 || index === 0 || index === dataPoints.length - 1) {
+                return null;
+            }
+            
+            const prevPoint = dataPoints[index - 1];
+            const nextPoint = dataPoints[index + 1];
+            
+            // 使用中心差分法计算斜率
+            return (nextPoint.v - prevPoint.v) / (nextPoint.t - prevPoint.t);
+        }
+        
+        // 计算位移斜率
+        function calculateDisplacementSlope(dataPoints, targetPoint) {
+            const index = dataPoints.findIndex(p => p.t === targetPoint.t);
+            if (index === -1 || index === 0 || index === dataPoints.length - 1) {
+                return null;
+            }
+            
+            const prevPoint = dataPoints[index - 1];
+            const nextPoint = dataPoints[index + 1];
+            
+            // 使用中心差分法计算斜率
+            return (nextPoint.x - prevPoint.x) / (nextPoint.t - prevPoint.t);
+        }
+        
+        // 动画循环
+        function animate(timestamp) {
+            if (!isRunning) return;
+            
+            if (lastTimestamp === 0) {
+                lastTimestamp = timestamp;
+            }
+            
+            const deltaTime = (timestamp - lastTimestamp) / 1000; // 转换为秒
+            lastTimestamp = timestamp;
+            
+            updatePhysics(deltaTime);
+            drawSimulation();
+            drawVelocityGraph();
+            drawDisplacementGraph();
+            updateDataDisplay();
+            updateStatusIndicator();
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        // 重置模拟
+        function resetSimulation() {
+            t = 0;
+            v = 0;
+            x = 0;
+            a = 0;
+            E = 0;
+            Fa = 0;
+            velocityDataPoints.length = 0;
+            displacementDataPoints.length = 0;
+            selectedVelocityPoint = null;
+            selectedDisplacementPoint = null;
+            velocityPointInfo.style.display = 'none';
+            displacementPointInfo.style.display = 'none';
+            
+            // 重置图表范围
+            maxTime = 5;
+            maxVelocity = 5;
+            maxDisplacement = 20;
+            
+            updateDataDisplay();
+            updateStatusIndicator();
+            drawSimulation();
+            drawVelocityGraph();
+            drawDisplacementGraph();
+        }
+        
+        // 事件监听
+        forceSlider.addEventListener('input', function() {
+            F = parseFloat(this.value);
+            updateSliders();
+        });
+        
+        massSlider.addEventListener('input', function() {
+            m = parseFloat(this.value);
+            updateSliders();
+        });
+        
+        resistanceSlider.addEventListener('input', function() {
+            R = parseFloat(this.value);
+            updateSliders();
+        });
+        
+        magneticSlider.addEventListener('input', function() {
+            B = parseFloat(this.value);
+            updateSliders();
+        });
+        
+        speedSlider.addEventListener('input', function() {
+            animationSpeed = parseFloat(this.value);
+            updateSliders();
+        });
+        
+        startBtn.addEventListener('click', function() {
+            if (!isRunning) {
+                isRunning = true;
+                lastTimestamp = 0;
+                animationId = requestAnimationFrame(animate);
+                updateStatusIndicator();
+            }
+        });
+        
+        pauseBtn.addEventListener('click', function() {
+            isRunning = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            updateStatusIndicator();
+        });
+        
+        resetBtn.addEventListener('click', resetSimulation);
+        
+        // 添加图表点击事件
+        velocityCanvas.addEventListener('click', function(event) {
+            const rect = velocityCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            const margin = {top: 20, right: 20, bottom: 30, left: 40};
+            const t = (x - margin.left) / (velocityCanvas.width - margin.left - margin.right) * maxTime;
+            
+            // 检查是否点击在曲线附近
+            if (t >= 0 && t <= maxTime) {
+                const point = findNearestPoint(velocityDataPoints, t);
+                // 设置阈值，如果最近点与点击位置的时间差大于0.5秒，则认为是空白处
+                if (point && Math.abs(point.t - t) < 0.5) {
+                    selectedVelocityPoint = point;
+                    selectedVelocityPoint.slope = calculateSlope(velocityDataPoints, point);
+                    
+                    // 显示点信息
+                    velocityPointInfo.innerHTML = `
+                        <h4>速度-时间图</h4>
+                        <p>时间: ${point.t.toFixed(2)} s</p>
+                        <p>速度: ${point.v.toFixed(2)} m/s</p>
+                        <p>斜率(加速度): ${selectedVelocityPoint.slope ? selectedVelocityPoint.slope.toFixed(2) + ' m/s²' : '无法计算'}</p>
+                    `;
+                    
+                    // 定位信息框
+                    const pointX = margin.left + (point.t / maxTime) * (velocityCanvas.width - margin.left - margin.right);
+                    const pointY = velocityCanvas.height - margin.bottom - (point.v / maxVelocity) * (velocityCanvas.height - margin.top - margin.bottom);
+                    
+                    velocityPointInfo.style.left = (pointX + 10) + 'px';
+                    velocityPointInfo.style.top = (pointY - 60) + 'px';
+                    velocityPointInfo.style.display = 'block';
+                    
+                    // 重绘图表
+                    drawVelocityGraph();
+                } else {
+                    // 点击空白处，隐藏点信息
+                    selectedVelocityPoint = null;
+                    velocityPointInfo.style.display = 'none';
+                    drawVelocityGraph();
+                }
+            } else {
+                // 点击空白处，隐藏点信息
+                selectedVelocityPoint = null;
+                velocityPointInfo.style.display = 'none';
+                drawVelocityGraph();
+            }
+        });
+        
+        displacementCanvas.addEventListener('click', function(event) {
+            const rect = displacementCanvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            const margin = {top: 20, right: 20, bottom: 30, left: 40};
+            const t = (x - margin.left) / (displacementCanvas.width - margin.left - margin.right) * maxTime;
+            
+            // 检查是否点击在曲线附近
+            if (t >= 0 && t <= maxTime) {
+                const point = findNearestPoint(displacementDataPoints, t);
+                // 设置阈值，如果最近点与点击位置的时间差大于0.5秒，则认为是空白处
+                if (point && Math.abs(point.t - t) < 0.5) {
+                    selectedDisplacementPoint = point;
+                    selectedDisplacementPoint.slope = calculateDisplacementSlope(displacementDataPoints, point);
+                    
+                    // 显示点信息
+                    displacementPointInfo.innerHTML = `
+                        <h4>位移-时间图</h4>
+                        <p>时间: ${point.t.toFixed(2)} s</p>
+                        <p>位移: ${point.x.toFixed(2)} m</p>
+                        <p>斜率(速度): ${selectedDisplacementPoint.slope ? selectedDisplacementPoint.slope.toFixed(2) + ' m/s' : '无法计算'}</p>
+                    `;
+                    
+                    // 定位信息框
+                    const pointX = margin.left + (point.t / maxTime) * (displacementCanvas.width - margin.left - margin.right);
+                    const pointY = displacementCanvas.height - margin.bottom - (point.x / maxDisplacement) * (displacementCanvas.height - margin.top - margin.bottom);
+                    
+                    displacementPointInfo.style.left = (pointX + 10) + 'px';
+                    displacementPointInfo.style.top = (pointY - 60) + 'px';
+                    displacementPointInfo.style.display = 'block';
+                    
+                    // 重绘图表
+                    drawDisplacementGraph();
+                } else {
+                    // 点击空白处，隐藏点信息
+                    selectedDisplacementPoint = null;
+                    displacementPointInfo.style.display = 'none';
+                    drawDisplacementGraph();
+                }
+            } else {
+                // 点击空白处，隐藏点信息
+                selectedDisplacementPoint = null;
+                displacementPointInfo.style.display = 'none';
+                drawDisplacementGraph();
+            }
+        });
+        
+        // 初始化
+        updateSliders();
+        resetSimulation();
+    </script>
+</body>
+</html>
