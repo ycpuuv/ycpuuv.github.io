@@ -1,0 +1,741 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>高中物理：光敏电阻特性教学动画 | 互动课件</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #F4F3EC;
+            font-family: 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* 主容器自适应 */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #F4F3EC;
+            border-radius: 28px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            overflow: hidden;
+            padding: 20px 24px 32px;
+        }
+
+        /* 响应式内边距 */
+        @media (max-width: 680px) {
+            body {
+                padding: 12px;
+            }
+            .container {
+                padding: 16px;
+            }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 28px;
+            border-bottom: 3px solid #2D593E;
+            padding-bottom: 12px;
+        }
+        h1 {
+            color: #2D593E;
+            font-size: 1.9rem;
+            letter-spacing: -0.3px;
+        }
+        .subtitle {
+            color: #AE7645;
+            font-weight: 600;
+            margin-top: 6px;
+            font-size: 0.95rem;
+        }
+
+        /* Tabs 选项卡 */
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: #EBEDD4;
+            border: none;
+            border-radius: 40px;
+            font-weight: bold;
+            color: #2D593E;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+        .tab-btn.active {
+            background: #2D593E;
+            color: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .page {
+            display: none;
+            background: white;
+            border-radius: 28px;
+            padding: 28px 24px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+            animation: fadeIn 0.3s ease;
+        }
+        .page.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* 通用卡片/布局 */
+        .flex-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: flex-start;
+        }
+        .flex-1 {
+            flex: 1;
+            min-width: 220px;
+        }
+        .card {
+            background: #F8F7F0;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #E2E6DA;
+            margin-bottom: 20px;
+        }
+        .img-container {
+            background: #fff;
+            border-radius: 20px;
+            overflow: hidden;
+            text-align: center;
+            border: 1px solid #ddd;
+        }
+        .img-container img {
+            width: 100%;
+            max-width: 280px;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+            object-fit: contain;
+        }
+        .controls-panel {
+            background: #EBEDD4;
+            padding: 22px;
+            border-radius: 28px;
+            margin-top: 20px;
+        }
+        .slider-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #1e3a2f;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            -webkit-appearance: none;
+            background: #cdd2b6;
+            border-radius: 10px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #2D593E;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+        .btn {
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s ease, background 0.2s;
+        }
+        .btn-primary { background: #2D593E; color: white; }
+        .btn-accent { background: #AE7645; color: white; }
+        .btn-danger { background: #DC2626; color: white; }
+        .btn:hover { transform: translateY(-2px); filter: brightness(0.96); }
+        .data-box {
+            font-family: 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: white;
+            padding: 12px;
+            border-radius: 28px;
+            text-align: center;
+            border: 2px solid #2D593E;
+            margin: 16px 0;
+        }
+        #chart-container {
+            width: 100%;
+            height: 260px;
+            background: #FEFCF5;
+            border-radius: 20px;
+            border: 1px solid #D9DEB7;
+            margin-top: 12px;
+            position: relative;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* 场景盒子 */
+        .scene-box {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            background: #2b2b2b;
+            border-radius: 28px;
+            overflow: hidden;
+            border: 2px solid #2D593E;
+            box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+        }
+        .scene-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: filter 0.4s;
+        }
+        .overlay-lamp {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            width: 140px;
+            height: 140px;
+            background: radial-gradient(circle, rgba(255,245,160,0.9) 0%, rgba(255,200,70,0.5) 50%, rgba(255,200,50,0) 80%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        /* 流水线样式 */
+        .conveyor {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            height: 30px;
+            background: #4a4a4a;
+        }
+        .box {
+            position: absolute;
+            bottom: 52px;
+            width: 48px;
+            height: 48px;
+            background: #AE7645;
+            border-radius: 6px;
+            border: 2px solid #5a3a1a;
+            transition: left 0.02s linear;
+        }
+        .laser-emitter, .laser-receiver {
+            position: absolute;
+            left: 50%;
+            width: 40px;
+            height: 16px;
+            background: #3c3c3c;
+            border-radius: 4px;
+            transform: translateX(-50%);
+            text-align: center;
+            font-size: 9px;
+            line-height: 14px;
+            color: #eee;
+            font-weight: bold;
+        }
+        .laser-emitter { bottom: 100px; border-bottom: 2px solid red; }
+        .laser-receiver { bottom: 48px; border-top: 2px solid #0f0; }
+        .light-beam {
+            position: absolute;
+            bottom: 65px;
+            left: 50%;
+            width: 3px;
+            height: 36px;
+            background: rgba(255, 0, 0, 0.7);
+            transform: translateX(-50%);
+            box-shadow: 0 0 4px red;
+            transition: background 0.1s;
+        }
+        .counter-display {
+            position: absolute;
+            top: 16px;
+            right: 18px;
+            background: rgba(0,0,0,0.75);
+            color: #0f0;
+            font-family: monospace;
+            font-weight: bold;
+            font-size: 1.5rem;
+            padding: 8px 18px;
+            border-radius: 40px;
+            backdrop-filter: blur(4px);
+            letter-spacing: 1px;
+        }
+        .flex {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .text-sm { font-size: 0.85rem; }
+        .font-bold { font-weight: 700; }
+        .mt-2 { margin-top: 8px; }
+        .mt-4 { margin-top: 18px; }
+        .mb-4 { margin-bottom: 16px; }
+        .list-disc { padding-left: 24px; }
+        @media (max-width: 600px) {
+            .tab-btn { padding: 6px 14px; font-size: 0.8rem;}
+            .data-box { font-size: 1.2rem; }
+            .counter-display { font-size: 1rem; padding: 4px 12px; top: 8px; right: 8px;}
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABCYAs5wqYgBRACL4qQQUQCguYkoGwJCgMhQAQOA4iyANABIA=">
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1>🌞 光敏电阻：从光学量到电学量</h1>
+    <p class="subtitle">高中物理 · 光电导效应 · 传感器应用</p>
+   </header>
+   <div class="tabs"><button class="tab-btn active" data-page="intro">📘 原理介绍</button> <button class="tab-btn" data-page="demo">📊 特性演示 (R-E曲线)</button> <button class="tab-btn" data-page="street">🌃 路灯自动控制</button> <button class="tab-btn" data-page="factory">🏭 流水线计数</button>
+   </div><!-- 页面1：原理 -->
+   <div id="intro" class="page active">
+    <div class="flex-row">
+     <div class="flex-1">
+      <h2 class="font-bold" style="font-size:1.5rem; margin-bottom:12px;">🔍 什么是光敏电阻？</h2>
+      <p>光敏电阻 (LDR / Photoresistor) 利用半导体的<strong>光电导效应</strong>制成。无光照时电阻极大（暗电阻），随着光照增强，阻值显著减小。</p>
+      <div class="card" style="margin-top: 20px;">
+       <h3 class="font-bold">✨ 核心原理</h3>
+       <p>硫化镉（CdS）等材料在光子激发下，价带电子跃迁到导带，载流子浓度增加 → 电导率上升 → 电阻下降。</p>
+       <p class="mt-2">✅ 将 <strong>光学量（光照强度）</strong> 转换为 <strong>电学量（电阻值）</strong>，是典型的非电学量→电学量传感器。</p>
+      </div>
+     </div>
+     <div class="flex-1 img-container"><img src="https://img.zxxk.com/rbm/html/2026/5/29/53cfaa4b-d061-4d0e-a312-dff05803b347.jpg" alt="光敏电阻实物图" style="max-width:100%">
+      <p class="text-sm" style="padding:6px 0;">图1 典型光敏电阻（LDR）</p>
+     </div>
+    </div>
+    <div class="mt-4" style="background:#EFF3E8; border-radius:20px; padding:16px;">
+     <h3 class="font-bold">📐 规律总结</h3>
+     <ul class="list-disc">
+      <li>光照越强，电阻值越小；光照越弱，电阻值越大。</li>
+      <li>阻值与光照呈非线性反比特性。</li>
+      <li>利用这种特性可以制作光控开关、自动调光等装置。</li>
+     </ul>
+    </div>
+   </div><!-- 页面2：特性演示 -->
+   <div id="demo" class="page">
+    <h2 class="font-bold mb-4">📈 光照强度 vs 电阻 动态仿真</h2>
+    <div class="flex-row">
+     <div class="flex-1">
+      <div class="controls-panel">
+       <div class="slider-group"><label>💡 调节光照强度 E (lux) : <span id="light-val">500</span> lx</label> <input type="range" id="light-slider" min="10" max="2000" value="500" step="5">
+       </div>
+       <div class="data-box">
+        当前电阻 <span id="res-val">1000</span> Ω
+       </div>
+       <div class="flex" style="margin-top: 12px;"><button id="record-btn" class="btn btn-primary">📌 记录数据点</button> <button id="clear-btn" class="btn btn-danger">🗑️ 清空记录</button>
+       </div>
+       <p class="text-sm" style="margin-top: 16px;">※ 点击“记录”采集当前(E,R)点，连线展示实际规律</p>
+      </div>
+     </div>
+     <div class="flex-1">
+      <div id="chart-container">
+       <canvas id="data-chart" width="500" height="240" style="width:100%; height:100%;">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACcAAAAkCAIAAACFVbTMAAAAk0lEQVR42u2TwQ6AMAhD+/8fzcySHSYWVi96KQcjDvsK2zBmxPakaXpPBXqsf7FJxF10sO90tSqjqzMFs9OrpF6j9l2lq1dF69hQN9K0R9CchjbPIY4HgtMnVanvxoAaQI9xo0vN8QMIwWy8vzAHZ9DkepXjYcyV0Fqshk834jxqjD/CVFNNNdVUU0011VRTTf06Lv9mY5QV3zQQAAAAAElFTkSuQmCC" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+       </canvas>
+      </div>
+      <p class="text-sm text-center mt-2">📉 R-E 特性曲线（反比关系）</p>
+     </div>
+    </div>
+    <div class="mt-4" style="background:#F2F0E6; padding: 14px 20px; border-radius: 24px;">
+     <h3 class="font-bold">🔬 实验现象：</h3>
+     <ul class="list-disc">
+      <li>光照增强 → 电阻减小 → 电路电流增大</li>
+      <li>模拟公式符合光敏电阻物理特性</li>
+      <li>记录多个点，观察电阻随光照指数下降的趋势</li>
+     </ul>
+    </div>
+   </div><!-- 页面3：路灯控制 -->
+   <div id="street" class="page">
+    <h2 class="font-bold mb-4">🌙 应用1：智能路灯 · 光控电路</h2>
+    <div class="scene-box"><img id="street-img" src="https://img.zxxk.com/rbm/html/2026/5/29/93b9149a-93df-4736-992e-3e0eb498e5bc.jpg" class="scene-img" alt="路灯场景">
+     <div id="lamp-glow" class="overlay-lamp" style="display: none;"></div>
+     <div style="position: absolute; bottom: 16px; left: 16px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 6px 14px; border-radius: 40px; color: white; font-weight: bold;">
+      路灯状态：<span id="lamp-status" style="color:#facc15;">已熄灭</span>
+     </div>
+    </div>
+    <div class="controls-panel"><label for="env-light">🎚️ 环境光亮度模拟 (向左=黑夜 ⇢ 向右=白天)</label> <input type="range" id="env-light" min="0" max="100" value="100">
+     <p class="text-sm mt-2">📖 原理：环境变暗 → 光敏电阻阻值上升 → 控制电路电压变化 → 路灯自动点亮。</p>
+    </div>
+   </div><!-- 页面4：流水线计数 -->
+   <div id="factory" class="page">
+    <h2 class="font-bold mb-4">📦 应用2：传送带产品计数 (激光+光敏电阻)</h2>
+    <div class="scene-box" style="background: #1f2a1e;"><img src="https://img.zxxk.com/rbm/html/2026/5/29/a5cdc60d-5346-401d-abc4-130bbfba29c5.jpg" class="scene-img" style="opacity: 0.45; object-fit: cover;" alt="工厂背景">
+     <div class="conveyor"></div>
+     <div id="factory-box" class="box" style="left: -60px;"></div>
+     <div class="laser-emitter">
+      🔴 激光发射
+     </div>
+     <div class="light-beam" id="laser-beam"></div>
+     <div class="laser-receiver">
+      📡 光敏接收
+     </div>
+     <div class="counter-display">
+      计数: <span id="count-val">0</span>
+     </div>
+    </div>
+    <div class="controls-panel flex" style="justify-content: center; gap: 16px; margin-top: 20px;"><button id="start-factory" class="btn btn-primary">▶ 启动传送带</button> <button id="pause-factory" class="btn btn-accent">⏸️ 暂停</button> <button id="reset-factory" class="btn btn-danger">🔄 重置计数</button>
+    </div>
+    <p class="text-sm mt-3" style="background:#E9EDDC; padding: 10px; border-radius: 20px;">💡 原理：当物品经过激光与接收器之间，光线被遮挡，光敏电阻阻值骤增 → 检测到脉冲 → 计数器自动增加1。</p>
+   </div>
+  </div>
+  <script>
+    // ---------- 选项卡切换 ----------
+    const tabs = document.querySelectorAll('.tab-btn');
+    const pages = document.querySelectorAll('.page');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const pageId = tab.dataset.page;
+            tabs.forEach(btn => btn.classList.remove('active'));
+            tab.classList.add('active');
+            pages.forEach(page => page.classList.remove('active'));
+            const targetPage = document.getElementById(pageId);
+            if(targetPage) targetPage.classList.add('active');
+            // 如果切到demo，重新绘制图表确保canvas尺寸正确
+            if(pageId === 'demo') {
+                setTimeout(() => drawChart(), 30);
+            }
+        });
+    });
+
+    // ---------- 页面2：光照-电阻模拟 + 记录绘图 ----------
+    const lightSlider = document.getElementById('light-slider');
+    const lightValSpan = document.getElementById('light-val');
+    const resValSpan = document.getElementById('res-val');
+    const recordBtn = document.getElementById('record-btn');
+    const clearBtn = document.getElementById('clear-btn');
+    const canvas = document.getElementById('data-chart');
+    let ctx = canvas.getContext('2d');
+
+    let recordedPoints = []; // 存储 {E, R}
+
+    // 物理模拟: R = 500000/(E+50) + 50   (范围10~2000lux → 约R从~1200Ω降至~280Ω)
+    function calcResistance(E) {
+        return Math.round(500000 / (E + 50) + 50);
+    }
+
+    function updateResistanceDisplay() {
+        const E = parseInt(lightSlider.value);
+        const R = calcResistance(E);
+        lightValSpan.innerText = E;
+        resValSpan.innerText = R;
+        return { E, R };
+    }
+
+    // 绘制坐标系 + 理论曲线 + 记录点
+    function drawChart() {
+        if(!canvas || !ctx) return;
+        const w = canvas.clientWidth;
+        const h = canvas.clientHeight;
+        canvas.width = w;
+        canvas.height = h;
+        if(w <= 10 || h <= 10) return;
+        ctx.clearRect(0, 0, w, h);
+        // 边距
+        const padLeft = 48, padRight = 28, padTop = 20, padBottom = 32;
+        const plotW = w - padLeft - padRight;
+        const plotH = h - padTop - padBottom;
+        if(plotW <= 0 || plotH <= 0) return;
+
+        // 绘制坐标轴
+        ctx.beginPath();
+        ctx.strokeStyle = '#444';
+        ctx.lineWidth = 1.5;
+        ctx.moveTo(padLeft, padTop);
+        ctx.lineTo(padLeft, h - padBottom);
+        ctx.lineTo(w - padRight, h - padBottom);
+        ctx.stroke();
+        // 轴标签
+        ctx.fillStyle = '#2D593E';
+        ctx.font = '12px "Segoe UI"';
+        ctx.fillText('R (Ω)', 12, padTop+12);
+        ctx.fillText('E (lux)', w - padRight - 28, h - padBottom + 16);
+        
+        // 理论曲线 (连续反比例)
+        ctx.beginPath();
+        ctx.strokeStyle = '#A0AB7F';
+        ctx.setLineDash([6, 6]);
+        let first = true;
+        for(let e = 10; e <= 2000; e += 20) {
+            const r = calcResistance(e);
+            const x = padLeft + (e / 2000) * plotW;
+            const y = padTop + plotH - (r / 1200) * plotH; // 最大电阻约1200Ω
+            if(first) { ctx.moveTo(x, y); first = false; }
+            else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // 绘制记录的数据点
+        if(recordedPoints.length) {
+            recordedPoints.forEach(p => {
+                const x = padLeft + (p.E / 2000) * plotW;
+                let y = padTop + plotH - (p.R / 1200) * plotH;
+                y = Math.min(h - padBottom - 5, Math.max(padTop + 2, y));
+                ctx.fillStyle = '#DC2626';
+                ctx.beginPath();
+                ctx.arc(x, y, 5, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(x, y, 2, 0, Math.PI*2);
+                ctx.fill();
+            });
+            // 用平滑连线展示趋势
+            if(recordedPoints.length >= 2) {
+                const sorted = [...recordedPoints].sort((a,b)=>a.E-b.E);
+                ctx.beginPath();
+                ctx.strokeStyle = '#2D593E';
+                ctx.lineWidth = 2.5;
+                for(let i=0; i<sorted.length; i++) {
+                    const p = sorted[i];
+                    const x = padLeft + (p.E / 2000) * plotW;
+                    let y = padTop + plotH - (p.R / 1200) * plotH;
+                    y = Math.min(h - padBottom - 5, Math.max(padTop + 2, y));
+                    if(i===0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+        }
+        // 显示最大值提醒
+        ctx.fillStyle = '#70552c';
+        ctx.font = '10px monospace';
+        ctx.fillText('※ 理论曲线(虚线) & 实测记录点', padLeft, padTop-4);
+    }
+
+    // 记录当前数据
+    function recordCurrent() {
+        const E = parseInt(lightSlider.value);
+        const R = calcResistance(E);
+        // 避免重复记录完全相同点 (可简单去重)
+        const exists = recordedPoints.some(p => p.E === E);
+        if(!exists) {
+            recordedPoints.push({E, R});
+            recordedPoints.sort((a,b)=>a.E-b.E);
+        } else {
+            // 若已存在相同光照，覆盖阻值（重新记录）
+            const idx = recordedPoints.findIndex(p=>p.E===E);
+            if(idx !== -1) recordedPoints[idx].R = R;
+        }
+        drawChart();
+    }
+
+    function clearRecords() {
+        recordedPoints = [];
+        drawChart();
+    }
+
+    lightSlider.addEventListener('input', () => {
+        updateResistanceDisplay();
+        // 实时刷新时，如果没记录，仅数值变动；但保持图表显示记录点和理论曲线
+        drawChart();
+    });
+    recordBtn.addEventListener('click', recordCurrent);
+    clearBtn.addEventListener('click', clearRecords);
+    
+    // 初始化和resize绘图
+    function initDemo() {
+        updateResistanceDisplay();
+        drawChart();
+    }
+    window.addEventListener('resize', () => {
+        if(document.getElementById('demo').classList.contains('active')) {
+            drawChart();
+        }
+    });
+
+    // ---------- 页面3：路灯控制 (光照亮度模拟) ----------
+    const envSlider = document.getElementById('env-light');
+    const streetImg = document.getElementById('street-img');
+    const lampGlow = document.getElementById('lamp-glow');
+    const lampStatusSpan = document.getElementById('lamp-status');
+
+    function updateStreet() {
+        let val = parseInt(envSlider.value);
+        // val = 0(极暗) → 100(极亮)
+        const brightnessPercent = 100 - val;  // 左暗右亮
+        const filterVal = Math.max(18, Math.min(100, brightnessPercent));
+        streetImg.style.filter = `brightness(${filterVal}%)`;
+        // 阈值: 环境亮度低于40% (即滑块>60) 开启路灯
+        const isDark = brightnessPercent < 40;
+        if(isDark) {
+            lampGlow.style.display = 'block';
+            lampStatusSpan.innerText = '💡 已点亮';
+            lampStatusSpan.style.color = '#FFD966';
+        } else {
+            lampGlow.style.display = 'none';
+            lampStatusSpan.innerText = '❄️ 已熄灭';
+            lampStatusSpan.style.color = '#aaa';
+        }
+    }
+    envSlider.addEventListener('input', updateStreet);
+    updateStreet();  // 初始状态
+
+    // ---------- 页面4：流水线计数 (物理仿真) ----------
+    const startBtn = document.getElementById('start-factory');
+    const pauseBtn = document.getElementById('pause-factory');
+    const resetBtn = document.getElementById('reset-factory');
+    const boxEl = document.getElementById('factory-box');
+    const countSpan = document.getElementById('count-val');
+    let conveyorRunning = false;
+    let boxX = -70;          // 起始左侧外
+    let count = 0;
+    let animFrameId = null;
+    let lastTriggerFlag = false; // 防止同一物体多次计数
+
+    // 获取光束中心 X 坐标 (相对父容器百分比)
+    function getBeamX() {
+        const parentRect = boxEl.parentElement.getBoundingClientRect();
+        const centerX = parentRect.width / 2;
+        return centerX;
+    }
+
+    function updateCountDisplay() {
+        countSpan.innerText = count;
+    }
+
+    function resetCounter() {
+        count = 0;
+        updateCountDisplay();
+        // 重置位置和标志
+        boxX = -70;
+        if(boxEl) boxEl.style.left = `${boxX}px`;
+        lastTriggerFlag = false;
+    }
+
+    function animateConveyor() {
+        if(!conveyorRunning) return;
+        // 移动速度
+        boxX += 3.2;
+        const containerWidth = boxEl.parentElement.offsetWidth;
+        if(boxX > containerWidth + 70) {
+            boxX = -70;
+        }
+        boxEl.style.left = `${boxX}px`;
+        
+        // 检测遮挡逻辑: 盒子宽度48px，光束中心在 containerWidth/2
+        const beamCenter = getBeamX();
+        const boxRect = {
+            left: boxX,
+            right: boxX + 48
+        };
+        const isBlocking = (boxRect.left <= beamCenter && boxRect.right >= beamCenter);
+        
+        // 从遮挡瞬间计数一次
+        if(isBlocking && !lastTriggerFlag) {
+            count++;
+            updateCountDisplay();
+            lastTriggerFlag = true;
+            // 视觉反馈: 激光束瞬间变绿
+            const beamDiv = document.querySelector('.light-beam');
+            if(beamDiv) {
+                beamDiv.style.background = 'rgba(0, 255, 80, 0.9)';
+                beamDiv.style.boxShadow = '0 0 8px #0f0';
+                setTimeout(() => {
+                    if(beamDiv) {
+                        beamDiv.style.background = 'rgba(255, 0, 0, 0.7)';
+                        beamDiv.style.boxShadow = '0 0 4px red';
+                    }
+                }, 150);
+            }
+        } else if(!isBlocking) {
+            lastTriggerFlag = false;
+        }
+        
+        animFrameId = requestAnimationFrame(animateConveyor);
+    }
+
+    function startConveyor() {
+        if(conveyorRunning) return;
+        conveyorRunning = true;
+        if(animFrameId) cancelAnimationFrame(animFrameId);
+        animateConveyor();
+    }
+    
+    function pauseConveyor() {
+        conveyorRunning = false;
+        if(animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+        }
+    }
+    
+    function resetAll() {
+        pauseConveyor();
+        resetCounter();
+        boxX = -70;
+        if(boxEl) boxEl.style.left = `${boxX}px`;
+        lastTriggerFlag = false;
+        // 重置后不自动启动，需手动点击开始
+    }
+
+    startBtn.addEventListener('click', startConveyor);
+    pauseBtn.addEventListener('click', pauseConveyor);
+    resetBtn.addEventListener('click', resetAll);
+    
+    // 初始化工厂位置和光束样式
+    if(boxEl) boxEl.style.left = '-70px';
+    // 确保激光光束样式
+    const beamDiv = document.querySelector('.light-beam');
+    if(beamDiv) {
+        beamDiv.style.background = 'rgba(255, 0, 0, 0.7)';
+        beamDiv.style.boxShadow = '0 0 4px red';
+    }
+    // 页面隐藏时暂停动画，节省性能 (可选)
+    function handlePageVisibility() {
+        if(document.hidden && conveyorRunning) {
+            pauseConveyor();
+        } else if(!document.hidden && conveyorRunning) {
+            // 恢复动画
+            startConveyor();
+        }
+    }
+    document.addEventListener('visibilitychange', handlePageVisibility);
+
+    // ---------- 全部初始化 ----------
+    initDemo();
+    updateStreet();
+    // 避免canvas初始可能尺寸为0延迟渲染
+    setTimeout(() => {
+        if(document.getElementById('demo').classList.contains('active')) drawChart();
+    }, 100);
+    
+    // 自适应重新绘制图表
+    window.addEventListener('resize', () => {
+        if(document.getElementById('demo') && document.getElementById('demo').classList.contains('active')) {
+            drawChart();
+        }
+    });
+    
+    // 保证所有图片显示正常，激光样式稳定
+    console.log("✅ 光敏电阻教学仿真已加载 · 符合物理规律");
+</script>
+ </body>
+</html>
