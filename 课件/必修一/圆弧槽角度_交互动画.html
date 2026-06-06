@@ -7,8 +7,8 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#0b0b14;color:#d4d4dc;font-family:'Inter','PingFang SC','Microsoft YaHei',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh}
-  h1{font-size:1.05em;font-weight:600;margin:12px 0 2px;color:#d4a373;letter-spacing:1px}
-  .sub{font-size:.62em;color:#5c5c72;margin-bottom:6px}
+  h1{font-size:1em;font-weight:600;margin:12px 0 2px;color:#d4a373;letter-spacing:1px}
+  .sub{font-size:.6em;color:#5c5c72;margin-bottom:6px}
   .main{max-width:620px;width:95%;margin:0 auto}
   canvas{display:block;width:100%;border-radius:8px;background:#0a0a14;margin:0 auto}
   .panel{background:#0e0e1e;border-radius:8px;border:1px solid #18182a;padding:10px 14px;margin:6px 0}
@@ -20,26 +20,22 @@
   .btns{display:flex;gap:6px}
   .btns button{flex:1;padding:5px 0;border-radius:5px;font-size:.68em;cursor:pointer;transition:.2s}
   .btn-go{background:#d4a373;border:none;color:#0b0b14;font-weight:600}
-  .btn-go:disabled{background:#1a1a30;color:#5c5c72}
+  .btn-go:disabled{background:#1a1a30;color:#5c5c72;cursor:default}
   .btn-reset{background:transparent;border:1px solid #2a2a48;color:#7a7a92}
   .btn-reset:hover{border-color:#d4a373;color:#d4a373}
-  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:6px;padding-top:6px;border-top:1px solid #18182a}
-  .item{text-align:center;padding:3px}
-  .item .l{font-size:.58em;color:#5c5c72}
-  .item .v{font-size:.8em;color:#e0e0e8;margin-top:1px;font-variant-numeric:tabular-nums}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:3px;margin-top:5px;padding-top:5px;border-top:1px solid #18182a}
+  .item{text-align:center;padding:2px}
+  .item .l{font-size:.56em;color:#5c5c72}
+  .item .v{font-size:.78em;color:#e0e0e8;font-variant-numeric:tabular-nums}
   .item .v.gold{color:#f4a261}
-  .legends{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid #18182a;justify-content:center}
-  .leg{display:flex;align-items:center;gap:4px;font-size:.6em;color:#7a7a92}
+  .legends{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px;padding-top:5px;border-top:1px solid #18182a;justify-content:center}
+  .leg{display:flex;align-items:center;gap:4px;font-size:.58em;color:#7a7a92}
   .leg .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
-  .compare{display:flex;gap:8px;margin-top:5px;flex-wrap:wrap}
-  .compare label{font-size:.6em;color:#5c5c72;display:flex;align-items:center;gap:4px;cursor:pointer}
-  .compare input[type=checkbox]{accent-color:#d4a373}
-  @media(max-width:480px){h1{font-size:.9em}.grid{grid-template-columns:repeat(2,1fr)}}
-
-.tabs{display:flex;gap:4px;margin-bottom:6px}
-.tabs button{flex:1;padding:4px;border-radius:4px;border:1px solid #1a1a30;background:transparent;color:#5c5c72;font-size:.62em;cursor:pointer;transition:.2s}
-.tabs button.active{background:#1a1a30;border-color:#d4a373;color:#d4a373}
-.tabs button:hover{border-color:#2a2a48;color:#7a7a92}
+  .tabs{display:flex;gap:4px;margin-bottom:6px}
+  .tabs button{flex:1;padding:4px;border-radius:4px;border:1px solid #1a1a30;background:transparent;color:#5c5c72;font-size:.62em;cursor:pointer;transition:.2s}
+  .tabs button.active{background:#1a1a30;border-color:#d4a373;color:#d4a373}
+  .tabs button:hover{border-color:#2a2a48;color:#7a7a92}
+  @media(max-width:480px){h1{font-size:.85em}.grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -59,7 +55,7 @@
   </div>
   <div class="row">
     <label>初速度 v₀</label>
-    <input type="range" id="sSpeed" min="30" max="120" value="70">
+    <input type="range" id="sSpeed" min="30" max="100" value="70">
     <span class="val" id="dSpeed">70</span>
   </div>
   <div class="row">
@@ -87,27 +83,32 @@ let W, H, sc;
 function resize() {
   const mw = Math.min(620, innerWidth - 10);
   c.width = mw;
-  c.height = mw * 0.75;
+  c.height = mw * 0.72;
   W = c.width;
   H = c.height;
-  sc = H / 280;
+  sc = 1.8; // fixed scale: pixels per world unit
 }
 resize();
 addEventListener('resize', resize);
 
-const G = 9.8;
-const GROUND_Y = H - 25;
-const LAUNCH_X = 80;
+// Physics: scale so trajectories fill the canvas
+// G=5, v0 = speed*0.35 → at speed=70, v0=24.5
+// Range at 45°: v0²/G = 600/5 = 120 world units = 216 px
+// At max speed 100, v0=35: range at 45° = 1225/5 = 245 = 441 px ← fits canvas
+const G = 5;
+const V0_MULT = 0.35;
+const GROUND_Y = H - 24;
+const LAUNCH_X = 90;
 
-let mode = 'single'; // 'single' | 'multi'
+let mode = 'single';
 let angle = 37, speed = 70;
 let running = false;
 let singleTrail = [];
 let singleBall = null;
+let singleDone = false;
 let multiResults = [];
 let stats = { d:0, v:0, h:0, t:0 };
 
-// DOM
 const sAngle = document.getElementById('sAngle');
 const sSpeed = document.getElementById('sSpeed');
 const dAngle = document.getElementById('dAngle');
@@ -116,20 +117,20 @@ const btnGo = document.getElementById('btnGo');
 const btnReset = document.getElementById('btnReset');
 const tabSingle = document.getElementById('tabSingle');
 const tabMulti = document.getElementById('tabMulti');
+const el = id => document.getElementById(id);
 
-sAngle.oninput = () => { if(running&&mode==='single')stop(); angle=+sAngle.value; dAngle.textContent=angle+'°'; if(mode==='single')draw(); };
-sSpeed.oninput = () => { if(running&&mode==='single')stop(); speed=+sSpeed.value; dSpeed.textContent=speed; if(mode==='single')draw(); };
-btnGo.onclick = () => { if(mode==='single')launch(); else multiLaunch(); };
+sAngle.oninput = () => { if(!running) { angle=+sAngle.value; dAngle.textContent=angle+'°'; draw(); } };
+sSpeed.oninput = () => { if(!running) { speed=+sSpeed.value; dSpeed.textContent=speed; draw(); } };
+btnGo.onclick = () => mode==='single' ? launch() : multiLaunch();
 btnReset.onclick = reset;
-tabSingle.onclick = () => { setMode('single'); };
-tabMulti.onclick = () => { setMode('multi'); };
+tabSingle.onclick = () => setMode('single');
+tabMulti.onclick = () => setMode('multi');
 
 function setMode(m) {
   mode = m;
   tabSingle.className = m==='single'?'active':'';
   tabMulti.className = m==='multi'?'active':'';
-  if(m==='multi') sAngle.disabled = true;
-  else sAngle.disabled = false;
+  sAngle.disabled = m!=='single';
   reset();
 }
 
@@ -137,18 +138,14 @@ function reset() {
   running = false;
   singleTrail = [];
   singleBall = null;
+  singleDone = false;
   multiResults = [];
   stats = {d:0,v:0,h:0,t:0};
   updateStats();
   btnGo.textContent = mode==='single'?'▶ 发射':'▶ 多角度发射';
   btnGo.disabled = false;
+  document.getElementById('legends').innerHTML = '';
   draw();
-}
-
-function stop() {
-  running = false;
-  btnGo.textContent = '▶ 发射';
-  btnGo.disabled = false;
 }
 
 function updateStats() {
@@ -157,59 +154,58 @@ function updateStats() {
   el('maxH').textContent = stats.h ? stats.h.toFixed(1) : '—';
   el('tFlight').textContent = stats.t ? stats.t.toFixed(2)+'s' : '—';
 }
-const el = id => document.getElementById(id);
 
 function w2s(wx, wy) {
   return [LAUNCH_X + wx * sc, GROUND_Y - wy * sc];
 }
 
-// Single launch
+// ---- Single launch ----
 function launch() {
   const θ = angle * Math.PI / 180;
-  const v0 = speed * 0.08;
+  const v0 = speed * V0_MULT;
   const vx = v0 * Math.cos(θ);
   const vy = v0 * Math.sin(θ);
+  const tF = 2 * vy / G;
   
-  singleBall = { x:0, y:0, vx, vy, t:0 };
+  singleBall = { x:0, y:0.01, vx, vy }; // tiny y offset to avoid immediate ground
   singleTrail = [];
+  singleDone = false;
   running = true;
-  stats = {d:0,v:0,h:0,t:0};
+  
+  stats = {
+    d: vx * tF,
+    v: v0,  // ground-to-ground: landing speed = launch speed
+    h: vy*vy/(2*G),
+    t: tF
+  };
   updateStats();
+  
   btnGo.textContent = '⏵ 飞行中';
   btnGo.disabled = true;
-  
-  // Calculate full trajectory analytically
-  const tFlight = 2 * vy / G;
-  const dHoriz = vx * tFlight;
-  const maxH = vy*vy/(2*G);
-  const vLand = Math.sqrt(vx*vx + vy*vy);
-  
-  stats.d = dHoriz;
-  stats.v = vLand;
-  stats.h = maxH;
-  stats.t = tFlight;
-  updateStats();
-  
   lastT = null;
   requestAnimationFrame(singleAnim);
 }
 
 function singleAnim(t) {
   if (!running) return;
-  const dt = lastT ? Math.min((t - lastT) / 1000, 0.02) : 0.016;
+  const dt = lastT ? Math.min((t - lastT) / 1000, 0.025) : 0.016;
   lastT = t;
   
-  const spd = 2.0;
+  const spd = 2.2;
   const b = singleBall;
   b.vy -= G * dt * spd;
   b.x += b.vx * dt * spd;
   b.y += b.vy * dt * spd;
   
-  singleTrail.push({x:b.x, y:b.y});
-  if (singleTrail.length > 1000) singleTrail.shift();
+  if (!singleDone) {
+    singleTrail.push({x:b.x, y:b.y});
+    if (singleTrail.length > 1200) singleTrail.shift();
+  }
   
-  if (b.y <= 0) {
+  if (b.y <= 0 && !singleDone) {
     b.y = 0;
+    singleDone = true;
+    singleTrail.push({x:b.x, y:0}); // final ground point
     running = false;
     btnGo.textContent = '⟳ 再试';
     btnGo.disabled = false;
@@ -219,36 +215,32 @@ function singleAnim(t) {
   if (running) requestAnimationFrame(singleAnim);
 }
 
-// Multi launch: launch 4 angles at once
+// ---- Multi launch ----
 function multiLaunch() {
   multiResults = [];
   running = true;
   btnGo.textContent = '⏵ 运行';
   btnGo.disabled = true;
+  document.getElementById('legends').innerHTML = '';
   
-  const v0 = speed * 0.08;
-  const testAngles = [20, 37, 53, 70];
+  const v0 = speed * V0_MULT;
+  const angles = [20, 37, 53, 70];
   
-  testAngles.forEach(a => {
+  angles.forEach(a => {
     const θ = a * Math.PI / 180;
     const vx = v0 * Math.cos(θ);
     const vy = v0 * Math.sin(θ);
     const tF = 2 * vy / G;
-    const dH = vx * tF;
-    const mH = vy*vy/(2*G);
-    const vL = Math.sqrt(vx*vx + vy*vy);
-    
     multiResults.push({
       angle: a,
-      ball: { x:0, y:0, vx, vy, t:0 },
+      ball: { x:0, y:0.01, vx, vy },
       trail: [],
       done: false,
-      stats: { d:dH, v:vL, h:mH, t:tF }
+      stats: { d: vx*tF, v: v0, h: vy*vy/(2*G), t: tF }
     });
   });
   
-  // Show comparison stats
-  stats = multiResults[1].stats; // show 37° as default
+  stats = multiResults[1].stats; // show 37° data
   updateStats();
   
   lastT = null;
@@ -257,10 +249,10 @@ function multiLaunch() {
 
 function multiAnim(t) {
   if (!running) return;
-  const dt = lastT ? Math.min((t - lastT) / 1000, 0.02) : 0.016;
+  const dt = lastT ? Math.min((t - lastT) / 1000, 0.025) : 0.016;
   lastT = t;
   
-  const spd = 2.0;
+  const spd = 2.2;
   let allDone = true;
   
   multiResults.forEach(r => {
@@ -271,28 +263,51 @@ function multiAnim(t) {
     b.x += b.vx * dt * spd;
     b.y += b.vy * dt * spd;
     r.trail.push({x:b.x, y:b.y});
-    if (r.trail.length > 1000) r.trail.shift();
-    if (b.y <= 0) {
-      b.y = 0;
-      r.done = true;
-    }
+    if (r.trail.length > 1200) r.trail.shift();
+    if (b.y <= 0) { b.y = 0; r.done = true; r.trail.push({x:b.x, y:0}); }
   });
   
   if (allDone) {
     running = false;
     btnGo.textContent = '⟳ 再试';
     btnGo.disabled = false;
+    // Update legend with final data
+    showMultiLegend();
+  } else {
+    showMultiLegend();
   }
   
   draw();
   if (running) requestAnimationFrame(multiAnim);
 }
 
-const COLORS = ['#f4a261', '#e76f51', '#2a9d8f', '#e9c46a'];
-const COLOR_NAMES = ['橙', '红', '青', '金'];
+function showMultiLegend() {
+  const legDiv = document.getElementById('legends');
+  legDiv.innerHTML = '';
+  multiResults.forEach((r, i) => {
+    const leg = document.createElement('span');
+    leg.className = 'leg';
+    const col = COLORS[i];
+    leg.innerHTML = `<span class="dot" style="background:${col}"></span>${r.angle}° → d=${r.stats.d.toFixed(1)}`;
+    legDiv.appendChild(leg);
+  });
+}
 
+const COLORS = ['#f4a261', '#e76f51', '#2a9d8f', '#e9c46a'];
+
+// ---- Drawing ----
 function draw() {
   ctx.clearRect(0, 0, W, H);
+  
+  // Background grid
+  ctx.strokeStyle = '#0e0e1e';
+  ctx.lineWidth = 0.5;
+  for (let y = GROUND_Y; y > 0; y -= 40) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+  }
+  for (let x = 0; x < W; x += 60) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+  }
   
   // Ground
   ctx.fillStyle = '#12121e';
@@ -300,130 +315,137 @@ function draw() {
   ctx.beginPath();
   ctx.moveTo(0, GROUND_Y);
   ctx.lineTo(W, GROUND_Y);
-  ctx.strokeStyle = '#1e1e30';
+  ctx.strokeStyle = '#2a2a40';
   ctx.lineWidth = 1;
   ctx.stroke();
-  
-  if (mode === 'single') {
-    drawSingle();
-  } else {
-    drawMulti();
-  }
-  
-  // Ground labels
-  ctx.fillStyle = '#3a3a50';
-  ctx.font = `${Math.round(8*sc/2.5)}px sans-serif`;
+  ctx.fillStyle = '#4a4a60';
+  ctx.font = '11px sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('地面', 4, GROUND_Y - 4);
+  
+  if (mode === 'single') drawSingle();
+  else drawMulti();
 }
 
 function drawSingle() {
   const θ = angle * Math.PI / 180;
-  const v0 = speed * 0.08;
+  const v0 = speed * V0_MULT;
   
   // Launch platform
-  ctx.fillStyle = '#0e0e1e';
-  ctx.fillRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
-  ctx.strokeStyle = '#1a1a2e';
+  ctx.fillStyle = '#0e0e20';
+  ctx.fillRect(LAUNCH_X-18, GROUND_Y-16, 36, 16);
+  ctx.strokeStyle = '#1a1a30';
   ctx.lineWidth = 1;
-  ctx.strokeRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
+  ctx.strokeRect(LAUNCH_X-18, GROUND_Y-16, 36, 16);
   
-  // Launch angle arc
+  // Angle arc
   ctx.beginPath();
-  ctx.arc(LAUNCH_X, GROUND_Y, 25, -θ, 0);
-  ctx.strokeStyle = '#2a2a48';
+  ctx.arc(LAUNCH_X, GROUND_Y, 22, -θ, 0);
+  ctx.strokeStyle = '#3a3a50';
   ctx.lineWidth = 1;
   ctx.stroke();
-  ctx.fillStyle = '#5c5c72';
-  ctx.font = `${Math.round(8*sc/2.5)}px sans-serif`;
+  ctx.fillStyle = '#6a6a80';
+  ctx.font = '10px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('θ='+angle+'°', LAUNCH_X+35, GROUND_Y-10);
+  ctx.fillText('θ='+angle+'°', LAUNCH_X+30, GROUND_Y-8);
   
-  // Velocity vector (from launch point)
-  const arrowLen = Math.min(v0 * sc * 0.8, 60);
+  // v0 arrow 
+  const al = Math.min(v0 * sc * 0.7, 55);
   ctx.beginPath();
   ctx.moveTo(LAUNCH_X, GROUND_Y);
-  ctx.lineTo(LAUNCH_X + arrowLen*Math.cos(θ), GROUND_Y - arrowLen*Math.sin(θ));
-  ctx.strokeStyle = '#e6b17e';
-  ctx.lineWidth = 1.5;
+  ctx.lineTo(LAUNCH_X + al*Math.cos(θ), GROUND_Y - al*Math.sin(θ));
+  ctx.strokeStyle = 'rgba(230,177,126,0.6)';
+  ctx.lineWidth = 2;
   ctx.stroke();
-  // arrowhead
-  const ax = LAUNCH_X + arrowLen*Math.cos(θ);
-  const ay = GROUND_Y - arrowLen*Math.sin(θ);
+  const ax = LAUNCH_X + al*Math.cos(θ), ay = GROUND_Y - al*Math.sin(θ);
   ctx.beginPath();
   ctx.moveTo(ax, ay);
   ctx.lineTo(ax-5*Math.cos(θ-0.4), ay+5*Math.sin(θ-0.4));
   ctx.moveTo(ax, ay);
   ctx.lineTo(ax-5*Math.cos(θ+0.4), ay+5*Math.sin(θ+0.4));
   ctx.stroke();
-  ctx.fillStyle = '#e6b17e';
-  ctx.font = `${Math.round(7*sc/2.5)}px sans-serif`;
-  ctx.fillText('v₀', ax+4, ay-2);
   
-  // Trail
+  // Predicted trajectory (dashed, shown when idle)
+  if (!running || (singleDone && singleTrail.length > 0)) {
+    const vx = v0 * Math.cos(θ);
+    const vy = v0 * Math.sin(θ);
+    ctx.beginPath();
+    let first = true;
+    for (let t = 0; t <= 2*vy/G; t += 0.02) {
+      const px = vx * t;
+      const py = vy * t - 0.5*G*t*t;
+      if (py < 0) break;
+      const [sx, sy] = w2s(px, py);
+      if (first) { ctx.moveTo(sx, sy); first = false; }
+      else ctx.lineTo(sx, sy);
+    }
+    if (running && singleDone) {
+      ctx.strokeStyle = 'rgba(244,162,97,0.6)';
+      ctx.lineWidth = 2.5;
+    } else {
+      ctx.strokeStyle = 'rgba(244,162,97,0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5,5]);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  
+  // Trail from simulation
   if (singleTrail.length > 1) {
     ctx.beginPath();
-    const trail = singleTrail;
-    for (let i = 0; i < trail.length; i++) {
-      const [sx, sy] = w2s(trail[i].x, trail[i].y);
+    for (let i = 0; i < singleTrail.length; i++) {
+      const [sx, sy] = w2s(singleTrail[i].x, singleTrail[i].y);
       if (i === 0) ctx.moveTo(sx, sy);
       else ctx.lineTo(sx, sy);
     }
-    ctx.strokeStyle = 'rgba(244,162,97,0.5)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(244,162,97,0.7)';
+    ctx.lineWidth = 2.5;
     ctx.stroke();
-    
-    // Range marker
-    if (singleBall && singleBall.y <= 0 && stats.d > 0) {
-      const [lx, ly] = w2s(stats.d, 0);
-      ctx.beginPath();
-      ctx.moveTo(LAUNCH_X, GROUND_Y);
-      ctx.lineTo(lx, GROUND_Y);
-      ctx.strokeStyle = 'rgba(244,162,97,0.3)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([3,3]);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.fillStyle = '#f4a261';
-      ctx.font = `${Math.round(9*sc/2.5)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText('d = '+stats.d.toFixed(1), (LAUNCH_X+lx)/2, GROUND_Y-4);
-      
-      // Landing dot
-      ctx.beginPath();
-      ctx.arc(lx, GROUND_Y, 4, 0, Math.PI*2);
-      ctx.fillStyle = '#f4a261';
-      ctx.fill();
-    }
-    
-    // Ball
-    if (singleBall && singleBall.y > 0) {
-      const [bx, by] = w2s(singleBall.x, singleBall.y);
-      drawBall(bx, by, '#f4a261');
-      
-      // Velocity vector
-      const vm = Math.sqrt(singleBall.vx*singleBall.vx + singleBall.vy*singleBall.vy);
-      if (vm > 0.01) {
-        const al = Math.min(vm * sc * 0.4, 35);
-        ctx.beginPath();
-        ctx.moveTo(bx, by);
-        ctx.lineTo(bx + singleBall.vx/vm*al, by - singleBall.vy/vm*al);
-        ctx.strokeStyle = 'rgba(230,177,126,0.5)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
-    }
   }
   
-  // Max height marker (static)
-  if (stats.h > 0 && singleTrail.length > 0) {
-    const θr = angle * Math.PI / 180;
-    const v0r = speed * 0.08;
-    const vx = v0r * Math.cos(θr);
-    const vy = v0r * Math.sin(θr);
-    const maxH = vy*vy/(2*G);
+  // Ball
+  if (singleBall && singleDone === false) {
+    const [bx, by] = w2s(singleBall.x, singleBall.y);
+    drawBall(bx, by, '#f4a261');
+  }
+  
+  // Landing marker
+  if (singleDone && stats.d > 0) {
+    const [lx, ly] = w2s(stats.d, 0);
+    ctx.beginPath();
+    ctx.arc(lx, GROUND_Y, 5, 0, Math.PI*2);
+    ctx.fillStyle = '#f4a261';
+    ctx.fill();
+    
+    // Range line
+    ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    ctx.moveTo(LAUNCH_X, GROUND_Y+1);
+    ctx.lineTo(lx, GROUND_Y+1);
+    ctx.strokeStyle = 'rgba(244,162,97,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    
+    ctx.fillStyle = '#f4a261';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('d = '+stats.d.toFixed(1), (LAUNCH_X+lx)/2, GROUND_Y-3);
+    
+    // Landing speed
+    ctx.fillStyle = '#6a6a80';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText("v' = "+stats.v.toFixed(2), lx+6, GROUND_Y-3);
+  }
+  
+  // Max height marker
+  if (stats.h > 0) {
+    const vx = v0 * Math.cos(θ);
+    const vy = v0 * Math.sin(θ);
     const maxX = vx*vy/G;
-    const [mx, my] = w2s(maxX, maxH);
+    const [mx, my] = w2s(maxX, stats.h);
     ctx.setLineDash([2,2]);
     ctx.beginPath();
     ctx.moveTo(mx, my);
@@ -433,32 +455,26 @@ function drawSingle() {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = '#5c5c72';
-    ctx.font = `${Math.round(7*sc/2.5)}px sans-serif`;
+    ctx.font = '9px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('h_max='+stats.h.toFixed(1), mx, my-4);
+    ctx.fillText('h='+stats.h.toFixed(1), mx, my-3);
   }
 }
 
 function drawMulti() {
-  // Launch point
-  ctx.fillStyle = '#0e0e1e';
-  ctx.fillRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
-  ctx.strokeStyle = '#1a1a2e';
-  ctx.strokeRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
+  // Launch platform
+  ctx.fillStyle = '#0e0e20';
+  ctx.fillRect(LAUNCH_X-18, GROUND_Y-16, 36, 16);
+  ctx.strokeStyle = '#1a1a30';
+  ctx.strokeRect(LAUNCH_X-18, GROUND_Y-16, 36, 16);
   
-  // Clear legends
-  const legDiv = document.getElementById('legends');
-  legDiv.innerHTML = '';
-  
-  // Draw trajectories for each result
   multiResults.forEach((r, idx) => {
     const color = COLORS[idx];
-    const trail = r.trail;
     
-    if (trail.length > 1) {
+    if (r.trail.length > 1) {
       ctx.beginPath();
-      for (let i = 0; i < trail.length; i++) {
-        const [sx, sy] = w2s(trail[i].x, trail[i].y);
+      for (let i = 0; i < r.trail.length; i++) {
+        const [sx, sy] = w2s(r.trail[i].x, r.trail[i].y);
         if (i === 0) ctx.moveTo(sx, sy);
         else ctx.lineTo(sx, sy);
       }
@@ -466,33 +482,24 @@ function drawMulti() {
       ctx.lineWidth = 2;
       ctx.stroke();
       
-      // Ball at current position
+      // Ball or landing dot
       const b = r.ball;
       if (!r.done) {
         const [bx, by] = w2s(b.x, b.y);
         drawBall(bx, by, color);
-      } else {
-        // Landing dot
+      } else if (r.stats.d > 0) {
         const [lx, ly] = w2s(r.stats.d, 0);
         ctx.beginPath();
-        ctx.arc(lx, GROUND_Y, 3, 0, Math.PI*2);
+        ctx.arc(lx, GROUND_Y, 4, 0, Math.PI*2);
         ctx.fillStyle = color;
         ctx.fill();
       }
     }
     
-    // Legend
-    const leg = document.createElement('span');
-    leg.className = 'leg';
-    leg.innerHTML = `<span class="dot" style="background:${color}"></span>θ=${r.angle}° d=${r.stats.d.toFixed(1)}`;
-    legDiv.appendChild(leg);
-  });
-  
-  // Launch angle indicators
-  multiResults.forEach((r, idx) => {
+    // Angle indicator
     const θ = r.angle * Math.PI / 180;
-    const v0 = speed * 0.08;
-    const alen = Math.min(v0 * sc * 0.6, 45);
+    const v0 = speed * V0_MULT;
+    const alen = Math.min(v0 * sc * 0.5, 40);
     ctx.beginPath();
     ctx.moveTo(LAUNCH_X, GROUND_Y);
     ctx.lineTo(LAUNCH_X + alen*Math.cos(θ), GROUND_Y - alen*Math.sin(θ));
@@ -502,24 +509,26 @@ function drawMulti() {
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = COLORS[idx];
-    ctx.font = `${Math.round(7*sc/2.5)}px sans-serif`;
+    ctx.font = '9px sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText(r.angle+'°', LAUNCH_X + (alen+10)*Math.cos(θ), GROUND_Y - (alen+10)*Math.sin(θ)+3);
   });
 }
 
 function drawBall(x, y, color) {
-  const grd = ctx.createRadialGradient(x-2, y-2, 1, x, y, 6*sc/8);
+  const r = 5;
+  const grd = ctx.createRadialGradient(x-2, y-2, 1, x, y, r);
   grd.addColorStop(0, '#fff');
   grd.addColorStop(0.3, color);
-  grd.addColorStop(1, color);
+  grd.addColorStop(1, 'rgba(0,0,0,0.3)');
   ctx.beginPath();
-  ctx.arc(x, y, 5*sc/8, 0, Math.PI*2);
+  ctx.arc(x, y, r, 0, Math.PI*2);
   ctx.fillStyle = grd;
   ctx.fill();
 }
 
 // Initial draw
+setTimeout(() => { GROUND_Y = H - 24; draw(); }, 50);
 draw();
 </script>
 </body>
