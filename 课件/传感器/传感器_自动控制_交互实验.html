@@ -1,0 +1,761 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>传感器应用：自动控制装置模拟 | 高中物理互动教学</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #2D593E;
+            --secondary: #EBEDD4;
+            --accent: #DC2626;
+            --background: #F4F3EC;
+            --foreground: #021502;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--foreground);
+            font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 主布局自适应 */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 20px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.6rem;
+            font-weight: 500;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        /* 侧边栏 */
+        #sidebar {
+            flex: 1.2;
+            min-width: 260px;
+            background-color: white;
+            border-radius: 24px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            border: 1px solid #e9ecef;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 0.8rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--secondary);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-weight: bold;
+            color: #5a6e66;
+            font-size: 1rem;
+            transition: all 0.2s;
+            border-radius: 40px;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            background: #e6f0ea;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .exp-info h3 {
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .exp-info p {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+            color: #2c3e2f;
+        }
+
+        .assembly-zone {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        .comp-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 16px;
+            padding: 12px 8px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            background: #fefefe;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .comp-card:hover {
+            border-color: var(--primary);
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .comp-card img {
+            width: 100%;
+            object-fit: contain;
+            margin-bottom: 8px;
+            pointer-events: none;
+        }
+
+        /* 右侧内容区 */
+        #content-area {
+            flex: 2.8;
+            min-width: 520px;
+            background: white;
+            border-radius: 28px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stage {
+            width: 100%;
+            min-height: 380px;
+            background: #FCFAF5;
+            border-radius: 28px;
+            padding: 1rem;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.02);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .controls-panel {
+            margin-top: 1.8rem;
+            background: white;
+            padding: 1.2rem 1.8rem;
+            border-radius: 40px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.05);
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            border: 1px solid #edf2f0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            min-width: 200px;
+            flex: 1;
+        }
+
+        .btn {
+            padding: 0.6rem 1.4rem;
+            border-radius: 40px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 2px 5px rgba(45,89,62,0.2);
+        }
+
+        .btn-primary:hover {
+            background-color: #1f4230;
+            transform: translateY(-1px);
+        }
+
+        .btn-accent {
+            background-color: #fff1f0;
+            color: var(--accent);
+            border: 1px solid #ffe0dd;
+        }
+
+        .btn-accent:hover {
+            background-color: #ffe4e1;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            background: #eff5f0;
+            color: #1f543b;
+        }
+
+        .status-alarm {
+            background-color: #ffecf0;
+            color: #c0392b;
+            animation: blinkWarning 1s infinite;
+        }
+
+        @keyframes blinkWarning {
+            0% { opacity: 1; background-color: #ffecf0; }
+            50% { opacity: 0.7; background-color: #ffcec6; }
+            100% { opacity: 1; background-color: #ffecf0; }
+        }
+
+        /* 门窗报警器专用 */
+        .door-view {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .door-container {
+            position: relative;
+            width: 140px;
+            height: 240px;
+            border: 4px solid #5d4037;
+            background: #efe3d4;
+            border-radius: 8px;
+            perspective: 1000px;
+        }
+
+        .door-leaf {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #c8a882;
+            transform-origin: left;
+            transition: transform 0.55s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            z-index: 2;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-start;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+
+        .magnet {
+            width: 14px;
+            height: 32px;
+            background: #3e3a39;
+            border-radius: 3px;
+            border-top: 12px solid #b91c1c;
+        }
+
+        .reed-switch {
+            position: absolute;
+            right: -28px;
+            top: 12px;
+            width: 12px;
+            height: 44px;
+            background: rgba(245,245,220,0.9);
+            border: 1px solid #aaa;
+            border-radius: 6px;
+        }
+
+        .reed-blade {
+            width: 3px;
+            height: 16px;
+            background: #777;
+            position: absolute;
+            left: 4px;
+            transition: transform 0.2s;
+        }
+
+        .reed-blade-top { top: 2px; transform-origin: top; }
+        .reed-blade-bottom { bottom: 2px; transform-origin: bottom; }
+
+        .circuit-diag {
+            max-width: 380px;
+            width: 100%;
+            height: auto;
+            background: #fffdf8;
+            border-radius: 20px;
+        }
+
+        /* 光控样式 */
+        #env-light {
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.25);
+            pointer-events: none;
+            transition: background 0.3s ease;
+            border-radius: 24px;
+        }
+
+        #lamp-glow {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255,230,100,0.7) 0%, rgba(255,200,50,0) 70%);
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.25s;
+            border-radius: 50%;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: #ddd;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 780px) {
+            .app-container { padding: 12px; }
+            main { flex-direction: column; }
+            #sidebar { min-width: auto; }
+            #content-area { min-width: auto; }
+            .door-view { gap: 20px; flex-direction: column; }
+            .controls-panel { flex-direction: column; align-items: stretch; }
+            .circuit-diag { max-width: 100%; }
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABbYKAogCgQBJAARgCUQESCAAYkgGACIgGRAAYMAAAyANABAA=">
+ </head>
+ <body>
+  <div class="app-container">
+   <header>
+    <h1>🔬 利用传感器制作简单的自动控制装置</h1>
+    <p style="font-size:0.85rem; opacity:0.9; margin-top: 6px;">干簧管门窗报警器 | 光敏电阻光控开关 | 物理仿真实验</p>
+   </header>
+   <main>
+    <!-- 左侧栏：实验切换 & 元件介绍 -->
+    <div id="sidebar">
+     <div class="tab-buttons">
+      <button class="tab-btn active" data-exp="1">🚪 门窗报警器</button> <button class="tab-btn" data-exp="2">☀️ 光控开关</button>
+     </div>
+     <div id="info-1" class="exp-info">
+      <h3>🚨 实验1: 干簧管门窗报警器</h3>
+      <p><strong>原理：</strong> 干簧管感应磁铁。门关闭时，磁铁使干簧管触点吸合 → 继电器线圈得电 → LED亮（警戒正常）；门打开，干簧管断开 → 继电器释放 → 蜂鸣器报警。</p>
+      <div class="assembly-zone">
+       <div class="comp-card" data-comp="reed">
+        <img src="https://img.zxxk.com/rbm/html/2026/6/3/52348c49-7a9a-4d7e-9c2a-ae9e9907f70b.jpg" alt="干簧管">
+        <div>
+         干簧管 SA
+        </div>
+       </div>
+       <div class="comp-card" data-comp="relay">
+        <img src="https://img.zxxk.com/rbm/html/2026/6/3/ff12b4f8-276b-40ba-9025-a4bfc73812b4.jpg" alt="继电器">
+        <div>
+         继电器 K
+        </div>
+       </div>
+       <div class="comp-card" data-comp="buzzer">
+        <img src="https://img.zxxk.com/rbm/html/2026/6/3/c5f22248-ecb6-4d1f-b73b-fdca369ee8ef.jpg" alt="蜂鸣器">
+        <div>
+         蜂鸣器 H
+        </div>
+       </div>
+      </div>
+      <p><strong>电路图：</strong> <img src="https://img.zxxk.com/rbm/html/2026/6/3/a5cff117-4025-4091-ae02-8f0f256869eb.jpg" alt="电路图" width="100%"></p>
+      <p><strong>基本元件及参数：</strong> <img src="https://img.zxxk.com/rbm/html/2026/6/3/80514c53-8eae-4733-a7c8-7b801d641446.jpg" alt="器件" width="100%"></p>
+     </div>
+     <div id="info-2" class="exp-info hidden">
+      <h3>💡 实验2: 光控开关 (路灯自动控制)</h3>
+      <p><strong>原理：</strong> 光敏电阻RG 与R1 分压。光线变弱时RG 阻值增大 → 三极管基极电压上升导通 → 路灯点亮。调节R1可改变灵敏度。</p>
+      <div class="assembly-zone">
+       <div class="comp-card" data-comp="ldr">
+        <img src="https://img.zxxk.com/rbm/html/2026/6/3/5f582f0f-8ff8-4bcc-a6b8-772a378fd973.jpg" alt="光敏电阻">
+        <div>
+         光敏电阻 RG
+        </div>
+       </div>
+       <div class="comp-card" data-comp="triode">
+        <img src="https://img.zxxk.com/rbm/html/2026/6/3/48952c43-ad9b-47fe-a742-ef17fd25c6a4.jpg" alt="三极管">
+        <div>
+         三极管 VT
+        </div>
+       </div>
+       <div class="comp-card" data-comp="bulb">
+        <img src="https://img.zxxk.com/rbm/html/2026/6/3/a33d204f-6d97-4648-a4fc-ac15774f4645.jpg" alt="灯泡">
+        <div>
+         小灯泡 L
+        </div>
+       </div>
+      </div>
+      <p><strong>电路图：</strong> <img src="https://img.zxxk.com/rbm/html/2026/6/3/6700df18-4818-4d60-8569-000f58f858d6.jpg" alt="电路图" width="100%"></p>
+      <p><strong>基本元件及参数：</strong> <img src="https://img.zxxk.com/rbm/html/2026/6/3/a160eec0-384a-4906-9c52-6fb4b11b919a.jpg" alt="器件" width="100%"></p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAZCAIAAABPfsIJAAAAs0lEQVR4nO2T3Q6DMAiFOa7vvT75WF2jKz2gtdnFLjwxRvn5IC1AVUXKg+0t3q/Qd2s0wocYKXKhccGG4ZHzM472u6B4tJGVCArq6LD2HQSbslqwnaNbfEaJkpU+LgmJkkEWsd7wlqv2m+Gzi4gnMYWY48yDXhC5eHqiHJ4Hv82O+B2CkXbcYgfzqGRkrlOpnuPcoPjoxSt1ehvd5pk1LzvzGqk8rjS9bZGW3+Ju4k38M+Ib3oAwVe8m1+UAAAAASUVORK5CYII=" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+     </div>
+    </div><!-- 右侧实验舞台 -->
+    <div id="content-area">
+     <!-- 实验1 门窗报警器舞台 -->
+     <div id="stage-1" class="stage">
+      <div class="door-view">
+       <div class="door-container">
+        <div class="door-leaf" id="door-leaf">
+         <div class="magnet"></div>
+        </div>
+        <div class="reed-switch">
+         <div class="reed-blade reed-blade-top" id="blade-t"></div>
+         <div class="reed-blade reed-blade-bottom" id="blade-b"></div>
+        </div>
+       </div><!-- 电路原理 SVG (完全保留原始元件ID) -->
+       <svg class="circuit-diag" viewBox="0 0 420 280" style="max-width:100%; height:auto; display: none;">
+        <rect x="20" y="30" width="360" height="220" fill="none" stroke="#ccc" stroke-width="1.5" stroke-dasharray="4" /> <!-- 干簧管符号区域 --> <g id="diag-reed">
+         <ellipse cx="50" cy="130" rx="14" ry="26" fill="white" stroke="#2e5e3b" stroke-width="1.8" />
+         <line x1="50" y1="108" x2="50" y2="122" stroke="#333" stroke-width="2" />
+         <line x1="50" y1="152" x2="50" y2="138" stroke="#333" stroke-width="2" id="reed-arm" />
+        </g> <!-- 继电器线圈 --> <g transform="translate(150, 40)">
+         <rect width="60" height="40" fill="white" stroke="#2D593E" stroke-dasharray="4 2" rx="4" />
+         <text x="22" y="26" font-size="14" fill="#2D593E" font-weight="bold">K</text>
+         <line x1="30" y1="0" x2="30" y2="-12" stroke="#333" stroke-width="2" />
+        </g> <!-- 继电器转换触点 --> <line x1="200" y1="130" x2="230" y2="130" stroke="#333" stroke-width="2" /> <line x1="230" y1="130" x2="260" y2="105" stroke="#333" stroke-width="2" id="relay-arm" /> <!-- LED 负载 --> <circle id="diag-led" cx="360" cy="65" r="12" fill="#ddd" stroke="#2D593E" stroke-width="1.5" /> <text x="380" y="70" font-size="12" fill="#2D593E">LED</text> <!-- 蜂鸣器 负载 --> <path id="diag-buzzer" d="M340,200 L360,200 L375,180 L375,220 L360,200 Z" fill="#ddd" stroke="#2D593E" stroke-width="1.5" /> <text x="310" y="215" font-size="12" fill="#2D593E">H</text> <!-- 电源线示意 --> <line x1="180" y1="240" x2="220" y2="240" stroke="#333" stroke-width="4" /> <line x1="195" y1="250" x2="205" y2="250" stroke="#333" stroke-width="2" />
+       </svg>
+      </div>
+     </div><!-- 实验2 光控开关舞台 -->
+     <div id="stage-2" class="stage hidden" style="position:relative;">
+      <div style="position:relative; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:20px;">
+       <div id="env-light" style="position:absolute; inset:0; background:rgba(0,0,0,0.25); border-radius:24px;"></div>
+       <div style="z-index:2; position:relative; text-align:center;">
+        <div style="position:relative; display:inline-block;">
+         <img id="lamp-img" src="https://img.zxxk.com/rbm/html/2026/6/3/a33d204f-6d97-4648-a4fc-ac15774f4645.jpg" style="width:130px; filter: grayscale(1); transition: filter 0.2s; border-radius: 20px;">
+         <div id="lamp-glow" style="position:absolute; top:50%; left:50%; transform: translate(-50%,-50%); width:220px; height:220px; background: radial-gradient(circle, rgba(255,220,100,0.7) 0%, rgba(255,200,50,0) 70%); opacity:0;"></div>
+        </div>
+       </div>
+       <div style="z-index:2; background: rgba(255,255,245,0.95); padding: 10px 20px; border-radius: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); backdrop-filter: blur(2px);">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:center;">
+         <span>光敏电阻RG :</span> <span id="ldr-res-val" style="font-weight:bold; color:var(--primary);">3.5 kΩ</span>
+        </div>
+       </div>
+      </div>
+     </div><!-- 底部控制栏 -->
+     <div class="controls-panel">
+      <div class="control-group" id="ctrl-1">
+       <button class="btn btn-primary" id="doorToggleBtn">🚪 开启/关闭 门窗</button>
+       <div class="status-badge status-normal" id="status-1">
+        系统正常：门窗关闭
+       </div>
+      </div>
+      <div class="control-group hidden" id="ctrl-2">
+       <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+        <span>🌞 光照强度:</span> <input type="range" id="lightSlider" min="0" max="100" value="60" style="flex:1;">
+       </div>
+       <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+        <span>⚙️ 灵敏度R1:</span> <input type="range" id="r1Slider" min="0" max="100" value="50" style="flex:1;">
+       </div>
+       <div class="status-badge status-normal" id="status-2">
+        路灯状态：已熄灭
+       </div>
+      </div><button class="btn btn-accent" id="resetBtn">🔄 重置实验</button>
+     </div>
+    </div>
+   </main>
+  </div>
+  <script>
+    // ---------- 全局变量 ----------
+    let currentExp = 1;         // 1:门窗报警器 2:光控开关
+    let isDoorOpen = false;      // 门是否打开 (true=打开报警)
+    let lightLevel = 60;         // 0-100
+    let r1Value = 50;            // 灵敏度 0-100
+
+    // DOM 元素
+    const stage1 = document.getElementById('stage-1');
+    const stage2 = document.getElementById('stage-2');
+    const ctrl1 = document.getElementById('ctrl-1');
+    const ctrl2 = document.getElementById('ctrl-2');
+    const info1 = document.getElementById('info-1');
+    const info2 = document.getElementById('info-2');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    // 报警器专用元素
+    const doorLeaf = document.getElementById('door-leaf');
+    const bladeTop = document.getElementById('blade-t');
+    const bladeBottom = document.getElementById('blade-b');
+    const status1 = document.getElementById('status-1');
+    const reedArm = document.getElementById('reed-arm');
+    const relayArm = document.getElementById('relay-arm');
+    const diagLed = document.getElementById('diag-led');
+    const diagBuzzer = document.getElementById('diag-buzzer');
+    
+    // 光控专用元素
+    const lightSlider = document.getElementById('lightSlider');
+    const r1Slider = document.getElementById('r1Slider');
+    const status2 = document.getElementById('status-2');
+    const ldrResSpan = document.getElementById('ldr-res-val');
+    const lampImg = document.getElementById('lamp-img');
+    const lampGlow = document.getElementById('lamp-glow');
+    const envLight = document.getElementById('env-light');
+    
+    // 辅助函数：切换实验
+    function switchExp(expId) {
+        currentExp = expId;
+        // 更新tab样式
+        tabBtns.forEach(btn => {
+            const val = parseInt(btn.getAttribute('data-exp'));
+            if (val === expId) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+        // 显示/隐藏信息区
+        if (expId === 1) {
+            info1.classList.remove('hidden');
+            info2.classList.add('hidden');
+            stage1.classList.remove('hidden');
+            stage2.classList.add('hidden');
+            ctrl1.classList.remove('hidden');
+            ctrl2.classList.add('hidden');
+        } else {
+            info1.classList.add('hidden');
+            info2.classList.remove('hidden');
+            stage1.classList.add('hidden');
+            stage2.classList.remove('hidden');
+            ctrl1.classList.add('hidden');
+            ctrl2.classList.remove('hidden');
+        }
+        // 重置当前实验状态为默认（正常）
+        resetCurrentExp();
+    }
+    
+    // 重置逻辑（根据当前实验重置参数）
+    function resetCurrentExp() {
+        if (currentExp === 1) {
+            // 门重置为关闭状态：若当前开门则关闭；若关门保持关门（确保状态为关闭）
+            if (isDoorOpen === true) {
+                // 调用切换
+                toggleDoorInternal();
+            } else if (isDoorOpen === false) {
+                // 已经是关门，但为了确保电路状态正确，重新应用一次关门视觉
+                applyDoorState(false);
+            } else {
+                // 初始异常情况
+                isDoorOpen = false;
+                applyDoorState(false);
+            }
+        } else {
+            // 光控重置: 光照60, 灵敏度50
+            lightLevel = 60;
+            r1Value = 50;
+            if (lightSlider) lightSlider.value = 60;
+            if (r1Slider) r1Slider.value = 50;
+            updateLightLevel(lightLevel);
+            updateR1Value(r1Value);
+            applyLightControl();
+        }
+    }
+    
+    // 门窗状态应用 (核心电路更新)
+    function applyDoorState(open) {
+        isDoorOpen = open;
+        if (open) {
+            // 门打开状态
+            doorLeaf.style.transform = 'rotateY(-75deg)';
+            status1.innerText = '⚠️ 警告：门窗已开启！报警触发';
+            status1.className = 'status-badge status-alarm';
+            // 干簧管叶片分离 (物理模拟)
+            bladeTop.style.transform = 'rotate(0deg)';
+            bladeBottom.style.transform = 'rotate(0deg)';
+            // 电路：干簧管断开，继电器失电，触点切换至蜂鸣器支路
+            reedArm.setAttribute('y2', '155');    // 模拟断开位置
+            relayArm.setAttribute('y2', '195');    // 触点接到蜂鸣器侧 (y2=195蜂鸣器通路)
+            diagLed.setAttribute('fill', '#ccc');   // LED灭
+            diagBuzzer.setAttribute('fill', '#f44336'); // 蜂鸣器红色报警
+        } else {
+            // 门关闭状态 (正常)
+            doorLeaf.style.transform = 'rotateY(0deg)';
+            status1.innerText = '✅ 系统正常：门窗关闭';
+            status1.className = 'status-badge status-normal';
+            // 干簧管叶片闭合 (磁吸引)
+            bladeTop.style.transform = 'translateY(6px) rotate(6deg)';
+            bladeBottom.style.transform = 'translateY(-6px) rotate(-6deg)';
+            // 电路：干簧管闭合，继电器吸合，触点接LED
+            reedArm.setAttribute('y2', '146');     // 闭合导通位置
+            relayArm.setAttribute('y2', '105');     // 触点接LED侧
+            diagLed.setAttribute('fill', '#4caf50'); // LED亮绿灯
+            diagBuzzer.setAttribute('fill', '#ccc'); // 蜂鸣器灰
+        }
+    }
+    
+    function toggleDoorInternal() {
+        applyDoorState(!isDoorOpen);
+    }
+    
+    // 光控部分: 根据光强和R1计算并更新路灯状态 + 阻值显示
+    function updateLightLevel(val) {
+        lightLevel = Math.min(100, Math.max(0, parseInt(val) || 0));
+        // 环境背景变暗系数 (光照越低背景越暗)
+        const darkAlpha = (100 - lightLevel) / 120;
+        envLight.style.background = `rgba(0,0,0,${Math.min(0.7, darkAlpha)})`;
+        // 光敏电阻阻值模拟 (物理规律: 光越强阻值越小)
+        let resK = (1000 / (lightLevel + 1)).toFixed(1);
+        ldrResSpan.innerText = `${resK} kΩ`;
+        applyLightControl();
+    }
+    
+    function updateR1Value(val) {
+        r1Value = Math.min(100, Math.max(0, parseInt(val) || 0));
+        applyLightControl();
+    }
+    
+    function applyLightControl() {
+        // 阈值计算：灵敏度越高阈值越高 (越容易点亮)
+        const threshold = 20 + (r1Value / 2.5);   // 范围20~60
+        const isOn = lightLevel < threshold;
+        
+        if (isOn) {
+            lampImg.style.filter = 'grayscale(0) brightness(1.15)';
+            lampGlow.style.opacity = '1';
+            status2.innerText = '🌙 路灯状态：光弱自动开启';
+            status2.className = 'status-badge status-alarm';
+        } else {
+            lampImg.style.filter = 'grayscale(0.85) brightness(0.85)';
+            lampGlow.style.opacity = '0';
+            status2.innerText = '☀️ 路灯状态：已熄灭';
+            status2.className = 'status-badge status-normal';
+        }
+        // 根据亮度轻微调整环境光感
+        const darkLevel = (100 - lightLevel) / 100;
+        envLight.style.background = `rgba(0,0,0,${0.2 + darkLevel * 0.4})`;
+    }
+    
+    // 组件高亮提示（教学反馈）
+    function highlightComponent(type) {
+        console.log(`[组件探索] 当前查看元件: ${type}`);
+        // 简单视觉反馈：闪烁对应元件侧边栏卡片?
+        const cards = document.querySelectorAll('.comp-card');
+        cards.forEach(card => {
+            if (card.innerText.includes(type) || card.getAttribute('data-comp') === type) {
+                card.style.transform = 'scale(1.02)';
+                card.style.backgroundColor = '#e9f3ef';
+                setTimeout(() => { card.style.transform = ''; card.style.backgroundColor = ''; }, 300);
+            }
+        });
+    }
+    
+    // 绑定滑块事件
+    function bindEvents() {
+        if (lightSlider) {
+            lightSlider.addEventListener('input', (e) => {
+                updateLightLevel(e.target.value);
+            });
+        }
+        if (r1Slider) {
+            r1Slider.addEventListener('input', (e) => {
+                updateR1Value(e.target.value);
+            });
+        }
+        const doorBtn = document.getElementById('doorToggleBtn');
+        if (doorBtn) doorBtn.addEventListener('click', () => toggleDoorInternal());
+        
+        resetBtn.addEventListener('click', () => resetCurrentExp());
+        
+        // tab切换
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const exp = parseInt(btn.getAttribute('data-exp'));
+                if (!isNaN(exp)) switchExp(exp);
+            });
+        });
+        
+        // 元件卡片点击模拟高亮
+        document.querySelectorAll('.comp-card').forEach(card => {
+            card.addEventListener('click', (e) => {
+                let compType = '';
+                if (card.innerText.includes('干簧管')) compType = 'reed';
+                else if (card.innerText.includes('继电器')) compType = 'relay';
+                else if (card.innerText.includes('蜂鸣器')) compType = 'buzzer';
+                else if (card.innerText.includes('光敏电阻')) compType = 'ldr';
+                else if (card.innerText.includes('三极管')) compType = 'triode';
+                else if (card.innerText.includes('小灯泡')) compType = 'bulb';
+                highlightComponent(compType);
+            });
+        });
+    }
+    
+    // 页面初始化: 设置正确的初始状态
+    function initializeSimulation() {
+        // 报警器初始关闭状态
+        isDoorOpen = false;
+        applyDoorState(false);
+        // 光控默认60%光照，灵敏度50，路灯灭
+        lightLevel = 60;
+        r1Value = 50;
+        if (lightSlider) lightSlider.value = 60;
+        if (r1Slider) r1Slider.value = 50;
+        updateLightLevel(60);
+        updateR1Value(50);
+        applyLightControl();
+        // 确保实验2初始可见隐藏正确
+        switchExp(1);
+        bindEvents();
+    }
+    
+    // 添加额外容错: 重设所有属性, 确保svg元素存在
+    window.addEventListener('load', () => {
+        initializeSimulation();
+        // 解决移动端滑块事件穿透
+        const sliders = document.querySelectorAll('input[type="range"]');
+        sliders.forEach(slider => {
+            slider.addEventListener('touchstart', (e) => e.stopPropagation());
+        });
+    });
+    
+    // 适配窗口大小，保留原有电路图比例
+    window.addEventListener('resize', () => {
+        // 无操作，保持flex自适应
+    });
+</script>
+ </body>
+</html>
