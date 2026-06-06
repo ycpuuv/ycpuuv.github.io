@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安培力 · 无底纹大字版 · 全物理量标注</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+  <style>
+        /* 白灰色背景，无底纹设计 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: #e8edf2;
+            color: #1a2b3c;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 20px 15px;
+            background: transparent;
+            border-radius: 28px;
+            box-shadow: none;
+            border: none;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+            color: #0a3f60;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.5;
+            color: #1f405e;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .scene-container {
+            flex: 1;
+            min-width: 500px;
+            height: 600px;
+            background: #ffffff;
+            border-radius: 28px;
+            overflow: hidden;
+            box-shadow: 0 25px 40px -12px rgba(0, 25, 45, 0.25);
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        #three-container {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls-panel {
+            flex: 0 0 300px;
+            background: transparent;
+            border-radius: 28px;
+            padding: 20px;
+            box-shadow: none;
+            border: none;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+            margin-bottom: 15px;
+            color: #0a4a70;
+            border-bottom: 2px solid rgba(58, 134, 255, 0.3);
+            padding-bottom: 8px;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: #1a5f85;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .slider-container {
+            margin-bottom: 18px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            color: #1e3f5a;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .slider-label span {
+            font-weight: 700;
+        }
+        
+        .slider-value {
+            color: #0f6cb0;
+            font-weight: 800;
+            background: transparent;
+            padding: 2px 8px;
+            border-radius: 40px;
+            font-size: 0.9rem;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .slider {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: rgba(0, 40, 70, 0.15);
+            border-radius: 20px;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 2px solid #1a7ad0;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 80, 200, 0.3);
+            transition: 0.1s;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+            background: #f0f8ff;
+        }
+        
+        .force-display {
+            background: transparent;
+            border-radius: 22px;
+            padding: 16px;
+            margin-top: 10px;
+            text-align: center;
+            border: none;
+            box-shadow: none;
+        }
+        
+        .force-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #0a4f7a;
+            margin: 8px 0;
+            text-shadow: 0 2px 4px rgba(255,255,255,0.8);
+            letter-spacing: -1px;
+        }
+        
+        .formula {
+            font-size: 1.2rem;
+            margin: 15px 0;
+            text-align: center;
+            padding: 12px;
+            background: transparent;
+            border-radius: 20px;
+            border: none;
+            font-family: 'Courier New', monospace;
+            color: #003d66;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .formula-highlight {
+            color: #d95c1e;
+            font-weight: 700;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            background: transparent;
+            padding: 5px 12px;
+            border-radius: 40px;
+            backdrop-filter: none;
+            font-weight: 600;
+            color: #1a3e58;
+            border: 1px solid rgba(58, 134, 255, 0.2);
+            box-shadow: none;
+            font-size: 0.85rem;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info-panel {
+            background: transparent;
+            border-radius: 28px;
+            padding: 20px;
+            margin-top: 15px;
+            box-shadow: none;
+            border: none;
+        }
+        
+        .info-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+        }
+        
+        .info-box {
+            background: transparent;
+            backdrop-filter: none;
+            padding: 16px;
+            border-radius: 22px;
+            border-left: 4px solid #2f7eb6;
+            box-shadow: none;
+            transition: transform 0.2s;
+        }
+        
+        .info-box:hover {
+            transform: translateY(-3px);
+        }
+        
+        .info-box h3 {
+            margin-top: 0;
+            color: #0a4260;
+            font-size: 1.2rem;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .info-box p {
+            line-height: 1.6;
+            margin-bottom: 8px;
+            color: #1d3f55;
+            font-size: 0.95rem;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+        }
+        
+        .highlight {
+            color: #c4450c;
+            font-weight: 700;
+            background: transparent;
+            padding: 0 4px;
+            border-radius: 0;
+        }
+        
+        .angle-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            backdrop-filter: none;
+            padding: 8px 15px;
+            border-radius: 0;
+            font-size: 1.2rem;
+            border: none;
+            z-index: 10;
+            box-shadow: none;
+            color: #0a3f60;
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            line-height: 1.8;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+        
+        .angle-display div {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .angle-display .label {
+            color: #1e5a85;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        .angle-display .value {
+            color: #d95c1e;
+            font-weight: 800;
+            font-size: 1.8rem;
+            min-width: 70px;
+            text-align: right;
+            text-shadow: 1px 1px 3px rgba(255,255,255,0.9);
+        }
+        
+        .angle-display .small-value {
+            font-size: 1.5rem;
+            color: #0f6cb0;
+        }
+        
+        @media (max-width: 1000px) {
+            .content {
+                flex-direction: column;
+            }
+            .scene-container, .controls-panel {
+                min-width: 100%;
+            }
+            .scene-container {
+                height: 450px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .scene-container {
+                height: 350px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .subtitle {
+                font-size: 0.9rem;
+            }
+            .angle-display {
+                padding: 5px 10px;
+                font-size: 1rem;
+            }
+            .angle-display .value {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABSYYAogCIAIIAAQhCQwX4CkKYkAACACgGRAAUsAAByANABAA=">
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1>⚡ 安培力 · 无底纹大字版 · 全物理量标注 ⚡</h1>
+    <p class="subtitle">B、I、L、F 均有大字标签 · 清晰直观</p>
+   </header>
+   <div class="content">
+    <div class="scene-container">
+     <div id="three-container"></div>
+     <div class="angle-display" id="info-panel">
+      <div>
+       <span class="label">夹角 θ</span> <span class="value" id="current-angle">90°</span>
+      </div>
+      <div>
+       <span class="label">B</span> <span class="value small-value" id="current-b">1.0 T</span>
+      </div>
+      <div>
+       <span class="label">F</span> <span class="value small-value" id="current-f">1.00 N</span>
+      </div>
+     </div>
+    </div>
+    <div class="controls-panel">
+     <h2>交互控制</h2>
+     <div class="control-group">
+      <h3>磁场与电流夹角控制</h3>
+      <div class="slider-container">
+       <div class="slider-label">
+        <span>夹角 θ</span> <span class="slider-value" id="angle-value">90°</span>
+       </div><input type="range" min="0" max="180" value="90" class="slider" id="angle-slider">
+      </div>
+      <div class="slider-container">
+       <div class="slider-label">
+        <span>磁感应强度 B</span> <span class="slider-value" id="b-value">1.0 T</span>
+       </div><input type="range" min="0" max="20" value="10" class="slider" id="b-slider">
+      </div>
+      <div class="slider-container">
+       <div class="slider-label">
+        <span>电流强度 I</span> <span class="slider-value" id="i-value">1.0 A</span>
+       </div><input type="range" min="0" max="20" value="10" class="slider" id="i-slider">
+      </div>
+      <div class="slider-container">
+       <div class="slider-label">
+        <span>导线长度 L</span> <span class="slider-value" id="l-value">1.0 m</span>
+       </div><input type="range" min="0" max="20" value="10" class="slider" id="l-slider">
+      </div>
+     </div>
+     <div class="force-display">
+      <h3>安培力大小</h3>
+      <div class="formula">
+       F = <span id="b-display">1.0</span> × <span id="i-display">1.0</span> × <span id="l-display">1.0</span> × sin(<span id="theta-display">90°</span>)
+      </div>
+      <div class="force-value" id="force-value">
+       1.00 N
+      </div>
+      <div>
+       安培力方向: <span id="force-direction">向上<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAjCAIAAADuajb/AAAAi0lEQVR42u2U4Q6AIAiE7/0fmmttLRMkINc/mHPp8BMODDxNHvNyab/vnWHgdxOFxrwW4+ENWjckDjC64AoTiRQ8bjaulwtYZa2zcOKiYrEuv/aEkTajnYT9JfUxnYKfESsgKr28+LNoRLXLKEDL2izC6PvwudF/BqO/kkWMbeef06xmNatZzfqXdQC2MzZYghVpKQAAAABJRU5ErkJggg==" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;"></span>
+      </div>
+     </div>
+     <div class="legend">
+      <div class="legend-item">
+       <div class="legend-color" style="background-color: #3a86ff;"></div><span>磁场 B</span>
+      </div>
+      <div class="legend-item">
+       <div class="legend-color" style="background-color: #f39c12;"></div><span>电流 I (末端)</span>
+      </div>
+      <div class="legend-item">
+       <div class="legend-color" style="background-color: #2ecc71;"></div><span>长度 L (中心)</span>
+      </div>
+      <div class="legend-item">
+       <div class="legend-color" style="background-color: #e63946;"></div><span>安培力 F</span>
+      </div>
+     </div>
+    </div>
+   </div>
+   <div class="info-panel">
+    <h2>📘 安培力与夹角关系 · 全标注</h2>
+    <div class="info-content">
+     <div class="info-box">
+      <h3>计算公式</h3>
+      <p><span class="highlight">F = BIL·sinθ</span></p>
+      <p>• <strong>B</strong> - 磁感应强度 (T)</p>
+      <p>• <strong>I</strong> - 电流强度 (A) — 导线末端</p>
+      <p>• <strong>L</strong> - 导线长度 (m) — 导线中心</p>
+      <p>• <strong>F</strong> - 安培力 — 力箭头旁</p>
+     </div>
+     <div class="info-box">
+      <h3>典型情况</h3>
+      <p>1. <span class="highlight">垂直 (θ=90°)</span>: 力最大</p>
+      <p>2. <span class="highlight">平行 (θ=0°或180°)</span>: 力为0</p>
+      <p>3. <span class="highlight">任意夹角</span>: 力介于中间</p>
+     </div>
+     <div class="info-box">
+      <h3>方向判断 · 左手定则</h3>
+      <p>磁场穿掌心，四指电流，拇指为力。</p>
+      <p>所有文字无背景，字体加大。</p>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+        // 全局变量
+        let scene, camera, renderer, controls;
+        let magneticFieldArrow, currentWireGroup, forceArrow, angleArc;
+        // 物理量标签
+        let labelB, labelI, labelL, labelF;
+        let angle = 90;
+        let B = 1.0, I = 1.0, L = 1.0;
+        
+        // 磁场线组
+        let fieldLinesGroup;
+        
+        // 初始化
+        function init() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f4f8);
+            
+            camera = new THREE.PerspectiveCamera(60, document.getElementById('three-container').clientWidth / document.getElementById('three-container').clientHeight, 0.1, 1000);
+            camera.position.set(6.5, 3.5, 8);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+            renderer.setSize(document.getElementById('three-container').clientWidth, document.getElementById('three-container').clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('three-container').appendChild(renderer.domElement);
+            
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 1.4);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+            const fillLight = new THREE.DirectionalLight(0xffeedd, 0.8);
+            fillLight.position.set(-5, 2, 5);
+            scene.add(fillLight);
+            
+            createCoordinateSystem();
+            createPhysicsModel();
+            setupEventListeners();
+            animate();
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        // 坐标系
+        function createCoordinateSystem() {
+            const xAxisGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-4.5,0,0), new THREE.Vector3(4.5,0,0)]);
+            const xAxis = new THREE.Line(xAxisGeo, new THREE.LineBasicMaterial({ color: 0xaa5555 }));
+            scene.add(xAxis);
+            const yAxisGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-4.5,0), new THREE.Vector3(0,4.5,0)]);
+            const yAxis = new THREE.Line(yAxisGeo, new THREE.LineBasicMaterial({ color: 0x55aa55 }));
+            scene.add(yAxis);
+            const zAxisGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-4.5), new THREE.Vector3(0,0,4.5)]);
+            const zAxis = new THREE.Line(zAxisGeo, new THREE.LineBasicMaterial({ color: 0x5555aa }));
+            scene.add(zAxis);
+            
+            const sphereMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+            const xMarker = new THREE.Mesh(new THREE.SphereGeometry(0.08,6), sphereMat); xMarker.position.set(4.7,0,0); scene.add(xMarker);
+            const yMarker = new THREE.Mesh(new THREE.SphereGeometry(0.08,6), sphereMat); yMarker.position.set(0,4.7,0); scene.add(yMarker);
+            const zMarker = new THREE.Mesh(new THREE.SphereGeometry(0.08,6), sphereMat); zMarker.position.set(0,0,4.7); scene.add(zMarker);
+        }
+        
+        // 创建充满空间的磁场线 + 边缘箭头
+        function createMagneticFieldLinesWithArrows() {
+            const group = new THREE.Group();
+            const color = 0x3a86ff;
+            const opacity = 0.4;
+            const range = 4.0;
+            const step = 1.0;
+            
+            for (let x = -range; x <= range; x += step) {
+                for (let y = -range; y <= range; y += step) {
+                    if (Math.abs(x) < 0.6 && Math.abs(y) < 0.6) continue;
+                    
+                    const start = new THREE.Vector3(x, y, -range);
+                    const end = new THREE.Vector3(x, y, range);
+                    
+                    const points = [start, end];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: opacity });
+                    const line = new THREE.Line(geometry, material);
+                    group.add(line);
+                }
+            }
+            
+            // 边缘箭头
+            for (let x = -range; x <= range; x += step) {
+                for (let y = -range; y <= range; y += step) {
+                    if (Math.abs(x) < range - 0.1 && Math.abs(y) < range - 0.1) continue;
+                    if (Math.abs(x) < 0.6 && Math.abs(y) < 0.6) continue;
+                    
+                    const mid = new THREE.Vector3(x, y, 0);
+                    const arrowDir = new THREE.Vector3(0, 0, 1);
+                    const arrowLength = 0.7;
+                    const arrowHeadLength = 0.32;
+                    const arrowHeadWidth = 0.24;
+                    const arrowColor = 0x3a86ff;
+                    
+                    const arrow = new THREE.ArrowHelper(arrowDir, mid, arrowLength, arrowColor, arrowHeadLength, arrowHeadWidth);
+                    group.add(arrow);
+                }
+            }
+            
+            return group;
+        }
+        
+        // 创建细圆柱导线 + 仅两端电流箭头
+        function createCurrentWire(length, direction) {
+            const group = new THREE.Group();
+            const wireLength = Math.max(0.6, length * 1.6);
+            const radius = 0.14;
+            
+            const cylinderGeo = new THREE.CylinderGeometry(radius, radius, wireLength, 32);
+            const cylinderMat = new THREE.MeshStandardMaterial({ 
+                color: 0xe67e22, 
+                emissive: 0x442200,
+                roughness: 0.25,
+                metalness: 0.7
+            });
+            const cylinder = new THREE.Mesh(cylinderGeo, cylinderMat);
+            const quat = new THREE.Quaternion();
+            quat.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+            cylinder.applyQuaternion(quat);
+            group.add(cylinder);
+            
+            // 两端箭头
+            const arrowColor = 0xffaa33;
+            const arrowLength = 0.9;
+            const arrowHeadLength = 0.4;
+            const arrowHeadWidth = 0.28;
+            
+            const fractions = [-0.45, 0.45];
+            fractions.forEach(f => {
+                const pos = direction.clone().multiplyScalar(f * wireLength);
+                const arrow = new THREE.ArrowHelper(direction, pos, arrowLength, arrowColor, arrowHeadLength, arrowHeadWidth);
+                group.add(arrow);
+            });
+            
+            return group;
+        }
+        
+        // 创建无底纹大字标签 (只有文字，带阴影)
+        function createLabel(text, color, position, fontSize = 60) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 128;
+            const context = canvas.getContext('2d');
+            
+            // 无填充背景
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 设置文字阴影，使其在白灰色背景上清晰
+            context.shadowColor = 'rgba(255, 255, 255, 0.9)';
+            context.shadowBlur = 8;
+            context.shadowOffsetX = 2;
+            context.shadowOffsetY = 2;
+            
+            context.font = `bold ${fontSize}px "Segoe UI", "Microsoft YaHei", sans-serif`;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillStyle = '#1e2b3c'; // 深色文字
+            context.fillText(text, canvas.width / 2, canvas.height / 2);
+            
+            // 添加一点描边效果增强可读性
+            context.strokeStyle = 'rgba(255,255,255,0.5)';
+            context.lineWidth = 2;
+            context.strokeText(text, canvas.width / 2, canvas.height / 2);
+            
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, depthTest: false, depthWrite: false, transparent: true });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.position.copy(position);
+            sprite.scale.set(1.4, 0.7, 1);
+            return sprite;
+        }
+        
+        // 创建夹角弧
+        function createAngleArc(angleDeg, radius) {
+            const segments = 50;
+            const angleRad = THREE.MathUtils.degToRad(angleDeg);
+            const points = [];
+            for (let i = 0; i <= segments; i++) {
+                const theta = (i / segments) * angleRad;
+                points.push(new THREE.Vector3(Math.sin(theta) * radius, 0.1, Math.cos(theta) * radius));
+            }
+            const geometry = new THREE.BufferGeometry().setFromPoints(points);
+            const material = new THREE.LineBasicMaterial({ color: 0xf4b942, linewidth: 3 });
+            return new THREE.Line(geometry, material);
+        }
+        
+        function createPhysicsModel() {
+            // 主磁场箭头
+            magneticFieldArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1), new THREE.Vector3(0,0,0), 2.5, 0x3a86ff, 0.5, 0.3);
+            scene.add(magneticFieldArrow);
+            
+            // 磁场线
+            fieldLinesGroup = createMagneticFieldLinesWithArrows();
+            scene.add(fieldLinesGroup);
+            
+            // 电流导线
+            const initialDir = new THREE.Vector3(1,0,0);
+            currentWireGroup = createCurrentWire(L, initialDir);
+            scene.add(currentWireGroup);
+            
+            // 力箭头
+            forceArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 2.5, 0xe63946, 0.6, 0.35);
+            scene.add(forceArrow);
+            
+            // 物理量标签 (无底纹，大字)
+            labelB = createLabel('B', 0x3a86ff, new THREE.Vector3(0.6, 0.6, 2.5), 70);
+            scene.add(labelB);
+            
+            labelI = createLabel('I', 0xf39c12, new THREE.Vector3(0, 0, 0), 70);
+            scene.add(labelI);
+            
+            labelL = createLabel('L', 0x2ecc71, new THREE.Vector3(0, 0, 0), 70);
+            scene.add(labelL);
+            
+            // 新增 F 标签
+            labelF = createLabel('F', 0xe63946, new THREE.Vector3(0, 0, 0), 70);
+            scene.add(labelF);
+            
+            angleArc = createAngleArc(angle, 1.6);
+            scene.add(angleArc);
+            
+            updatePhysicsModel();
+        }
+        
+        function updatePhysicsModel() {
+            const angleRad = THREE.MathUtils.degToRad(angle);
+            const currentDir = new THREE.Vector3(Math.sin(angleRad), 0, Math.cos(angleRad)).normalize();
+            
+            // 更新导线
+            scene.remove(currentWireGroup);
+            currentWireGroup = createCurrentWire(L, currentDir);
+            scene.add(currentWireGroup);
+            
+            const wireLengthVis = Math.max(0.6, L * 1.6);
+            
+            // I 标签：放在导线正方向末端附近
+            const posI = currentDir.clone().multiplyScalar(wireLengthVis * 0.6).add(new THREE.Vector3(0, 0.7, 0));
+            labelI.position.copy(posI);
+            
+            // L 标签：放在导线中心上方
+            labelL.position.set(0, 0.8, 0);
+            
+            // 计算力
+            const Bdir = new THREE.Vector3(0,0,1);
+            const IL = currentDir.clone().multiplyScalar(I * L);
+            const forceDir = new THREE.Vector3().crossVectors(IL, Bdir.clone().multiplyScalar(B)).normalize();
+            const forceMagnitude = B * I * L * Math.sin(angleRad);
+            
+            if (forceMagnitude > 0.001) {
+                const forceLen = Math.max(0.8, Math.min(forceMagnitude * 3.8, 5.0));
+                scene.remove(forceArrow);
+                forceArrow = new THREE.ArrowHelper(forceDir, new THREE.Vector3(0,0,0), forceLen, 0xe63946, 0.65, 0.4);
+                scene.add(forceArrow);
+                
+                // 更新 F 标签位置：放在力箭头末端附近
+                const posF = forceDir.clone().multiplyScalar(forceLen * 0.7).add(new THREE.Vector3(0, 0.5, 0));
+                labelF.position.copy(posF);
+                labelF.visible = true;
+                
+                let dirText = "";
+                if (Math.abs(forceDir.y) > 0.8) dirText = forceDir.y > 0 ? "向上" : "向下";
+                else if (Math.abs(forceDir.x) > 0.8) dirText = forceDir.x > 0 ? "向右" : "向左";
+                else if (Math.abs(forceDir.z) > 0.8) dirText = forceDir.z > 0 ? "向前" : "向后";
+                else dirText = "斜向";
+                document.getElementById("force-direction").textContent = dirText;
+            } else {
+                scene.remove(forceArrow);
+                forceArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0), new THREE.Vector3(0,0,0), 0.2, 0xe63946, 0.2, 0.2);
+                scene.add(forceArrow);
+                // 力为零时隐藏 F 标签
+                labelF.visible = false;
+                document.getElementById("force-direction").textContent = "零";
+            }
+            
+            scene.remove(angleArc);
+            angleArc = createAngleArc(angle, 1.6);
+            scene.add(angleArc);
+            
+            // 更新右上角信息
+            document.getElementById("current-angle").textContent = angle + "°";
+            document.getElementById("current-b").textContent = B.toFixed(1) + " T";
+            document.getElementById("current-f").textContent = forceMagnitude.toFixed(2) + " N";
+            
+            // 更新滑块旁边的显示
+            document.getElementById("force-value").textContent = forceMagnitude.toFixed(2) + " N";
+            document.getElementById("b-display").textContent = B.toFixed(1);
+            document.getElementById("i-display").textContent = I.toFixed(1);
+            document.getElementById("l-display").textContent = L.toFixed(1);
+            document.getElementById("theta-display").textContent = angle + "°";
+        }
+        
+        function setupEventListeners() {
+            const angleSlider = document.getElementById("angle-slider");
+            const angleValue = document.getElementById("angle-value");
+            angleSlider.addEventListener("input", function() {
+                angle = parseInt(this.value);
+                angleValue.textContent = angle + "°";
+                updatePhysicsModel();
+            });
+            
+            const bSlider = document.getElementById("b-slider");
+            const bValue = document.getElementById("b-value");
+            bSlider.addEventListener("input", function() {
+                B = parseFloat(this.value) / 10;
+                bValue.textContent = B.toFixed(1) + " T";
+                updatePhysicsModel();
+            });
+            
+            const iSlider = document.getElementById("i-slider");
+            const iValue = document.getElementById("i-value");
+            iSlider.addEventListener("input", function() {
+                I = parseFloat(this.value) / 10;
+                iValue.textContent = I.toFixed(1) + " A";
+                updatePhysicsModel();
+            });
+            
+            const lSlider = document.getElementById("l-slider");
+            const lValue = document.getElementById("l-value");
+            lSlider.addEventListener("input", function() {
+                L = parseFloat(this.value) / 10;
+                lValue.textContent = L.toFixed(1) + " m";
+                updatePhysicsModel();
+            });
+        }
+        
+        function onWindowResize() {
+            camera.aspect = document.getElementById('three-container').clientWidth / document.getElementById('three-container').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(document.getElementById('three-container').clientWidth, document.getElementById('three-container').clientHeight);
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+ </body>
+</html>
