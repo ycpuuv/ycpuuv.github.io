@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>通电直导线磁场可视化（修正磁感线密度）</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #0d1b2a, #1b263b);
+            color: #e0e1dd;
+        }
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(13, 27, 42, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 320px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid #415a77;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(13, 27, 42, 0.85);
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            border: 1px solid #415a77;
+            width: 300px;
+        }
+        .slider-container {
+            margin: 12px 0;
+        }
+        .slider-container label {
+            display: inline-block;
+            width: 130px;
+            font-weight: 500;
+        }
+        input[type="range"] {
+            width: 150px;
+            margin: 0 10px;
+        }
+        button {
+            background: #415a77;
+            color: #e0e1dd;
+            border: none;
+            padding: 10px 16px;
+            margin: 8px 5px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        button:hover {
+            background: #778da9;
+            transform: translateY(-2px);
+        }
+        h1, h2 {
+            margin-top: 0;
+            color: #e0e1dd;
+        }
+        h1 {
+            border-bottom: 1px solid #415a77;
+            padding-bottom: 10px;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            z-index: 1000;
+            background: rgba(13, 27, 42, 0.9);
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .hand-rule {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(65, 90, 119, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .current-direction {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255, 209, 102, 0.2);
+            border-radius: 6px;
+            font-weight: 500;
+        }
+        .legend {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(65, 90, 119, 0.3);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .legend-color {
+            width: 20px;
+            height: 10px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="info">
+            <h1>通电直导线磁场</h1>
+            <p>这个可视化展示了通电直导线周围的磁场分布：</p>
+            <ul>
+                <li><strong style="color: #e63946">红色导线</strong>表示带电流的直导线</li>
+                <li><strong style="color: #48cae4">蓝色箭头</strong>表示磁场方向和强度</li>
+                <li><strong style="color: #ffd166">黄色箭头</strong>表示电流方向</li>
+                <li><strong style="color: #9d4edd">紫色圆环</strong>表示磁感线</li>
+                <li>磁场方向遵循<strong>右手螺旋定则</strong></li>
+            </ul>
+            <div class="hand-rule">
+                <strong>右手螺旋定则：</strong>用右手握住导线，拇指指向电流方向，四指弯曲的方向即为磁场方向。
+            </div>
+            <div class="legend">
+                <strong>磁感线密度：</strong>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #7209b7;"></div>
+                    <span>靠近导线 - 密集</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background-color: #4cc9f0;"></div>
+                    <span>远离导线 - 稀疏</span>
+                </div>
+            </div>
+            <div class="current-direction">
+                当前电流方向: <span id="current-direction-text">向上</span>
+            </div>
+            <p>使用鼠标与场景交互：</p>
+            <ul>
+                <li>左键拖动：旋转视图</li>
+                <li>右键拖动：平移视图</li>
+                <li>滚轮：缩放</li>
+            </ul>
+        </div>
+        
+        <div id="controls">
+            <h2>控制面板</h2>
+            <div class="slider-container">
+                <label for="current">电流强度:</label>
+                <input type="range" id="current" min="1" max="10" value="5">
+                <span id="current-value" class="value-display">5 A</span>
+            </div>
+            <div class="slider-container">
+                <label for="distance">观察距离:</label>
+                <input type="range" id="distance" min="1" max="10" value="5">
+                <span id="distance-value" class="value-display">5 m</span>
+            </div>
+            <div class="slider-container">
+                <label for="field-line-density">磁感线密度:</label>
+                <input type="range" id="field-line-density" min="1" max="10" value="5">
+                <span id="field-line-density-value" class="value-display">5</span>
+            </div>
+            <div>
+                <button id="reverse-current">反转电流方向</button>
+                <button id="reset-view">重置视图</button>
+                <button id="top-view">俯视图</button>
+                <button id="toggle-field-lines">切换磁感线</button>
+            </div>
+        </div>
+        
+        <div id="loading">加载中...</div>
+    </div>
+
+    <!-- 引入Three.js库 -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+    
+    <script>
+        // 主要Three.js代码
+        let scene, camera, renderer, controls;
+        let conductor, currentArrow, magneticFieldArrows = [];
+        let magneticFieldLines = [];
+        let currentDirection = 1; // 1表示向上，-1表示向下
+        let showFieldLines = true;
+        
+        // 初始化场景
+        function init() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0c1445);
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(5, 5, 10);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('container').appendChild(renderer.domElement);
+            
+            // 添加轨道控制
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 15);
+            scene.add(directionalLight);
+            
+            // 创建坐标系
+            createCoordinateSystem();
+            
+            // 创建导线
+            createConductor();
+            
+            // 创建磁场
+            createMagneticField();
+            
+            // 创建磁感线
+            createMagneticFieldLines();
+            
+            // 添加窗口大小调整监听
+            window.addEventListener('resize', onWindowResize);
+            
+            // 隐藏加载提示
+            document.getElementById('loading').style.display = 'none';
+            
+            // 设置控件事件监听
+            setupControls();
+            
+            // 开始动画循环
+            animate();
+        }
+        
+        // 创建坐标系
+        function createCoordinateSystem() {
+            // 创建坐标轴
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+            
+            // 添加网格
+            const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
+        }
+        
+        // 创建导线
+        function createConductor() {
+            // 如果导线已存在，先移除
+            if (conductor) {
+                scene.remove(conductor);
+            }
+            if (currentArrow) {
+                scene.remove(currentArrow);
+            }
+            
+            // 创建导线几何体
+            const geometry = new THREE.CylinderGeometry(0.1, 0.1, 8, 32);
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0xe63946,
+                emissive: 0x441111
+            });
+            conductor = new THREE.Mesh(geometry, material);
+            scene.add(conductor);
+            
+            // 添加电流方向指示箭头
+            const direction = new THREE.Vector3(0, currentDirection, 0);
+            
+            // 根据电流方向确定箭头位置
+            let originY;
+            if (currentDirection > 0) {
+                originY = 4; // 电流向上，箭头在导线顶部
+            } else {
+                originY = -4; // 电流向下，箭头在导线底部
+            }
+            
+            const origin = new THREE.Vector3(0, originY, 0);
+            const length = 0.8; // 减小箭头长度
+            const hex = 0xffd166;
+            
+            currentArrow = new THREE.ArrowHelper(direction, origin, length, hex, 0.3, 0.15);
+            scene.add(currentArrow);
+        }
+        
+        // 创建磁场
+        function createMagneticField() {
+            // 清除现有的磁场箭头
+            magneticFieldArrows.forEach(arrow => scene.remove(arrow));
+            magneticFieldArrows = [];
+            
+            const currentStrength = document.getElementById('current').value;
+            const observationDistance = document.getElementById('distance').value;
+            
+            // 在导线周围创建磁场箭头
+            const radiusStep = 0.5;
+            const angleStep = Math.PI / 8;
+            const heightStep = 1;
+            
+            for (let r = 1; r <= observationDistance; r += radiusStep) {
+                for (let angle = 0; angle < 2 * Math.PI; angle += angleStep) {
+                    for (let y = -3; y <= 3; y += heightStep) {
+                        // 计算位置
+                        const x = r * Math.cos(angle);
+                        const z = r * Math.sin(angle);
+                        
+                        // 计算磁场方向（垂直于径向向量）
+                        // 根据右手螺旋定则，磁场方向是环绕导线的
+                        // 修正：电流向上时，磁场方向应该是逆时针（从上方看）
+                        const direction = new THREE.Vector3(
+                            Math.sin(angle) * currentDirection,
+                            0,
+                            -Math.cos(angle) * currentDirection
+                        ).normalize();
+                        
+                        // 计算磁场强度（与电流和距离有关）
+                        const strength = currentStrength / r;
+                        
+                        // 创建箭头 - 减小箭头尺寸
+                        const arrowHelper = new THREE.ArrowHelper(
+                            direction,
+                            new THREE.Vector3(x, y, z),
+                            Math.min(strength * 0.25, 0.6), // 进一步减小箭头长度
+                            0x48cae4,
+                            0.4,  // 头部长度比例
+                            0.15  // 头部宽度
+                        );
+                        
+                        scene.add(arrowHelper);
+                        magneticFieldArrows.push(arrowHelper);
+                    }
+                }
+            }
+        }
+        
+        // 创建磁感线
+        function createMagneticFieldLines() {
+            // 清除现有的磁感线
+            magneticFieldLines.forEach(line => scene.remove(line));
+            magneticFieldLines = [];
+            
+            if (!showFieldLines) return;
+            
+            const currentStrength = document.getElementById('current').value;
+            const observationDistance = document.getElementById('distance').value;
+            const density = document.getElementById('field-line-density').value;
+            
+            // 在导线周围创建磁感线
+            // 使用非线性半径分布，靠近导线处密集，远离导线处稀疏
+            const minRadius = 0.5;
+            const maxRadius = observationDistance;
+            const numCircles = density * 3; // 增加圆环数量
+            
+            // 使用非线性分布使靠近导线的圆环更密集
+            for (let i = 0; i < numCircles; i++) {
+                // 使用非线性分布计算半径，使靠近导线的圆环更密集
+                // 使用平方函数使靠近导线处更密集
+                const t = i / (numCircles - 1);
+                const r = minRadius + (maxRadius - minRadius) * Math.pow(t, 2);
+                
+                // 计算磁场强度
+                const strength = currentStrength / r;
+                
+                // 创建圆形磁感线
+                const geometry = new THREE.TorusGeometry(r, 0.04, 8, 64); // 磁感线粗细改为0.04
+                
+                // 根据磁场强度设置颜色（从深紫到浅蓝）
+                const color = new THREE.Color();
+                color.setHSL(0.7 - strength * 0.1, 0.9, 0.5);
+                
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: color,
+                    transparent: true,
+                    opacity: 0.8 - 0.4 * (r / maxRadius) // 远处圆环更透明
+                });
+                
+                const torus = new THREE.Mesh(geometry, material);
+                torus.position.y = 0; // 仅保留最上面一层（y=0）
+                torus.rotation.x = Math.PI / 2; // 使圆环水平
+                
+                scene.add(torus);
+                magneticFieldLines.push(torus);
+            }
+        }
+        
+        // 设置控件事件监听
+        function setupControls() {
+            // 电流强度滑块
+            document.getElementById('current').addEventListener('input', function() {
+                document.getElementById('current-value').textContent = this.value + ' A';
+                createMagneticField();
+                createMagneticFieldLines();
+            });
+            
+            // 观察距离滑块
+            document.getElementById('distance').addEventListener('input', function() {
+                document.getElementById('distance-value').textContent = this.value + ' m';
+                createMagneticField();
+                createMagneticFieldLines();
+            });
+            
+            // 磁感线密度滑块
+            document.getElementById('field-line-density').addEventListener('input', function() {
+                document.getElementById('field-line-density-value').textContent = this.value;
+                createMagneticFieldLines();
+            });
+            
+            // 反转电流方向按钮
+            document.getElementById('reverse-current').addEventListener('click', function() {
+                currentDirection *= -1;
+                document.getElementById('current-direction-text').textContent = 
+                    currentDirection > 0 ? '向上' : '向下';
+                createConductor();
+                createMagneticField();
+                createMagneticFieldLines();
+            });
+            
+            // 重置视图按钮
+            document.getElementById('reset-view').addEventListener('click', function() {
+                controls.reset();
+                camera.position.set(5, 5, 10);
+            });
+            
+            // 俯视图按钮
+            document.getElementById('top-view').addEventListener('click', function() {
+                camera.position.set(0, 10, 0.1);
+                controls.update();
+            });
+            
+            // 切换磁感线按钮
+            document.getElementById('toggle-field-lines').addEventListener('click', function() {
+                showFieldLines = !showFieldLines;
+                createMagneticFieldLines();
+                this.textContent = showFieldLines ? '隐藏磁感线' : '显示磁感线';
+            });
+        }
+        
+        // 窗口大小调整处理
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
