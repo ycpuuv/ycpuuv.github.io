@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>弹簧振子运动与能量转换演示</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .simulation-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .control-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .value-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        button {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-weight: bold;
+        }
+        button:hover {
+            background: #357abd;
+        }
+        #simulationCanvas {
+            width: 100%;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            display: block;
+        }
+        .graph-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .graph-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .graph {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            position: relative;
+            height: 180px;
+        }
+        .graph-title {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #ffd93d;
+        }
+        .graph canvas {
+            width: 100%;
+            height: 140px;
+            border-radius: 5px;
+            display: block;
+        }
+        .info-panel {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .info-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .info-card h3 {
+            margin-bottom: 10px;
+            color: #4a90e2;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+        }
+        .time-indicator {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        .energy-value {
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            font-weight: bold;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 4px 10px;
+            border-radius: 4px;
+            text-align: center;
+            min-width: 120px;
+        }
+        .legend {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            font-size: 0.8rem;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 3px;
+            margin-right: 5px;
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABJQCEogAAQIBAAQgCAQmaCAKYkBECCAgOxAAQIAAASANABCA=">
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1>弹簧振子能量变化演示实验室</h1>
+    <p class="subtitle">交互式模拟弹簧振子的简谐运动及动能与势能的转换过程</p>
+   </header>
+   <div class="content">
+    <div class="simulation-panel">
+     <h2>弹簧振子模拟</h2>
+     <div class="controls">
+      <div class="control-group">
+       <label for="stiffnessSlider">劲度系数 (N/m):</label> <input type="range" id="stiffnessSlider" min="10" max="200" step="5" value="50">
+       <div class="value-display">
+        <span>10</span> <span id="stiffnessValue">50</span> <span>200</span>
+       </div>
+      </div>
+      <div class="control-group">
+       <label for="amplitudeSlider">振幅 (m):</label> <input type="range" id="amplitudeSlider" min="0.5" max="3" step="0.1" value="1.5">
+       <div class="value-display">
+        <span>0.5</span> <span id="amplitudeValue">1.5</span> <span>3.0</span>
+       </div>
+      </div>
+      <div class="control-group">
+       <label for="speedSlider">模拟速度:</label> <input type="range" id="speedSlider" min="0.1" max="1" step="0.1" value="1">
+       <div class="value-display">
+        <span>慢</span> <span id="speedValue">正常</span> <span>快</span>
+       </div>
+      </div>
+      <div class="control-group">
+       <button id="resetBtn">重置模拟</button> <button id="pauseBtn">暂停/继续</button>
+      </div>
+     </div>
+     <canvas id="simulationCanvas"></canvas>
+     <div class="time-indicator">
+      当前时间: <span id="currentTime">0.00<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABwAAAAgCAIAAACO148VAAAAjElEQVR42u1UQQ7AIAjj/4+mi9llQkHwtAPEmI2xWgooWKafnb6aZ92d1gShabqQOGX/jPif+jGLqXaWz4McJmmEIe4jveJ4QbNEmnlwpl0debA0y4KC81woMKHBVFbDVItdXWwscfOTY/l+4hMVqXNkGnaY1KrRkyIB7WpaulDubUAHdEAHdEB/DPoA4JZ1Dz68kksAAAAASUVORK5CYII=" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;"></span> 秒
+     </div>
+    </div>
+    <div class="graph-panel">
+     <h2>能量随时间变化曲线</h2>
+     <div class="graph-container">
+      <div class="graph">
+       <div class="graph-title">
+        动能随时间变化
+       </div>
+       <div class="energy-value" id="kineticValue">
+        动能: 0.00 J
+       </div>
+       <canvas id="kineticGraph"></canvas>
+      </div>
+      <div class="graph">
+       <div class="graph-title">
+        势能随时间变化
+       </div>
+       <div class="energy-value" id="potentialValue">
+        势能: 0.00 J
+       </div>
+       <canvas id="potentialGraph"></canvas>
+      </div>
+      <div class="graph">
+       <div class="graph-title">
+        能量随时间变化
+       </div>
+       <div class="legend">
+        <div class="legend-item">
+         <div class="legend-color" style="background: #ff6b6b;"></div><span>动能</span>
+        </div>
+        <div class="legend-item">
+         <div class="legend-color" style="background: #4a90e2;"></div><span>势能</span>
+        </div>
+        <div class="legend-item">
+         <div class="legend-color" style="background: #6bff6b;"></div><span>总能量</span>
+        </div>
+       </div>
+       <canvas id="combinedGraph"></canvas>
+      </div>
+     </div>
+     <div class="time-indicator">
+      显示时间范围: <span id="timeRange">0.00 - 8.00</span> 秒
+     </div>
+    </div>
+   </div>
+   <div class="info-panel">
+    <h2>物理原理说明</h2>
+    <div class="info-grid">
+     <div class="info-card">
+      <h3>弹簧振子原理</h3>
+      <p>弹簧振子是一个理想化的物理模型，由质量可忽略的弹簧和质量块组成。当质量块偏离平衡位置时，会受到与位移成正比的回复力作用，遵循胡克定律：F = -kx。</p>
+     </div>
+     <div class="info-card">
+      <h3>简谐运动</h3>
+      <p>弹簧振子的运动是简谐运动，其位移随时间按正弦或余弦规律变化：x(t) = A·cos(ωt + φ)，其中ω = √(k/m)为角频率。</p>
+     </div>
+     <div class="info-card">
+      <h3>能量转换</h3>
+      <p>在无阻尼情况下，系统机械能守恒。动能和弹性势能相互转化：在平衡位置动能最大，势能为零；在最大位移处势能最大，动能为零。</p>
+     </div>
+     <div class="info-card">
+      <h3>能量公式</h3>
+      <p>弹性势能: E<sub>p</sub> = ½kx²<br>
+        动能: E<sub>k</sub> = ½mv²<br>
+        总机械能: E = E<sub>p</sub> + E<sub>k</sub> = ½kA² (守恒)</p>
+     </div>
+    </div>
+   </div>
+   <footer>
+    <p>物理教学演示工具 |敏行物理工作室 开发</p>
+   </footer>
+  </div>
+  <script>
+        // 获取Canvas元素和上下文
+        const simCanvas = document.getElementById('simulationCanvas');
+        const kineticCanvas = document.getElementById('kineticGraph');
+        const potentialCanvas = document.getElementById('potentialGraph');
+        const combinedCanvas = document.getElementById('combinedGraph');
+        
+        const simCtx = simCanvas.getContext('2d');
+        const kineticCtx = kineticCanvas.getContext('2d');
+        const potentialCtx = potentialCanvas.getContext('2d');
+        const combinedCtx = combinedCanvas.getContext('2d');
+        
+        // 获取控制元素
+        const stiffnessSlider = document.getElementById('stiffnessSlider');
+        const amplitudeSlider = document.getElementById('amplitudeSlider');
+        const speedSlider = document.getElementById('speedSlider');
+        const resetBtn = document.getElementById('resetBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        
+        // 显示当前值的元素
+        const stiffnessValue = document.getElementById('stiffnessValue');
+        const amplitudeValue = document.getElementById('amplitudeValue');
+        const speedValue = document.getElementById('speedValue');
+        const currentTimeDisplay = document.getElementById('currentTime');
+        const timeRangeDisplay = document.getElementById('timeRange');
+        const kineticValueDisplay = document.getElementById('kineticValue');
+        const potentialValueDisplay = document.getElementById('potentialValue');
+        
+        // 物理参数
+        let params = {
+            mass: 1, // 固定质量
+            stiffness: parseFloat(stiffnessSlider.value),
+            amplitude: parseFloat(amplitudeSlider.value),
+            speed: parseFloat(speedSlider.value), // 模拟速度
+            time: 0,
+            isPaused: false,
+            timeWindow: 8 // 时间窗口大小（秒）
+        };
+        
+        // 能量数据存储
+        const energyData = [];
+        
+        // 更新显示的值
+        function updateValueDisplays() {
+            stiffnessValue.textContent = params.stiffness.toFixed(0);
+            amplitudeValue.textContent = params.amplitude.toFixed(1);
+            currentTimeDisplay.textContent = params.time.toFixed(2);
+            
+            // 更新速度显示文本
+            if (params.speed < 0.5) {
+                speedValue.textContent = "慢";
+            } else if (params.speed < 2) {
+                speedValue.textContent = "正常";
+            } else {
+                speedValue.textContent = "快";
+            }
+            
+            // 更新时间范围显示
+            const startTime = Math.max(0, params.time - params.timeWindow);
+            const endTime = Math.max(params.timeWindow, params.time);
+            timeRangeDisplay.textContent = `${startTime.toFixed(2)} - ${endTime.toFixed(2)}`;
+        }
+        
+        // 初始化
+        updateValueDisplays();
+        
+        // 调整Canvas大小
+        function resizeCanvases() {
+            simCanvas.width = simCanvas.offsetWidth;
+            simCanvas.height = simCanvas.offsetHeight;
+            
+            kineticCanvas.width = kineticCanvas.offsetWidth;
+            kineticCanvas.height = kineticCanvas.offsetHeight;
+            
+            potentialCanvas.width = potentialCanvas.offsetWidth;
+            potentialCanvas.height = potentialCanvas.offsetHeight;
+            
+            combinedCanvas.width = combinedCanvas.offsetWidth;
+            combinedCanvas.height = combinedCanvas.offsetHeight;
+        }
+        
+        window.addEventListener('resize', resizeCanvases);
+        resizeCanvases();
+        
+        // 弹簧振子模拟函数
+        function simulateSpring() {
+            // 计算角频率
+            const omega = Math.sqrt(params.stiffness / params.mass);
+            
+            // 计算位移、速度和加速度
+            const displacement = params.amplitude * Math.cos(omega * params.time);
+            const velocity = -params.amplitude * omega * Math.sin(omega * params.time);
+            const acceleration = -params.amplitude * omega * omega * Math.cos(omega * params.time);
+            
+            // 计算能量
+            const potentialEnergy = 0.5 * params.stiffness * displacement * displacement;
+            const kineticEnergy = 0.5 * params.mass * velocity * velocity;
+            const totalEnergy = potentialEnergy + kineticEnergy;
+            
+            return { displacement, velocity, acceleration, potentialEnergy, kineticEnergy, totalEnergy, omega };
+        }
+        
+        // 绘制弹簧振子
+        function drawSpringMassSystem(displacement) {
+            const width = simCanvas.width;
+            const height = simCanvas.height;
+            
+            // 清除画布
+            simCtx.clearRect(0, 0, width, height);
+            
+            // 绘制参考线（平衡位置）
+            simCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            simCtx.lineWidth = 1;
+            simCtx.beginPath();
+            simCtx.moveTo(width * 0.1, height / 2);
+            simCtx.lineTo(width * 0.9, height / 2);
+            simCtx.stroke();
+            
+            // 绘制墙壁
+            simCtx.fillStyle = '#aaa';
+            simCtx.fillRect(width * 0.1 - 10, height / 2 - 50, 10, 100);
+            
+            // 绘制弹簧
+            const springStartX = width * 0.1;
+            const springEndX = width * 0.5 + (displacement / params.amplitude) * (width * 0.3);
+            const springY = height / 2;
+            
+            simCtx.strokeStyle = '#4a90e2';
+            simCtx.lineWidth = 3;
+            simCtx.beginPath();
+            simCtx.moveTo(springStartX, springY);
+            
+            // 绘制弹簧线圈
+            const coils = 15;
+            const coilWidth = (springEndX - springStartX) / coils;
+            for (let i = 0; i < coils; i++) {
+                const x = springStartX + i * coilWidth;
+                const y = springY + (i % 2 === 0 ? -10 : 10);
+                simCtx.lineTo(x, y);
+            }
+            simCtx.lineTo(springEndX, springY);
+            simCtx.stroke();
+            
+            // 绘制质量块
+            const massRadius = 25;
+            simCtx.fillStyle = '#ff6b6b';
+            simCtx.beginPath();
+            simCtx.arc(springEndX, springY, massRadius, 0, Math.PI * 2);
+            simCtx.fill();
+            
+            // 绘制位移指示器
+            simCtx.strokeStyle = '#ffd93d';
+            simCtx.lineWidth = 2;
+            simCtx.beginPath();
+            simCtx.moveTo(width * 0.5, height / 2);
+            simCtx.lineTo(springEndX, springY);
+            simCtx.stroke();
+            
+            // 绘制位移值
+            simCtx.fillStyle = '#ffd93d';
+            simCtx.font = '14px Arial';
+            simCtx.textAlign = 'center';
+            simCtx.fillText(`x = ${displacement.toFixed(2)} m`, width * 0.5, height / 2 - 20);
+        }
+        
+        // 绘制网格和坐标轴
+        function drawGrid(ctx, width, height, maxEnergy, timeWindow, currentTime) {
+            // 计算时间窗口的起始时间
+            const startTime = Math.max(0, currentTime - timeWindow);
+            const endTime = Math.max(timeWindow, currentTime);
+            
+            // 绘制网格
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.lineWidth = 0.5;
+            
+            // 垂直网格线（时间轴）
+            const timeSteps = 8;
+            for (let i = 0; i <= timeSteps; i++) {
+                const x = 40 + (i / timeSteps) * (width - 60);
+                ctx.beginPath();
+                ctx.moveTo(x, 10);
+                ctx.lineTo(x, height - 30); // 减少底部空间，避免与标签重叠
+                ctx.stroke();
+            }
+            
+            // 水平网格线（能量轴）
+            const energySteps = 4;
+            for (let i = 0; i <= energySteps; i++) {
+                const y = 10 + (i / energySteps) * (height - 40); // 调整高度，避免与标签重叠
+                ctx.beginPath();
+                ctx.moveTo(40, y);
+                ctx.lineTo(width - 20, y);
+                ctx.stroke();
+            }
+            
+            // 绘制坐标轴
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(40, 10);
+            ctx.lineTo(40, height - 30); // 减少底部空间
+            ctx.lineTo(width - 20, height - 30);
+            ctx.stroke();
+            
+            // 坐标轴标签
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            // 调整"时间"标签位置，避免与数值重叠
+            ctx.fillText('时间 (s)', width / 2, height - 5);
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('能量 (J)', 0, 0);
+            ctx.restore();
+            
+            // 时间轴数值标签 - 调整位置避免与"时间"标签重叠
+            for (let i = 0; i <= timeSteps; i++) {
+                const x = 40 + (i / timeSteps) * (width - 60);
+                const timeValue = startTime + (i / timeSteps) * (endTime - startTime);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                // 将数值标签向上移动，避免与"时间"标签重叠
+                ctx.fillText(timeValue.toFixed(1), x, height - 15);
+            }
+            
+            // 能量轴数值标签 - 调整位置避免与能量值重叠
+            for (let i = 0; i <= energySteps; i++) {
+                const y = 10 + (i / energySteps) * (height - 40);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'left';
+                // 将标签向右移动，避免与能量值重叠
+                ctx.fillText((maxEnergy * (1 - i / energySteps)).toFixed(1), 25, y + 3);
+            }
+        }
+        
+        // 绘制动能图表
+        function drawKineticGraph(data) {
+            const width = kineticCanvas.width;
+            const height = kineticCanvas.height;
+            
+            // 清除画布
+            kineticCtx.clearRect(0, 0, width, height);
+            
+            // 计算最大能量值用于缩放
+            const maxEnergy = 0.5 * params.stiffness * params.amplitude * params.amplitude;
+            
+            // 绘制网格和坐标轴
+            drawGrid(kineticCtx, width, height, maxEnergy, params.timeWindow, params.time);
+            
+            // 添加新数据点
+            energyData.push({
+                time: params.time,
+                kinetic: data.kineticEnergy,
+                potential: data.potentialEnergy,
+                total: data.totalEnergy
+            });
+            
+            // 移除超出时间窗口的数据点 - 修正：从Y轴开始显示，不保留额外数据
+            const removeTime = params.time - params.timeWindow;
+            while (energyData.length > 0 && energyData[0].time < removeTime) {
+                energyData.shift();
+            }
+            
+            // 绘制动能曲线
+            if (energyData.length > 1) {
+                kineticCtx.strokeStyle = '#ff6b6b';
+                kineticCtx.lineWidth = 2;
+                kineticCtx.beginPath();
+                
+                const startTime = Math.max(0, params.time - params.timeWindow);
+                const endTime = Math.max(params.timeWindow, params.time);
+                
+                for (let i = 0; i < energyData.length; i++) {
+                    // 只绘制在时间窗口内的数据点
+                    if (energyData[i].time >= startTime && energyData[i].time <= endTime) {
+                        const x = 40 + ((energyData[i].time - startTime) / (endTime - startTime)) * (width - 60);
+                        const y = 10 + (1 - energyData[i].kinetic / maxEnergy) * (height - 40);
+                        
+                        if (i === 0 || energyData[i-1].time < startTime) {
+                            kineticCtx.moveTo(x, y);
+                        } else {
+                            kineticCtx.lineTo(x, y);
+                        }
+                    }
+                }
+                kineticCtx.stroke();
+            }
+            
+            // 更新动能数值显示
+            kineticValueDisplay.textContent = `动能: ${data.kineticEnergy.toFixed(2)} J`;
+        }
+        
+        // 绘制势能图表
+        function drawPotentialGraph(data) {
+            const width = potentialCanvas.width;
+            const height = potentialCanvas.height;
+            
+            // 清除画布
+            potentialCtx.clearRect(0, 0, width, height);
+            
+            // 计算最大能量值用于缩放
+            const maxEnergy = 0.5 * params.stiffness * params.amplitude * params.amplitude;
+            
+            // 绘制网格和坐标轴
+            drawGrid(potentialCtx, width, height, maxEnergy, params.timeWindow, params.time);
+            
+            // 绘制势能曲线
+            if (energyData.length > 1) {
+                potentialCtx.strokeStyle = '#4a90e2';
+                potentialCtx.lineWidth = 2;
+                potentialCtx.beginPath();
+                
+                const startTime = Math.max(0, params.time - params.timeWindow);
+                const endTime = Math.max(params.timeWindow, params.time);
+                
+                for (let i = 0; i < energyData.length; i++) {
+                    // 只绘制在时间窗口内的数据点
+                    if (energyData[i].time >= startTime && energyData[i].time <= endTime) {
+                        const x = 40 + ((energyData[i].time - startTime) / (endTime - startTime)) * (width - 60);
+                        const y = 10 + (1 - energyData[i].potential / maxEnergy) * (height - 40);
+                        
+                        if (i === 0 || energyData[i-1].time < startTime) {
+                            potentialCtx.moveTo(x, y);
+                        } else {
+                            potentialCtx.lineTo(x, y);
+                        }
+                    }
+                }
+                potentialCtx.stroke();
+            }
+            
+            // 更新势能数值显示
+            potentialValueDisplay.textContent = `势能: ${data.potentialEnergy.toFixed(2)} J`;
+        }
+        
+        // 绘制综合能量图表（显示三种能量）
+        function drawCombinedGraph(data) {
+            const width = combinedCanvas.width;
+            const height = combinedCanvas.height;
+            
+            // 清除画布
+            combinedCtx.clearRect(0, 0, width, height);
+            
+            // 计算最大能量值用于缩放
+            const maxEnergy = 0.5 * params.stiffness * params.amplitude * params.amplitude;
+            
+            // 绘制网格和坐标轴
+            drawGrid(combinedCtx, width, height, maxEnergy, params.timeWindow, params.time);
+            
+            // 绘制动能曲线
+            if (energyData.length > 1) {
+                combinedCtx.strokeStyle = '#ff6b6b';
+                combinedCtx.lineWidth = 2;
+                combinedCtx.beginPath();
+                
+                const startTime = Math.max(0, params.time - params.timeWindow);
+                const endTime = Math.max(params.timeWindow, params.time);
+                
+                for (let i = 0; i < energyData.length; i++) {
+                    // 只绘制在时间窗口内的数据点
+                    if (energyData[i].time >= startTime && energyData[i].time <= endTime) {
+                        const x = 40 + ((energyData[i].time - startTime) / (endTime - startTime)) * (width - 60);
+                        const y = 10 + (1 - energyData[i].kinetic / maxEnergy) * (height - 40);
+                        
+                        if (i === 0 || energyData[i-1].time < startTime) {
+                            combinedCtx.moveTo(x, y);
+                        } else {
+                            combinedCtx.lineTo(x, y);
+                        }
+                    }
+                }
+                combinedCtx.stroke();
+            }
+            
+            // 绘制势能曲线
+            if (energyData.length > 1) {
+                combinedCtx.strokeStyle = '#4a90e2';
+                combinedCtx.lineWidth = 2;
+                combinedCtx.beginPath();
+                
+                const startTime = Math.max(0, params.time - params.timeWindow);
+                const endTime = Math.max(params.timeWindow, params.time);
+                
+                for (let i = 0; i < energyData.length; i++) {
+                    // 只绘制在时间窗口内的数据点
+                    if (energyData[i].time >= startTime && energyData[i].time <= endTime) {
+                        const x = 40 + ((energyData[i].time - startTime) / (endTime - startTime)) * (width - 60);
+                        const y = 10 + (1 - energyData[i].potential / maxEnergy) * (height - 40);
+                        
+                        if (i === 0 || energyData[i-1].time < startTime) {
+                            combinedCtx.moveTo(x, y);
+                        } else {
+                            combinedCtx.lineTo(x, y);
+                        }
+                    }
+                }
+                combinedCtx.stroke();
+            }
+            
+            // 绘制总能量曲线
+            if (energyData.length > 1) {
+                combinedCtx.strokeStyle = '#6bff6b';
+                combinedCtx.lineWidth = 2;
+                combinedCtx.beginPath();
+                
+                const startTime = Math.max(0, params.time - params.timeWindow);
+                const endTime = Math.max(params.timeWindow, params.time);
+                
+                for (let i = 0; i < energyData.length; i++) {
+                    // 只绘制在时间窗口内的数据点
+                    if (energyData[i].time >= startTime && energyData[i].time <= endTime) {
+                        const x = 40 + ((energyData[i].time - startTime) / (endTime - startTime)) * (width - 60);
+                        const y = 10 + (1 - energyData[i].total / maxEnergy) * (height - 40);
+                        
+                        if (i === 0 || energyData[i-1].time < startTime) {
+                            combinedCtx.moveTo(x, y);
+                        } else {
+                            combinedCtx.lineTo(x, y);
+                        }
+                    }
+                }
+                combinedCtx.stroke();
+            }
+        }
+        
+        // 动画循环
+        function animate() {
+            if (!params.isPaused) {
+                // 计算物理量
+                const data = simulateSpring();
+                
+                // 绘制弹簧振子
+                drawSpringMassSystem(data.displacement);
+                
+                // 绘制能量图表
+                drawKineticGraph(data);
+                drawPotentialGraph(data);
+                drawCombinedGraph(data);
+                
+                // 更新时间（根据速度参数调整时间增量）
+                params.time += 0.02 * params.speed;
+                
+                // 更新显示值
+                updateValueDisplays();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // 事件监听
+        stiffnessSlider.addEventListener('input', function() {
+            params.stiffness = parseFloat(this.value);
+            updateValueDisplays();
+        });
+        
+        amplitudeSlider.addEventListener('input', function() {
+            params.amplitude = parseFloat(this.value);
+            updateValueDisplays();
+        });
+        
+        speedSlider.addEventListener('input', function() {
+            params.speed = parseFloat(this.value);
+            updateValueDisplays();
+        });
+        
+        resetBtn.addEventListener('click', function() {
+            params.time = 0;
+            energyData.length = 0;
+            updateValueDisplays();
+        });
+        
+        pauseBtn.addEventListener('click', function() {
+            params.isPaused = !params.isPaused;
+            this.textContent = params.isPaused ? '继续' : '暂停';
+        });
+        
+        // 启动动画
+        animate();
+    </script>
+ </body>
+</html>
