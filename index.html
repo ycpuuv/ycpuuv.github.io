@@ -78,38 +78,63 @@
 
   .card{
     display:flex;align-items:center;gap:12px;
-    background:#0e0e1e;border-radius:6px;padding:11px 14px;
+    background:#0e0e1e;border-radius:6px;padding:10px 14px;
     border:1px solid #18182a;text-decoration:none;
-    transition:all .2s;margin-bottom:6px;
+    transition:all .2s;margin-bottom:5px;
   }
   .card:hover{
     background:#131328;border-color:#2a2a48;
     transform:translateX(3px);
   }
   .card .icon{
-    width:28px;height:28px;border-radius:5px;
+    width:32px;height:32px;border-radius:6px;
     display:flex;align-items:center;justify-content:center;
-    font-size:.9em;flex-shrink:0;
+    font-size:1em;flex-shrink:0;
     background:rgba(212,163,115,.08);
   }
   .card .info{flex:1;min-width:0}
-  .card .info .name{font-size:.82em;color:#c8c8d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card .info .desc{font-size:.68em;color:#4a4a60;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .info .name{font-size:.82em;color:#c8c8d0}
   .card .arrow{color:#2a2a40;font-size:.7em;transition:.2s;flex-shrink:0}
   .card:hover .arrow{color:#d4a373;transform:translateX(3px)}
 
   .placeholder{
-    background:#0e0e1e;border-radius:6px;padding:11px 14px;
-    border:1px dashed #1a1a2e;margin-bottom:6px;
+    background:#0e0e1e;border-radius:6px;padding:10px 14px;
+    border:1px dashed #1a1a2e;margin-bottom:5px;
     display:flex;align-items:center;gap:12px;
   }
-  .placeholder .icon{width:28px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.9em;flex-shrink:0;background:rgba(255,255,255,.03);color:#3a3a50}
+  .placeholder .icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1em;flex-shrink:0;background:rgba(255,255,255,.03);color:#3a3a50}
   .placeholder .info .name{font-size:.82em;color:#3a3a50}
-  .placeholder .info .desc{font-size:.68em;color:#2a2a40;margin-top:1px}
+
+  .external{
+    display:flex;align-items:center;gap:12px;
+    background:#0e0e1e;border-radius:6px;padding:12px 14px;
+    border:1px solid #18182a;text-decoration:none;
+    transition:all .2s;margin-bottom:5px;
+  }
+  .external:hover{
+    background:#131328;border-color:#d4a373;
+    transform:translateX(3px);
+  }
+  .external .icon{
+    width:32px;height:32px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1em;flex-shrink:0;
+    background:rgba(244,162,97,.1);
+  }
+  .external .info{flex:1}
+  .external .info .name{font-size:.82em;color:#f4a261}
+  .external .tag{
+    font-size:.6em;padding:2px 8px;border-radius:8px;
+    background:rgba(244,162,97,.1);color:#d48a4a;
+    flex-shrink:0;
+  }
 
   footer{
     text-align:center;padding:28px;color:#1e1e30;font-size:.65em;
     letter-spacing:1px;
+  }
+  footer .email{
+    color:#3a3a50;font-size:.9em;margin-bottom:6px;letter-spacing:0;
   }
 
   @media(max-width:600px){
@@ -125,269 +150,286 @@
   <h1>启 明</h1>
   <p class="sub">教学 · 心理 · 规划</p>
   <div class="pill">
-    <span>📦 <span id="totalItems">0</span> 件</span>
+    <span>📦 <span id="totalItems">0</span></span>
   </div>
 </div>
 
 <div class="container">
 
-  <!-- ===== 教学资源 ===== -->
+  <!-- 教学资源 -->
   <div class="section">
     <div class="section-header"><h2>教学资源</h2><span class="line"></span></div>
 
-    <div class="subsection-header">物理题库</div>
+    <div class="subsection-header">📝 题库</div>
     <a class="card" href="tiku.html">
       <div class="icon">📝</div>
-      <div class="info"><div class="name">物理题库</div><div class="desc">新增 · 导入 · 搜索 · 难度分级</div></div>
+      <div class="info"><div class="name">物理题库</div></div>
       <span class="arrow">→</span>
     </a>
 
     <div class="subsection-header">必修一 · 运动学</div>
     <a class="card" href="必修一_运动学复习_三天冲刺.html">
       <div class="icon">📐</div>
-      <div class="info"><div class="name">运动学复习 · 三天冲刺</div><div class="desc">必修一 视频+知识+练习</div></div>
+      <div class="info"><div class="name">运动学复习 · 三天冲刺</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="必修一_推导与进阶.html">
       <div class="icon">📏</div>
-      <div class="info"><div class="name">推导与进阶</div><div class="desc">运动学公式推导</div></div>
+      <div class="info"><div class="name">推导与进阶</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/必修一/伽利略斜面实验_交互动画.html">
       <div class="icon">🧪</div>
-      <div class="info"><div class="name">伽利略理想化斜面实验</div><div class="desc">交互动画 · 必修一</div></div>
+      <div class="info"><div class="name">伽利略理想化斜面实验</div></div>
       <span class="arrow">→</span>
     </a>
 
-    <div class="subsection-header">必修一 · 相互作用与力</div>
+    <div class="subsection-header">必修一 · 力</div>
     <a class="card" href="课件/必修一/力的合成_交互动画.html">
       <div class="icon">💪</div>
-      <div class="info"><div class="name">力的合成</div><div class="desc">交互动画 · 必修一</div></div>
+      <div class="info"><div class="name">力的合成</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/必修一/观察桌面的微小形变_交互动画.html">
       <div class="icon">🔍</div>
-      <div class="info"><div class="name">观察桌面的微小形变</div><div class="desc">交互动画 · 必修一</div></div>
+      <div class="info"><div class="name">观察桌面的微小形变</div></div>
       <span class="arrow">→</span>
     </a>
 
     <div class="subsection-header">选必一 · 机械振动</div>
     <a class="card" href="课件/机械振动/单摆_交互动画.html">
-      <div class="icon">🕰</div>
-      <div class="info"><div class="name">单摆</div><div class="desc">交互动画 · 选必一</div></div>
+      <div class="icon">🕰️</div>
+      <div class="info"><div class="name">单摆</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/机械振动/单摆阻尼_交互动画.html">
       <div class="icon">📉</div>
-      <div class="info"><div class="name">单摆阻尼</div><div class="desc">阻尼振动 · 选必一</div></div>
+      <div class="info"><div class="name">单摆阻尼</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/机械振动/圆锥摆模拟器_交互动画.html">
       <div class="icon">🌀</div>
-      <div class="info"><div class="name">圆锥摆模拟器</div><div class="desc">交互动画 · 选必一</div></div>
+      <div class="info"><div class="name">圆锥摆模拟器</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/机械振动/弹簧振子_简谐运动力与速度_交互动画.html">
       <div class="icon">〰️</div>
-      <div class="info"><div class="name">弹簧振子 · 简谐运动力与速度</div><div class="desc">交互动画 · 选必一</div></div>
+      <div class="info"><div class="name">弹簧振子 · 简谐运动力与速度</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/机械振动/弹簧振子_能量变化_交互动画.html">
       <div class="icon">⚡</div>
-      <div class="info"><div class="name">弹簧振子 · 能量变化</div><div class="desc">交互动画 · 选必一</div></div>
+      <div class="info"><div class="name">弹簧振子 · 能量变化</div></div>
       <span class="arrow">→</span>
     </a>
 
     <div class="subsection-header">选必二 · 电磁学</div>
     <a class="card" href="课件/电磁学/通电直导线_磁场_交互动画.html">
       <div class="icon">🧲</div>
-      <div class="info"><div class="name">通电直导线的磁场</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">通电直导线的磁场</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/磁场对通电导线受力_3D演示.html">
       <div class="icon">🧲</div>
-      <div class="info"><div class="name">磁场对通电导线受力 · 3D</div><div class="desc">交互实验 · 选必二</div></div>
+      <div class="info"><div class="name">磁场对通电导线受力 · 3D</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/安培力_交互动画.html">
       <div class="icon">🧲</div>
-      <div class="info"><div class="name">安培力</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">安培力</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/安培力与洛伦兹力_交互动画.html">
       <div class="icon">⚡</div>
-      <div class="info"><div class="name">安培力与洛伦兹力</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">安培力与洛伦兹力</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/带电粒子_磁场螺旋运动_交互动画.html">
       <div class="icon">🌀</div>
-      <div class="info"><div class="name">带电粒子 · 磁场螺旋运动</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">带电粒子 · 磁场螺旋运动</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/导体棒_磁场运动模拟_交互动画.html">
-    <div class="icon">📊</div>
-    <div class="info"><div class="name">导体棒 · 磁场运动模拟</div><div class="desc">交互动画 · 选必二</div></div>
-    <span class="arrow">→</span>
+      <div class="icon">📊</div>
+      <div class="info"><div class="name">导体棒 · 磁场运动模拟</div></div>
+      <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/法拉第直流发电机_交互动画.html">
-    <div class="icon">⚙️</div>
-    <div class="info"><div class="name">法拉第直流发电机</div><div class="desc">交互动画 · 选必二</div></div>
-    <span class="arrow">→</span>
+      <div class="icon">⚙️</div>
+      <div class="info"><div class="name">法拉第直流发电机</div></div>
+      <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/单棒_无外力模型_交互动画.html">
       <div class="icon">📈</div>
-      <div class="info"><div class="name">单棒 · 无外力模型</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">单棒 · 无外力模型</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/电磁驱动_交互动画.html">
       <div class="icon">🔄</div>
-      <div class="info"><div class="name">电磁驱动</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">电磁驱动</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/电磁阻尼_交互动画.html">
       <div class="icon">✋</div>
-      <div class="info"><div class="name">电磁阻尼</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">电磁阻尼</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/理想变压器_交互动画.html">
       <div class="icon">⚡</div>
-      <div class="info"><div class="name">理想变压器模型</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">理想变压器模型</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/交变电流的产生_交互动画.html">
       <div class="icon">〰️</div>
-      <div class="info"><div class="name">交变电流的产生</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">交变电流的产生</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/电磁学/远距离输电_交互动画.html">
       <div class="icon">🔌</div>
-      <div class="info"><div class="name">远距离输电模型</div><div class="desc">交互动画 · 选必二</div></div>
+      <div class="info"><div class="name">远距离输电模型</div></div>
       <span class="arrow">→</span>
     </a>
 
     <div class="subsection-header">传感器</div>
     <a class="card" href="课件/传感器/光敏电阻_交互实验.html">
       <div class="icon">💡</div>
-      <div class="info"><div class="name">观察光敏电阻的特性</div><div class="desc">交互实验 · 选必二</div></div>
+      <div class="info"><div class="name">观察光敏电阻的特性</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/传感器/传感器_自动控制_交互实验.html">
       <div class="icon">🤖</div>
-      <div class="info"><div class="name">传感器·自动控制装置</div><div class="desc">交互实验 · 选必二</div></div>
+      <div class="info"><div class="name">传感器 · 自动控制装置</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课件/传感器/霍尔元件_交互实验.html">
       <div class="icon">🧲</div>
-      <div class="info"><div class="name">观察霍尔元件的特性</div><div class="desc">交互实验 · 选必二</div></div>
+      <div class="info"><div class="name">观察霍尔元件的特性</div></div>
       <span class="arrow">→</span>
     </a>
 
     <div class="subsection-header">核物理</div>
     <a class="card" href="binding-energy.html">
-      <div class="icon">⚛</div>
-      <div class="info"><div class="name">比结合能 · 核反应方向</div><div class="desc">课堂交互课件</div></div>
+      <div class="icon">⚛️</div>
+      <div class="info"><div class="name">比结合能 · 核反应方向</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="binding-energy-lecture.html">
       <div class="icon">📖</div>
-      <div class="info"><div class="name">比结合能讲义</div><div class="desc">完整课堂讲稿</div></div>
+      <div class="info"><div class="name">比结合能讲义</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="decay-recoil.html">
       <div class="icon">💥</div>
-      <div class="info"><div class="name">衰变反冲</div><div class="desc">核物理交互课件</div></div>
+      <div class="info"><div class="name">衰变反冲</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="decay-temp.html">
-      <div class="icon">☢</div>
-      <div class="info"><div class="name">衰变 · 临时版</div><div class="desc">核物理课件</div></div>
+      <div class="icon">☢️</div>
+      <div class="info"><div class="name">衰变 · 临时版</div></div>
       <span class="arrow">→</span>
     </a>
 
     <div class="subsection-header">视频集锦</div>
     <a class="card" href="bilibili-核聚变核裂变.html">
       <div class="icon">🔥</div>
-      <div class="info"><div class="name">B站 · 核聚变与核裂变</div><div class="desc">B站视频专题</div></div>
+      <div class="info"><div class="name">B站 · 核聚变与核裂变</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="核裂变核聚变_课堂视频集锦.html">
-      <div class="icon">☢</div>
-      <div class="info"><div class="name">核物理视频精选</div><div class="desc">25个视频 · 裂变 · 聚变 · 核武器</div></div>
+      <div class="icon">☢️</div>
+      <div class="info"><div class="name">核物理视频精选</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="运动学_课堂视频集锦.html">
       <div class="icon">🏃</div>
-      <div class="info"><div class="name">运动学视频精选</div><div class="desc">12个B站精品视频</div></div>
+      <div class="info"><div class="name">运动学视频精选</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="课堂视频集锦.html">
       <div class="icon">🎬</div>
-      <div class="info"><div class="name">课堂视频集锦（综合）</div><div class="desc">各章节视频汇总</div></div>
+      <div class="info"><div class="name">课堂视频集锦</div></div>
       <span class="arrow">→</span>
     </a>
-
   </div>
 
-  <!-- ===== 教学思考 ===== -->
+  <!-- 推荐资源 -->
+  <div class="section">
+    <div class="section-header"><h2>推荐资源</h2><span class="line"></span></div>
+    <a class="external" href="https://phydemo.app/ray-optics/simulator/" target="_blank">
+      <div class="icon">🔦</div>
+      <div class="info"><div class="name">Ray Optics Simulation · 光学模拟</div></div>
+      <span class="tag">外部</span>
+    </a>
+    <a class="external" href="https://iwuli.com/" target="_blank">
+      <div class="icon">🧠</div>
+      <div class="info"><div class="name">爱物理 iwuli</div></div>
+      <span class="tag">外部</span>
+    </a>
+  </div>
+
+  <!-- 教学思考 -->
   <div class="section">
     <div class="section-header"><h2>教学思考</h2><span class="line"></span></div>
     <a class="card" href="物理提分_科学训练体系.md">
       <div class="icon">📈</div>
-      <div class="info"><div class="name">物理提分 · 科学训练体系</div><div class="desc">系统性提分方法论</div></div>
+      <div class="info"><div class="name">物理提分 · 科学训练体系</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="一轮复习课堂流程优化方案.md">
       <div class="icon">🔄</div>
-      <div class="info"><div class="name">一轮复习课堂流程优化方案</div><div class="desc">教学流程设计与反思</div></div>
+      <div class="info"><div class="name">一轮复习课堂流程优化方案</div></div>
       <span class="arrow">→</span>
     </a>
     <a class="card" href="为理解而教_高三物理层次映射.md">
       <div class="icon">🧠</div>
-      <div class="info"><div class="name">为理解而教 · 高三物理层次映射</div><div class="desc">认知层次分析</div></div>
+      <div class="info"><div class="name">为理解而教 · 高三物理层次映射</div></div>
       <span class="arrow">→</span>
     </a>
     <div class="placeholder">
       <div class="icon">✍️</div>
-      <div class="info"><div class="name">教育感悟</div><div class="desc">你的教育思考 · 待撰写</div></div>
+      <div class="info"><div class="name">教育感悟 · 待撰写</div></div>
     </div>
     <div class="placeholder">
       <div class="icon">📋</div>
-      <div class="info"><div class="name">管理轶事</div><div class="desc">校园管理中的见闻 · 待撰写</div></div>
+      <div class="info"><div class="name">管理轶事 · 待撰写</div></div>
     </div>
   </div>
 
-  <!-- ===== 心理咨询 ===== -->
+  <!-- 心理咨询 -->
   <div class="section">
     <div class="section-header"><h2>心理咨询</h2><span class="line"></span></div>
     <div class="placeholder">
       <div class="icon">🌿</div>
-      <div class="info"><div class="name">咨询手记</div><div class="desc">个案思考与专业分享 · 持续更新中</div></div>
+      <div class="info"><div class="name">咨询手记 · 待撰写</div></div>
     </div>
     <div class="placeholder">
       <div class="icon">🧘</div>
-      <div class="info"><div class="name">心理科普</div><div class="desc">情绪管理 · 亲子沟通 · 学业压力</div></div>
+      <div class="info"><div class="name">心理科普 · 待撰写</div></div>
     </div>
   </div>
 
-  <!-- ===== 人生规划 ===== -->
+  <!-- 人生规划 -->
   <div class="section">
     <div class="section-header"><h2>人生规划</h2><span class="line"></span></div>
     <div class="placeholder">
       <div class="icon">🧭</div>
-      <div class="info"><div class="name">成长规划</div><div class="desc">学业规划 · 职业探索 · 方向选择</div></div>
+      <div class="info"><div class="name">成长规划 · 待撰写</div></div>
     </div>
     <div class="placeholder">
       <div class="icon">📖</div>
-      <div class="info"><div class="name">读书笔记</div><div class="desc">阅读与思考 · 待撰写</div></div>
+      <div class="info"><div class="name">读书笔记 · 待撰写</div></div>
     </div>
   </div>
 
 </div>
 
-<footer>启明 · 教学 心理 规划</footer>
+<footer>
+  <div class="email">📧 ycpuuv@163.com</div>
+  启明 · 教学 心理 规划
+</footer>
 
 <script>
-document.getElementById('totalItems').textContent = document.querySelectorAll('.card').length;
+document.getElementById('totalItems').textContent = document.querySelectorAll('.card, .external').length;
 </script>
 </body>
 </html>
