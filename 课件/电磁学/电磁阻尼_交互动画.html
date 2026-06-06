@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>电磁阻尼实验 - 最终完善版</title>
+    <style>
+        /* --- 全局设置 --- */
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            background-color: #121212;
+            color: #333;
+        }
+
+        /* --- 左侧：实验演示区 --- */
+        .experiment-area {
+            flex: 1; 
+            position: relative;
+            background: radial-gradient(circle at center, #3a3a3a 0%, #000 100%);
+            display: flex;
+            flex-direction: column;
+            min-width: 400px; 
+        }
+
+        /* 顶部悬浮标题 */
+        .header-title {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 2rem; 
+            font-weight: bold;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 30px;
+            border-left: 6px solid #00d2ff;
+            border-radius: 6px;
+            pointer-events: none; 
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        /* 画布容器 */
+        #canvasContainer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* --- 右侧：控制面板区 --- */
+        .control-panel {
+            width: 380px; 
+            min-width: 320px;
+            background-color: #f4f6f9;
+            border-left: 1px solid #444;
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            box-sizing: border-box;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.5);
+            z-index: 20;
+            overflow-y: auto; 
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #222;
+            font-size: 1.8rem; 
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+        }
+
+        /* 控制组块 */
+        .control-group {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #444;
+            font-size: 1.1rem; 
+        }
+
+        /* 按钮 */
+        button {
+            width: 100%;
+            padding: 15px; 
+            margin-bottom: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem; 
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        button:active { transform: scale(0.98); }
+
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-warning { background-color: #ffc107; color: #222; }
+        .btn-reset { background-color: #6c757d; color: white; }
+        .btn-reset:hover { background-color: #545b62; }
+
+        /* 开关行 */
+        .switch-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 开关控件 */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px; 
+            height: 34px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #28a745; }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* 表格 */
+        .table-wrapper {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 250px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem; 
+        }
+        th { 
+            background-color: #e9ecef; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1;
+            padding: 12px;
+        }
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        /* 结论 */
+        .conclusion {
+            font-size: 1.1rem; 
+            line-height: 1.6;
+            color: #333;
+            background-color: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 5px solid #2196f3;
+        }
+
+        .status-text {
+            text-align: center;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            background: #e9ecef;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 800px) {
+            body {
+                flex-direction: column; 
+                overflow: auto; 
+            }
+            .experiment-area {
+                height: 60vh; 
+                min-height: 300px;
+            }
+            .control-panel {
+                width: 100%; 
+                height: auto;
+                box-shadow: none;
+                border-top: 2px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 左侧：实验区 -->
+    <div class="experiment-area">
+        <div class="header-title">演示电磁阻尼现象</div>
+        <div id="canvasContainer">
+            <canvas id="simCanvas"></canvas>
+        </div>
+    </div>
+
+    <!-- 右侧：控制区 -->
+    <div class="control-panel">
+        <h2>实验控制台</h2>
+        
+        <div class="status-text" id="statusText">状态: 准备就绪</div>
+
+        <div class="control-group">
+            <button class="btn-primary" id="btnStartPause">开始实验</button>
+            <button class="btn-reset" id="btnReset">重置系统</button>
+            
+            <div class="switch-row">
+                <label for="magnetSwitch" style="margin:0; cursor:pointer;">磁场开关 (前后磁极)</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="magnetSwitch">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group" style="display: flex; flex-direction: column;">
+            <label>实验记录</label>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>次序</th>
+                            <th>环境</th>
+                            <th>耗时(s)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>实验结论</label>
+            <div class="conclusion" id="conclusionText">
+                请分别进行【有磁场】和【无磁场】的实验以获取结论。
+            </div>
+        </div>
+    </div>
+
+<script>
+    // --- 1. 初始化 ---
+    const canvas = document.getElementById('simCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('canvasContainer');
+
+    // --- 物理参数 ---
+    const GRAVITY = 0.15; 
+    const AIR_RESISTANCE = 0.990; 
+    const MAGNET_RESISTANCE = 0.955; 
+    const INITIAL_ANGLE = Math.PI / 5; // 36度
+
+    // 运行时变量
+    let stringLength;
+    let angle = INITIAL_ANGLE;
+    let velocity = 0;
+    let acceleration = 0;
+    
+    let isRunning = false;
+    let isMagnetOn = false;
+    let isFinished = false;
+    let startTime = 0;
+    let recordCount = 0;
+    let animationFrameId;
+
+    // 状态标记：是否完成过对应实验
+    let doneMagnet = false;
+    let doneNoMagnet = false;
+
+    // DOM 元素
+    const btnStartPause = document.getElementById('btnStartPause');
+    const btnReset = document.getElementById('btnReset');
+    const magnetSwitch = document.getElementById('magnetSwitch');
+    const statusText = document.getElementById('statusText');
+    const recordTableBody = document.getElementById('recordTableBody');
+    const conclusionText = document.getElementById('conclusionText');
+
+    // --- 2. 窗口大小调整 ---
+    function resizeCanvas() {
+        const w = container.clientWidth;
+        const h = container.clientHeight;
+        
+        canvas.width = w;
+        canvas.height = h;
+        
+        stringLength = Math.min(h * 0.65, w * 0.45); 
+        
+        if (!isRunning) draw(); 
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    window.onload = resizeCanvas;
+
+    // --- 3. 物理引擎 ---
+    function updatePhysics() {
+        if (!isRunning) return;
+
+        let k = GRAVITY / (stringLength / 150); 
+        acceleration = -1 * k * Math.sin(angle);
+        
+        velocity += acceleration;
+        velocity *= AIR_RESISTANCE;
+
+        if (isMagnetOn && Math.abs(angle) < 0.16) {
+            velocity *= MAGNET_RESISTANCE;
+        }
+
+        angle += velocity;
+
+        if (Math.abs(angle) < 0.001 && Math.abs(velocity) < 0.0005) {
+            stopExperiment();
+        }
+    }
+
+    function stopExperiment() {
+        isRunning = false;
+        isFinished = true;
+        angle = 0;
+        velocity = 0;
+        
+        btnStartPause.textContent = "开始实验";
+        btnStartPause.className = "btn-primary";
+        statusText.textContent = "状态: 已停止";
+        
+        const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+        addRecord(duration);
+        
+        draw(); 
+    }
+
+    function addRecord(duration) {
+        recordCount++;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${recordCount}</td>
+            <td>${isMagnetOn ? '<b style="color:red">有磁场</b>' : '无磁场'}</td>
+            <td>${duration}</td>
+        `;
+        recordTableBody.appendChild(row);
+        
+        const wrapper = document.querySelector('.table-wrapper');
+        wrapper.scrollTop = wrapper.scrollHeight;
+
+        // 更新完成状态
+        if (isMagnetOn) {
+            doneMagnet = true;
+        } else {
+            doneNoMagnet = true;
+        }
+
+        // 检查结论显示条件
+        updateConclusion();
+    }
+
+    function updateConclusion() {
+        if (doneMagnet && doneNoMagnet) {
+            conclusionText.innerHTML = "<strong>结论：</strong>当导体在磁场中运动时，感应电流会使导体收到安培力，安培力的方向总是阻碍导体的运动，此现象称为电磁阻尼。";
+        } else if (doneMagnet) {
+            conclusionText.innerHTML = "已完成【有磁场】实验，请继续进行【无磁场】实验以得出结论。";
+        } else if (doneNoMagnet) {
+            conclusionText.innerHTML = "已完成【无磁场】实验，请继续进行【有磁场】实验以得出结论。";
+        }
+    }
+
+    // --- 4. 绘图引擎 ---
+    function draw() {
+        const cx = canvas.width / 2;
+        const cy = canvas.height * 0.15; 
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 1. 绘制支架
+        ctx.beginPath();
+        ctx.moveTo(cx - 150, cy);
+        ctx.lineTo(cx + 150, cy);
+        ctx.strokeStyle = '#999';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 磁铁位置参数
+        const magnetY = cy + stringLength + 20; 
+        const magnetSize = 120; 
+
+        // 2. 绘制【后方磁极】(N极)
+        if (isMagnetOn) {
+            ctx.fillStyle = '#8B0000'; 
+            ctx.fillRect(cx - magnetSize/2, magnetY - magnetSize/2, magnetSize, magnetSize);
+            
+            ctx.fillStyle = 'rgba(255,255,255,0.3)';
+            ctx.font = 'bold 50px Arial';
+            ctx.fillText("N", cx - 20, magnetY + 20);
+        } else {
+            ctx.fillStyle = '#333';
+            ctx.fillRect(cx - 25, magnetY + 50, 50, 15);
+        }
+
+        // 3. 绘制【磁场方向标识】 (仅绘制点)
+        if (isMagnetOn) {
+            ctx.fillStyle = 'yellow';
+            
+            // 绘制网格点阵
+            const step = 30;
+            for (let x = -magnetSize/2 + 20; x < magnetSize/2; x += step) {
+                for (let y = -magnetSize/2 + 20; y < magnetSize/2; y += step) {
+                    ctx.beginPath();
+                    // 只画点，不画圈，半径3.5px
+                    ctx.arc(cx + x, magnetY + y, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            
+            // 绘制磁场方向说明文字
+            ctx.font = 'bold 20px Arial';
+            ctx.fillStyle = '#FFD700';
+            ctx.fillText("B • (向外)", cx + magnetSize/2 + 10, magnetY);
+        }
+
+        // 4. 计算铝板位置
+        const bobX = cx + stringLength * Math.sin(angle);
+        const bobY = cy + stringLength * Math.cos(angle);
+
+        // 5. 绘制摆绳
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(bobX, bobY);
+        ctx.strokeStyle = '#ccc';
+        ctx.lineWidth = 4;
+        ctx.stroke();
+
+        // 6. 绘制【铝板】
+        ctx.save();
+        ctx.translate(bobX, bobY);
+        ctx.rotate(-angle); 
+        
+        const plateW = 140; 
+        const plateH = 70;
+
+        let grad = ctx.createLinearGradient(0, -plateH/2, 0, plateH/2);
+        grad.addColorStop(0, '#bdc3c7');
+        grad.addColorStop(0.5, '#ecf0f1');
+        grad.addColorStop(1, '#95a5a6');
+        
+        ctx.fillStyle = grad;
+        ctx.shadowColor = 'rgba(0,0,0,0.6)';
+        ctx.shadowBlur = 10;
+        
+        ctx.beginPath();
+        ctx.rect(-plateW/2, -plateH/2, plateW, plateH);
+        ctx.fill();
+        ctx.strokeStyle = '#7f8c8d';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.15)';
+        ctx.beginPath();
+        ctx.arc(-35, 0, 8, 0, Math.PI*2);
+        ctx.arc(35, 0, 8, 0, Math.PI*2);
+        ctx.fill();
+
+        if (isMagnetOn && Math.abs(angle) < 0.16 && Math.abs(velocity) > 0.005) {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, 40, 25, 0, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.8)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            
+            ctx.fillStyle = '#00ff00';
+            ctx.font = '16px Arial';
+            ctx.fillText("涡流", -16, -35);
+        }
+
+        ctx.restore();
+
+        // 7. 绘制【前方磁极】(S极)
+        if (isMagnetOn) {
+            ctx.fillStyle = 'rgba(0, 0, 139, 0.35)'; 
+            ctx.fillRect(cx - magnetSize/2, magnetY - magnetSize/2, magnetSize, magnetSize);
+            
+            ctx.strokeStyle = 'rgba(100, 100, 255, 0.5)';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(cx - magnetSize/2, magnetY - magnetSize/2, magnetSize, magnetSize);
+
+            ctx.fillStyle = 'rgba(255,255,255, 0.8)';
+            ctx.font = 'bold 50px Arial';
+            ctx.fillText("S", cx - 20, magnetY + 20);
+        }
+    }
+
+    // --- 5. 动画循环 ---
+    function animate() {
+        updatePhysics();
+        draw();
+        animationFrameId = requestAnimationFrame(animate);
+    }
+
+    // --- 6. 事件绑定 ---
+    btnStartPause.addEventListener('click', () => {
+        if (isFinished) {
+            resetSystem();
+            startSystem();
+        } else {
+            isRunning = !isRunning;
+            if (isRunning) {
+                if(startTime === 0) startTime = Date.now();
+                btnStartPause.textContent = "暂停实验";
+                btnStartPause.className = "btn-warning";
+                statusText.textContent = "状态: 进行中...";
+            } else {
+                btnStartPause.textContent = "继续实验";
+                btnStartPause.className = "btn-primary";
+                statusText.textContent = "状态: 已暂停";
+            }
+        }
+    });
+
+    function startSystem() {
+        isRunning = true;
+        startTime = Date.now();
+        isFinished = false;
+        btnStartPause.textContent = "暂停实验";
+        btnStartPause.className = "btn-warning";
+        statusText.textContent = "状态: 进行中...";
+    }
+
+    function resetSystem() {
+        isRunning = false;
+        isFinished = false;
+        angle = INITIAL_ANGLE;
+        velocity = 0;
+        acceleration = 0;
+        startTime = 0;
+        
+        btnStartPause.textContent = "开始实验";
+        btnStartPause.className = "btn-primary";
+        statusText.textContent = "状态: 准备就绪";
+        // 重置时不清除 doneMagnet/doneNoMagnet 标记，除非刷新页面
+        // 但提示语需要根据当前完成情况恢复
+        updateConclusion(); 
+        if (!doneMagnet && !doneNoMagnet) {
+             conclusionText.innerHTML = "请分别进行【有磁场】和【无磁场】的实验以获取结论。";
+        }
+        
+        draw();
+    }
+    
+    btnReset.addEventListener('click', resetSystem);
+
+    magnetSwitch.addEventListener('change', (e) => {
+        isMagnetOn = e.target.checked;
+        if (!isRunning) draw(); 
+        if (isRunning) {
+            statusText.textContent = isMagnetOn ? "状态: 磁场介入" : "状态: 自由摆动";
+        }
+    });
+
+    // 启动
+    resizeCanvas();
+    animate();
+
+</script>
+</body>
+</html>
