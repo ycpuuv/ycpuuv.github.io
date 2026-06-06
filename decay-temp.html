@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>α vs β⁻ 衰变反冲对比</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:#080c18;
+  display:flex;justify-content:center;align-items:center;
+  min-height:100dvh;
+  font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;
+  padding:8px;
+}
+.card{
+  max-width:1060px;width:100%;
+  background:linear-gradient(145deg,#0d1325,#0a1020);
+  border-radius:20px;
+  border:1px solid rgba(99,102,241,0.12);
+  box-shadow:0 20px 60px rgba(0,0,0,0.7),inset 0 1px 0 rgba(255,255,255,0.03);
+  padding:12px 14px 16px;
+}
+#canvas-container{display:flex;justify-content:center;margin-bottom:10px}
+canvas{display:block;border-radius:14px;width:100%!important;height:auto!important}
+.controls{
+  display:flex;flex-wrap:wrap;gap:6px;
+  justify-content:center;align-items:center;margin-bottom:8px;
+}
+.btn{
+  padding:8px 22px;border:none;border-radius:10px;
+  font-size:14px;font-weight:600;cursor:pointer;transition:all 0.25s;
+  font-family:inherit;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#6366f1,#8b5cf6);
+  color:#fff;padding:8px 26px;
+  box-shadow:0 4px 15px rgba(99,102,241,0.25)
+}
+.btn-primary:hover{box-shadow:0 6px 25px rgba(99,102,241,0.4);transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,0.06);color:#8899bb}
+.btn-secondary:hover{color:#c8d8ff;background:rgba(255,255,255,0.1)}
+.legend{
+  display:flex;gap:14px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#8899bb}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.phys-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+}
+.phys-panel{
+  background:rgba(255,255,255,0.03);border-radius:12px;
+  padding:8px 12px;
+  border:1px solid rgba(255,255,255,0.05);
+  display:flex;flex-direction:column;gap:2px;
+}
+.phys-panel .title{
+  text-align:center;font-size:13px;font-weight:700;
+  letter-spacing:0.5px;margin-bottom:3px;
+}
+.phys-panel.alpha .title{color:#f87171}
+.phys-panel.beta .title{color:#60a5fa}
+.phys-row{display:flex;align-items:baseline;gap:6px;color:#99aacc;font-size:12px;line-height:1.65}
+.phys-row .label{color:#667799;font-size:11px;min-width:48px}
+.phys-row .eq{color:#dde8ff;font-weight:600}
+.phys-row .hl-gold{color:#f0c060}
+.phys-row .hl-blue{color:#60c0f0}
+.phys-row .hl-red{color:#f87171}
+@media(max-width:640px){
+  .phys-grid{grid-template-columns:1fr}
+  .card{padding:8px}
+  .btn{padding:6px 14px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="canvas-container"></div>
+  <div class="controls">
+    <button class="btn btn-primary" id="playBtn" onclick="triggerDecay()">▶ 同时衰变</button>
+    <button class="btn btn-secondary" onclick="resetSketch()">⟳ 重置</button>
+  </div>
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#ef4444;box-shadow:0 0 6px #ef444488"></span>α (⁴He²⁺) 带正电</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#3b82f6;box-shadow:0 0 6px #3b82f688"></span>β⁻ (e⁻) 带负电</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#fbbf24;box-shadow:0 0 6px #fbbf2488"></span>反冲子核 带正电</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#f59e0b;box-shadow:0 0 6px #f59e0b88"></span>母核（衰变前）</span>
+    <span class="legend-item"><span style="color:#a78bfa">→F</span>洛伦兹力</span>
+  </div>
+  <div class="phys-grid" id="physGrid">
+    <div class="phys-panel alpha" id="panelA">
+      <div class="title">α 衰变 — α与子核均带正电 → <span style="color:#f0c060">同向偏转</span></div>
+      <div class="phys-row"><span class="label">反应</span><span class="eq">²²⁶Ra → ²²²Rn + α</span></div>
+      <div class="phys-row"><span class="label">出射→</span><span class="hl-red">α (⁴He²⁺) 质量4u · 电荷+2e</span></div>
+      <div class="phys-row"><span class="label">反冲←</span><span style="color:#fbbf24">²²²Rn · 质量222u · 电荷+86e</span></div>
+      <div class="phys-row"><span class="label">方向</span><span style="color:#f0c060">同向偏转（两粒子均正电）</span></div>
+      <div class="phys-row" style="font-size:11px;color:#667799">点击「同时衰变」对比</div>
+    </div>
+    <div class="phys-panel beta" id="panelB">
+      <div class="title">β⁻ 衰变 — β⁻带负电子核带正电 → <span style="color:#60c0f0">反向偏转</span></div>
+      <div class="phys-row"><span class="label">反应</span><span class="eq">¹⁴C → ¹⁴N + e⁻ + ν̄ₑ</span></div>
+      <div class="phys-row"><span class="label">出射→</span><span class="hl-blue">β⁻ (e⁻) 质量≈1/1836u · 电荷−e</span></div>
+      <div class="phys-row"><span class="label">反冲←</span><span style="color:#fbbf24">¹⁴N · 质量14u · 电荷+7e</span></div>
+      <div class="phys-row"><span class="label">方向</span><span style="color:#60c0f0">反向偏转（电荷相反）</span></div>
+      <div class="phys-row" style="font-size:11px;color:#667799">点击「同时衰变」对比</div>
+    </div>
+  </div>
+</div>
+<script>
+// ====== 大画布 · 慢速动画 ======
+const Bz=-1.0, DT=0.22, TRAIL_MAX=400;
+const NR=18;        // 母核半径
+const W=1040,H=620;  // 大幅加宽
+
+let state='idle',timer=0;
+let parts=[],trails=[];
+
+// ---- 物理参数（速度调慢以便观察）----
+const ALPHA={
+  me:4, qe:2, ve:1.8, er:12,   // 速度从3.5降到1.8
+  mr:222, qr:86, rr:16,
+  nameE:'α (⁴He²⁺)', nameR:'²²²Rn',
+  eq:'²²⁶Ra → ²²²Rn + α', eColor:[239,68,68],
+};
+const BETA={
+  me:0.00055, qe:-1, ve:4.2, er:6, // 速度从8.5降到4.2
+  mr:14, qr:7, rr:14,
+  nameE:'β⁻ (e⁻)', nameR:'¹⁴N',
+  eq:'¹⁴C → ¹⁴N + e⁻ + ν̄ₑ', eColor:[59,130,246],
+};
+
+// ====== P5 ======
+new p5(p=>{
+  p.setup=()=>{
+    p.createCanvas(W,H).parent('canvas-container');
+    p.pixelDensity(1);
+    resetAll();setTimeout(function(){if(state=="idle"){state="decaying";timer=0;document.getElementById("playBtn").textContent="⏳";}},600);setTimeout(function(){state="exploding";spawnAll();updatePanels();},1400);
+  }
+
+  function resetAll(){state='idle';timer=0;parts=[];trails=[]}
+
+  p.draw=()=>{
+    p.background(8,12,24);
+    p.translate(W/2,H/2);
+
+    // --- 中线 ---
+    p.stroke(255,255,255,6);p.strokeWeight(0.5);p.line(0,-H/2,0,H/2);
+
+    // --- B场 ---
+    let sp=42;
+    for(let x=-W/2+(W/2%sp);x<W/2;x+=sp)
+      for(let y=-H/2+(H/2%sp);y<H/2;y+=sp){
+        let d=Math.sqrt(x*x+y*y);
+        let a=p.constrain(p.map(d,30,150,4,35),4,35);
+        p.stroke(45,60,110,a);p.strokeWeight(0.9);
+        let s=4.5;
+        p.line(x-s,y-s,x+s,y+s);p.line(x+s,y-s,x-s,y+s);
+      }
+    p.noStroke();p.fill(65,85,150,110);
+    p.textSize(11);p.textStyle(p.BOLD);p.textAlign(p.LEFT,p.TOP);
+    p.text('B ⊗',-W/2+12,-H/2+8);
+
+    // --- 区域标题 ---
+    p.noStroke();
+    p.fill(239,68,68,40);p.textSize(15);p.textStyle(p.BOLD);p.textAlign(p.CENTER,p.TOP);
+    p.text('α 衰变', -W/4, -H/2+10);
+    p.fill(59,130,246,40);
+    p.text('β⁻ 衰变', W/4, -H/2+10);
+
+    // --- 反冲方向提示 ---
+    p.fill(255,255,255,18);p.textSize(11);p.textAlign(p.CENTER,p.CENTER);
+    if(state=='idle'){
+      // 标出反冲方向箭头
+      drawArrow(-W/4+60,0,-W/4+NR+20,0,[255,255,255,20],1);
+      drawArrow(-W/4-60,0,-W/4-NR-20,0,[255,255,255,20],1);
+      drawArrow(W/4+60,0,W/4+NR+20,0,[255,255,255,20],1);
+      drawArrow(W/4-60,0,W/4-NR-20,0,[255,255,255,20],1);
+      p.fill(255,255,255,12);p.textSize(10);
+      p.text('出射→',-W/4+70,16);p.text('←反冲',-W/4-60,16);
+      p.text('出射→',W/4+70,16);p.text('←反冲',W/4-60,16);
+    }
+
+    // --- 十字 ---
+    p.stroke(255,255,255,5);p.strokeWeight(0.3);
+    p.line(-W/2,0,W/2,0);p.line(0,-H/2,0,H/2);
+
+    // ============ 状态机 ============
+
+    if(state=='idle'){
+      drawNuc(-W/4,0,NR,[245,158,11],true);
+      labelAt(-W/4,-NR-16,'²²⁶Ra','#f5a80b',14);
+      drawNuc(W/4,0,NR,[245,158,11],true);
+      labelAt(W/4,-NR-16,'¹⁴C','#f5a80b',14);
+      info('点击「同时衰变」',160,180);
+    }
+
+    if(state=='decaying'){
+      timer++;
+      let prog=p.constrain(timer/25,0,1);
+      let fl=p.sin(prog*Math.PI)*200;
+
+      // α 侧
+      let ca=p.lerpColor(p.color(245,158,11),p.color(255,220,100),prog);
+      drawNuc(-W/4,0,NR*(1+prog*0.12),[p.red(ca),p.green(ca),p.blue(ca)],true);
+      labelAt(-W/4,-NR-16,'²²⁶Ra','#f5a80b',14);
+      if(prog>0.25){p.noStroke();p.fill(239,68,68,fl*0.15);p.circle(-W/4,0,NR*3.2*(1+prog*0.25))}
+
+      // β 侧
+      let cb=p.lerpColor(p.color(245,158,11),p.color(200,220,255),prog);
+      drawNuc(W/4,0,NR*(1+prog*0.12),[p.red(cb),p.green(cb),p.blue(cb)],true);
+      labelAt(W/4,-NR-16,'¹⁴C','#f5a80b',14);
+      if(prog>0.25){p.noStroke();p.fill(59,130,246,fl*0.15);p.circle(W/4,0,NR*3.2*(1+prog*0.25))}
+
+      if(timer>35){state='exploding';spawnAll();updatePanels()}
+    }
+
+    if(state=='exploding'||state=='moving'){
+      // 更新粒子
+      for(let i=0;i<parts.length;i++){
+        let pt=parts[i];if(!pt.a)continue;
+        let fx=pt.q*pt.vy*Bz,fy=-pt.q*pt.vx*Bz;
+        pt.vx+=fx/pt.m*DT;pt.vy+=fy/pt.m*DT;
+        pt.x+=pt.vx*DT;pt.y+=pt.vy*DT;
+        trails[i].push({x:pt.x,y:pt.y});
+        if(trails[i].length>TRAIL_MAX)trails[i].shift();
+        if(Math.abs(pt.x)>W/2-18||Math.abs(pt.y)>H/2-18)pt.a=false;
+      }
+
+      // 轨迹
+      for(let i=0;i<parts.length;i++){
+        let tr=trails[i];if(tr.length<2)continue;
+        let pt=parts[i];
+        let bc=pt.t=='e'?(pt.q>0?[239,68,68]:[59,130,246]):[251,191,36];
+        let sw=pt.t=='e'?(pt.q>0?2.8:1.6):2.5;
+        p.noFill();
+        for(let j=1;j<tr.length;j++){
+          let al=p.map(j,0,tr.length-1,2,170);
+          p.stroke(bc[0],bc[1],bc[2],al);p.strokeWeight(sw+p.map(j,0,tr.length-1,0,1));
+          p.line(tr[j-1].x,tr[j-1].y,tr[j].x,tr[j].y);
+        }
+      }
+
+      // 粒子
+      for(let pt of parts){if(!pt.a)continue;drawP(pt);}
+
+      if(state=='exploding'){timer++;if(timer>48)state='moving';}
+      if(state=='moving'&&parts.every(p=>!p.a))resetAll();setTimeout(function(){if(state=="idle"){state="decaying";timer=0;document.getElementById("playBtn").textContent="⏳";}},600);setTimeout(function(){state="exploding";spawnAll();updatePanels();},1400);
+    }
+  }
+
+  // ====== 绘图函数 ======
+
+  function drawNuc(x,y,r,rgb,g){
+    if(g){p.noStroke();for(let i=5;i>0;i--){p.fill(rgb[0],rgb[1],rgb[2],2+i*2);p.circle(x,y,r*2+i*7)}}
+    p.noStroke();p.fill(rgb[0],rgb[1],rgb[2]);p.circle(x,y,r*2);
+    p.fill(255,255,255,35);p.circle(x-r*0.25,y-r*0.25,r*0.6);
+    for(let i=0;i<6;i++){
+      let a=i*Math.PI/3+p.frameCount*0.002;
+      p.fill(255,255,200,20+Math.sin(p.frameCount*0.015+i)*10);
+      p.circle(x+Math.cos(a)*r*0.45,y+Math.sin(a)*r*0.45,2.5);
+    }
+  }
+
+  function drawP(pt){
+    let bc=pt.t=='e'?(pt.q>0?[239,68,68]:[59,130,246]):[251,191,36];
+    let r=pt.r;
+    // 发光
+    p.noStroke();
+    for(let i=3;i>0;i--){p.fill(bc[0],bc[1],bc[2],5+i*2);p.circle(pt.x,pt.y,r*2+i*6)}
+    p.fill(bc[0],bc[1],bc[2]);p.noStroke();p.circle(pt.x,pt.y,r*2);
+    p.fill(255,255,255,45);p.circle(pt.x-r*0.2,pt.y-r*0.2,r*0.4);
+
+    let spd=Math.sqrt(pt.vx*pt.vx+pt.vy*pt.vy);
+
+    // ===== 大而醒目的速度箭头 =====
+    if(spd>0.02){
+      let len=p.constrain(spd*10,14,55);
+      let nx=pt.vx/spd,ny=pt.vy/spd;
+      let sx=pt.x+nx*(r+3),sy=pt.y+ny*(r+3);
+      let ex=sx+nx*len,ey=sy+ny*len;
+      // 加粗箭头
+      p.stroke(255,255,255,110);p.strokeWeight(2.2);p.line(sx,sy,ex,ey);
+      let ang=Math.atan2(ny,nx);
+      p.push();p.translate(ex,ey);p.rotate(ang);
+      p.noStroke();p.fill(255,255,255,130);
+      p.triangle(0,0,-9,-5,-9,5);p.pop();
+      // v 标签
+      p.fill(255,255,255,140);p.noStroke();p.textSize(10);p.textStyle(p.BOLD);
+      p.textAlign(p.CENTER,p.BOTTOM);
+      p.text('v',ex+Math.cos(ang)*12,ey+Math.sin(ang)*12);
+    }
+
+    // 标签
+    let label=pt.t=='e'?(pt.q>0?ALPHA.nameE:BETA.nameE):(pt.q>10?ALPHA.nameR:BETA.nameR);
+    p.noStroke();p.fill(255,255,255,210);
+    p.textSize(12);p.textStyle(p.BOLD);p.textAlign(p.CENTER,p.BOTTOM);
+    p.text(label,pt.x,pt.y-r-10);
+
+    // 洛伦兹力 F
+    if((state=='moving'||state=='exploding')&&spd>0.03){
+      let fx=pt.q*pt.vy*Bz,fy=-pt.q*pt.vx*Bz,fm=Math.sqrt(fx*fx+fy*fy);
+      if(fm>0.003){
+        let fl=p.constrain(fm*3,10,35),fa=Math.atan2(fy,fx);
+        let fex=pt.x+Math.cos(fa)*fl,fey=pt.y+Math.sin(fa)*fl;
+        // 紫色 F 矢量
+        p.stroke(167,139,250,100);p.strokeWeight(1.8);p.line(pt.x,pt.y,fex,fey);
+        p.push();p.translate(fex,fey);p.rotate(fa);
+        p.noStroke();p.fill(167,139,250,130);p.triangle(0,0,-6,-3.5,-6,3.5);p.pop();
+        p.fill(167,139,250,150);p.noStroke();p.textSize(11);p.textStyle(p.BOLD);p.textAlign(p.CENTER,p.BOTTOM);
+        p.text('F',fex+Math.cos(fa)*9,fey+Math.sin(fa)*9);
+      }
+    }
+
+    // ===== 标记初始位置（反冲起点的圆点） =====
+    if(pt.startX!==undefined&&pt.startY!==undefined){
+      p.noStroke();
+      p.fill(255,255,255,30);
+      p.circle(pt.startX,pt.startY,6);
+    }
+  }
+
+  function labelAt(x,y,txt,c,sz){
+    p.fill(c);p.noStroke();p.textSize(sz);
+    p.textStyle(p.BOLD);p.textAlign(p.CENTER,p.BOTTOM);p.text(txt,x,y);
+  }
+  function info(txt,a,yo){
+    p.fill(100,120,180,a);p.noStroke();p.textSize(14);
+    p.textAlign(p.CENTER,p.CENTER);p.text(txt,0,H/2-yo);
+  }
+
+  // ====== 生成粒子 ======
+  function spawnAll(){
+    parts=[];trails=[];
+
+    // α 组（左侧）— 出射角 22°
+    let a1=p.radians(22);
+    let em=ALPHA.me,eq=ALPHA.qe,ev=ALPHA.ve,er=ALPHA.er;
+    let ex=-W/4+Math.cos(a1)*(NR+er+1),ey=-Math.sin(a1)*(NR+er+1);
+    let rm=ALPHA.mr,rq=ALPHA.qr,rv=em*ev/rm,rr=ALPHA.rr;
+    let rx=-W/4-Math.cos(a1)*(NR+rr+1),ry=Math.sin(a1)*(NR+rr+1);
+
+    // β 组（右侧）— 出射角 22°
+    let a2=p.radians(22);
+    let bm=BETA.me,bq=BETA.qe,bv=BETA.ve,br=BETA.er;
+    let bex=W/4+Math.cos(a2)*(NR+br+1),bey=-Math.sin(a2)*(NR+br+1);
+    let brm=BETA.mr,brq=BETA.qr,brv=bm*bv/brm,brr=BETA.rr;
+    let brx=W/4-Math.cos(a2)*(NR+brr+1),bry=Math.sin(a2)*(NR+brr+1);
+
+    parts.push({
+      x:ex,y:ey,
+      vx:Math.cos(a1)*ev,vy:-Math.sin(a1)*ev,
+      m:em,q:eq,r:er,t:'e',a:true,
+      startX:ex,startY:ey
+    });
+    parts.push({
+      x:rx,y:ry,
+      vx:-Math.cos(a1)*rv,vy:Math.sin(a1)*rv,
+      m:rm,q:rq,r:rr,t:'r',a:true,
+      startX:rx,startY:ry
+    });
+    parts.push({
+      x:bex,y:bey,
+      vx:Math.cos(a2)*bv,vy:-Math.sin(a2)*bv,
+      m:bm,q:bq,r:br,t:'e',a:true,
+      startX:bex,startY:bey
+    });
+    parts.push({
+      x:brx,y:bry,
+      vx:-Math.cos(a2)*brv,vy:Math.sin(a2)*brv,
+      m:brm,q:brq,r:brr,t:'r',a:true,
+      startX:brx,startY:bry
+    });
+
+    trails=[[],[],[],[]];
+  }
+
+  function updatePanels(){
+    if(parts.length<4)return;
+    let av=Math.sqrt(parts[0].vx**2+parts[0].vy**2);
+    let arv=Math.sqrt(parts[1].vx**2+parts[1].vy**2);
+    let aRat=(av/(arv||0.0001)).toFixed(0);
+    let bv=Math.sqrt(parts[2].vx**2+parts[2].vy**2);
+    let brv=Math.sqrt(parts[3].vx**2+parts[3].vy**2);
+    let bRat=(bv/(brv||0.0001)).toFixed(0);
+
+    document.getElementById('panelA').innerHTML=
+      `<div class="title">α 衰变 — <span style="color:#f0c060">同向偏转 ✓</span></div>`+
+      `<div class="phys-row"><span class="label">反应</span><span class="eq">²²⁶Ra → ²²²Rn + α</span></div>`+
+      `<div class="phys-row"><span class="label" style="color:#f87171">α→</span><span class="hl-red">质量4u · 电荷+2e</span><span style="color:#667799;font-size:11px"> 速度${av.toFixed(1)}</span></div>`+
+      `<div class="phys-row"><span class="label" style="color:#fbbf24">←子核</span><span style="color:#fbbf24">质量222u · 电荷+86e</span><span style="color:#667799;font-size:11px"> 速度${arv.toFixed(2)}</span></div>`+
+      `<div class="phys-row"><span class="label">速度比</span><span class="hl-gold">v_α/v_Rn = ${aRat}</span><span style="color:#667799;font-size:11px">（动量守恒）</span></div>`+
+      `<div class="phys-row"><span class="label">偏转</span><span style="color:#f0c060;font-size:12px">均带正电 → 洛伦兹力同向 → 同向弯曲</span></div>`;
+
+    document.getElementById('panelB').innerHTML=
+      `<div class="title">β⁻ 衰变 — <span style="color:#60c0f0">反向偏转 ✓</span></div>`+
+      `<div class="phys-row"><span class="label">反应</span><span class="eq">¹⁴C → ¹⁴N + e⁻ + ν̄ₑ</span></div>`+
+      `<div class="phys-row"><span class="label" style="color:#60a5fa">β⁻→</span><span class="hl-blue">质量≈1/1836u · 电荷−e</span><span style="color:#667799;font-size:11px"> 速度${bv.toFixed(1)}</span></div>`+
+      `<div class="phys-row"><span class="label" style="color:#fbbf24">←子核</span><span style="color:#fbbf24">质量14u · 电荷+7e</span><span style="color:#667799;font-size:11px"> 速度${brv.toFixed(3)}</span></div>`+
+      `<div class="phys-row"><span class="label">速度比</span><span class="hl-blue">v_β/v_N = ${bRat}</span><span style="color:#667799;font-size:11px">（β⁻极轻，速度极快）</span></div>`+
+      `<div class="phys-row"><span class="label">偏转</span><span style="color:#60c0f0;font-size:12px">β⁻(−e)与¹⁴N(+7e)电荷相反 → 反向弯曲</span></div>`;
+  }
+})
+
+// ====== 全局接口 ======
+function triggerDecay(){if(state!='idle')return;state='decaying';timer=0;document.getElementById('playBtn').textContent='⏳ 衰变中…';setTimeout(()=>{document.getElementById('playBtn').textContent='▶ 同时衰变'},2500)}
+function resetSketch(){resetAll();setTimeout(function(){if(state=="idle"){state="decaying";timer=0;document.getElementById("playBtn").textContent="⏳";}},600);setTimeout(function(){state="exploding";spawnAll();updatePanels();},1400);parts=[];trails=[];document.getElementById('panelA').innerHTML='<div class="title">α 衰变 — <span style="color:#f0c060">同向偏转</span></div><div class="phys-row"><span class="label">反应</span><span class="eq">²²⁶Ra → ²²²Rn + α</span></div><div class="phys-row"><span class="label" style="color:#f87171">α→</span><span class="hl-red">α (⁴He²⁺) 质量4u · 电荷+2e</span></div><div class="phys-row"><span class="label" style="color:#fbbf24">←子核</span><span style="color:#fbbf24">²²²Rn · 质量222u · 电荷+86e</span></div><div class="phys-row"><span class="label">方向</span><span style="color:#f0c060">同向偏转（均正电）</span></div><div class="phys-row" style="font-size:11px;color:#667799">点击「同时衰变」对比</div>';document.getElementById('panelB').innerHTML='<div class="title">β⁻ 衰变 — <span style="color:#60c0f0">反向偏转</span></div><div class="phys-row"><span class="label">反应</span><span class="eq">¹⁴C → ¹⁴N + e⁻ + ν̄ₑ</span></div><div class="phys-row"><span class="label" style="color:#60a5fa">β⁻→</span><span class="hl-blue">β⁻ (e⁻) 质量≈1/1836u · 电荷−e</span></div><div class="phys-row"><span class="label" style="color:#fbbf24">←子核</span><span style="color:#fbbf24">¹⁴N · 质量14u · 电荷+7e</span></div><div class="phys-row"><span class="label">方向</span><span style="color:#60c0f0">反向偏转（电荷相反）</span></div><div class="phys-row" style="font-size:11px;color:#667799">点击「同时衰变」对比</div>';document.getElementById('playBtn').textContent='▶ 同时衰变'}
+</script>
+</body>
+</html>
