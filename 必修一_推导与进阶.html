@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>必修一 · 前两章 · 推导与进阶</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0a0a1a;color:#e0e0e0}
+  header{background:linear-gradient(135deg,#0a1628,#1a0a2e);padding:30px 20px 24px;text-align:center;border-bottom:1px solid rgba(255,107,53,.2)}
+  header h1{font-size:1.8em;background:linear-gradient(90deg,#ff6b35,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  header p{color:#889;font-size:.85em;margin-top:4px}
+  header .badge{display:inline-block;background:rgba(255,215,0,.15);color:#ffd700;padding:2px 12px;border-radius:10px;font-size:.75em;margin-top:6px}
+  .container{max-width:960px;margin:0 auto;padding:16px 16px 40px}
+
+  .chapter{background:#12122a;border-radius:12px;padding:18px;margin-bottom:16px;border:1px solid #1a1a3e}
+  .chapter h2{font-size:1.1em;color:#ffd700;margin-bottom:4px}
+  .chapter .sub{font-size:.78em;color:#667;margin-bottom:12px}
+
+  .block{margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid #1a1a35}
+  .block:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+  .block h3{font-size:1em;color:#fff;margin-bottom:4px;padding-left:10px;border-left:3px solid #ff6b35}
+  .block .explain{font-size:.82em;color:#889aab;line-height:1.7;margin:6px 0 8px 10px}
+
+  .derivation{background:#0d0d2b;border:1px solid #ff6b3540;border-radius:6px;padding:10px 14px;margin:8px 0 8px 10px}
+  .derivation .step{font-size:.88em;color:#ddd;font-family:"Times New Roman",serif;line-height:1.8;padding:3px 0}
+  .derivation .step .arrow{color:#ff6b35;margin:0 6px}
+  .derivation .step .result{color:#ffd700;font-weight:bold}
+  .derivation .label{font-size:.75em;color:#fb7299;font-weight:bold;margin-bottom:4px}
+  .derivation .note{font-size:.72em;color:#667;margin-top:4px;font-style:italic}
+
+  .formula-box{background:#0d0d2b;border:1px solid #ff6b3540;border-radius:6px;padding:8px 12px;margin:6px 0 8px 10px}
+  .formula-box .f{font-size:1em;color:#ffd700;font-family:"Times New Roman",serif;font-style:italic;margin:3px 0}
+  .formula-box .note{font-size:.72em;color:#667}
+
+  .v-item{display:flex;align-items:center;gap:8px;background:#161632;border-radius:6px;padding:7px 12px;margin:5px 0 5px 10px;border:1px solid #252545}
+  .v-item:hover{border-color:#fb7299}
+  .v-item .vtag{font-size:.65em;padding:1px 6px;border-radius:3px;background:rgba(255,107,53,.2);color:#ff6b35;flex-shrink:0}
+  .v-item a{color:#ccc;text-decoration:none;font-size:.82em;flex:1}
+  .v-item a:hover{color:#fb7299}
+  .v-item .vmeta{font-size:.7em;color:#556;flex-shrink:0}
+
+  .p-box{background:#0d0d2b;border:1px solid #14b8a640;border-radius:6px;padding:10px 14px;margin:8px 0 4px 10px}
+  .p-box .pq{font-size:.82em;color:#ccc;line-height:1.7;margin-bottom:4px}
+  .p-box .pq .num{color:#14b8a6;font-weight:bold}
+  .p-box .pq .tag-hard{color:#fb7299;font-weight:bold;margin-right:4px}
+  .p-box .answer{font-size:.75em;color:#667;border-top:1px dashed #252545;padding-top:6px;margin-top:4px}
+  .p-box .answer strong{color:#14b8a6}
+
+  .tip{background:rgba(255,215,0,.06);border-left:3px solid #ffd700;padding:8px 12px;margin:10px 0 4px 10px;font-size:.8em;color:#ccb}
+
+  .end-link{text-align:center;padding:16px;color:#556;font-size:.75em}
+  @media(max-width:600px){header h1{font-size:1.3em}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📐 必修一 · 运动学推导与进阶</h1>
+  <p>掌握公式来源 → 理解推论根基 → 突破难题</p>
+  <span class="badge">🔥 推导 · 进阶 · 高考衔接</span>
+</header>
+<div class="container">
+
+<div class="chapter">
+<h2>📖 第一章 · 运动的描述（难点精讲）</h2>
+<div class="sub">加速度的理解与矢量性——这是第一章真正的难点，也是第二章的基石</div>
+
+<!-- 1.4 加速度深度 -->
+<div class="block">
+<h3>1.4 加速度 · 深度理解</h3>
+<div class="explain">
+<strong>加速度的本质：</strong> 速度对时间的变化率 a = dv/dt（极限思想）<br>
+<strong>矢量性的核心：</strong> a与v同向→加速；a与v反向→减速（和a的正负号无关！）<br>
+<strong>常见误区：</strong> a>0不一定加速——因为v也可能为负！
+</div>
+
+<div class="derivation">
+<div class="label">📐 推导：从加速度定义到匀变速速度公式</div>
+<div class="step">定义：a = Δv/Δt = (v − v₀)/t</div>
+<div class="step">两边乘t：v − v₀ = at</div>
+<div class="step">移项：<span class="result">v = v₀ + at</span></div>
+<div class="note">这是匀变速直线运动的第一条基本公式——直接从加速度定义出发，没有任何假设</div>
+</div>
+
+<div class="p-box">
+<div class="pq"><span class="num">Q1.</span> <span class="tag-hard">【核心理解】</span>一质点做直线运动，加速度a = -5m/s²，初速度v₀ = -3m/s。问该质点是加速还是减速运动？</div>
+<div class="pq"><span class="num">Q2.</span> <span class="tag-hard">【易错】</span>物体做加速度逐渐减小的加速运动，当加速度减小到0时，物体的速度____（最大/最小/为0）</div>
+<div class="pq"><span class="num">Q3.</span> <span class="tag-hard">【逆向思维】</span>一个做匀减速直线运动的物体，某时刻速度大小为v，经过t时间后速度大小仍为v，但方向相反。求这段时间内的加速度。</div>
+<div class="answer"><strong>提示：</strong> Q1：a与v₀同号（均为负）→同向→加速！Q2：只要a与v同向，即使a减小，v仍增大，直到a=0时v最大。Q3：设初速度方向为正，则v₀=v，v=-v，a=(-v-v)/t = -2v/t</div>
+</div>
+</div>
+</div>
+
+<!-- ========== 第二章 ========== -->
+<div class="chapter">
+<h2>📖 第二章 · 公式体系全推导</h2>
+<div class="sub">从加速度定义出发，一步步推导出所有公式——理解才能灵活运用</div>
+
+<!-- 2.1 四大公式推导 -->
+<div class="block">
+<h3>2.1 四大公式 · 完整推导链</h3>
+
+<div class="derivation">
+<div class="label">📐 推导一：v = v₀ + at（已证）</div>
+<div class="step">由加速度定义 a = (v − v₀)/t → <span class="result">v = v₀ + at</span></div>
+</div>
+
+<div class="derivation">
+<div class="label">📐 推导二：x = v₀t + ½at²“（v-t图面积法）”</div>
+<div class="step">在v-t图像中，图线是一条斜线（匀变速）</div>
+<div class="step">位移 = 图线与t轴围成的梯形面积</div>
+<div class="step">梯形面积 = 矩形 + 三角形</div>
+<div class="step">矩形面积 = v₀·t</div>
+<div class="step">三角形面积 = ½·(at)·t = ½at²</div>
+<div class="step">总面积：<span class="result">x = v₀t + ½at²</span></div>
+<div class="note">⚠️ 这个推导必须掌握——v-t图面积=位移是运动学最重要的思想之一！</div>
+</div>
+
+<div class="derivation">
+<div class="label">📐 推导三：v² − v₀² = 2ax（消t法）”</div>
+<div class="step">由 v = v₀ + at → t = (v − v₀)/a</div>
+<div class="step">代入 x = v₀t + ½at²</div>
+<div class="step">x = v₀·(v−v₀)/a + ½a·(v−v₀)²/a²</div>
+<div class="step">化简：x = (v₀v − v₀²)/a + (v² − 2vv₀ + v₀²)/(2a)</div>
+<div class="step">通分相加：x = (v² − v₀²)/(2a)</div>
+<div class="step">移项：<span class="result">v² − v₀² = 2ax</span></div>
+<div class="note">这个公式最大的优势是「不含时间t」，当题目不涉及时间时直接使用</div>
+</div>
+
+<div class="derivation">
+<div class="label">📐 推导四：x = (v₀+v)·t / 2（平均速度法）”</div>
+<div class="step">由 x = v₀t + ½at²</div>
+<div class="step">将 at = v − v₀ 代入</div>
+<div class="step">x = v₀t + ½(v−v₀)t</div>
+<div class="step">x = v₀t + ½vt − ½v₀t</div>
+<div class="step"><span class="result">x = (v₀ + v)·t / 2</span></div>
+<div class="note">本质：匀变速直线运动的平均速度 = (v₀+v)/2</div>
+</div>
+
+<div class="p-box">
+<div class="pq"><span class="num">Q1.</span> <span class="tag-hard">【公式选择训练】</span>一架飞机着陆时的速度为60m/s，以-5m/s²匀减速，问跑道至少需要多长？选择哪个公式最简便？为什么？</div>
+<div class="pq"><span class="num">Q2.</span> <span class="tag-hard">【综合】</span>一物体从静止开始做匀加速直线运动，第3s末的速度为6m/s，求第5s内的位移。</div>
+<div class="answer"><strong>提示：</strong> Q1已知v₀,v,a，求x——用v²−v₀²=2ax（不含t最简便）；Q2先求a=v/t=2m/s²，再求前5s和前4s位移差——第5s内位移 = Δx = ½×2×25 − ½×2×16 = 9m</div>
+</div>
+</div>
+
+<!-- 2.2 推论推导 -->
+<div class="block">
+<h3>2.2 两个重要推论 · 完整推导</h3>
+
+<div class="derivation">
+<div class="label">📐 推导一：Δx = aT²（连续相等时间位移差恒等）”</div>
+<div class="step">设物体以初速度v₀、加速度a做匀变速运动</div>
+<div class="step">第一个T内的位移：x₁ = v₀T + ½aT²</div>
+<div class="step">第二个T内的位移：x₂ = (v₀+aT)T + ½aT² = v₀T + aT² + ½aT²</div>
+<div class="step">两段位移差：Δx = x₂ − x₁</div>
+<div class="step">Δx = (v₀T + aT² + ½aT²) − (v₀T + ½aT²)</div>
+<div class="step"><span class="result">Δx = aT²</span></div>
+<div class="note">这个结论的妙处在于：它和初速度无关！无论v₀多大，相邻相等时间位移差都是aT²</div>
+</div>
+
+<div class="derivation">
+<div class="label">📐 推论延伸：纸带逐差法原理”</div>
+<div class="step">如果T内取了6段位移：x₁, x₂, x₃, x₄, x₅, x₆</div>
+<div class="step">单用Δx=aT²——只用了x₂−x₁，浪费了其他数据</div>
+<div class="step">逐差法：a = [(x₄+x₅+x₆) − (x₁+x₂+x₃)] / (3T)²</div>
+<div class="step">即 a = [(x₄+x₅+x₆) − (x₁+x₂+x₃)] / 9T²</div>
+<div class="note">为什么除以9T²？因为x₄−x₁=3aT²，所以(x₄−x₁)+(x₅−x₂)+(x₆−x₃)=3×3aT²=9aT²</div>
+</div>
+
+<div class="derivation">
+<div class="label">📐 推导二：中间时刻速度 = 平均速度”</div>
+<div class="step">前半段时间：从0到t/2，速度从v₀到v<sub>t/2</sub></div>
+<div class="step">v<sub>t/2</sub> = v₀ + a·(t/2) ——公式①</div>
+<div class="step">后半段时间：从t/2到t，速度从v<sub>t/2</sub>到v</div>
+<div class="step">v = v<sub>t/2</sub> + a·(t/2) ——公式②</div>
+<div class="step">②-①：v − v<sub>t/2</sub> = v<sub>t/2</sub> − v₀</div>
+<div class="step">→ 2v<sub>t/2</sub> = v₀ + v</div>
+<div class="step"><span class="result">v<sub>t/2</sub> = (v₀ + v)/2</span></div>
+<div class="step">又因为 x = (v₀+v)t/2，所以 v<sub>t/2</sub> = x/t = 平均速度</div>
+<div class="note">重要结论：匀变速直线运动中，中间时刻速度 = 平均速度。这是实验求瞬时速度的依据！</div>
+</div>
+
+<div class="p-box">
+<div class="pq"><span class="num">Q1.</span> <span class="tag-hard">【Δx=aT²应用】</span>小球从斜面上滚下做匀加速直线运动，照相机每隔0.1s拍摄一次。测得第1段距离4.0cm，第3段距离8.0cm。求加速度a，以及第2段的距离。</div>
+<div class="pq"><span class="num">Q2.</span> <span class="tag-hard">【中间时刻速度】</span>一物体做匀加速直线运动，通过A点速度3m/s，通过B点速度7m/s，AB中点速度为v₁，AB中间时刻速度为v₂。比较v₁和v₂的大小。</div>
+<div class="pq"><span class="num">Q3.</span> <span class="tag-hard">【综合★】</span>做匀加速运动的物体，通过一段长x的位移所用时间为t₁，紧接着通过下一段同样长x的位移所用时间为t₂。求物体的加速度。（用x, t₁, t₂表示）</div>
+<div class="answer"><strong>提示：</strong> Q1：Δx=aT²，第1段到第3段差2个Δx，即(8-4)=2a(0.1)²→a=200cm/s²=2m/s²；x₂=x₁+aT²=6.0cm。Q2：匀加速中v中=√[(v₀²+v²)/2]≈5.4m/s，v时=(v₀+v)/2=5m/s，所以v₁>v₂。Q3：用平均速度！v₁=x/t₁，v₂=x/t₂，a=(v₂−v₁)/[(t₁+t₂)/2]=2x(t₁−t₂)/[t₁t₂(t₁+t₂)]</div>
+</div>
+</div>
+
+<!-- 2.3 自由落体进阶 -->
+<div class="block">
+<h3>2.3 自由落体 · 经典比例与高级应用</h3>
+
+<div class="derivation">
+<div class="label">📐 推导：自由落体三大经典比例”</div>
+<div class="step">设t=0开始自由下落（v₀=0, a=g）</div>
+<div class="step">① 1T内、2T内、3T内...位移比：</div>
+<div class="step">h₁ = ½g(T)² = ½gT²</div>
+<div class="step">h₂ = ½g(2T)² = 2gT²</div>
+<div class="step">h₃ = ½g(3T)² = 4.5gT²</div>
+<div class="step"><span class="result">h₁ : h₂ : h₃ : ... = 1 : 4 : 9 : ...</span></div>
+<div class="step">② 第1T内、第2T内、第3T内...位移比：</div>
+<div class="step">hⅠ = h₁ = ½gT²</div>
+<div class="step">hⅡ = h₂ − h₁ = 1.5gT²</div>
+<div class="step">hⅢ = h₃ − h₂ = 2.5gT²</div>
+<div class="step"><span class="result">hⅠ : hⅡ : hⅢ : ... = 1 : 3 : 5 : ...</span></div>
+<div class="step">③ 下落h、2h、3h...所用时间比：</div>
+<div class="step">由 h = ½gt² → t = √(2h/g)</div>
+<div class="step"><span class="result">t₁ : t₂ : t₃ : ... = 1 : √2 : √3 : ...</span></div>
+</div>
+
+<div class="p-box">
+<div class="pq"><span class="num">Q1.</span> <span class="tag-hard">【比例法巧解】</span>一石块从高处自由落下，通过前1m、前2m、前3m所用时间之比为______。</div>
+<div class="pq"><span class="num">Q2.</span> <span class="tag-hard">【比例法巧解】</span>自由落体第1s内下落5m，第3s内下落____m。</div>
+<div class="pq"><span class="num">Q3.</span> <span class="tag-hard">【塔顶落石★】</span>一石子从塔顶自由下落，最后1s下落的高度为塔高的9/25，求塔高h（g=10m/s²）。</div>
+<div class="pq"><span class="num">Q4.</span> <span class="tag-hard">【穿越窗口★★】</span>一个长L的杆子从高处自由落下，杆子下端经过高h的窗口所用时间为t，求杆子上端经过窗口所用的时间。</div>
+<div class="answer"><strong>提示：</strong> Q1：1:√2:√3。Q2：1:3:5=5:15:25→第3s内25m。Q3：设总时间t，最后1s位移=½gt²−½g(t-1)²=9h/25，又h=½gt²，联立得t=5s，h=125m。Q4：下端经过窗口用时t₁=√[2(h+L)/g]−√(2h/g)，上端经过窗口用时t₂=√[2(h+2L)/g]−√[2(h+L)/g]</div>
+</div>
+</div>
+
+<!-- 2.4 追击相遇 -->
+<div class="block">
+<h3>2.4 追及相遇问题 · 临界分析</h3>
+<div class="explain">
+<strong>核心思想：</strong>速度相等时是追及问题的临界点（距离最远或最近）<br>
+<strong>解题三步：</strong>①画示意图 ②列位移方程 ③令速度相等求临界
+</div>
+
+<div class="p-box">
+<div class="pq"><span class="num">Q1.</span> <span class="tag-hard">【匀速追匀加速★】</span>汽车A以20m/s匀速行驶，发现前方x₀=150m处汽车B以10m/s匀速行驶。A刹车做加速度大小为2m/s²的匀减速。问A是否会撞上B？</div>
+<div class="pq"><span class="num">Q2.</span> <span class="tag-hard">【匀加速追匀速★★】</span>当汽车B以10m/s匀速经过路口时，汽车A从静止开始以2m/s²启动追赶。求：①A追上B所需时间 ②追上时A的速度 ③追上前A、B间最大距离</div>
+<div class="pq"><span class="num">Q3.</span> <span class="tag-hard">【匀减速追匀速★★】</span>在平直公路上，A车以20m/s行驶，发现前方100m处B车以8m/s匀速行驶。A立即刹车做匀减速，问加速度至少为多大才不撞上？</div>
+<div class="answer"><strong>提示：</strong> Q1：速度相等时v₀−at=10→t=5s，xA=75m，xB=50m，Δx=25m<150m→不撞。Q2：①½at²=vt→t=10s；②v=20m/s；③t=5s时距离最大，Δx=vt−½at²=25m。Q3：设a，速度相等时t=(20-8)/a=12/a，xA=20t−½at²，xB=8t。令xA−xB≤100→a≥0.72m/s²</div>
+</div>
+</div>
+
+<!-- 2.5 竖直上抛 -->
+<div class="block">
+<h3>2.5 竖直上抛运动 · 对称性分析（拓展）</h3>
+<div class="explain">
+<strong>特点：</strong>竖直上抛 = a=-g的匀减速直线运动（全过程统一处理）<br>
+<strong>对称性：</strong>上升和下降通过同一位置时速度大小相等、方向相反；上升和下降通过同一段距离所用时间相等
+</div>
+
+<div class="derivation">
+<div class="label">📐 推导：上升最大高度与上升时间”</div>
+<div class="step">取向上为正，v₀>0，a=−g</div>
+<div class="step">最高点 v=0：0 = v₀ − gt → <span class="result">t = v₀/g</span></div>
+<div class="step">最大高度：0² − v₀² = 2(−g)H → <span class="result">H = v₀²/2g</span></div>
+</div>
+
+<div class="p-box">
+<div class="pq"><span class="num">Q1.</span> <span class="tag-hard">【对称性应用】</span>某物体竖直上抛，经4s落回原处，求初速度和最大高度（g=10m/s²）。</div>
+<div class="pq"><span class="num">Q2.</span> <span class="tag-hard">【分段vs全程★★】</span>某物体以20m/s竖直上抛，求：①第3s末的位置和速度 ②全程运动总时间（取向上为正，g=10m/s²）</div>
+<div class="pq"><span class="num">Q3.</span> <span class="tag-hard">【双向可逆★★】</span>一个从地面竖直上抛的物体，两次经过A点的时间间隔为Δt，求A点距地面的高度。（不计空气阻力）</div>
+<div class="answer"><strong>提示：</strong> Q1：对称性→上升下降各2s，v₀=gt=20m/s，H=½gt²=20m。Q2：①x=20×3−½×10×9=15m，v=20-30=-10m/s（向下）；②t=4s。Q3：从最高点到A点的时间为Δt/2，最高点到地面t₀，h=½g(t₀²−(Δt/2)²)
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- 公式总表 -->
+<div class="chapter" style="border-color:#ff6b3540">
+<h2>📋 公式体系 · 推导逻辑图</h2>
+<div class="sub">一条推导链串起所有公式——理解了就再也不用死记硬背</div>
+<div class="derivation" style="margin-left:0">
+  <div class="step" style="font-size:.9em;line-height:2.0">
+    加速度定义 a=Δv/Δt<br>
+    <span class="arrow">→→→→</span> <span class="result">v = v₀ + at</span>（消Δv）<br>
+    <span class="arrow">→→→→</span> 代入x=v₀t+½at²的v-t图面积<br>
+    <span class="arrow">→→→→</span> <span class="result">x = v₀t + ½at²</span><br>
+    <span class="arrow">→→→→</span> 两式联立消t <span class="arrow">→→→→</span> <span class="result">v²−v₀²=2ax</span><br>
+    <span class="arrow">→→→→</span> v=v₀+at代入x公式 <span class="arrow">→→→→</span> <span class="result">x=(v₀+v)t/2</span><br>
+    <span class="arrow">→→→→</span> 比较相邻T位移差值 <span class="arrow">→→→→</span> <span class="result">Δx=aT²</span><br>
+    <span class="arrow">→→→→</span> 前半/后半时间对称 <span class="arrow">→→→→</span> <span class="result">vₜ/₂=(v₀+v)/2</span>
+  </div>
+  <div class="note">结论：所有公式都来自于加速度定义 + v-t图面积，一个推导链贯穿全部！
+  </div>
+</div>
+</div>
+
+<div class="end-link">💪 理解推导 = 真正的掌握。高考加分！</div>
+</div>
+</body>
+</html>
