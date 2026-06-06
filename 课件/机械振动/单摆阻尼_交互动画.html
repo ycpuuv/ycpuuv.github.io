@@ -1,0 +1,1589 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>单摆阻尼振动模拟与s-t图像</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ed 100%);
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #4a6fa5;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+            background: linear-gradient(to right, #2c3e50, #4a6fa5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .simulation-panel {
+            flex: 1;
+            min-width: 500px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .graph-panel {
+            flex: 1;
+            min-width: 500px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: #f9f9f9;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 15px;
+        }
+        
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-group {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .control-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .slider-label span:first-child {
+            font-weight: 500;
+        }
+        
+        .slider-label span:last-child {
+            color: #4a6fa5;
+            font-weight: 600;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(to right, #e0e0e0, #d0d0d0);
+            outline: none;
+            -webkit-appearance: none;
+            transition: all 0.3s ease;
+        }
+        
+        input[type="range"]:hover {
+            background: linear-gradient(to right, #d5d5d5, #c5c5c5);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(to bottom, #4a6fa5, #3a5a80);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .simulation-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(to bottom, #4a6fa5, #3a5a80);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(74, 111, 165, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button:hover {
+            background: linear-gradient(to bottom, #3a5a80, #2c3e50);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        button#resetBtn {
+            background: linear-gradient(to bottom, #e74c3c, #c0392b);
+            box-shadow: 0 4px 6px rgba(231, 76, 60, 0.2);
+        }
+        
+        button#resetBtn:hover {
+            background: linear-gradient(to bottom, #c0392b, #a93226);
+        }
+        
+        button#clearChartBtn {
+            background: linear-gradient(to bottom, #f39c12, #e67e22);
+            box-shadow: 0 4px 6px rgba(243, 156, 18, 0.2);
+            flex: 1;
+        }
+        
+        button#clearChartBtn:hover {
+            background: linear-gradient(to bottom, #e67e22, #d35400);
+        }
+        
+        button#startBtn {
+            flex: 2;
+        }
+        
+        .info-panel {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-top: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .formula {
+            background: linear-gradient(to right, #f8f9fa, #f0f3f5);
+            border-left: 4px solid #4a6fa5;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Cambria', 'Times New Roman', serif;
+            font-size: 1.1rem;
+            border-radius: 0 8px 8px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .damping-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .damping-type {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .damping-type:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .type-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .type-title:before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .underdamped .type-title:before {
+            background-color: #2ecc71;
+        }
+        
+        .critically-damped .type-title:before {
+            background-color: #f39c12;
+        }
+        
+        .overdamped .type-title:before {
+            background-color: #e74c3c;
+        }
+        
+        .current-status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: linear-gradient(to right, #e8f4fc, #d8e8f5);
+            color: #4a6fa5;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .data-table-container {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th {
+            background-color: #4a6fa5;
+            color: white;
+            padding: 10px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .data-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        
+        .data-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        
+        .data-table tr:hover {
+            background-color: #f0f7ff;
+        }
+        
+        .pendulum-params {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .param-value {
+            font-weight: 600;
+            color: #4a6fa5;
+        }
+        
+        .graph-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .time-display {
+            font-size: 1rem;
+            color: #4a6fa5;
+            font-weight: 600;
+            padding: 5px 10px;
+            background: linear-gradient(to right, #e8f4fc, #d8e8f5);
+            border-radius: 4px;
+        }
+        
+        .chart-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chart-buttons button {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 1100px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .simulation-panel, .graph-panel {
+                min-width: 100%;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .controls {
+                flex-direction: column;
+            }
+            
+            .control-group {
+                min-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .graph-controls {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .chart-buttons {
+                width: 100%;
+            }
+            
+            .chart-buttons button {
+                flex: 1;
+            }
+            
+            .pendulum-params {
+                flex-direction: column;
+                gap: 5px;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .graph-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .graph-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+        }
+        
+        .pendulum-details {
+            display: flex;
+            flex-direction: column;
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .pendulum-details div {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .pendulum-details div:last-child {
+            margin-bottom: 0;
+        }
+        
+        .icon {
+            margin-right: 8px;
+        }
+        
+        .units-info {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+            text-align: right;
+        }
+        
+        .reset-info {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 10px;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .angle-unit {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-left: 2px;
+        }
+        
+        .simulation-speed {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .simulation-speed input {
+            flex-grow: 1;
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABQYQAggiIAJIAAQgCUwEqCEOYkAECCAgGwAAcsAAByANABAA=">
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1>单摆阻尼振动模拟</h1>
+    <p class="subtitle">本模拟展示了单摆阻尼振动及其位移-时间(s-t)图像。调整参数可观察欠阻尼、临界阻尼和过阻尼的不同效果。小角度近似下，单摆做简谐运动。</p>
+   </header>
+   <div class="content">
+    <div class="simulation-panel">
+     <div class="panel-title">
+      <span>单摆模拟（小角度简谐运动）</span>
+      <div class="current-status" id="dampingStatus">
+       欠阻尼状态
+      </div>
+     </div>
+     <div class="canvas-container">
+      <canvas id="pendulumCanvas" width="800" height="400"></canvas>
+     </div>
+     <div class="pendulum-params">
+      <div>
+       当前位移: <span class="param-value" id="currentDisplacement">0.087</span> m
+      </div>
+      <div>
+       振动频率: <span class="param-value" id="currentFrequency">0.50</span> Hz
+      </div>
+      <div>
+       衰减系数: <span class="param-value" id="currentDecay">0.05</span> s⁻¹
+      </div>
+     </div>
+     <div class="simulation-speed">
+      <span>模拟速度:</span> <input type="range" id="speedSlider" min="0.25" max="2" step="0.25" value="1"> <span id="speedValue">1.0x</span>
+     </div>
+     <div class="pendulum-details">
+      <div>
+       <span>摆绳材质:</span> <span class="param-value">不可伸长轻绳</span>
+      </div>
+      <div>
+       <span>摆球直径:</span> <span class="param-value">25 mm</span>
+      </div>
+      <div>
+       <span>重力加速度:</span> <span class="param-value">9.8 m/s²</span>
+      </div>
+     </div>
+    </div>
+    <div class="graph-panel">
+     <div class="graph-header">
+      <div class="graph-title">
+       位移-时间图像 (s-t 图像)
+      </div>
+      <div class="time-display">
+       时间: <span id="timeValue">0.0</span> s
+      </div>
+     </div>
+     <div class="graph-controls">
+      <div class="chart-buttons">
+       <button id="clearChartBtn"> <span class="icon">🗑️</span> 清除图表 </button>
+      </div>
+     </div>
+     <div class="canvas-container">
+      <canvas id="graphCanvas" width="800" height="350"></canvas>
+     </div>
+     <div class="units-info">
+      * 位移s为从平衡位置到当前位置的弧长，单位：米(m)
+     </div>
+     <div class="reset-info">
+      * 重置模拟后，之前的振动图像以虚线保留，新的振动曲线用实线绘制
+     </div>
+     <div class="data-table-container">
+      <table class="data-table" id="dataTable">
+       <thead>
+        <tr>
+         <th>时间 (s)</th>
+         <th>位移 (m)</th>
+         <th>速度 (m/s)</th>
+         <th>加速度 (m/s²)</th>
+        </tr>
+       </thead>
+       <tbody id="dataTableBody">
+        <!-- 数据行将通过JavaScript动态添加 -->
+       </tbody>
+      </table>
+     </div>
+    </div>
+   </div>
+   <div class="controls">
+    <div class="control-group">
+     <div class="control-title">
+      单摆参数
+     </div>
+     <div class="slider-container">
+      <div class="slider-label">
+       <span>摆长 (L)</span> <span id="lengthValue">1.0</span> m
+      </div><input type="range" id="lengthSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: 4px;">
+       <span>0.5 m</span> <span>1.0 m</span> <span>3.0 m</span>
+      </div>
+     </div>
+     <div class="slider-container">
+      <div class="slider-label">
+       <span>阻尼系数 (γ)</span> <span id="dampingValue">0.1</span>
+      </div><input type="range" id="dampingSlider" min="0" max="2" step="0.05" value="0.1">
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: 4px;">
+       <span>0 (无阻尼)</span> <span>1 (临界阻尼)</span> <span>2 (强阻尼)</span>
+      </div>
+     </div>
+     <div class="slider-container">
+      <div class="slider-label">
+       <span>摆球质量 (m)</span> <span id="massValue">1.0</span> kg
+      </div><input type="range" id="massSlider" min="0.5" max="3" step="0.1" value="1.0">
+     </div>
+    </div>
+    <div class="control-group">
+     <div class="control-title">
+      初始条件
+     </div>
+     <div class="slider-container">
+      <div class="slider-label">
+       <span>初始位移 (s₀)</span> <span id="initialDisplacementValue">0.087</span> m
+      </div><input type="range" id="initialDisplacementSlider" min="0" max="0.262" step="0.001" value="0.087">
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: 4px;">
+       <span>0 m</span> <span>0.087 m</span> <span>0.262 m</span>
+      </div>
+     </div>
+     <div class="slider-container">
+      <div class="slider-label">
+       <span>初始速度 (v₀)</span> <span id="initialVelocityValue">0.0</span> m/s
+      </div><input type="range" id="initialVelocitySlider" min="-1.0" max="1.0" step="0.05" value="0.0">
+      <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #888; margin-top: 4px;">
+       <span>-1.0 m/s</span> <span>0.0 m/s</span> <span>1.0 m/s</span>
+      </div>
+     </div>
+     <div class="simulation-buttons">
+      <button id="startBtn"> <span class="icon">⏯️</span> 开始/暂停 </button> <button id="resetBtn"> <span class="icon">🔄</span> 重置模拟 </button>
+     </div>
+    </div>
+   </div>
+   <div class="info-panel">
+    <div class="info-title">
+     单摆阻尼振动物理原理（小角度近似）
+    </div>
+    <p>在小角度（θ ≤ 5°）近似下，单摆做简谐运动，其运动方程可线性化为：</p>
+    <div class="formula">
+     线性化运动方程: d²s/dt² + (γ/m)·ds/dt + (g/L)·s = 0
+     <br>
+      其中 s = L·θ 为从平衡位置到当前位置的弧长（位移）
+     <br>
+      简谐运动解（欠阻尼）: s(t) = A·e^(-γt/2m)·cos(ωt + φ)
+     <br>
+      其中 ω = √(g/L - (γ/2m)²) 为阻尼振动角频率
+     <br>
+      无阻尼固有频率: ω₀ = √(g/L)，周期: T = 2π/ω₀ = 2π√(L/g)
+    </div>
+    <p>在振幅处（位移最大时），速度v = 0，符合简谐运动特征。</p>
+    <p>调整阻尼系数可以观察三种不同类型的阻尼振动：</p>
+    <div class="damping-types">
+     <div class="damping-type underdamped">
+      <div class="type-title">
+       欠阻尼
+      </div>
+      <p>阻尼较小，单摆会来回摆动，振幅呈指数规律衰减。这是最常见的阻尼类型。</p>
+     </div>
+     <div class="damping-type critically-damped">
+      <div class="type-title">
+       临界阻尼
+      </div>
+      <p>阻尼适中，单摆能以最快速度、无振荡地回到平衡位置。常用于精密仪器设计。</p>
+     </div>
+     <div class="damping-type overdamped">
+      <div class="type-title">
+       过阻尼
+      </div>
+      <p>阻尼很大，单摆缓慢地、不振荡地回到平衡位置。例如某些减震系统。<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAkCAIAAAAcrW15AAAAt0lEQVR4nO2T6xKEIAiFoXxvfXO3sm0PAkq/1zON4wU+9ZBcayU6Pv62ZA1J9XHy6l2gqeYxeylFxrFK4+Hw1gZp7FAwQONah5OzYLKwFRQKe+Tpl6s9iggreCuZgZDQl9nB8XGi/HJ/XZBT7WpdTtcxL87odANlWBjkDMp66vHI8xvfimaJqmWZpilkBWAROGh2SFsgpjPIfnr6ROYTMeeF8Iec1GXMStOtgop4tEALtEAL9J+gDxR0M2tEyeFCAAAAAElFTkSuQmCC" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;"></p>
+     </div>
+    </div>
+    <div class="formula" style="margin-top: 20px;">
+     当前参数下:
+     <br>
+      最大位移（振幅）对应角度: θ_max = s_max / L
+     <br>
+      在振幅处: v = 0, a = -ω₀²·s_max
+     <br>
+      机械能: E = ½ m v² + ½ (mg/L) s²
+    </div>
+   </div>
+   <footer>
+    <p>单摆阻尼振动模拟 | 物理教学演示工具 | 使用HTML5 Canvas和JavaScript实现</p>
+   </footer>
+  </div>
+  <script>
+        // 获取Canvas元素和上下文
+        const pendulumCanvas = document.getElementById('pendulumCanvas');
+        const graphCanvas = document.getElementById('graphCanvas');
+        const pendulumCtx = pendulumCanvas.getContext('2d');
+        const graphCtx = graphCanvas.getContext('2d');
+        
+        // 获取控制元素
+        const lengthSlider = document.getElementById('lengthSlider');
+        const dampingSlider = document.getElementById('dampingSlider');
+        const massSlider = document.getElementById('massSlider');
+        const initialDisplacementSlider = document.getElementById('initialDisplacementSlider');
+        const initialVelocitySlider = document.getElementById('initialVelocitySlider');
+        const speedSlider = document.getElementById('speedSlider');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const clearChartBtn = document.getElementById('clearChartBtn');
+        
+        // 获取显示值的元素
+        const lengthValue = document.getElementById('lengthValue');
+        const dampingValue = document.getElementById('dampingValue');
+        const massValue = document.getElementById('massValue');
+        const initialDisplacementValue = document.getElementById('initialDisplacementValue');
+        const initialVelocityValue = document.getElementById('initialVelocityValue');
+        const speedValue = document.getElementById('speedValue');
+        const dampingStatus = document.getElementById('dampingStatus');
+        const timeValue = document.getElementById('timeValue');
+        const currentDisplacementValue = document.getElementById('currentDisplacement');
+        const currentFrequency = document.getElementById('currentFrequency');
+        const currentDecay = document.getElementById('currentDecay');
+        
+        // 数据表相关元素
+        const dataTableBody = document.getElementById('dataTableBody');
+        
+        // 模拟参数
+        let params = {
+            length: parseFloat(lengthSlider.value),          // 摆长 L (m)
+            damping: parseFloat(dampingSlider.value),        // 阻尼系数 γ (Ns/m)
+            mass: parseFloat(massSlider.value),              // 质量 m (kg)
+            initialDisplacement: parseFloat(initialDisplacementSlider.value), // 初始位移 s₀ (m)
+            initialVelocity: parseFloat(initialVelocitySlider.value), // 初始速度 v₀ (m/s)
+            time: 0,                                         // 当前时间 (s)
+            isRunning: true,                                 // 模拟是否运行
+            g: 9.8,                                          // 重力加速度 (m/s²)
+            speed: parseFloat(speedSlider.value)             // 模拟速度倍率
+        };
+        
+        // 当前状态
+        let currentDisplacement = params.initialDisplacement; // 当前位移 s (m)
+        let currentVelocity = params.initialVelocity;         // 当前速度 v (m/s)
+        let currentAcceleration = 0;                          // 当前加速度 a (m/s²)
+        
+        // 历史数据（用于绘制s-t图像和填充数据表）
+        let history = [];
+        const maxHistoryPoints = 2000;
+        
+        // 存储之前模拟周期的历史数据（用于绘制虚线）
+        let previousHistories = [];
+        
+        // 动画ID
+        let animationId = null;
+        
+        // 时间步长（基础时间步长，实际步长会乘以速度倍率）
+        const baseTimeStep = 0.02; // 放慢模拟速度
+        
+        // 更新显示值
+        function updateDisplayValues() {
+            lengthValue.textContent = params.length.toFixed(1);
+            dampingValue.textContent = params.damping.toFixed(2);
+            massValue.textContent = params.mass.toFixed(1);
+            initialDisplacementValue.textContent = params.initialDisplacement.toFixed(3);
+            initialVelocityValue.textContent = params.initialVelocity.toFixed(2);
+            speedValue.textContent = params.speed.toFixed(1) + "x";
+            
+            // 计算当前振动参数
+            const gamma = params.damping; // 阻尼系数
+            const omega0 = Math.sqrt(params.g / params.length); // 固有角频率 (rad/s) - 无阻尼单摆
+            const omega = Math.sqrt(omega0 * omega0 - Math.pow(gamma/(2*params.mass), 2)); // 阻尼振动角频率 (rad/s)
+            
+            // 更新参数显示
+            currentDecay.textContent = (gamma/(2*params.mass)).toFixed(2);
+            if (omega > 0) {
+                currentFrequency.textContent = (omega / (2 * Math.PI)).toFixed(2);
+            } else {
+                currentFrequency.textContent = "0.00";
+            }
+            currentDisplacementValue.textContent = currentDisplacement.toFixed(3);
+            
+            // 更新阻尼状态
+            const criticalDamping = 2 * params.mass * Math.sqrt(params.g / params.length);
+            if (params.damping < criticalDamping * 0.95) {
+                dampingStatus.textContent = "欠阻尼状态";
+                dampingStatus.style.background = "linear-gradient(to right, #e8f7ef, #d4f0e2)";
+                dampingStatus.style.color = "#27ae60";
+            } else if (params.damping > criticalDamping * 1.05) {
+                dampingStatus.textContent = "过阻尼状态";
+                dampingStatus.style.background = "linear-gradient(to right, #fdedec, #f9d6d5)";
+                dampingStatus.style.color = "#e74c3c";
+            } else {
+                dampingStatus.textContent = "临界阻尼状态";
+                dampingStatus.style.background = "linear-gradient(to right, #fef5e7, #faecc2)";
+                dampingStatus.style.color = "#f39c12";
+            }
+        }
+        
+        // 更新数据表
+        function updateDataTable() {
+            // 如果历史数据为空，不更新表格
+            if (history.length === 0 && previousHistories.length === 0) return;
+            
+            // 清空表格（保留表头）
+            dataTableBody.innerHTML = '';
+            
+            // 显示当前模拟周期的数据点（最多显示20行）
+            const displayCount = Math.min(20, history.length);
+            const startIndex = Math.max(0, history.length - displayCount);
+            
+            for (let i = startIndex; i < history.length; i++) {
+                const point = history[i];
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${point.time.toFixed(2)}</td>
+                    <td>${point.displacement.toFixed(3)}</td>
+                    <td>${point.velocity.toFixed(3)}</td>
+                    <td>${point.acceleration.toFixed(3)}</td>
+                `;
+                dataTableBody.appendChild(row);
+            }
+            
+            // 如果表格为空，添加提示信息
+            if (dataTableBody.children.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="4" style="text-align: center; color: #7f8c8d; font-style: italic;">
+                        模拟数据将在此显示。点击"开始模拟"按钮开始记录。
+                    </td>
+                `;
+                dataTableBody.appendChild(row);
+            }
+        }
+        
+        // 绘制单摆
+        function drawPendulum() {
+            const width = pendulumCanvas.width;
+            const height = pendulumCanvas.height;
+            const centerX = width / 2;
+            const pivotY = height / 4;
+            
+            // 清除画布
+            pendulumCtx.clearRect(0, 0, width, height);
+            
+            // 绘制背景网格
+            drawGrid(pendulumCtx, width, height);
+            
+            // 绘制天花板
+            const ceilingGradient = pendulumCtx.createLinearGradient(0, 0, 0, 30);
+            ceilingGradient.addColorStop(0, '#636e72');
+            ceilingGradient.addColorStop(0.5, '#7f8c8d');
+            ceilingGradient.addColorStop(1, '#636e72');
+            pendulumCtx.fillStyle = ceilingGradient;
+            pendulumCtx.fillRect(0, 0, width, 30);
+            
+            // 绘制天花板阴影
+            pendulumCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            pendulumCtx.fillRect(0, 30, width, 5);
+            
+            // 绘制天花板文字
+            pendulumCtx.fillStyle = 'white';
+            pendulumCtx.font = 'bold 14px Arial';
+            pendulumCtx.textAlign = 'center';
+            pendulumCtx.fillText("悬挂点", centerX, 20);
+            
+            // 绘制悬挂点
+            pendulumCtx.fillStyle = '#636e72';
+            pendulumCtx.beginPath();
+            pendulumCtx.arc(centerX, pivotY, 8, 0, Math.PI * 2);
+            pendulumCtx.fill();
+            
+            pendulumCtx.strokeStyle = '#2c3e50';
+            pendulumCtx.lineWidth = 2;
+            pendulumCtx.beginPath();
+            pendulumCtx.arc(centerX, pivotY, 12, 0, Math.PI * 2);
+            pendulumCtx.stroke();
+            
+            // 计算摆球位置（根据位移计算角度）
+            // 小角度近似：s = L·θ，所以 θ = s/L
+            const angleRad = currentDisplacement / params.length; // 弧度
+            const angleDeg = angleRad * 180 / Math.PI; // 度
+            
+            const pendulumLength = params.length * 100; // 将米转换为像素（1m = 100px）
+            const ballX = centerX + pendulumLength * Math.sin(angleRad);
+            const ballY = pivotY + pendulumLength * Math.cos(angleRad);
+            
+            // 绘制摆绳
+            pendulumCtx.strokeStyle = '#2c3e50';
+            pendulumCtx.lineWidth = 3;
+            pendulumCtx.beginPath();
+            pendulumCtx.moveTo(centerX, pivotY);
+            pendulumCtx.lineTo(ballX, ballY);
+            pendulumCtx.stroke();
+            
+            // 绘制摆球
+            const ballRadius = 25;
+            const ballGradient = pendulumCtx.createRadialGradient(
+                ballX, ballY, 5,
+                ballX, ballY, ballRadius
+            );
+            ballGradient.addColorStop(0, '#ff9f43');
+            ballGradient.addColorStop(0.7, '#ee5a24');
+            ballGradient.addColorStop(1, '#c23616');
+            
+            pendulumCtx.beginPath();
+            pendulumCtx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+            pendulumCtx.fillStyle = ballGradient;
+            pendulumCtx.fill();
+            
+            // 绘制摆球高光
+            pendulumCtx.beginPath();
+            pendulumCtx.arc(ballX - 8, ballY - 8, 8, 0, Math.PI * 2);
+            pendulumCtx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            pendulumCtx.fill();
+            
+            pendulumCtx.strokeStyle = '#b33939';
+            pendulumCtx.lineWidth = 2;
+            pendulumCtx.stroke();
+            
+            // 绘制摆球质量标签
+            pendulumCtx.fillStyle = 'white';
+            pendulumCtx.font = 'bold 14px Arial';
+            pendulumCtx.textAlign = 'center';
+            pendulumCtx.fillText(`m=${params.mass}kg`, ballX, ballY + 5);
+            
+            // 绘制角度指示弧（仅当角度较大时显示）
+            if (Math.abs(angleDeg) > 1) {
+                const arcRadius = 80;
+                pendulumCtx.strokeStyle = '#3498db';
+                pendulumCtx.lineWidth = 2;
+                pendulumCtx.beginPath();
+                pendulumCtx.arc(centerX, pivotY, arcRadius, -Math.PI/2, -Math.PI/2 - angleRad, angleRad > 0);
+                pendulumCtx.stroke();
+                
+                // 绘制角度标签
+                pendulumCtx.fillStyle = '#3498db';
+                pendulumCtx.font = 'bold 14px Arial';
+                pendulumCtx.textAlign = 'center';
+                const angleLabelX = centerX + (arcRadius + 20) * Math.sin(-angleRad/2);
+                const angleLabelY = pivotY - (arcRadius + 20) * Math.cos(-angleRad/2);
+                pendulumCtx.fillText(`θ = ${angleDeg.toFixed(1)}°`, angleLabelX, angleLabelY);
+            }
+            
+            // 绘制位移指示线（从平衡位置到当前位置）
+            pendulumCtx.strokeStyle = '#2ecc71';
+            pendulumCtx.lineWidth = 2;
+            pendulumCtx.setLineDash([3, 3]);
+            
+            // 计算平衡位置对应的球位置
+            const equilibriumBallY = pivotY + pendulumLength;
+            
+            // 绘制位移线（水平位移）
+            pendulumCtx.beginPath();
+            pendulumCtx.moveTo(centerX, equilibriumBallY);
+            pendulumCtx.lineTo(ballX, ballY);
+            pendulumCtx.stroke();
+            pendulumCtx.setLineDash([]);
+            
+            // 绘制位移箭头
+            drawArrow(pendulumCtx, centerX, equilibriumBallY, ballX, ballY, '#2ecc71', 8);
+            
+            // 绘制位移标签
+            pendulumCtx.fillStyle = '#2ecc71';
+            pendulumCtx.font = 'bold 16px Arial';
+            pendulumCtx.textAlign = 'center';
+            pendulumCtx.fillText(`位移 s = ${currentDisplacement.toFixed(3)} m`, 
+                                (centerX + ballX) / 2, 
+                                (equilibriumBallY + ballY) / 2 - 15);
+            
+            // 绘制平衡位置线（垂直线）
+            pendulumCtx.strokeStyle = '#3498db';
+            pendulumCtx.lineWidth = 1;
+            pendulumCtx.setLineDash([5, 5]);
+            pendulumCtx.beginPath();
+            pendulumCtx.moveTo(centerX, pivotY);
+            pendulumCtx.lineTo(centerX, pivotY + pendulumLength);
+            pendulumCtx.stroke();
+            pendulumCtx.setLineDash([]);
+            
+            // 绘制平衡位置标签
+            pendulumCtx.fillStyle = '#3498db';
+            pendulumCtx.font = '14px Arial';
+            pendulumCtx.textAlign = 'right';
+            pendulumCtx.fillText("平衡位置", centerX - 10, pivotY + pendulumLength/2);
+            
+            // 绘制摆长标签
+            pendulumCtx.fillStyle = '#9b59b6';
+            pendulumCtx.font = 'bold 16px Arial';
+            pendulumCtx.textAlign = 'left';
+            pendulumCtx.fillText(`摆长 L = ${params.length.toFixed(1)} m`, 20, 60);
+            
+            // 绘制时间标签
+            const timeText = `时间 t = ${params.time.toFixed(2)} s`;
+            pendulumCtx.fillStyle = '#2c3e50';
+            pendulumCtx.font = 'bold 16px Arial';
+            pendulumCtx.textAlign = 'left';
+            pendulumCtx.fillText(timeText, 20, 90);
+            
+            // 绘制速度标签
+            const velocityText = `速度 v = ${currentVelocity.toFixed(3)} m/s`;
+            pendulumCtx.fillStyle = '#e67e22';
+            pendulumCtx.font = 'bold 16px Arial';
+            pendulumCtx.textAlign = 'left';
+            pendulumCtx.fillText(velocityText, 20, 120);
+            
+            // 绘制加速度标签
+            const accelerationText = `加速度 a = ${currentAcceleration.toFixed(3)} m/s²`;
+            pendulumCtx.fillStyle = '#8e44ad';
+            pendulumCtx.font = 'bold 16px Arial';
+            pendulumCtx.textAlign = 'left';
+            pendulumCtx.fillText(accelerationText, 20, 150);
+            
+            // 绘制能量标签
+            const kineticEnergy = 0.5 * params.mass * currentVelocity * currentVelocity;
+            const potentialEnergy = 0.5 * (params.mass * params.g / params.length) * currentDisplacement * currentDisplacement;
+            const totalEnergy = kineticEnergy + potentialEnergy;
+            const energyText = `机械能 E = ${totalEnergy.toFixed(3)} J`;
+            pendulumCtx.fillStyle = '#16a085';
+            pendulumCtx.font = 'bold 16px Arial';
+            pendulumCtx.textAlign = 'left';
+            pendulumCtx.fillText(energyText, 20, 180);
+            
+            // 绘制振幅处速度提示
+            if (Math.abs(currentVelocity) < 0.001 && Math.abs(currentDisplacement) > 0.001) {
+                pendulumCtx.fillStyle = '#e74c3c';
+                pendulumCtx.font = 'bold 14px Arial';
+                pendulumCtx.textAlign = 'right';
+                pendulumCtx.fillText("振幅处: v ≈ 0", width - 20, 60);
+            }
+        }
+        
+        // 绘制箭头
+        function drawArrow(ctx, fromX, fromY, toX, toY, color, size = 10) {
+            const headlen = size;
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const angle = Math.atan2(dy, dx);
+            
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            
+            // 箭头尖端
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+            
+            // 箭头杆（如果箭头方向不是垂直或水平，则绘制）
+            if (Math.abs(dx) > 1 || Math.abs(dy) > 1) {
+                ctx.beginPath();
+                ctx.moveTo(fromX, fromY);
+                ctx.lineTo(toX - headlen * 0.5 * Math.cos(angle), toY - headlen * 0.5 * Math.sin(angle));
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+        
+        // 绘制s-t图像
+        function drawGraph() {
+            const width = graphCanvas.width;
+            const height = graphCanvas.height;
+            const margin = 40;
+            const graphWidth = width - 2 * margin;
+            const graphHeight = height - 2 * margin;
+            
+            // 清除画布
+            graphCtx.clearRect(0, 0, width, height);
+            
+            // 绘制背景网格
+            drawGrid(graphCtx, width, height);
+            
+            // 绘制坐标轴
+            graphCtx.strokeStyle = '#2c3e50';
+            graphCtx.lineWidth = 2;
+            
+            // X轴（时间）
+            graphCtx.beginPath();
+            graphCtx.moveTo(margin, height - margin);
+            graphCtx.lineTo(width - margin, height - margin);
+            graphCtx.stroke();
+            
+            // Y轴（位移）
+            graphCtx.beginPath();
+            graphCtx.moveTo(margin, margin);
+            graphCtx.lineTo(margin, height - margin);
+            graphCtx.stroke();
+            
+            // 绘制坐标轴箭头
+            drawArrow(graphCtx, width - margin, height - margin, width - margin + 10, height - margin, '#2c3e50', 8);
+            drawArrow(graphCtx, margin, margin, margin, margin - 10, '#2c3e50', 8);
+            
+            // 绘制坐标轴标签
+            graphCtx.fillStyle = '#2c3e50';
+            graphCtx.font = 'bold 16px Arial';
+            graphCtx.textAlign = 'center';
+            graphCtx.fillText("时间 t (s)", width / 2, height - 10);
+            
+            graphCtx.save();
+            graphCtx.translate(10, height / 2);
+            graphCtx.rotate(-Math.PI / 2);
+            graphCtx.fillText("位移 s (m)", 0, 0);
+            graphCtx.restore();
+            
+            // 绘制刻度
+            graphCtx.fillStyle = '#2c3e50';
+            graphCtx.font = '12px Arial';
+            graphCtx.textAlign = 'center';
+            
+            // 计算时间范围 - 考虑所有历史数据
+            let maxTime = 20;
+            
+            // 检查当前历史数据的最大时间
+            if (history.length > 0) {
+                const currentMaxTime = Math.max(...history.map(p => p.time));
+                maxTime = Math.max(maxTime, currentMaxTime);
+            }
+            
+            // 检查之前历史数据的最大时间
+            for (let i = 0; i < previousHistories.length; i++) {
+                if (previousHistories[i].length > 0) {
+                    const prevMaxTime = Math.max(...previousHistories[i].map(p => p.time));
+                    maxTime = Math.max(maxTime, prevMaxTime);
+                }
+            }
+            
+            // X轴刻度（时间）
+            const timeStep = maxTime <= 20 ? 2 : Math.ceil(maxTime / 10);
+            for (let i = 0; i <= maxTime; i += timeStep) {
+                const x = margin + (i / maxTime) * graphWidth;
+                
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, height - margin - 5);
+                graphCtx.lineTo(x, height - margin + 5);
+                graphCtx.stroke();
+                
+                graphCtx.fillText(i.toFixed(0), x, height - margin + 20);
+            }
+            
+            // Y轴刻度（位移）
+            const maxDisplacement = 0.3; // 最大位移 0.3 m（对应约17°）
+            for (let i = -5; i <= 5; i++) {
+                const y = height - margin - ((i + 5) / 10) * graphHeight;
+                const displacementValue = (i * maxDisplacement / 5).toFixed(2);
+                
+                graphCtx.beginPath();
+                graphCtx.moveTo(margin - 5, y);
+                graphCtx.lineTo(margin + 5, y);
+                graphCtx.stroke();
+                
+                graphCtx.textAlign = 'right';
+                graphCtx.fillText(displacementValue, margin - 10, y + 4);
+            }
+            
+            // 绘制零线（平衡位置）
+            graphCtx.strokeStyle = '#3498db';
+            graphCtx.lineWidth = 1;
+            graphCtx.setLineDash([5, 5]);
+            graphCtx.beginPath();
+            const zeroY = height - margin - (5 / 10) * graphHeight;
+            graphCtx.moveTo(margin, zeroY);
+            graphCtx.lineTo(width - margin, zeroY);
+            graphCtx.stroke();
+            graphCtx.setLineDash([]);
+            
+            // 绘制图例
+            graphCtx.fillStyle = '#e74c3c';
+            graphCtx.font = 'bold 14px Arial';
+            graphCtx.textAlign = 'left';
+            graphCtx.fillText("当前振动曲线", width - 200, margin + 20);
+            
+            graphCtx.fillStyle = '#7f8c8d';
+            graphCtx.font = 'bold 14px Arial';
+            graphCtx.textAlign = 'left';
+            graphCtx.fillText("历史振动曲线", width - 200, margin + 45);
+            
+            // 如果没有历史数据，则绘制提示文本
+            if (history.length < 1 && previousHistories.length === 0) {
+                graphCtx.fillStyle = '#7f8c8d';
+                graphCtx.font = 'italic 16px Arial';
+                graphCtx.textAlign = 'center';
+                graphCtx.fillText("点击'开始模拟'查看振动曲线", width / 2, height / 2);
+                return;
+            }
+            
+            // 首先，绘制之前模拟周期的历史数据（虚线）
+            for (let h = 0; h < previousHistories.length; h++) {
+                const prevHistory = previousHistories[h];
+                if (prevHistory.length < 2) continue;
+                
+                // 设置虚线样式
+                graphCtx.strokeStyle = 'rgba(127, 140, 141, 0.6)';
+                graphCtx.lineWidth = 2;
+                graphCtx.setLineDash([5, 5]);
+                graphCtx.beginPath();
+                
+                // 移动到第一个点
+                const firstPoint = prevHistory[0];
+                const firstX = margin + (firstPoint.time / maxTime) * graphWidth;
+                const firstY = height - margin - ((firstPoint.displacement / maxDisplacement) * 5 + 5) / 10 * graphHeight;
+                graphCtx.moveTo(firstX, firstY);
+                
+                // 绘制曲线
+                for (let i = 1; i < prevHistory.length; i++) {
+                    const point = prevHistory[i];
+                    const x = margin + (point.time / maxTime) * graphWidth;
+                    const y = height - margin - ((point.displacement / maxDisplacement) * 5 + 5) / 10 * graphHeight;
+                    
+                    // 确保点在画布范围内
+                    if (x >= margin && x <= width - margin && y >= margin && y <= height - margin) {
+                        graphCtx.lineTo(x, y);
+                    } else {
+                        graphCtx.moveTo(x, y);
+                    }
+                }
+                
+                graphCtx.stroke();
+            }
+            
+            // 然后，绘制当前周期的数据（实线）
+            graphCtx.setLineDash([]); // 清除虚线设置
+            
+            if (history.length >= 2) {
+                const curveGradient = graphCtx.createLinearGradient(margin, 0, width - margin, 0);
+                curveGradient.addColorStop(0, 'rgba(231, 76, 60, 0.9)');
+                curveGradient.addColorStop(0.5, 'rgba(231, 76, 60, 0.7)');
+                curveGradient.addColorStop(1, 'rgba(231, 76, 60, 0.4)');
+                
+                graphCtx.strokeStyle = curveGradient;
+                graphCtx.lineWidth = 3;
+                graphCtx.lineJoin = 'round';
+                graphCtx.beginPath();
+                
+                // 移动到第一个点
+                const firstPoint = history[0];
+                const firstX = margin + (firstPoint.time / maxTime) * graphWidth;
+                const firstY = height - margin - ((firstPoint.displacement / maxDisplacement) * 5 + 5) / 10 * graphHeight;
+                graphCtx.moveTo(firstX, firstY);
+                
+                // 绘制曲线
+                for (let i = 1; i < history.length; i++) {
+                    const point = history[i];
+                    const x = margin + (point.time / maxTime) * graphWidth;
+                    const y = height - margin - ((point.displacement / maxDisplacement) * 5 + 5) / 10 * graphHeight;
+                    
+                    // 确保点在画布范围内
+                    if (x >= margin && x <= width - margin && y >= margin && y <= height - margin) {
+                        graphCtx.lineTo(x, y);
+                    } else {
+                        graphCtx.moveTo(x, y);
+                    }
+                }
+                
+                graphCtx.stroke();
+                
+                // 绘制最后一个点（当前点）
+                const lastPoint = history[history.length - 1];
+                const lastX = margin + (lastPoint.time / maxTime) * graphWidth;
+                const lastY = height - margin - ((lastPoint.displacement / maxDisplacement) * 5 + 5) / 10 * graphHeight;
+                
+                // 绘制数据点
+                const pointGradient = graphCtx.createRadialGradient(lastX, lastY, 0, lastX, lastY, 6);
+                pointGradient.addColorStop(0, '#ff9f43');
+                pointGradient.addColorStop(1, '#e74c3c');
+                
+                graphCtx.fillStyle = pointGradient;
+                graphCtx.beginPath();
+                graphCtx.arc(lastX, lastY, 6, 0, Math.PI * 2);
+                graphCtx.fill();
+                
+                // 在当前点添加标签
+                graphCtx.fillStyle = '#2c3e50';
+                graphCtx.font = '14px Arial';
+                graphCtx.textAlign = 'left';
+                const labelText = `(${lastPoint.time.toFixed(2)} s, ${lastPoint.displacement.toFixed(3)} m)`;
+                
+                // 确保标签不超出画布
+                let labelX = lastX + 10;
+                let labelY = lastY - 10;
+                
+                if (labelX > width - 150) {
+                    labelX = lastX - 120;
+                }
+                if (labelY < margin + 20) {
+                    labelY = lastY + 20;
+                }
+                
+                graphCtx.fillText(labelText, labelX, labelY);
+            }
+        }
+        
+        // 绘制网格
+        function drawGrid(ctx, width, height) {
+            ctx.strokeStyle = '#eaeaea';
+            ctx.lineWidth = 1;
+            
+            // 垂直线
+            for (let x = 0; x <= width; x += 50) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, height);
+                ctx.stroke();
+            }
+            
+            // 水平线
+            for (let y = 0; y <= height; y += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+            }
+        }
+        
+        // 更新模拟 - 使用线性化运动方程（小角度简谐运动）
+        function updateSimulation() {
+            if (!params.isRunning) return;
+            
+            // 更新时间（考虑速度倍率）
+            const timeStep = baseTimeStep * params.speed;
+            params.time += timeStep;
+            timeValue.textContent = params.time.toFixed(1);
+            
+            // 计算新的位移和速度 - 使用线性化运动方程（小角度简谐运动）
+            // 运动方程：d²s/dt² + (γ/m)·ds/dt + (g/L)·s = 0
+            // 转换为数值解：a = -(γ/m)·v - (g/L)·s
+            
+            // 计算加速度
+            currentAcceleration = - (params.damping / params.mass) * currentVelocity 
+                                 - (params.g / params.length) * currentDisplacement;
+            
+            // 更新速度（使用改进的欧拉法，确保在振幅处速度接近0）
+            const newVelocity = currentVelocity + currentAcceleration * timeStep;
+            
+            // 更新位移
+            const newDisplacement = currentDisplacement + newVelocity * timeStep;
+            
+            // 确保在振幅处速度接近0（数值稳定性处理）
+            // 如果位移接近极值且速度很小，强制速度为0
+            const maxAllowedDisplacement = 0.262; // 对应15°的位移
+            if (Math.abs(newDisplacement) > 0.95 * maxAllowedDisplacement && Math.abs(newVelocity) < 0.01) {
+                currentVelocity = 0;
+            } else {
+                currentVelocity = newVelocity;
+            }
+            
+            currentDisplacement = newDisplacement;
+            
+            // 将数据添加到历史记录
+            history.push({
+                time: params.time,
+                displacement: currentDisplacement,
+                velocity: currentVelocity,
+                acceleration: currentAcceleration
+            });
+            
+            // 限制历史记录长度
+            if (history.length > maxHistoryPoints) {
+                if (history.length > maxHistoryPoints + 100) {
+                    history.splice(0, history.length - maxHistoryPoints);
+                }
+            }
+            
+            // 更新数据表（每0.5秒更新一次）
+            if (Math.floor(params.time * 10) % 5 === 0) {
+                updateDataTable();
+            }
+            
+            // 更新显示值
+            updateDisplayValues();
+            
+            // 重新绘制
+            drawPendulum();
+            drawGraph();
+            
+            // 继续动画循环
+            animationId = requestAnimationFrame(updateSimulation);
+        }
+        
+        // 清除图表和数据表
+        function clearChart() {
+            // 清除所有历史数据
+            history = [];
+            previousHistories = [];
+            
+            // 清除数据表
+            dataTableBody.innerHTML = '';
+            
+            // 重新绘制图表
+            drawGraph();
+            
+            // 添加一行提示信息到数据表
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td colspan="4" style="text-align: center; color: #7f8c8d; font-style: italic;">
+                    图表和数据表已清除，模拟将继续运行并记录新数据
+                </td>
+            `;
+            dataTableBody.appendChild(row);
+        }
+        
+        // 重置模拟
+        function resetSimulation() {
+            // 停止当前动画
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+            
+            // 保存当前历史数据到之前的历史记录中（如果历史数据不为空）
+            if (history.length > 0) {
+                // 复制当前历史数据
+                const historyCopy = [...history];
+                previousHistories.push(historyCopy);
+                
+                // 限制之前历史记录的数量（最多保留3个周期）
+                if (previousHistories.length > 3) {
+                    previousHistories.shift();
+                }
+            }
+            
+            // 清空当前历史数据
+            history = [];
+            
+            // 重置参数
+            params.time = 0;
+            currentDisplacement = params.initialDisplacement;
+            currentVelocity = params.initialVelocity;
+            currentAcceleration = 0;
+            
+            // 添加初始点到历史数据
+            history.push({
+                time: params.time,
+                displacement: currentDisplacement,
+                velocity: currentVelocity,
+                acceleration: currentAcceleration
+            });
+            
+            // 重新开始模拟
+            if (params.isRunning) {
+                animationId = requestAnimationFrame(updateSimulation);
+            }
+            
+            // 重新绘制
+            drawPendulum();
+            drawGraph();
+            updateDataTable();
+        }
+        
+        // 初始化
+        function init() {
+            // 设置Canvas尺寸
+            function resizeCanvases() {
+                const containerWidth = document.querySelector('.canvas-container').clientWidth;
+                pendulumCanvas.width = containerWidth;
+                pendulumCanvas.height = 400;
+                graphCanvas.width = containerWidth;
+                graphCanvas.height = 350;
+                
+                // 重新绘制
+                drawPendulum();
+                drawGraph();
+            }
+            
+            // 初始调整尺寸
+            resizeCanvases();
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', resizeCanvases);
+            
+            // 设置滑块事件监听
+            lengthSlider.addEventListener('input', function() {
+                params.length = parseFloat(this.value);
+                // 更新初始位移滑块范围（基于最大角度5°）
+                const maxDisplacement = params.length * Math.sin(5 * Math.PI / 180);
+                initialDisplacementSlider.max = maxDisplacement.toFixed(3);
+                initialDisplacementSlider.value = Math.min(parseFloat(initialDisplacementSlider.value), maxDisplacement);
+                params.initialDisplacement = parseFloat(initialDisplacementSlider.value);
+                updateDisplayValues();
+            });
+            
+            dampingSlider.addEventListener('input', function() {
+                params.damping = parseFloat(this.value);
+                updateDisplayValues();
+            });
+            
+            massSlider.addEventListener('input', function() {
+                params.mass = parseFloat(this.value);
+                updateDisplayValues();
+            });
+            
+            initialDisplacementSlider.addEventListener('input', function() {
+                params.initialDisplacement = parseFloat(this.value);
+                updateDisplayValues();
+                // 如果模拟没有运行，更新当前位移
+                if (!params.isRunning) {
+                    currentDisplacement = params.initialDisplacement;
+                    drawPendulum();
+                }
+            });
+            
+            initialVelocitySlider.addEventListener('input', function() {
+                params.initialVelocity = parseFloat(this.value);
+                updateDisplayValues();
+                // 如果模拟没有运行，更新当前速度
+                if (!params.isRunning) {
+                    currentVelocity = params.initialVelocity;
+                    drawPendulum();
+                }
+            });
+            
+            speedSlider.addEventListener('input', function() {
+                params.speed = parseFloat(this.value);
+                updateDisplayValues();
+            });
+            
+            // 设置按钮事件监听
+            startBtn.addEventListener('click', function() {
+                params.isRunning = !params.isRunning;
+                startBtn.innerHTML = params.isRunning ? '<span class="icon">⏸️</span> 暂停模拟' : '<span class="icon">▶️</span> 开始模拟';
+                
+                if (params.isRunning) {
+                    animationId = requestAnimationFrame(updateSimulation);
+                } else {
+                    if (animationId) {
+                        cancelAnimationFrame(animationId);
+                    }
+                }
+            });
+            
+            resetBtn.addEventListener('click', resetSimulation);
+            
+            clearChartBtn.addEventListener('click', clearChart);
+            
+            // 初始显示
+            updateDisplayValues();
+            updateDataTable();
+            drawPendulum();
+            drawGraph();
+            
+            // 添加初始点到历史数据
+            history.push({
+                time: params.time,
+                displacement: currentDisplacement,
+                velocity: currentVelocity,
+                acceleration: currentAcceleration
+            });
+            
+            // 开始模拟
+            animationId = requestAnimationFrame(updateSimulation);
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+ </body>
+</html>
