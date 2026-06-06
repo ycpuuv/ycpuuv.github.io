@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>远距离输电模型 - 高中物理互动课件</title>
+  <style>
+        :root {
+            --primary: #175FFF;
+            --secondary: #F901F7;
+            --accent: #67F844;
+            --background: #090B2F;
+            --foreground: #FFFFFF;
+            --card-bg: rgba(26, 36, 60, 0.85);
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background-color: var(--background);
+            color: var(--foreground);
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        /* UI 层，悬浮控制面板 */
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 18px;
+            pointer-events: auto;
+            margin-bottom: 16px;
+            max-width: 480px;
+            width: calc(100% - 40px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 14px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 1px;
+        }
+        .control-group {
+            margin-bottom: 14px;
+        }
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            opacity: 0.9;
+        }
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--primary);
+            cursor: pointer;
+            background: #2a3455;
+            height: 4px;
+            border-radius: 5px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            font-size: 0.75rem;
+            margin: 15px 0 10px;
+        }
+        .stat-item {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 8px 6px;
+            border-radius: 12px;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+        .stat-value {
+            font-weight: bold;
+            color: var(--accent);
+            font-size: 0.9rem;
+            margin-top: 4px;
+            word-break: break-word;
+        }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+        .btn:hover {
+            filter: brightness(1.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(23,95,255,0.3);
+        }
+        .btn-secondary {
+            background: var(--secondary);
+        }
+        #label-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+        .label-3d {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.65);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            border-left: 3px solid var(--primary);
+            backdrop-filter: blur(4px);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            font-family: monospace;
+        }
+        .comparison-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            max-width: 280px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin-bottom: 0;
+        }
+        #info-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 20, 35, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--primary);
+            padding: 24px;
+            border-radius: 28px;
+            max-width: 400px;
+            width: 85%;
+            display: none;
+            pointer-events: auto;
+            z-index: 200;
+            box-shadow: 0 20px 35px rgba(0,0,0,0.5);
+        }
+        .formula {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 14px;
+            border-radius: 16px;
+            margin: 16px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .close-btn {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #aaa;
+            transition: 0.2s;
+        }
+        .close-btn:hover { color: white; }
+        @media (max-width: 768px) {
+            .panel { padding: 14px; max-width: 100%; width: calc(100% - 30px);}
+            .stats-grid { gap: 6px; }
+            .stat-item { padding: 6px 4px; font-size: 0.7rem; }
+            .stat-value { font-size: 0.75rem; }
+            .panel-title { font-size: 1rem; }
+            .comparison-panel { max-width: 240px; bottom: 12px; right: 12px; padding: 10px 12px; }
+            .btn { padding: 8px 12px; }
+            .label-3d { font-size: 10px; padding: 2px 8px; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-item:nth-child(10) { grid-column: span 2; }
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABKQSEggAgAhBAARgCQQEACAGYkgCCCAgOxAAUMAIAiBNABAA=">
+ </head>
+ <body>
+  <div id="canvas-container"></div>
+  <div id="label-container"></div>
+  <div id="ui-layer">
+   <div class="panel">
+    <div class="panel-title">
+     ⚡ 远距离输电模拟器 · 高压输电原理
+    </div>
+    <div class="control-group">
+     <div class="control-label">
+      <span>🔽 输电电压 (U)</span><span id="val-voltage">220 kV</span>
+     </div><input type="range" id="input-voltage" min="10" max="500" value="220" step="1">
+    </div>
+    <div class="control-group">
+     <div class="control-label">
+      <span>⚡ 输电线电阻 (R)</span><span id="val-resistance">10 Ω</span>
+     </div><input type="range" id="input-resistance" min="1" max="50" value="10" step="0.5">
+    </div>
+    <div class="control-group">
+     <div class="control-label">
+      <span>🏭 用户负载 (户数)</span><span id="val-load">500 户</span>
+     </div><input type="range" id="input-load" min="100" max="2000" value="500" step="10">
+    </div>
+    <div class="stats-grid">
+     <div class="stat-item">
+      <div>
+       发电厂电压
+      </div>
+      <div class="stat-value" id="stat-gen-v">
+       10 kV
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       输电电压
+      </div>
+      <div class="stat-value" id="stat-trans-v">
+       220 kV
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       用户端电压
+      </div>
+      <div class="stat-value" id="stat-user-v">
+       220 V
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       发电厂电流
+      </div>
+      <div class="stat-value" id="stat-gen-i">
+       0 A<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABkAAAAaCAIAAADNH2CaAAAAgUlEQVR42u1UQQ7AIAjr/x9Nl10mU5HiTkskxKAmpZZG8A5z63Q71s9JC3A/rIOGO/IXaXIs1lgUOjWaEJ5gInrEq9qAHRaXolDnFQlhemIQu/q0ub+snux46Q5aKMCSXilxQjORZDFkblaG8Joj4/6RapzyEoeYx5c/52AdrL9iXdN+lcdz27j+AAAAAElFTkSuQmCC" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       输电电流
+      </div>
+      <div class="stat-value" id="stat-trans-i">
+       0 A
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       用户端电流
+      </div>
+      <div class="stat-value" id="stat-user-i">
+       0 A
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       发电厂功率
+      </div>
+      <div class="stat-value" id="stat-gen-p">
+       0 kW
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       线损功率
+      </div>
+      <div class="stat-value" id="stat-loss">
+       0 kW
+      </div>
+     </div>
+     <div class="stat-item">
+      <div>
+       用户端功率
+      </div>
+      <div class="stat-value" id="stat-user-p">
+       0 kW
+      </div>
+     </div>
+     <div class="stat-item" style="grid-column: span 3;">
+      <div style="display: flex; justify-content: space-between;">
+       <span>📈 输电效率 (η)</span><span class="stat-value" id="stat-efficiency">0%</span>
+      </div>
+     </div>
+    </div><button class="btn" id="btn-details">📐 查看功率计算详情</button> <button class="btn btn-secondary" id="btn-reset">🔄 重置场景</button>
+   </div>
+   <div class="panel comparison-panel">
+    <div class="panel-title">
+     📊 方案对比 (高压优势)
+    </div>
+    <div id="comparison-content" style="font-size: 13px;">
+     当前方案：<span id="comp-current">220kV 输电</span>
+     <br>
+      线损功率：<span id="comp-loss">--</span>
+     <br>
+      对比 110kV：<span id="comp-diff">--</span>
+    </div>
+   </div>
+  </div>
+  <div id="info-modal">
+   <span class="close-btn" id="close-modal">✕</span>
+   <div class="panel-title" style="margin-top:0;">
+    📖 物理公式推导
+   </div>
+   <div class="formula">
+    <strong>1. 输电电流：</strong> \( I = \dfrac{P}{U} \) 
+    <br>
+    <br><strong>2. 线损功率：</strong> \( P_{损} = I^{2}R = \left(\dfrac{P}{U}\right)^{2} R \) 
+    <br>
+    <br><strong>3. 结论：</strong> 当输送功率 \(P\) 和电阻 \(R\) 一定时，<span style="color:var(--accent)">提高电压 \(U\)</span>，线损显著降低。 
+    <br>
+     🚀 电压提升10倍 → 线损降为1/100，这就是高压输电的核心！
+   </div>
+   <p style="font-size: 13px; color: #ccc;">✨ 本模拟器严格遵循物理规律，动态展示电流、损耗与效率变化。</p>
+  </div><!-- 引入Three.js核心库和扩展 -->
+  <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+  <script type="module">import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ---------- 物理状态 ----------
+        const state = {
+            voltage: 220000,      // 输电电压 (V)
+            resistance: 10,       // 线路总电阻 (Ω)
+            loadCount: 500,       // 用户户数
+            powerPerLoad: 2000    // 每户功率 (W)
+        };
+        // 固定参数
+        const U_GEN = 10000;      // 发电厂电压 10kV
+        const U_USER_NOM = 220;   // 用户端额定电压 220V
+        
+        let scene, camera, renderer, controls;
+        let labels = [];
+        const textureLoader = new THREE.TextureLoader();
+        
+        // 资产图片 (与原版保持一致)
+        const ASSETS = {
+            powerStation: 'https://img.zxxk.com/rbm/html/2026/5/29/06bf2aad-3e90-4d29-80ce-4f3ce36eda28.jpg',
+            stepUp: 'https://img.zxxk.com/rbm/html/2026/5/29/efeb1a92-5f84-4592-a3d1-a7417e1ffa68.jpg',
+            tower: 'https://img.zxxk.com/rbm/html/2026/5/29/fd9fce6a-b695-4b23-8a7d-6f5013659d89.jpg',
+            substation: 'https://img.zxxk.com/rbm/html/2026/5/29/308d4fcb-725b-49ab-8fca-8917cc552e86.jpg',
+            factory: 'https://img.zxxk.com/rbm/html/2026/5/29/c2924449-bd33-44bd-8bc4-f495b757b996.jpg',
+            house: 'https://img.zxxk.com/rbm/html/2026/5/29/3eb46b73-1bfb-4957-b48f-b45f7dbcd14b.jpg'
+        };
+        
+        // ---------- 物理计算 & UI更新 ----------
+        function updatePhysics() {
+            // 总发电/输送功率 = 负载总需求
+            let P_gen = state.loadCount * state.powerPerLoad;
+            const U_trans = state.voltage;
+            const R_line = state.resistance;
+            
+            // 输电电流
+            const I_trans = P_gen / U_trans;
+            // 线损功率
+            let P_loss = I_trans * I_trans * R_line;
+            // 确保线损不超过总功率
+            if (P_loss > P_gen) P_loss = P_gen;
+            const P_user = Math.max(0, P_gen - P_loss);
+            // 发电机侧电流
+            const I_gen = P_gen / U_GEN;
+            // 用户侧电流 (额定220V)
+            const I_user = P_user / U_USER_NOM;
+            const efficiency = (P_user / P_gen) * 100;
+            
+            // 更新DOM
+            document.getElementById('stat-gen-v').innerText = (U_GEN / 1000).toFixed(1) + ' kV';
+            document.getElementById('stat-trans-v').innerText = (U_trans / 1000).toFixed(0) + ' kV';
+            document.getElementById('stat-user-v').innerText = U_USER_NOM + ' V';
+            document.getElementById('stat-gen-i').innerText = I_gen.toFixed(1) + ' A';
+            document.getElementById('stat-trans-i').innerText = I_trans.toFixed(2) + ' A';
+            document.getElementById('stat-user-i').innerText = I_user.toFixed(1) + ' A';
+            document.getElementById('stat-gen-p').innerText = (P_gen / 1000).toFixed(1) + ' kW';
+            document.getElementById('stat-loss').innerText = (P_loss / 1000).toFixed(2) + ' kW';
+            document.getElementById('stat-user-p').innerText = (P_user / 1000).toFixed(1) + ' kW';
+            document.getElementById('stat-efficiency').innerText = (efficiency > 0 ? efficiency.toFixed(2) : 0) + '%';
+            
+            // 对比方案 (110kV)
+            const lowV = 110000;
+            const I_low = P_gen / lowV;
+            const P_loss_low = I_low * I_low * R_line;
+            const saving = (P_loss_low - P_loss) / 1000;
+            document.getElementById('comp-current').innerHTML = (U_trans/1000).toFixed(0) + 'kV 输电';
+            document.getElementById('comp-loss').innerHTML = (P_loss/1000).toFixed(1) + ' kW';
+            const diffHtml = saving > 0 ? 
+                `<span style="color:var(--accent)">✅ 节省 ${saving.toFixed(1)} kW</span>` : 
+                `<span style="color:var(--secondary)">⚠️ 多损 ${Math.abs(saving).toFixed(1)} kW</span>`;
+            document.getElementById('comp-diff').innerHTML = diffHtml;
+        }
+        
+        // ---------- 3D场景构建 (增强光照: 更明亮) ----------
+        function createBuilding(type, x, z) {
+            let geometry;
+            const material = new THREE.MeshStandardMaterial({ color: 0x88aaff, roughness: 0.4, metalness: 0.6 });
+            // 优先加载纹理
+            const texUrl = ASSETS[type];
+            if (texUrl) {
+                const texture = textureLoader.load(texUrl);
+                material.map = texture;
+                material.color.setHex(0xffffff);
+            }
+            switch(type) {
+                case 'powerStation': geometry = new THREE.BoxGeometry(14, 9, 14); break;
+                case 'tower': geometry = new THREE.CylinderGeometry(1.2, 3, 15, 5); break;
+                case 'stepUp': geometry = new THREE.BoxGeometry(7, 7, 7); break;
+                case 'substation': geometry = new THREE.BoxGeometry(8, 6, 8); break;
+                default: geometry = new THREE.BoxGeometry(7, 5, 7);
+            }
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, geometry.parameters?.height ? geometry.parameters.height/2 : 2.5, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = false;
+            return mesh;
+        }
+        
+        function addLabel(mesh, text) {
+            const div = document.createElement('div');
+            div.className = 'label-3d';
+            div.textContent = text;
+            document.getElementById('label-container').appendChild(div);
+            labels.push({ element: div, mesh: mesh });
+        }
+        
+        function initScene() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x090b2f);
+            scene.fog = new THREE.FogExp2(0x090b2f, 0.0012); // 轻微降低雾浓度使背景更透亮
+            
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 500);
+            camera.position.set(70, 55, 85);
+            camera.lookAt(0, 0, 0);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true; // 启用阴影映射增强立体感
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = false;
+            controls.enableZoom = true;
+            controls.zoomSpeed = 1.2;
+            controls.target.set(0, 10, 0);
+            
+            // ========== 增强光照系统 (更明亮且层次丰富) ==========
+            // 1. 环境光: 提高亮度和颜色温暖一点
+            const ambientLight = new THREE.AmbientLight(0x7c8cbb, 1.25);  // 强度提升至1.25，颜色偏冷白使场景更亮
+            scene.add(ambientLight);
+            
+            // 2. 主光源方向光: 强度提高，增加阴影细节
+            const mainLight = new THREE.DirectionalLight(0xfff5e6, 1.5);
+            mainLight.position.set(35, 65, 25);
+            mainLight.castShadow = true;
+            mainLight.receiveShadow = false;
+            mainLight.shadow.mapSize.width = 1024;
+            mainLight.shadow.mapSize.height = 1024;
+            scene.add(mainLight);
+            
+            // 3. 辅助方向光 (从背面和下方补充)
+            const backFill = new THREE.DirectionalLight(0x88aaff, 0.7);
+            backFill.position.set(-20, 30, -30);
+            scene.add(backFill);
+            
+            // 4. 暖色填充光从底部/侧面增加建筑立体感
+            const warmFill = new THREE.PointLight(0xffaa66, 0.6);
+            warmFill.position.set(10, 15, 20);
+            scene.add(warmFill);
+            
+            // 5. 原有点光源增强并调整位置
+            const pointLight = new THREE.PointLight(0x4488ff, 0.9);
+            pointLight.position.set(-25, 25, 40);
+            scene.add(pointLight);
+            
+            // 6. 增加一个半球光使阴影部分更通透 (天空色/地面色)
+            const hemiLight = new THREE.HemisphereLight(0x88bbff, 0x335533, 0.65);
+            scene.add(hemiLight);
+            
+            // 可选: 简单显示辅助光源位置用于调试(不必须)
+            // 添加轻微辅助光让输电塔高光更明显
+            const rimLight = new THREE.PointLight(0xffaa88, 0.5);
+            rimLight.position.set(-40, 45, -30);
+            scene.add(rimLight);
+            
+            // 地面和装饰 (网格+半透明平面)
+            const gridHelper = new THREE.GridHelper(300, 30, 0xaaccff, 0x5599cc);
+            gridHelper.position.y = -1;
+            gridHelper.material.transparent = true;
+            gridHelper.material.opacity = 0.5;
+            scene.add(gridHelper);
+            const groundPlane = new THREE.Mesh(
+                new THREE.PlaneGeometry(280, 140),
+                new THREE.MeshStandardMaterial({ color: 0x121a3a, roughness: 0.7, metalness: 0.1, transparent: true, opacity: 0.55 })
+            );
+            groundPlane.rotation.x = -Math.PI/2;
+            groundPlane.position.y = -1.2;
+            groundPlane.receiveShadow = false;
+            scene.add(groundPlane);
+            
+            // 定义路径点 (x, z, type, label)
+            const points = [
+                { x: -115, z: 0, type: 'powerStation', label: '🏭 发电站' },
+                { x: -85, z: 0, type: 'stepUp', label: '⬆️ 升压变压器' },
+                { x: -45, z: 0, type: 'tower', label: '⚡ 高压输电塔' },
+                { x: -5, z: 0, type: 'tower', label: '🏛️ 一次变电站' },
+                { x: 35, z: 0, type: 'substation', label: '⚙️ 二次变电站' },
+                { x: 75, z: 0, type: 'substation', label: '🏘️ 降压站' },
+                { x: 105, z: -18, type: 'factory', label: '🏭 工业用户' },
+                { x: 105, z: 18, type: 'house', label: '🏠 居民用户' }
+            ];
+            
+            points.forEach(p => {
+                const mesh = createBuilding(p.type, p.x, p.z);
+                scene.add(mesh);
+                addLabel(mesh, p.label);
+            });
+            
+            // 输电线路 (发光线条，更亮的材质)
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x5a9eff });
+            for (let i = 0; i < points.length - 2; i++) {
+                const p1 = points[i];
+                const p2 = points[i+1];
+                const pointsVec = [
+                    new THREE.Vector3(p1.x, 7.2, p1.z),
+                    new THREE.Vector3(p2.x, 7.2, p2.z)
+                ];
+                const geo = new THREE.BufferGeometry().setFromPoints(pointsVec);
+                const line = new THREE.Line(geo, lineMaterial);
+                scene.add(line);
+            }
+            // 最后分支线路 (红色低压配网)
+            const lastSub = points[5];
+            const branchPoints = [points[6], points[7]];
+            branchPoints.forEach(target => {
+                const pts = [
+                    new THREE.Vector3(lastSub.x, 2.8, lastSub.z),
+                    new THREE.Vector3(target.x, 2.2, target.z)
+                ];
+                const geoBranch = new THREE.BufferGeometry().setFromPoints(pts);
+                const branchLine = new THREE.Line(geoBranch, new THREE.LineBasicMaterial({ color: 0xff7777 }));
+                scene.add(branchLine);
+            });
+            
+            // 粒子效果增强亮度 (增加数量，颜色亮白)
+            const particleGeo = new THREE.BufferGeometry();
+            const particleCount = 600;
+            const particlePositions = new Float32Array(particleCount * 3);
+            for (let i = 0; i < particleCount; i++) {
+                particlePositions[i*3] = (Math.random() - 0.5) * 220;
+                particlePositions[i*3+1] = Math.random() * 35;
+                particlePositions[i*3+2] = (Math.random() - 0.5) * 90;
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+            const particleMat = new THREE.PointsMaterial({ color: 0xbbddff, size: 0.22, transparent: true, opacity: 0.7 });
+            const particles = new THREE.Points(particleGeo, particleMat);
+            scene.add(particles);
+        }
+        
+        // 动态更新标签位置 (3D转2D)
+        function updateLabels() {
+            labels.forEach(item => {
+                const vector = item.mesh.position.clone();
+                vector.project(camera);
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (vector.y * -0.5 + 0.5) * window.innerHeight;
+                if (vector.z < 1) {
+                    item.element.style.display = 'block';
+                    item.element.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
+                } else {
+                    item.element.style.display = 'none';
+                }
+            });
+        }
+        
+        // 重置相机视角
+        function resetCameraView() {
+            camera.position.set(70, 55, 85);
+            controls.target.set(0, 8, 0);
+            controls.update();
+        }
+        
+        // 初始化UI控制
+        function initUI() {
+            const vSlider = document.getElementById('input-voltage');
+            const rSlider = document.getElementById('input-resistance');
+            const lSlider = document.getElementById('input-load');
+            const resetBtn = document.getElementById('btn-reset');
+            const detailsBtn = document.getElementById('btn-details');
+            const closeModal = document.getElementById('close-modal');
+            
+            vSlider.addEventListener('input', (e) => {
+                const kV = parseFloat(e.target.value);
+                state.voltage = kV * 1000;
+                document.getElementById('val-voltage').innerText = kV + ' kV';
+                updatePhysics();
+            });
+            rSlider.addEventListener('input', (e) => {
+                state.resistance = parseFloat(e.target.value);
+                document.getElementById('val-resistance').innerText = state.resistance + ' Ω';
+                updatePhysics();
+            });
+            lSlider.addEventListener('input', (e) => {
+                state.loadCount = parseInt(e.target.value);
+                document.getElementById('val-load').innerText = state.loadCount + ' 户';
+                updatePhysics();
+            });
+            resetBtn.addEventListener('click', () => {
+                vSlider.value = '220';
+                rSlider.value = '10';
+                lSlider.value = '500';
+                state.voltage = 220000;
+                state.resistance = 10;
+                state.loadCount = 500;
+                document.getElementById('val-voltage').innerText = '220 kV';
+                document.getElementById('val-resistance').innerText = '10 Ω';
+                document.getElementById('val-load').innerText = '500 户';
+                updatePhysics();
+                resetCameraView();
+            });
+            detailsBtn.addEventListener('click', () => {
+                document.getElementById('info-modal').style.display = 'flex';
+            });
+            closeModal.addEventListener('click', () => {
+                document.getElementById('info-modal').style.display = 'none';
+            });
+            window.addEventListener('click', (e) => {
+                const modal = document.getElementById('info-modal');
+                if (e.target === modal) modal.style.display = 'none';
+            });
+            // 初始计算一次
+            updatePhysics();
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            updateLabels();
+            renderer.render(scene, camera);
+        }
+        
+        // 自适应窗口
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // 启动
+        function start() {
+            initScene();
+            initUI();
+            animate();
+            window.addEventListener('resize', onWindowResize);
+            updatePhysics();
+        }
+        
+        start();</script>
+ </body>
+</html>
