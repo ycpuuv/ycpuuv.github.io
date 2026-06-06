@@ -1,0 +1,816 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>圆锥摆模拟器 - 修正版</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #2a3a7c, #3a4a8c);
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            display: flex;
+            flex-direction: column;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px 0;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .simulation-panel {
+            flex: 3;
+            min-width: 700px;
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .controls-panel {
+            flex: 1;
+            min-width: 300px;
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .panel-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4a5bcc;
+            color: #feb47b;
+        }
+        
+        #canvas-container {
+            width: 100%;
+            height: 500px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(10, 10, 30, 0.5);
+        }
+        
+        .metrics-container {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .metric-box {
+            flex: 1;
+            height: 120px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(10, 10, 30, 0.5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        
+        .metric-title {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #feb47b;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .metric-unit {
+            font-size: 1rem;
+            color: #aaa;
+            margin-left: 5px;
+        }
+        
+        .control-group {
+            margin-bottom: 25px;
+        }
+        
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #2a3a7c;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #ff7e5f;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #ff9e7b;
+        }
+        
+        .value-display {
+            min-width: 60px;
+            text-align: right;
+            font-weight: 600;
+            color: #feb47b;
+        }
+        
+        .formula-container {
+            background: rgba(10, 10, 30, 0.6);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+        
+        .formula-title {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #feb47b;
+        }
+        
+        .formula {
+            font-family: 'Cambria Math', serif;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+        
+        .variables {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .variable {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        .variable-name {
+            font-weight: 500;
+        }
+        
+        .variable-value {
+            color: #feb47b;
+            font-weight: 600;
+        }
+        
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(to right, #ff7e5f, #feb47b);
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 126, 95, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .info-panel {
+            margin-top: 30px;
+            background: rgba(30, 30, 60, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .info-content {
+            line-height: 1.7;
+        }
+        
+        .info-content p {
+            margin-bottom: 15px;
+        }
+        
+        .highlight {
+            color: #feb47b;
+            font-weight: 600;
+        }
+        
+        @media (max-width: 1200px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .simulation-panel, .controls-panel {
+                min-width: 100%;
+            }
+            
+            .metrics-container {
+                flex-direction: column;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            #canvas-container {
+                height: 350px;
+            }
+            
+            .metric-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABKYCsxwowwIQACb4qAQmqCAqYkIGwJAgMARAYOAwiSBNABKA=">
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1>圆锥摆模拟器 - 修正版</h1>
+    <p class="subtitle">小球通过红色细线系在悬挂点，显示受力分析和物理量</p>
+   </header>
+   <div class="content">
+    <div class="simulation-panel">
+     <h2 class="panel-title">3D模拟与物理量</h2>
+     <div id="canvas-container"></div>
+     <div class="metrics-container">
+      <div class="metric-box">
+       <div class="metric-title">
+        向心力大小
+       </div>
+       <div class="metric-value" id="centripetal-force-display">
+        3.92<span class="metric-unit">N</span>
+       </div>
+      </div>
+      <div class="metric-box">
+       <div class="metric-title">
+        周期大小
+       </div>
+       <div class="metric-value" id="period-display">
+        2.01<span class="metric-unit">s</span>
+       </div>
+      </div>
+      <div class="metric-box">
+       <div class="metric-title">
+        角速度
+       </div>
+       <div class="metric-value" id="angular-velocity-display">
+        3.12<span class="metric-unit">rad/s</span>
+       </div>
+      </div>
+     </div>
+     <div class="formula-container">
+      <div class="formula-title">
+       物理公式
+      </div>
+      <div class="formula">
+       T = 2π√(L·cosθ/g)
+      </div>
+      <div class="formula">
+       ω = √(g/(L·cosθ))
+      </div>
+      <div class="formula">
+       F<sub>向</sub> = m·ω²·r = m·g·tanθ
+      </div>
+      <div class="variables">
+       <div class="variable"><span class="variable-name">摆长 L</span> <span class="variable-value" id="length-value">1.0 m</span>
+       </div>
+       <div class="variable"><span class="variable-name">摆角 θ</span> <span class="variable-value" id="angle-value">30°</span>
+       </div>
+       <div class="variable"><span class="variable-name">重力加速度 g</span> <span class="variable-value" id="gravity-value">9.8 m/s²</span>
+       </div>
+       <div class="variable"><span class="variable-name">质量 m</span> <span class="variable-value" id="mass-value">1.0 kg</span>
+       </div>
+      </div>
+     </div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAZCAIAAAA5RHCCAAAAi0lEQVR42u1TQQrAIAzL/x+djsEOahur2xgMGkS00KaJFXaCzR5eh3Mb2QLR5w+FKJYJeurIdca0dCjIN+dTpBkIVYuIEspoj1uH6yt1hvoJcnsRWbFIRk2mahp2isopWEjs5uXGxK/8mWCM4SU/cC9PhG6fUwOVlATIftXLgH2L4iu+4iu+4vsH3wEWpcvWg7HZxgAAAABJRU5ErkJggg==" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+    </div>
+    <div class="controls-panel">
+     <h2 class="panel-title">参数控制</h2>
+     <div class="control-group">
+      <div class="control-label"><span>摆长 L (m)</span> <span class="value-display" id="length-slider-value">1.0</span>
+      </div>
+      <div class="slider-container"><input type="range" id="length-slider" min="0.5" max="1.5" step="0.1" value="1.0">
+      </div>
+     </div>
+     <div class="control-group">
+      <div class="control-label"><span>摆角 θ (°)</span> <span class="value-display" id="angle-slider-value">30</span>
+      </div>
+      <div class="slider-container"><input type="range" id="angle-slider" min="10" max="60" step="1" value="30">
+      </div>
+     </div>
+     <div class="control-group">
+      <div class="control-label"><span>重力加速度 g (m/s²)</span> <span class="value-display" id="gravity-slider-value">9.8</span>
+      </div>
+      <div class="slider-container"><input type="range" id="gravity-slider" min="1.6" max="20" step="0.1" value="9.8">
+      </div>
+     </div>
+     <div class="control-group">
+      <div class="control-label"><span>质量 m (kg)</span> <span class="value-display" id="mass-slider-value">1.0</span>
+      </div>
+      <div class="slider-container"><input type="range" id="mass-slider" min="0.1" max="5.0" step="0.1" value="1.0">
+      </div>
+     </div>
+     <div class="buttons"><button id="reset-btn">重置参数</button> <button id="pause-btn">暂停/继续</button> <button id="clear-trail-btn">清除轨迹</button> <button id="toggle-forces-btn">显示/隐藏受力分析</button>
+     </div>
+    </div>
+   </div>
+   <div class="info-panel">
+    <h2 class="panel-title">圆锥摆物理原理与受力分析</h2>
+    <div class="info-content">
+     <p>圆锥摆是一种在重力作用下，悬点在正上方，摆锤在水平面内做匀速圆周运动的单摆系统。由于摆锤运动的轨迹是一个圆周，而摆绳扫过的图形是一个圆锥面，因此得名"圆锥摆"。</p>
+     <p><span class="highlight">受力分析：</span>摆锤受到两个力作用：竖直向下的重力G和沿摆绳方向的拉力T。这两个力的合力提供了摆锤做圆周运动所需的向心力，方向水平指向圆心。</p>
+     <p><span class="highlight">关键公式：</span></p>
+     <ul>
+      <li>周期公式：T = 2π√(L·cosθ/g)，与摆锤质量无关</li>
+      <li>角速度：ω = √(g/(L·cosθ))</li>
+      <li>向心力：F = m·ω²·r = m·g·tanθ</li>
+     </ul>
+     <p>调整上方的参数，观察圆锥摆运动的变化，验证物理公式的正确性！点击"显示/隐藏受力分析"按钮可以查看小球上的受力分析图。</p>
+    </div>
+   </div>
+  </div><!-- 引入Three.js库 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+  <script>
+        // 全局变量
+        let scene, camera, renderer, controls;
+        let pendulum, string;
+        let clock = new THREE.Clock();
+        let isPaused = false;
+        let showForces = true;
+        let trail = [];
+        const maxTrailPoints = 200;
+        
+        // 受力分析箭头
+        let gravityArrow, tensionArrow, centripetalArrow;
+        
+        // 圆锥摆参数
+        let params = {
+            length: 1.0,      // 摆长 (m)
+            angle: 30,        // 摆角 (度)
+            gravity: 9.8,     // 重力加速度 (m/s²)
+            mass: 1.0         // 质量 (kg)
+        };
+        
+        // 初始化Three.js场景
+        function init() {
+            // 创建场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0a0a1e);
+            
+            // 创建相机
+            camera = new THREE.PerspectiveCamera(60, 
+                document.getElementById('canvas-container').clientWidth / 
+                document.getElementById('canvas-container').clientHeight, 
+                0.1, 1000);
+            camera.position.set(3, 2, 3);
+            
+            // 创建渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(
+                document.getElementById('canvas-container').clientWidth,
+                document.getElementById('canvas-container').clientHeight
+            );
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // 添加轨道控制器
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            
+            // 添加光源
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 7);
+            scene.add(directionalLight);
+            
+            // 添加坐标轴辅助
+            const axesHelper = new THREE.AxesHelper(2);
+            scene.add(axesHelper);
+            
+            // 创建网格地面
+            const gridHelper = new THREE.GridHelper(10, 10, 0x444444, 0x222222);
+            gridHelper.position.y = 0; // 将网格放置在y=0平面
+            scene.add(gridHelper);
+            
+            // 创建圆锥摆
+            createPendulum();
+            
+            // 窗口大小变化时调整渲染器
+            window.addEventListener('resize', onWindowResize);
+            
+            // 开始动画循环
+            animate();
+        }
+        
+        // 创建圆锥摆
+        function createPendulum() {
+            // 清除旧的摆
+            if (pendulum) scene.remove(pendulum);
+            if (string) scene.remove(string);
+            
+            // 清除轨迹
+            trail.forEach(point => scene.remove(point));
+            trail = [];
+            
+            // 清除受力分析箭头
+            if (gravityArrow) scene.remove(gravityArrow);
+            if (tensionArrow) scene.remove(tensionArrow);
+            if (centripetalArrow) scene.remove(centripetalArrow);
+            
+            const angleRad = params.angle * Math.PI / 180;
+            const radius = params.length * Math.sin(angleRad);
+            const height = params.length * Math.cos(angleRad);
+            
+            // 确保小球高度不超过悬挂点
+            const suspensionHeight = 2.0;
+            const ballHeight = suspensionHeight - height;
+            
+            // 创建摆锤（球体）
+            const sphereGeometry = new THREE.SphereGeometry(0.1, 32, 32);
+            const sphereMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xff7e5f,
+                shininess: 100
+            });
+            pendulum = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            pendulum.position.set(radius, ballHeight, 0);
+            scene.add(pendulum);
+            
+            // 创建红色细线（从悬挂点到摆锤）
+            const stringGeometry = new THREE.BufferGeometry();
+            const stringMaterial = new THREE.LineBasicMaterial({ 
+                color: 0xff0000, // 红色
+                linewidth: 2
+            });
+            
+            const points = [
+                new THREE.Vector3(0, suspensionHeight, 0), // 悬挂点
+                new THREE.Vector3(radius, ballHeight, 0) // 将细线连接到摆锤
+            ];
+            stringGeometry.setFromPoints(points);
+            string = new THREE.Line(stringGeometry, stringMaterial);
+            scene.add(string);
+            
+            // 创建受力分析箭头
+            createForceArrows();
+            
+            // 更新物理量显示
+            updatePhysicsValues();
+        }
+        
+        // 创建受力分析箭头
+        function createForceArrows() {
+            const arrowLength = 0.5; // 箭头长度
+            
+            // 创建重力箭头（绿色，向下）
+            const gravityDirection = new THREE.Vector3(0, -1, 0);
+            gravityArrow = new THREE.ArrowHelper(
+                gravityDirection.normalize(),
+                pendulum.position,
+                arrowLength,
+                0x00ff00, // 绿色
+                0.1, // 箭头头部长度
+                0.05 // 箭头头部宽度
+            );
+            scene.add(gravityArrow);
+            
+            // 创建拉力箭头（蓝色，沿绳子方向）
+            const suspensionHeight = 2.0;
+            const tensionDirection = new THREE.Vector3(
+                0 - pendulum.position.x,
+                suspensionHeight - pendulum.position.y,
+                0 - pendulum.position.z
+            ).normalize();
+            tensionArrow = new THREE.ArrowHelper(
+                tensionDirection,
+                pendulum.position,
+                arrowLength,
+                0x0000ff, // 蓝色
+                0.1,
+                0.05
+            );
+            scene.add(tensionArrow);
+            
+            // 创建向心力箭头（红色，水平指向圆心）
+            // 向心力是拉力和重力的合力，方向水平指向圆心
+            const centripetalDirection = new THREE.Vector3(
+                -pendulum.position.x,
+                0,
+                -pendulum.position.z
+            ).normalize();
+            centripetalArrow = new THREE.ArrowHelper(
+                centripetalDirection,
+                pendulum.position,
+                arrowLength,
+                0xff0000, // 红色
+                0.1,
+                0.05
+            );
+            scene.add(centripetalArrow);
+        }
+        
+        // 更新受力分析箭头
+        function updateForceArrows() {
+            if (!showForces) return;
+            
+            const suspensionHeight = 2.0;
+            const arrowLength = 0.5;
+            
+            // 更新重力箭头
+            gravityArrow.position.copy(pendulum.position);
+            
+            // 更新拉力箭头
+            const tensionDirection = new THREE.Vector3(
+                0 - pendulum.position.x,
+                suspensionHeight - pendulum.position.y,
+                0 - pendulum.position.z
+            ).normalize();
+            tensionArrow.position.copy(pendulum.position);
+            tensionArrow.setDirection(tensionDirection);
+            tensionArrow.setLength(arrowLength, 0.1, 0.05);
+            
+            // 更新向心力箭头
+            // 向心力是拉力和重力的合力，方向水平指向圆心
+            const centripetalDirection = new THREE.Vector3(
+                -pendulum.position.x,
+                0,
+                -pendulum.position.z
+            ).normalize();
+            centripetalArrow.position.copy(pendulum.position);
+            centripetalArrow.setDirection(centripetalDirection);
+            centripetalArrow.setLength(arrowLength, 0.1, 0.05);
+        }
+        
+        // 切换受力分析显示
+        function toggleForces() {
+            showForces = !showForces;
+            
+            if (showForces) {
+                scene.add(gravityArrow);
+                scene.add(tensionArrow);
+                scene.add(centripetalArrow);
+            } else {
+                scene.remove(gravityArrow);
+                scene.remove(tensionArrow);
+                scene.remove(centripetalArrow);
+            }
+        }
+        
+        // 添加轨迹点
+        function addTrailPoint(position) {
+            const trailGeometry = new THREE.SphereGeometry(0.02, 8, 8);
+            const trailMaterial = new THREE.MeshBasicMaterial({ color: 0x4a5bcc });
+            const trailPoint = new THREE.Mesh(trailGeometry, trailMaterial);
+            trailPoint.position.copy(position);
+            scene.add(trailPoint);
+            trail.push(trailPoint);
+            
+            // 限制轨迹点数量
+            if (trail.length > maxTrailPoints) {
+                const oldPoint = trail.shift();
+                scene.remove(oldPoint);
+            }
+        }
+        
+        // 更新物理量显示
+        function updatePhysicsValues() {
+            const angleRad = params.angle * Math.PI / 180;
+            const radius = params.length * Math.sin(angleRad);
+            const height = params.length * Math.cos(angleRad);
+            
+            // 计算周期
+            const period = 2 * Math.PI * Math.sqrt(params.length * Math.cos(angleRad) / params.gravity);
+            document.getElementById('period-display').innerHTML = period.toFixed(2) + '<span class="metric-unit">s</span>';
+            
+            // 计算角速度
+            const angularVelocity = Math.sqrt(params.gravity / (params.length * Math.cos(angleRad)));
+            document.getElementById('angular-velocity-display').innerHTML = angularVelocity.toFixed(2) + '<span class="metric-unit">rad/s</span>';
+            
+            // 计算向心力
+            const centripetalForce = params.mass * params.gravity * Math.tan(angleRad);
+            document.getElementById('centripetal-force-display').innerHTML = centripetalForce.toFixed(2) + '<span class="metric-unit">N</span>';
+            
+            // 更新参数显示
+            document.getElementById('length-value').textContent = params.length.toFixed(1) + ' m';
+            document.getElementById('angle-value').textContent = params.angle + '°';
+            document.getElementById('gravity-value').textContent = params.gravity.toFixed(1) + ' m/s²';
+            document.getElementById('mass-value').textContent = params.mass.toFixed(1) + ' kg';
+            
+            return { angularVelocity, radius, height, period, centripetalForce };
+        }
+        
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (!isPaused) {
+                const delta = clock.getDelta();
+                const physics = updatePhysicsValues();
+                const angularVelocity = physics.angularVelocity;
+                const radius = physics.radius;
+                const height = physics.height;
+                
+                // 更新摆锤位置
+                const time = clock.getElapsedTime();
+                pendulum.position.x = radius * Math.cos(angularVelocity * time);
+                pendulum.position.z = radius * Math.sin(angularVelocity * time);
+                
+                // 更新红色细线
+                scene.remove(string);
+                const stringGeometry = new THREE.BufferGeometry();
+                const stringMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0xff0000,
+                    linewidth: 2
+                });
+                
+                const suspensionHeight = 2.0; // 悬挂点的高度
+                const points = [
+                    new THREE.Vector3(0, suspensionHeight, 0), // 悬挂点
+                    new THREE.Vector3(pendulum.position.x, pendulum.position.y, pendulum.position.z)
+                ];
+                stringGeometry.setFromPoints(points);
+                string = new THREE.Line(stringGeometry, stringMaterial);
+                scene.add(string);
+                
+                // 更新受力分析箭头
+                updateForceArrows();
+                
+                // 添加轨迹点
+                if (Math.floor(time * 10) % 2 === 0) { // 每0.2秒添加一个轨迹点
+                    addTrailPoint(pendulum.position.clone());
+                }
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 窗口大小变化时调整
+        function onWindowResize() {
+            camera.aspect = document.getElementById('canvas-container').clientWidth / 
+                            document.getElementById('canvas-container').clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(
+                document.getElementById('canvas-container').clientWidth,
+                document.getElementById('canvas-container').clientHeight
+            );
+        }
+        
+        // 初始化滑块事件
+        function initSliders() {
+            // 摆长滑块
+            document.getElementById('length-slider').addEventListener('input', function(e) {
+                params.length = parseFloat(e.target.value);
+                document.getElementById('length-slider-value').textContent = params.length.toFixed(1);
+                createPendulum();
+            });
+            
+            // 摆角滑块
+            document.getElementById('angle-slider').addEventListener('input', function(e) {
+                params.angle = parseInt(e.target.value);
+                document.getElementById('angle-slider-value').textContent = params.angle;
+                createPendulum();
+            });
+            
+            // 重力加速度滑块
+            document.getElementById('gravity-slider').addEventListener('input', function(e) {
+                params.gravity = parseFloat(e.target.value);
+                document.getElementById('gravity-slider-value').textContent = params.gravity.toFixed(1);
+                updatePhysicsValues();
+            });
+            
+            // 质量滑块
+            document.getElementById('mass-slider').addEventListener('input', function(e) {
+                params.mass = parseFloat(e.target.value);
+                document.getElementById('mass-slider-value').textContent = params.mass.toFixed(1);
+                updatePhysicsValues();
+            });
+            
+            // 重置按钮
+            document.getElementById('reset-btn').addEventListener('click', function() {
+                params.length = 1.0;
+                params.angle = 30;
+                params.gravity = 9.8;
+                params.mass = 1.0;
+                
+                document.getElementById('length-slider').value = params.length;
+                document.getElementById('angle-slider').value = params.angle;
+                document.getElementById('gravity-slider').value = params.gravity;
+                document.getElementById('mass-slider').value = params.mass;
+                
+                document.getElementById('length-slider-value').textContent = params.length.toFixed(1);
+                document.getElementById('angle-slider-value').textContent = params.angle;
+                document.getElementById('gravity-slider-value').textContent = params.gravity.toFixed(1);
+                document.getElementById('mass-slider-value').textContent = params.mass.toFixed(1);
+                
+                createPendulum();
+            });
+            
+            // 暂停/继续按钮
+            document.getElementById('pause-btn').addEventListener('click', function() {
+                isPaused = !isPaused;
+                if (!isPaused) {
+                    clock.start();
+                }
+            });
+            
+            // 清除轨迹按钮
+            document.getElementById('clear-trail-btn').addEventListener('click', function() {
+                trail.forEach(point => scene.remove(point));
+                trail = [];
+            });
+            
+            // 显示/隐藏受力分析按钮
+            document.getElementById('toggle-forces-btn').addEventListener('click', function() {
+                toggleForces();
+            });
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            init();
+            initSliders();
+        });
+    </script>
+ </body>
+</html>
