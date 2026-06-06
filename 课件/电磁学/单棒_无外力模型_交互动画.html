@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <title>单棒在磁场中运动的3D演示</title>
+  <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            font-family: "Microsoft YaHei", sans-serif;
+            background-color: #ffffff;
+        }
+
+        #canvas-wrap {
+            flex-grow: 1;
+            position: relative;
+            background-color: #ffffff;
+        }
+
+        #panel-right {
+            width: 320px;
+            background: #f8f9fa;
+            border-left: 1px solid #e0e0e0;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+            padding: 20px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            overflow-y: auto; /* 确保内容过多时可以滚动 */
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #0078d7;
+            padding-bottom: 10px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .control-group input[type=range] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #fff;
+            font-weight: bold;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        button:active { transform: scale(0.96); }
+        button:hover { opacity: 0.85; }
+        #btn-start { background-color: #28a745; }
+        #btn-pause { background-color: #ffc107; color: #333; }
+        #btn-reset { background-color: #dc3545; }
+        #btn-toggle-chart { background-color: #6c757d; margin-top: auto; }
+
+        /* 图表悬浮窗样式 */
+        #chart-box {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 450px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #chart-header {
+            padding: 10px 15px;
+            background: #f1f3f5;
+            border-bottom: 1px solid #ddd;
+            border-radius: 8px 8px 0 0;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            color: #495057;
+            user-select: none;
+        }
+
+        #close-chart {
+            background: none;
+            border: none;
+            color: #adb5bd;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+            flex: none;
+            width: auto;
+        }
+
+        #close-chart:hover { color: #dc3545; }
+
+        .chart-content {
+            padding: 10px;
+        }
+
+        .info-text {
+            font-size: 13px;
+            color: #444;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 6px;
+            line-height: 1.6;
+        }
+        
+        .info-text span {
+            font-weight: bold;
+            color: #0078d7;
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABIYKQggAoAJBAAAhCAQUoCkCYkAGACKgGBEAUMAIBCQNABAA=">
+ </head>
+ <body>
+  <div id="canvas-wrap">
+   <div id="chart-box">
+    <div id="chart-header">
+     <span>📊 运动数据图表 (拖动此处)</span> <span id="close-chart" title="隐藏图表">✖</span>
+    </div>
+    <div class="chart-content">
+     <canvas id="dataChart" width="400" height="250"></canvas>
+    </div>
+   </div>
+  </div>
+  <div id="panel-right">
+   <h2>控制面板</h2>
+   <div class="btn-group">
+    <button id="btn-start">开始</button> <button id="btn-pause">暂停</button> <button id="btn-reset">还原</button>
+   </div>
+   <div class="control-group">
+    <label>初速度 v0 (m/s) <span id="val-v">10.0</span></label> <input type="range" id="slider-v" min="1" max="30" step="0.5" value="10">
+   </div>
+   <div class="control-group">
+    <label>磁感应强度 B (T) <span id="val-b">1.0</span></label> <input type="range" id="slider-b" min="0.1" max="5" step="0.1" value="1.0">
+   </div>
+   <div class="control-group">
+    <label>轨道间距 L (m) <span id="val-l">2.0</span></label> <input type="range" id="slider-l" min="1" max="5" step="0.1" value="2.0">
+   </div>
+   <div class="control-group">
+    <label>棒质量 m (kg) <span id="val-m">0.5</span></label> <input type="range" id="slider-m" min="0.1" max="5" step="0.1" value="0.5">
+   </div>
+   <div class="control-group">
+    <label>回路电阻 R (Ω) <span id="val-r">0.5</span></label> <input type="range" id="slider-r" min="0.1" max="5" step="0.1" value="0.5">
+   </div>
+   <div class="info-text">
+    <b>实时状态监控：</b>
+    <br>
+     当前速度 v: <span id="real-v">0.00</span> m/s 
+    <br>
+     滑行位移 x: <span id="real-x">0.00<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAXCAIAAACeQxh6AAAAqklEQVR4nO1T0RLDIAgznf89/9y1uxWFBqi3PS7n9RRiDBXRey9lHzi/hS2LngswZm+hFCJNccg9Wnv6afEC7YvQAiHZRr1YxVmInuapmzmMo1gLjAPjCCaRWSOltZX9LkRo4XAdt6VFJJ8wUKfoteuCXrVtNZcW9C51oZb1kqMvK7jTTx04H63HEzY1OOL13k/J+2DT7IXGMcfcLC3HfP1fYcspf6FfCb0Anuw0yeQty6sAAAAASUVORK5CYII=" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;"></span> m 
+    <br>
+     加速度 a: <span id="real-a">0.00</span> m/s²
+   </div><button id="btn-toggle-chart">显示/隐藏图表</button>
+  </div>
+  <script src="https://img.zxxk.com/rbm-preview-product/h5/rbm/R56678372/three.min.js"></script>
+  <script src="https://img.zxxk.com/rbm-preview-product/h5/rbm/R56678372/OrbitControls.js"></script>
+  <script src="https://img.zxxk.com/rbm-preview-product/h5/rbm/R56678372/chart.min.js"></script>
+  <script>
+        // --- 物理参数与状态 ---
+        let params = {
+            v0: 10.0,
+            B: 1.0,
+            L: 2.0,
+            m: 0.5,
+            R: 0.5
+        };
+        
+        let state = {
+            isRunning: false,
+            v: 10.0,
+            x: 0.0,
+            time: 0.0,
+            dt: 0.016 // 每帧时间模拟步长 (s)
+        };
+
+        // --- Three.js 初始化 ---
+        const wrap = document.getElementById('canvas-wrap');
+        const scene = new THREE.Scene();
+        // 背景改为纯白
+        scene.background = new THREE.Color(0xffffff);
+        // 添加一点白雾效果，让远处的轨道自然融入背景
+        scene.fog = new THREE.Fog(0xffffff, 30, 80); 
+
+        const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 0.1, 1000);
+        camera.position.set(-10, 15, 20);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+        // 开启阴影
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        wrap.appendChild(renderer.domElement);
+
+        // 鼠标控制旋转、缩放、平移
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        // 光照系统 (适应白底)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(10, 20, 10);
+        dirLight.castShadow = true;
+        dirLight.shadow.camera.top = 20;
+        dirLight.shadow.camera.bottom = -20;
+        dirLight.shadow.camera.left = -20;
+        dirLight.shadow.camera.right = 60;
+        scene.add(dirLight);
+
+        // 半球光，增加金属质感层次
+        const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.4);
+        hemiLight.position.set(0, 20, 0);
+        scene.add(hemiLight);
+
+        // --- 场景物体创建 ---
+        // 导轨材质稍微加深一点，以便在白底上看得清
+        const railMaterial = new THREE.MeshStandardMaterial({ color: 0x666666, metalness: 0.7, roughness: 0.3 });
+        // 导体棒材质保持亮铜色
+        const rodMaterial = new THREE.MeshStandardMaterial({ color: 0xcc7722, metalness: 0.9, roughness: 0.2 }); 
+
+        let rail1, rail2, rodObj, magneticFieldGroup, groundPlane;
+
+        // 创建一个隐形或极淡的地面用来接收阴影
+        const planeGeo = new THREE.PlaneGeometry(200, 100);
+        const planeMat = new THREE.ShadowMaterial({ opacity: 0.1 });
+        groundPlane = new THREE.Mesh(planeGeo, planeMat);
+        groundPlane.rotation.x = -Math.PI / 2;
+        groundPlane.position.y = -0.5;
+        groundPlane.receiveShadow = true;
+        scene.add(groundPlane);
+
+        function buildScene() {
+            // 清除旧物体
+            if(rail1) scene.remove(rail1, rail2, rodObj, magneticFieldGroup);
+
+            const railLength = 120;
+            const railRadius = 0.15;
+
+            // 导轨1
+            const railGeo = new THREE.CylinderGeometry(railRadius, railRadius, railLength, 16);
+            railGeo.rotateZ(Math.PI / 2);
+            
+            rail1 = new THREE.Mesh(railGeo, railMaterial);
+            rail1.position.set(railLength/2 - 20, 0, params.L / 2);
+            rail1.castShadow = true;
+            rail1.receiveShadow = true;
+            scene.add(rail1);
+
+            // 导轨2
+            rail2 = new THREE.Mesh(railGeo, railMaterial);
+            rail2.position.set(railLength/2 - 20, 0, -params.L / 2);
+            rail2.castShadow = true;
+            rail2.receiveShadow = true;
+            scene.add(rail2);
+
+            // 导体棒 (沿Z轴放置)
+            const rodGeo = new THREE.CylinderGeometry(0.25, 0.25, params.L + 0.8, 32);
+            rodGeo.rotateX(Math.PI / 2);
+            rodObj = new THREE.Mesh(rodGeo, rodMaterial);
+            rodObj.position.set(0, 0.25, 0);
+            rodObj.castShadow = true;
+            scene.add(rodObj);
+
+            // 绘制向下的磁场箭头 (替代原先的叉号)
+            magneticFieldGroup = new THREE.Group();
+            
+            // 箭头属性
+            const dir = new THREE.Vector3(0, -1, 0); // 方向向下
+            const length = 2.5; // 箭头总长度
+            const hex = 0x17a2b8; // 矢量的颜色 (湖蓝色)
+            const headLength = 0.5;
+            const headWidth = 0.3;
+            
+            // 在导轨区域内生成阵列
+            for (let i = -10; i <= 80; i += 4) {
+                for (let j = -Math.floor(params.L/2) - 1; j <= Math.floor(params.L/2) + 1; j += 1.5) {
+                    const origin = new THREE.Vector3(i, 2.0, j); // 从轨道上方开始向下指
+                    const arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex, headLength, headWidth);
+                    
+                    // 设置半透明，避免显得过于杂乱
+                    if(arrowHelper.line && arrowHelper.cone) {
+                        arrowHelper.line.material.transparent = true;
+                        arrowHelper.line.material.opacity = 0.3;
+                        arrowHelper.cone.material.transparent = true;
+                        arrowHelper.cone.material.opacity = 0.5;
+                    }
+                    
+                    magneticFieldGroup.add(arrowHelper);
+                }
+            }
+            scene.add(magneticFieldGroup);
+        }
+
+        buildScene();
+
+        // 窗口缩放适配
+        window.addEventListener('resize', () => {
+            camera.aspect = wrap.clientWidth / wrap.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+        });
+
+        // --- Chart.js 图表逻辑 ---
+        const ctx = document.getElementById('dataChart').getContext('2d');
+        // 图表字体颜色适应白底
+        Chart.defaults.color = '#555';
+        
+        let chartData = {
+            labels: [],
+            datasets: [
+                {
+                    label: '速度 v (m/s)',
+                    borderColor: '#ff5722',
+                    backgroundColor: 'rgba(255, 87, 34, 0.1)',
+                    data: [],
+                    yAxisID: 'y',
+                    borderWidth: 2,
+                    pointRadius: 0
+                },
+                {
+                    label: '位移 x (m)',
+                    borderColor: '#0078d7',
+                    backgroundColor: 'rgba(0, 120, 215, 0.1)',
+                    data: [],
+                    yAxisID: 'y1',
+                    borderWidth: 2,
+                    pointRadius: 0
+                }
+            ]
+        };
+
+        const config = {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                animation: false,
+                interaction: { mode: 'index', intersect: false },
+                scales: {
+                    x: { title: { display: true, text: '时间 t (s)' } },
+                    y: { 
+                        type: 'linear', display: true, position: 'left',
+                        title: { display: true, text: '速度 (m/s)' }
+                    },
+                    y1: { 
+                        type: 'linear', display: true, position: 'right',
+                        title: { display: true, text: '位移 (m)' },
+                        grid: { drawOnChartArea: false }
+                    }
+                }
+            }
+        };
+        let myChart = new Chart(ctx, config);
+
+        function resetChart() {
+            chartData.labels = [];
+            chartData.datasets[0].data = [];
+            chartData.datasets[1].data = [];
+            myChart.update();
+        }
+
+        function updateChart() {
+            chartData.labels.push(state.time.toFixed(2));
+            chartData.datasets[0].data.push(state.v);
+            chartData.datasets[1].data.push(state.x);
+            myChart.update();
+        }
+
+
+        // --- UI 控制逻辑 ---
+        const uiSync = () => {
+            ['v', 'b', 'l', 'm', 'r'].forEach(key => {
+                const upperKey = key === 'v' ? 'v0' : key.toUpperCase();
+                document.getElementById(`val-${key}`).innerText = document.getElementById(`slider-${key}`).value;
+                params[upperKey] = parseFloat(document.getElementById(`slider-${key}`).value);
+            });
+        };
+
+        ['v', 'b', 'l', 'm', 'r'].forEach(key => {
+            document.getElementById(`slider-${key}`).addEventListener('input', () => {
+                uiSync();
+                if(key === 'l') buildScene(); // 改变轨道宽度时重建场景磁场
+                if(!state.isRunning && state.time === 0) {
+                    state.v = params.v0; 
+                    updateRealTimeUI(0);
+                }
+            });
+        });
+
+        const updateRealTimeUI = (acc) => {
+            document.getElementById('real-v').innerText = state.v.toFixed(2);
+            document.getElementById('real-x').innerText = state.x.toFixed(2);
+            document.getElementById('real-a').innerText = acc.toFixed(2);
+        };
+
+        document.getElementById('btn-start').addEventListener('click', () => { state.isRunning = true; });
+        document.getElementById('btn-pause').addEventListener('click', () => { state.isRunning = false; });
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            state.isRunning = false;
+            state.v = params.v0;
+            state.x = 0;
+            state.time = 0;
+            rodObj.position.x = 0;
+            camera.position.set(-10, 15, 20); // 重置相机视角
+            controls.target.set(0, 0, 0);
+            resetChart();
+            updateRealTimeUI(0);
+        });
+
+        // 图表拖拽与隐藏逻辑
+        const chartBox = document.getElementById('chart-box');
+        const chartHeader = document.getElementById('chart-header');
+        let isDragging = false, startMouseX, startMouseY, startBoxX, startBoxY;
+
+        chartHeader.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startMouseX = e.clientX;
+            startMouseY = e.clientY;
+            startBoxX = chartBox.offsetLeft;
+            startBoxY = chartBox.offsetTop;
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', onStopDrag);
+        });
+
+        function onDrag(e) {
+            if (!isDragging) return;
+            const dx = e.clientX - startMouseX;
+            const dy = e.clientY - startMouseY;
+            chartBox.style.left = `${startBoxX + dx}px`;
+            chartBox.style.top = `${startBoxY + dy}px`;
+        }
+
+        function onStopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', onStopDrag);
+        }
+
+        document.getElementById('close-chart').addEventListener('click', () => {
+            chartBox.style.display = 'none';
+        });
+
+        document.getElementById('btn-toggle-chart').addEventListener('click', () => {
+            chartBox.style.display = chartBox.style.display === 'none' ? 'flex' : 'none';
+        });
+
+        // --- 主动画与物理演算循环 ---
+        let frameCounter = 0;
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (state.isRunning && state.v > 0.01) {
+                // 物理计算：安培力 F = (B^2 * L^2 * v) / R
+                const force = (params.B * params.B * params.L * params.L * state.v) / params.R;
+                const acc = -force / params.m; // 加速度 a = -F/m
+
+                state.v += acc * state.dt;
+                if(state.v < 0) state.v = 0; 
+                state.x += state.v * state.dt;
+                state.time += state.dt;
+
+                // 更新 3D 导体棒位置
+                rodObj.position.x = state.x;
+
+                // 视角平滑跟随
+                controls.target.x += (state.x - controls.target.x) * 0.05;
+                camera.position.x += (state.x - camera.position.x - (-10)) * 0.05;
+
+                updateRealTimeUI(acc);
+
+                // 控制图表抽帧更新频率
+                frameCounter++;
+                if (frameCounter % 6 === 0) {
+                    updateChart();
+                }
+            } else if (state.isRunning && state.v <= 0.01) {
+                state.v = 0;
+                state.isRunning = false;
+                updateRealTimeUI(0);
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 初始化
+        uiSync();
+        resetChart();
+        updateRealTimeUI(0);
+        animate();
+
+    </script>
+ </body>
+</html>
