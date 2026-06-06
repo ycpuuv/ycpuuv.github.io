@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>观察桌面的微小形变</title>
+  <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        body {
+            background: #1e2b3c;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+        .main-card {
+            width: 1300px;
+            max-width: 100%;
+            background: #0f1a2b;
+            border-radius: 28px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 0 2px #3a506e inset;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #0b131f;
+            padding: 18px 25px;
+            color: #d4e6ff;
+            border-bottom: 2px solid #3e5a7a;
+        }
+        .header h1 {
+            font-size: 1.9rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+        }
+        .content {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .canvas-area {
+            flex: 3;
+            min-width: 750px;
+            background: #101b28;
+            position: relative;
+            border-right: 2px solid #2f425b;
+        }
+        #physicsCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #182434;
+            cursor: pointer;
+        }
+        .panel {
+            flex: 1.2;
+            min-width: 280px;
+            background: #0e1724;
+            padding: 25px 20px;
+            color: #cfdef5;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        .panel h3 {
+            font-weight: 400;
+            border-left: 5px solid #88ccff;
+            padding-left: 15px;
+            margin-bottom: 10px;
+            color: #aad0ff;
+        }
+        .slider-block {
+            background: #1a2638;
+            border-radius: 22px;
+            padding: 18px 18px;
+            box-shadow: inset 0 2px 5px #03060a;
+        }
+        .slider-item {
+            margin-bottom: 22px;
+        }
+        .slider-item label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.05rem;
+            color: #bcd1f0;
+        }
+        .value-badge {
+            background: #2f405a;
+            padding: 3px 12px;
+            border-radius: 30px;
+            color: #ffcc88;
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            margin: 8px 0;
+            height: 6px;
+            background: linear-gradient(90deg, #88ccff, #aad0ff);
+            border-radius: 10px;
+            -webkit-appearance: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            border: 2px solid #5f9ea0;
+            cursor: grab;
+            box-shadow: 0 2px 8px black;
+        }
+        .live-stats {
+            background: #101a28;
+            padding: 15px 18px;
+            border-radius: 22px;
+            border: 1px solid #3b5070;
+        }
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            margin: 8px 0;
+            border-bottom: 1px dashed #3d4f69;
+            padding-bottom: 5px;
+        }
+        .stat-row .highlight {
+            color: #ffe484;
+            font-weight: 600;
+        }
+        .buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: #2c3f5c;
+            border: none;
+            color: white;
+            padding: 12px 18px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: 600;
+            flex: 1 1 auto;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #5f7aa0;
+        }
+        .btn-primary {
+            background: #3a6ea5;
+            border-color: #88aaff;
+        }
+        .btn:hover {
+            filter: brightness(1.2);
+            transform: scale(1.02);
+        }
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 18px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #b0c6e0;
+        }
+        .legend-dot {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+        .footer-note {
+            text-align: center;
+            color: #60758b;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            padding: 15px 25px;
+            border-top: 1px solid #3a506e;
+            background: #0b131f;
+        }
+        .physics-explanation {
+            text-align: left;
+            color: #b0c6e0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 12px 20px;
+            background: #0e1724;
+            border-radius: 16px;
+            margin: 10px 25px 20px 25px;
+            border-left: 4px solid #88ccff;
+        }
+        .signature {
+            text-align: center;
+            color: #8a9fc0;
+            font-size: 0.9rem;
+            padding: 8px 0 12px 0;
+            border-top: 1px solid #2a3f5a;
+            background: #0b131f;
+            letter-spacing: 0.5px;
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABIQaAoggAQIBAAQhCUQFICAOYkACCAKgGxAAcoAAAyANABCA=">
+ </head>
+ <body>
+  <div class="main-card">
+   <div class="header">
+    <h1>观察桌面的微小形变</h1>
+   </div>
+   <div class="content">
+    <div class="canvas-area">
+     <canvas id="physicsCanvas" width="950" height="580"></canvas>
+    </div>
+    <div class="panel">
+     <h3>⬇️ 压力F (0–60N) 向下作用于桌面中央</h3>
+     <div class="slider-block">
+      <div class="slider-item">
+       <label><span>⚡ 力 值</span> <span class="value-badge" id="forceDisplay">0 N</span></label> <input type="range" id="forceSlider" min="0" max="60" step="1" value="0">
+      </div>
+      <div style="font-size:0.9rem; text-align:center; color:#aac3e0;">
+       ↓ 压力增大 → 光线汇聚点移动，光斑上移 ↓
+      </div>
+     </div>
+     <div class="live-stats">
+      <div class="stat-row">
+       <span>📐 镜B倾角</span> <span class="highlight" id="angleB">0.00°</span>
+      </div>
+      <div class="stat-row">
+       <span>📐 镜A倾角</span> <span class="highlight" id="angleA">0.00°</span>
+      </div>
+      <div class="stat-row">
+       <span>⚫ 光点位置</span> <span class="highlight" id="spotY">-- px</span>
+      </div>
+      <div class="stat-row">
+       <span>📏 零点偏移</span> <span class="highlight" id="offsetY">+0.0 px</span>
+      </div>
+      <div class="stat-row">
+       <span>🔁 放大倍数</span> <span class="highlight" id="gain">-- </span>
+      </div>
+     </div>
+     <div class="buttons">
+      <button class="btn btn-primary" id="resetBtn">⟲ 重置 (0N)</button>
+     </div>
+     <div class="legend">
+      <span><span class="legend-dot" style="background:#ff3333;"></span> 红色光线+动焦点</span> <span><span class="legend-dot" style="background:#88ccff;"></span> 加长光具座</span> <span><span class="legend-dot" style="background:#ffe066;"></span> 镜面字母</span> <span><span class="legend-dot" style="background:#88ccff;"></span> 压力F</span>
+     </div>
+     <div class="footer-note">
+      ｜ 三条光线夹角明显增大 ｜ 刻度下移 ｜ 0-60N ｜ <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABUAAAAkCAIAAADpU+bJAAAAiUlEQVR42u1TWw6AIAzr/Q/dGuOHjj0A8U8WQhTWdN0KdAYfe/jbfN8n0FywWbBsdKtzhSjb53l+Pfl9Nq3ylAOuW7Vmhfoz2ZmiQL/ythUtNPwq2Vjgu7DYPJd/aozqQSCc6mz97M4pqav1P8csrBX+ofq5Xr8SO5rzb94/9Tagtdj4jd/4/+IPvm/Smz6noQgAAAAASUVORK5CYII=" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+     </div>
+    </div>
+   </div>
+   <div class="physics-explanation">
+    <strong>📘 物理原理说明：</strong> 根据光的反射定律，镜面每倾斜 θ 角，反射光线会偏转 2θ 角；经两次反射后，光线偏转角度进一步放大，最终让墙面上的光点产生显著位移。力可以使物体发生形变，即使是极微小的形变，也能通过光学方法被放大观察。
+   </div><!-- 署名行：廊坊市第七中学 徐丹 -->
+   <div class="signature">
+    廊坊市第七中学 徐丹
+   </div>
+  </div>
+  <script>
+(function() {
+    const canvas = document.getElementById('physicsCanvas');
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+
+    // 桌面区域 (保持不变)
+    const desk = {
+        x: 150, y: 355,          
+        width: 520, thickness: 20
+    };
+
+    // 激光器位置 (保持调低后的位置，以维持较大夹角)
+    const laser = { x: 25, y: 305 };
+
+    // 平面镜B
+    const mirrorB = {
+        baseX: 655, baseY: 280,   
+        width: 12, height: 46
+    };
+    
+    // 平面镜A
+    const mirrorA = {
+        baseX: 185, baseY: 240,   
+        width: 12, height: 46
+    };
+
+    // 刻度墙 (位置向桌面移动，零点下移)
+    const wall = {
+        x: 760,                    
+        yMin: 90,                  
+        yMax: 440,
+        zeroY: 280                 // 零点位置 (0刻线)
+    };
+
+    // 物理系数 - 调整增益使F=60N时光斑刚好到达墙顶端(yMin+15 ≈ 105)
+    const MAX_TILT_B = 3.2;         
+    const MAX_TILT_A = -2.8;        
+    // 增大增益系数，使得60N时偏移量足够将光斑推到墙顶
+    // 目标: f=1时，newSpotY = wall.zeroY - 60 - offset ≈ wall.yMin+15 ≈ 105
+    // 计算所需offset ≈ wall.zeroY - 60 - 105 = 280-60-105 = 115
+    // 当前偏移计算公式 offset = tiltDiff * GAIN * (1+0.6)
+    // 估算tiltDiff ≈ (3.2 - (-2.8)) ≈ 6.0，则 GAIN ≈ 115 / (6*1.6) ≈ 12
+    // 实际使用14获得更好效果
+    const WALL_GAIN_FACTOR = 14.0;  
+
+    // 焦点移动系数
+    const FOCUS_B_X_OFFSET = 15;      
+    const FOCUS_B_Y_OFFSET = 19;      
+    const FOCUS_A_X_OFFSET = 13;      
+    const FOCUS_A_Y_OFFSET = 16;      
+
+    let force = 0.0;
+    let tiltB = 0, tiltA = 0;      
+    let spotWallY = wall.zeroY;
+    
+    // 动态焦点位置
+    let focusBX = 0, focusBY = 0;
+    let focusAX = 0, focusAY = 0;
+
+    // DOM
+    const forceSlider = document.getElementById('forceSlider');
+    const forceDisplay = document.getElementById('forceDisplay');
+    const angleAElem = document.getElementById('angleA');
+    const angleBElem = document.getElementById('angleB');
+    const spotYElem = document.getElementById('spotY');
+    const offsetYElem = document.getElementById('offsetY');
+    const gainElem = document.getElementById('gain');
+
+    document.getElementById('resetBtn').addEventListener('click', ()=>{
+        force = 0.0;
+        forceSlider.value = '0';
+        updateFromForce();
+        drawScene();
+    });
+
+    forceSlider.addEventListener('input', (e)=>{
+        force = parseFloat(e.target.value);
+        updateFromForce();
+        drawScene();
+    });
+
+    function updateFromForce() {
+        // 力的范围0-60，归一化 f = force/60
+        const f = Math.min(60, Math.max(0, force)) / 60; 
+        
+        tiltB = MAX_TILT_B * (0.7 * f + 0.3 * f*f);
+        tiltA = MAX_TILT_A * (0.6 * f + 0.4 * f*f);
+        
+        if (f === 0) {
+            // 力为0时，光斑固定在零刻线以上第三格 (每格20px，第三格即60px)
+            spotWallY = wall.zeroY - 60;
+        } else {
+            const tiltDiff = tiltB - tiltA;
+            // 使用调整后的增益，使f=1时偏移足够大，光斑到达墙顶端
+            let offset = tiltDiff * WALL_GAIN_FACTOR * (1 + 0.7*f); // 稍微提高非线性项
+            let newSpotY = wall.zeroY - 60 - offset; // 从第三格开始偏移
+            // 确保不超出墙的边界 (墙顶端边界为 wall.yMin + 15 ≈ 105)
+            if (newSpotY < wall.yMin + 10) newSpotY = wall.yMin + 10; // 允许略微超过但保留一点边距
+            if (newSpotY > wall.yMax - 15) newSpotY = wall.yMax - 15;
+            spotWallY = newSpotY;
+        }
+
+        // 动态焦点位置 (保持不变)
+        focusBX = mirrorB.baseX - mirrorB.width/2 - 4 + FOCUS_B_X_OFFSET * f;
+        focusBY = mirrorB.baseY - 12 + FOCUS_B_Y_OFFSET * f + 2;
+        
+        focusAX = mirrorA.baseX + mirrorA.width/2 + 4 - FOCUS_A_X_OFFSET * f;
+        focusAY = mirrorA.baseY + 10 - FOCUS_A_Y_OFFSET * f - 2;
+
+        forceDisplay.innerText = force.toFixed(0) + ' N';
+        angleBElem.innerText = tiltB.toFixed(2) + '°';
+        angleAElem.innerText = (-tiltA).toFixed(2) + '°';
+        spotYElem.innerText = spotWallY.toFixed(1) + ' px';
+        const offsetVal = (spotWallY - (wall.zeroY - 60)).toFixed(1); // 相对于第三格的偏移
+        offsetYElem.innerText = (offsetVal > 0 ? '+' : '') + offsetVal + ' px';
+        
+        if (f > 0.01) {
+            const mag = Math.abs(offsetVal) / (f * 12);
+            gainElem.innerText = mag.toFixed(1) + 'x';
+        } else {
+            gainElem.innerText = '0.0x';
+        }
+    }
+
+    // 绘制加长光具座
+    function drawLongBase(x, y, mirrorWidth, mirrorHeight) {
+        const mirrorBottom = y + mirrorHeight/2;   
+        const columnWidth = 14;
+        const columnHeight = desk.y - mirrorBottom + 8;
+        
+        ctx.fillStyle = '#9aabbc';
+        ctx.shadowBlur = 4;
+        ctx.shadowColor = '#00000070';
+        
+        ctx.fillRect(x - mirrorWidth/2 - 2, mirrorBottom - 6, mirrorWidth + 4, 6);
+        
+        ctx.fillStyle = '#8a9bb5';
+        ctx.fillRect(x - columnWidth/2, mirrorBottom, columnWidth, Math.max(columnHeight, 10));
+        
+        ctx.fillStyle = '#7b8da3';
+        ctx.fillRect(x - columnWidth/2 - 2, desk.y - 2, columnWidth + 4, 4);
+    }
+
+    // 绘制带旋转的镜子
+    function drawRotatedMirror(x, y, width, height, label, tiltAngle) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(tiltAngle * Math.PI / 180);
+        
+        ctx.fillStyle = '#b0d5ff';
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = '#88aaff';
+        ctx.fillRect(-width/2, -height/2, width, height);
+        
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#eaf4ff';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(-width/2, -height/2, width, height);
+        
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(-width/2 + 2, -height/2 + 4);
+        ctx.lineTo(width/2 - 4, -height/2 + 4);
+        ctx.stroke();
+
+        ctx.restore();
+        
+        ctx.save();
+        ctx.translate(x, y - 28);
+        ctx.fillStyle = '#fffacd';
+        ctx.font = 'bold 22px "Segoe UI"';
+        ctx.shadowBlur = 6;
+        ctx.shadowColor = '#000000a0';
+        ctx.fillText(label, -8, 0);
+        ctx.restore();
+    }
+
+    // 绘制箭头
+    function drawArrowOnRay(x, y, angleDeg) {
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angleDeg * Math.PI/180);
+        ctx.fillStyle = '#ff3333';
+        ctx.shadowBlur = 14;
+        ctx.shadowColor = '#ff4444';
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-16, -8);
+        ctx.lineTo(-16, 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+    }
+
+    // 绘制焦点
+    function drawFocusPoint(x, y) {
+        ctx.save();
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#ffff00';
+        ctx.fillStyle = '#ffff00';
+        ctx.beginPath();
+        ctx.arc(x, y, 5, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#ffaa00';
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.restore();
+    }
+
+    function drawScene() {
+        ctx.clearRect(0, 0, w, h);
+
+        // 背景网格
+        ctx.strokeStyle = '#2d4055';
+        ctx.lineWidth = 0.6;
+        for (let i = 0; i < w; i+= 40) {
+            ctx.beginPath();
+            ctx.moveTo(i, 0);
+            ctx.lineTo(i, h);
+            ctx.strokeStyle = '#253449';
+            ctx.stroke();
+        }
+        for (let i = 0; i < h; i+= 40) {
+            ctx.beginPath();
+            ctx.moveTo(0, i);
+            ctx.lineTo(w, i);
+            ctx.strokeStyle = '#253449';
+            ctx.stroke();
+        }
+
+        // 桌面
+        ctx.fillStyle = '#7c5e3c';
+        ctx.shadowColor = '#00000055';
+        ctx.shadowBlur = 10;
+        ctx.fillRect(desk.x, desk.y, desk.width, desk.thickness);
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#9b7e5a';
+        ctx.fillRect(desk.x, desk.y-2, desk.width, 4);
+        
+        // 桌腿
+        ctx.fillStyle = '#5d4b34';
+        ctx.fillRect(desk.x+40, desk.y+20, 18, 50);
+        ctx.fillRect(desk.x+desk.width-80, desk.y+20, 18, 50);
+
+        // 激光器
+        ctx.fillStyle = '#445c7a';
+        ctx.beginPath();
+        ctx.ellipse(laser.x, laser.y, 16, 12, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = '#993322';
+        ctx.beginPath();
+        ctx.arc(laser.x+12, laser.y-3, 6, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#ffddbb';
+        ctx.font = 'bold 12px monospace';
+        ctx.fillText('激光器', laser.x-20, laser.y-22);
+
+        // 当前镜中心
+        let bX = mirrorB.baseX;
+        let bY = mirrorB.baseY;
+        let aX = mirrorA.baseX;
+        let aY = mirrorA.baseY;
+
+        // 光具座
+        drawLongBase(bX, bY, mirrorB.width, mirrorB.height);
+        drawLongBase(aX, aY, mirrorA.width, mirrorA.height);
+        
+        // 旋转的镜子
+        drawRotatedMirror(bX, bY, mirrorB.width, mirrorB.height, 'B', tiltB);
+        drawRotatedMirror(aX, aY, mirrorA.width, mirrorA.height, 'A', tiltA);
+
+        // 刻度墙
+        ctx.shadowBlur = 0;
+        ctx.fillStyle = '#6f8fa7';
+        ctx.fillRect(wall.x-8, wall.yMin, 12, wall.yMax-wall.yMin);
+        ctx.strokeStyle = '#d4eaff';
+        ctx.lineWidth = 1.2;
+        for (let y = wall.yMin; y <= wall.yMax; y+=20) {
+            ctx.beginPath();
+            ctx.moveTo(wall.x-12, y);
+            ctx.lineTo(wall.x, y);
+            ctx.stroke();
+        }
+        
+        // 零基准线 (0刻线)
+        ctx.strokeStyle = '#fcd25a';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.moveTo(wall.x-15, wall.zeroY);
+        ctx.lineTo(wall.x+5, wall.zeroY);
+        ctx.stroke();
+        ctx.fillStyle = '#ffd966';
+        ctx.font = 'bold 12px sans-serif';
+        ctx.fillText('0点', wall.x-45, wall.zeroY-5);
+
+        // 在零刻线以上画出第三条刻度线作为视觉参考（第3格，每格20px）
+        const thirdTickY = wall.zeroY - 60; // 向上3格 (每格20px)
+        ctx.strokeStyle = '#ffaa66';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(wall.x-12, thirdTickY);
+        ctx.lineTo(wall.x, thirdTickY);
+        ctx.stroke();
+        ctx.fillStyle = '#ffbb88';
+        ctx.font = '10px sans-serif';
+        ctx.fillText('3', wall.x-20, thirdTickY-2);
+
+        // 光斑 (在force=0时，光斑落在第三格；force=60时，光斑接近墙顶端)
+        ctx.shadowBlur = 16;
+        ctx.shadowColor = '#ff3333';
+        ctx.fillStyle = '#ff3a2a';
+        ctx.beginPath();
+        ctx.arc(wall.x-2, spotWallY, 10, 0, 2*Math.PI);
+        ctx.fill();
+        ctx.fillStyle = '#ff8866aa';
+        ctx.beginPath();
+        ctx.arc(wall.x-2, spotWallY, 17, 0, 2*Math.PI);
+        ctx.fill();
+
+        // 动态焦点
+        const bLeftX = focusBX;
+        const bLeftY = focusBY;
+        const aRightX = focusAX;
+        const aRightY = focusAY;
+        
+        // 红色光线
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ff6666';
+        ctx.strokeStyle = '#ff3333';
+        ctx.lineWidth = 3.2;
+
+        // 光线1: 激光器 -> B
+        ctx.beginPath();
+        ctx.moveTo(laser.x+16, laser.y-2);
+        ctx.lineTo(bLeftX, bLeftY);
+        ctx.stroke();
+
+        // 光线2: B -> A
+        ctx.beginPath();
+        ctx.moveTo(bLeftX, bLeftY);
+        ctx.lineTo(aRightX, aRightY);
+        ctx.stroke();
+
+        // 光线3: A -> 墙
+        ctx.beginPath();
+        ctx.moveTo(aRightX, aRightY);
+        ctx.lineTo(wall.x-10, spotWallY);
+        ctx.stroke();
+
+        // 光线箭头
+        let x1 = laser.x + (bLeftX - laser.x) * 0.5;
+        let y1 = laser.y-2 + (bLeftY - (laser.y-2)) * 0.5;
+        let angle1 = Math.atan2(bLeftY - (laser.y-2), bLeftX - laser.x) * 180 / Math.PI;
+        drawArrowOnRay(x1, y1, angle1);
+
+        let x2 = bLeftX + (aRightX - bLeftX) * 0.5;
+        let y2 = bLeftY + (aRightY - bLeftY) * 0.5;
+        let angle2 = Math.atan2(aRightY - bLeftY, aRightX - bLeftX) * 180 / Math.PI;
+        drawArrowOnRay(x2, y2, angle2);
+
+        let x3 = aRightX + (wall.x-10 - aRightX) * 0.6;
+        let y3 = aRightY + (spotWallY - aRightY) * 0.6;
+        let angle3 = Math.atan2(spotWallY - aRightY, wall.x-10 - aRightX) * 180 / Math.PI;
+        drawArrowOnRay(x3, y3, angle3);
+
+        // 焦点
+        drawFocusPoint(bLeftX, bLeftY);
+        drawFocusPoint(aRightX, aRightY);
+
+        // 压力F箭头 —— 缩短长度，避免与红色光线相交
+        const forceX = 400;
+        const forceY = 300;  // 起始点下移40px (原为260)，大幅缩短蓝色竖线
+        const deskTopY = desk.y - 15; // 桌面下方的终止点不变
+        
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#88ccff';
+        ctx.strokeStyle = '#88ccff';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(forceX, forceY);        // 从更低的点开始
+        ctx.lineTo(forceX, deskTopY);
+        ctx.stroke();
+        
+        const arrowX = forceX;
+        const arrowY = deskTopY;            // 箭头仍在桌面下
+        
+        ctx.fillStyle = '#88ccff';
+        ctx.beginPath();
+        ctx.moveTo(arrowX - 8, arrowY - 10);
+        ctx.lineTo(arrowX + 8, arrowY - 10);
+        ctx.lineTo(arrowX, arrowY);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 18px "Segoe UI"';
+        ctx.shadowColor = '#226688';
+        ctx.fillText('F', arrowX - 20, arrowY - 15);
+
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = 'transparent';
+    }
+
+    // 初始化
+    force = 0.0;
+    forceSlider.value = '0';
+    updateFromForce();
+    drawScene();
+
+    window.updateFromForce = updateFromForce;
+    window.drawScene = drawScene;
+})();
+</script>
+ </body>
+</html>
