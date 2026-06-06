@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>圆弧槽角度 · 小球落地速度与距离</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0b0b14;color:#d4d4dc;font-family:'Inter','PingFang SC','Microsoft YaHei',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh}
+  h1{font-size:1.05em;font-weight:600;margin:14px 0 2px;letter-spacing:1px;color:#d4a373}
+  .sub{font-size:.65em;color:#5c5c72;margin-bottom:6px}
+  canvas{display:block;margin:0 auto;border-radius:8px;background:#0a0a14;max-width:600px;width:100%}
+  .panel{max-width:600px;width:90%;margin:8px auto;padding:10px 14px;background:#0e0e1e;border-radius:8px;border:1px solid #18182a}
+  .row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+  .row:last-child{margin-bottom:0}
+  .row label{font-size:.7em;color:#7a7a92;white-space:nowrap;min-width:70px}
+  .row input[type=range]{flex:1;accent-color:#d4a373;height:4px}
+  .row .val{font-size:.68em;color:#d4a373;min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
+  .btns{display:flex;gap:6px}
+  .btns button{flex:1;border-radius:5px;font-size:.68em;cursor:pointer;transition:.2s;padding:5px 0}
+  .btn-play{background:#d4a373;border:none;color:#0b0b14;font-weight:600}
+  .btn-play:disabled{background:#1a1a30;color:#5c5c72}
+  .btn-reset{background:transparent;border:1px solid #2a2a48;color:#7a7a92}
+  .btn-reset:hover{border-color:#d4a373;color:#d4a373}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px;padding-top:5px;border-top:1px solid #18182a}
+  .item{text-align:center;padding:3px 0}
+  .item .l{font-size:.58em;color:#5c5c72}
+  .item .v{font-size:.78em;color:#e0e0e8;font-variant-numeric:tabular-nums;margin-top:1px}
+  .item .v.gold{color:#f4a261}
+  @media(max-width:480px){h1{font-size:.9em}.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<h1>圆弧槽角度 · 小球落地速度与距离</h1>
+<p class="sub">改变弧槽角度 θ → 释放高度不同 → 出口速度变化 → 平抛距离改变</p>
+<canvas id="c"></canvas>
+<div class="panel">
+  <div class="row">
+    <label>弧槽角度 θ</label>
+    <input type="range" id="sAngle" min="10" max="170" value="90">
+    <span class="val" id="dAngle">90°</span>
+  </div>
+  <div class="row">
+    <label>平台高度 H</label>
+    <input type="range" id="sHeight" min="30" max="120" value="70">
+    <span class="val" id="dHeight">70</span>
+  </div>
+  <div class="row">
+    <label></label>
+    <div class="btns">
+      <button class="btn-play" id="btnPlay">▶ 释放</button>
+      <button class="btn-reset" id="btnReset">⟲ 重置</button>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="item"><div class="l">出口速度 v</div><div class="v gold" id="vExit">—</div></div>
+    <div class="item"><div class="l">飞行时间 t</div><div class="v" id="tFlight">—</div></div>
+    <div class="item"><div class="l">水平距离 d</div><div class="v gold" id="dHoriz">—</div></div>
+    <div class="item"><div class="l">落地速度 v'</div><div class="v" id="vLand">—</div></div>
+  </div>
+</div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let W, H, sc;
+
+function resize() {
+  const mw = Math.min(600, innerWidth - 12);
+  c.width = mw;
+  c.height = mw * 0.72;
+  W = c.width;
+  H = c.height;
+  sc = H / 260;
+}
+resize();
+addEventListener('resize', resize);
+
+const G = 9.8;
+const R = 70;  // arc radius (in world units)
+const PLATFORM = { x: W/2, baseY: 0, topY: 0 };
+
+let ball = {}, trail = [], phase = 'ready', running = false;
+let stats = { vExit: 0, tFlight: 0, dHoriz: 0, vLand: 0 };
+let angle = 90, platH = 70;
+
+// DOM
+const sAngle = document.getElementById('sAngle');
+const sHeight = document.getElementById('sHeight');
+const dAngle = document.getElementById('dAngle');
+const dHeight = document.getElementById('dHeight');
+const btnPlay = document.getElementById('btnPlay');
+const btnReset = document.getElementById('btnReset');
+const el = id => document.getElementById(id);
+
+sAngle.oninput = () => { if(phase!=='ready')reset(); angle=+sAngle.value; dAngle.textContent=angle+'°'; draw(); };
+sHeight.oninput = () => { if(phase!=='ready')reset(); platH=+sHeight.value; dHeight.textContent=platH; draw(); };
+btnPlay.onclick = start;
+btnReset.onclick = reset;
+
+function reset() {
+  phase='ready'; running=false; trail=[]; stats={vExit:0,tFlight:0,dHoriz:0,vLand:0};
+  updateStats(); btnPlay.textContent='▶ 释放'; btnPlay.disabled=false; draw();
+}
+
+function updateStats() {
+  el('vExit').textContent = stats.vExit ? stats.vExit.toFixed(2) : '—';
+  el('tFlight').textContent = stats.tFlight ? stats.tFlight.toFixed(2)+'s' : '—';
+  el('dHoriz').textContent = stats.dHoriz ? stats.dHoriz.toFixed(1) : '—';
+  el('vLand').textContent = stats.vLand ? stats.vLand.toFixed(2) : '—';
+}
+
+// Convert world coords (x,y) to screen coords
+// World: origin at platform center (top surface), x right, y up
+function w2s(wx, wy) {
+  return [W/2 + wx * sc, PLATFORM.baseY - wy * sc];
+}
+
+function start() {
+  const θ = angle * Math.PI / 180;
+  const half = θ / 2;
+  
+  // Arc parameters
+  // Circle center at (0, R) in world coords (y relative to platform top)
+  // Bottom of arc at (0, 0) — exit point
+  // Left edge: angle half from vertical, position = R·sin(half), R(1-cos(half))
+  const startH = R * (1 - Math.cos(half));  // height drop from start to exit
+  const startX = -R * Math.sin(half);       // x position of start
+  
+  // Exit velocity from conservation of energy: v = √(2g·Δh)
+  const vExit = Math.sqrt(2 * G * startH);
+  
+  ball = {
+    phase: 'arc',
+    angle: -half,        // start at left edge
+    da: 0,
+    x: startX,
+    y: startH,
+    vx: vExit,
+    vy: 0,
+    t: 0
+  };
+  
+  phase = 'sliding';
+  running = true;
+  trail = [];
+  stats = { vExit: 0, tFlight: 0, dHoriz: 0, vLand: 0 };
+  updateStats();
+  btnPlay.textContent = '⏵ 运行中';
+  btnPlay.disabled = true;
+  
+  lastT = null;
+  requestAnimationFrame(anim);
+}
+
+function toScreen(wx, wy) {
+  return [W/2 + wx * sc, H - 30 - (platH - wy) * sc];
+}
+
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+  
+  const θ = angle * Math.PI / 180;
+  const half = θ / 2;
+  
+  const groundY = H - 30;
+  const platBottom = groundY - 4;
+  const platTop = platBottom - platH * sc;
+  PLATFORM.baseY = platTop;
+  
+  // Ground
+  ctx.fillStyle = '#12121e';
+  ctx.fillRect(0, groundY, W, H - groundY);
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  ctx.lineTo(W, groundY);
+  ctx.strokeStyle = '#1e1e30';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  
+  // Platform
+  const pw = 160 * sc;
+  ctx.fillStyle = '#0e0e1e';
+  ctx.fillRect(W/2 - pw/2, platTop, pw, platBottom - platTop);
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(W/2 - pw/2, platTop, pw, platBottom - platTop);
+  
+  // Platform label
+  ctx.fillStyle = '#3a3a50';
+  ctx.font = `${Math.round(9*sc/2.5)}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('H = ' + platH, W/2, platBottom - 8);
+  
+  // Arc (groove)
+  const arcCX = W/2;
+  const arcCY = platTop;
+  ctx.beginPath();
+  ctx.arc(arcCX, arcCY, R * sc, -Math.PI/2 - half, -Math.PI/2 + half);
+  ctx.strokeStyle = '#d4a373';
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  
+  // Arc angle indicator
+  ctx.beginPath();
+  ctx.arc(arcCX, arcCY, 15, -Math.PI/2 - half, -Math.PI/2 + half);
+  ctx.strokeStyle = '#2a2a48';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.fillStyle = '#5c5c72';
+  ctx.font = `${Math.round(8*sc/2.5)}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText('θ='+angle.toFixed(0)+'°', arcCX, arcCY + R*sc/2);
+  
+  // Start height indicator (dashed line)
+  if (phase === 'ready') {
+    const sH = R * (1 - Math.cos(half));
+    const sX = -R * Math.sin(half);
+    const sx = w2s(sX, sH)[0];
+    const sy = w2s(sX, sH)[1];
+    ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx, platTop);
+    ctx.strokeStyle = '#4a4a60';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#5c5c72';
+    ctx.font = `${Math.round(8*sc/2.5)}px sans-serif`;
+    ctx.textAlign = 'left';
+    ctx.fillText('h', sx + 4, (sy + platTop)/2);
+  }
+  
+  // Trail
+  if (trail.length > 1) {
+    ctx.beginPath();
+    for (let i = 0; i < trail.length; i++) {
+      const [sx, sy] = toScreen(trail[i].x, trail[i].y);
+      if (i === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.strokeStyle = 'rgba(244,162,97,0.35)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4,4]);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  
+  // Ball position
+  let bx, by;
+  if (phase === 'arc' || phase === 'sliding') {
+    const b = ball;
+    bx = W/2 + b.x * sc;
+    by = platTop - b.y * sc;
+  } else if (phase === 'flying') {
+    const b = ball;
+    bx = W/2 + b.x * sc;
+    by = platTop - b.y * sc;
+  } else {
+    // ready state - ball at start position
+    const sH = R * (1 - Math.cos(half));
+    const sX = -R * Math.sin(half);
+    bx = W/2 + sX * sc;
+    by = platTop - sH * sc;
+  }
+  
+  // Ball glow
+  const grd = ctx.createRadialGradient(bx-2, by-2, 1, bx, by, 7*sc/8);
+  grd.addColorStop(0, '#f4a261');
+  grd.addColorStop(1, '#d4a373');
+  ctx.beginPath();
+  ctx.arc(bx, by, 6*sc/8, 0, Math.PI*2);
+  ctx.fillStyle = grd;
+  ctx.fill();
+  
+  // Ball highlight
+  ctx.beginPath();
+  ctx.arc(bx-2, by-2, 2*sc/8, 0, Math.PI*2);
+  ctx.fillStyle = 'rgba(255,255,255,0.25)';
+  ctx.fill();
+  
+  // Velocity vector during flight
+  if (phase === 'flying') {
+    const b = ball;
+    const vm = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
+    if (vm > 0.01) {
+      const alen = Math.min(vm * sc * 0.4, 45);
+      const ex = bx + (b.vx/vm) * alen;
+      const ey = by - (b.vy/vm) * alen;
+      ctx.beginPath();
+      ctx.moveTo(bx, by);
+      ctx.lineTo(ex, ey);
+      ctx.strokeStyle = '#e6b17e';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      const a = Math.atan2(-(ey-by), ex-bx);
+      ctx.beginPath();
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 6*Math.cos(a-0.4), ey + 6*Math.sin(a-0.4));
+      ctx.moveTo(ex, ey);
+      ctx.lineTo(ex - 6*Math.cos(a+0.4), ey + 6*Math.sin(a+0.4));
+      ctx.stroke();
+    }
+  }
+  
+  // Landing marker
+  if (phase === 'landed') {
+    const lx = W/2 + ball.x * sc;
+    ctx.beginPath();
+    ctx.arc(lx, groundY, 4, 0, Math.PI*2);
+    ctx.fillStyle = '#f4a261';
+    ctx.fill();
+    ctx.fillStyle = '#5c5c72';
+    ctx.font = `${Math.round(9*sc/2.5)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('d = ' + stats.dHoriz.toFixed(1), lx, groundY - 8);
+  }
+}
+
+let lastT = null;
+
+function anim(t) {
+  if (!running) return;
+  const dt = lastT ? Math.min((t - lastT) / 1000, 0.025) : 0.016;
+  lastT = t;
+  
+  const θ = angle * Math.PI / 180;
+  const half = θ / 2;
+  const spd = 2.0; // speed multiplier for visual appeal
+  
+  if (phase === 'sliding') {
+    const b = ball;
+    // Energy: v = √(2g·Δh) where Δh = y from bottom
+    b.vy = Math.sqrt(2 * G * Math.max(0, b.y));
+    
+    // Move along arc: angular step = v/R * dt
+    const dAngle_step = b.vy / R * dt * spd;
+    b.angle += dAngle_step;
+    
+    // Update position from angle
+    b.x = R * Math.sin(b.angle);
+    b.y = R * (1 - Math.cos(b.angle));
+    
+    // Check if reached bottom
+    if (b.angle >= 0) {
+      b.angle = 0;
+      b.x = 0;
+      b.y = 0;
+      
+      // Exit velocity = √(2g·H_drop)
+      const startH = R * (1 - Math.cos(half));
+      const vExit = Math.sqrt(2 * G * startH);
+      
+      b.vx = vExit;
+      b.vy = 0;
+      
+      phase = 'flying';
+      stats.vExit = vExit;
+      
+      // Time of flight from height = platH
+      stats.tFlight = Math.sqrt(2 * platH / G);
+      stats.dHoriz = vExit * stats.tFlight;
+      stats.vLand = Math.sqrt(vExit*vExit + 2*G*platH);
+      updateStats();
+    }
+  }
+  
+  if (phase === 'flying') {
+    const b = ball;
+    b.vy -= G * dt * spd;
+    b.x += b.vx * dt * spd;
+    b.y += b.vy * dt * spd;
+    
+    trail.push({x: b.x, y: b.y});
+    if (trail.length > 800) trail.shift();
+    
+    // Land when reaching ground level (below platform base)
+    if (b.y <= -platH) {
+      b.y = -platH;
+      phase = 'landed';
+      running = false;
+      btnPlay.textContent = '⟳ 再试';
+      btnPlay.disabled = false;
+    }
+  }
+  
+  draw();
+  if (running) requestAnimationFrame(anim);
+}
+
+draw();
+</script>
+</body>
+</html>
