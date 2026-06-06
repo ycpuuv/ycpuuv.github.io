@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <title>发电机全功能仿真 (带方向/全参数)</title>
+  <style>
+        /* 界面美化 */
+        body { margin: 0; overflow: hidden; background-color: #1e1e1e; color: #fff; font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+        #container { display: flex; width: 100vw; height: 100vh; }
+        #canvas-container { flex: 1; position: relative; overflow: hidden; background: #222; }
+        
+        /* 左上角标题 */
+        #header-title {
+            position: absolute;
+            top: 20px;
+            left: 40px;
+            z-index: 100;
+            font-size: 48px;
+            font-weight: 900;
+            color: #ffffff;
+            text-shadow: 4px 4px 10px rgba(0,0,0,0.8);
+            pointer-events: none;
+            letter-spacing: 4px;
+            font-family: 'Microsoft YaHei', sans-serif;
+            opacity: 0.9;
+        }
+
+        /* 修改：侧边栏宽度增大 */
+        #sidebar {
+            width: 420px; /* 从340px调整为420px */
+            background-color: #2b2b2b;
+            border-left: 1px solid #444;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.4);
+        }
+
+        h2 { margin-top: 0; color: #4db8ff; border-bottom: 2px solid #555; padding-bottom: 12px; font-size: 20px; letter-spacing: 1px; }
+        .section { background: #383838; padding: 15px; border-radius: 8px; margin-bottom: 18px; border: 1px solid #444; }
+        
+        /* 按钮组 */
+        .btn-group { display: flex; gap: 10px; }
+        button {
+            flex: 1; padding: 10px; border: none; border-radius: 5px; 
+            cursor: pointer; color: white; font-weight: bold; font-size: 14px;
+            transition: all 0.2s;
+        }
+        button:hover { transform: translateY(-1px); filter: brightness(1.1); }
+        button:active { transform: translateY(1px); }
+        #btn-start { background: linear-gradient(to bottom, #28a745, #218838); }
+        #btn-pause { background: linear-gradient(to bottom, #ffc107, #e0a800); color: #222; }
+        #btn-reset { background: linear-gradient(to bottom, #dc3545, #c82333); }
+
+        /* 滑块控件 */
+        .control-row { margin-bottom: 15px; }
+        .control-row label { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: #ddd; }
+        .control-row input[type=range] { width: 100%; cursor: pointer; accent-color: #4db8ff; }
+        .val-display { color: #4db8ff; font-family: monospace; font-weight: bold; background: #222; padding: 2px 6px; border-radius: 4px; }
+
+        /* 波形图 */
+        canvas.graph { 
+            background: #111; 
+            width: 100%; 
+            height: 140px; 
+            border: 1px solid #555; 
+            border-radius: 4px; 
+            display: block; 
+        }
+        .graph-wrapper { margin-bottom: 12px; position: relative; }
+    </style>
+  <script src="https://img.zxxk.com/rbm/html/2026/4/30/c55ee6e9-d18a-4d7e-be63-31b100536583.js"></script>
+  <script src="https://img.zxxk.com/rbm/html/2026/4/30/ff4853f3-28b6-4c46-8c9a-653ca410163a.js"></script>
+ </head>
+ <body>
+  <div id="container">
+   <div id="canvas-container">
+    <div id="header-title">
+     交变电流的产生
+    </div>
+   </div>
+   <div id="sidebar">
+    <h2>参数控制台</h2>
+    <div class="section">
+     <div class="btn-group">
+      <button id="btn-start">开始运行</button> <button id="btn-pause">暂停</button> <button id="btn-reset">重置</button>
+     </div>
+    </div>
+    <div class="section">
+     <div class="control-row">
+      <label>线框面积 S <span id="val-area" class="val-display">1.0</span></label> <input type="range" id="input-area" min="0.5" max="1.5" step="0.1" value="1.0">
+     </div>
+     <div class="control-row">
+      <label>初始位置 θ₀ (度) <span id="val-theta" class="val-display">0</span></label> <input type="range" id="input-theta" min="0" max="360" step="15" value="0">
+     </div>
+     <div class="control-row">
+      <label>角速度 ω (rad/s) <span id="val-omega" class="val-display">1.0</span></label> <input type="range" id="input-omega" min="0.1" max="3.0" step="0.1" value="1.0">
+     </div>
+     <div class="control-row">
+      <label>磁感应强度 B (T) <span id="val-B" class="val-display">1.0</span></label> <input type="range" id="input-B" min="0.5" max="2.0" step="0.1" value="1.0">
+     </div>
+    </div>
+    <div class="section" style="padding: 10px;">
+     <div class="graph-wrapper">
+      <canvas id="chart-flux" class="graph"></canvas>
+     </div>
+     <div class="graph-wrapper">
+      <canvas id="chart-emf" class="graph"></canvas>
+     </div>
+     <div class="graph-wrapper">
+      <canvas id="chart-current" class="graph"></canvas>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    // --- 1. 兼容性加载 Controls ---
+    let OrbitControlsClass;
+    if (THREE.OrbitControls) OrbitControlsClass = THREE.OrbitControls;
+    else if (typeof OrbitControls !== 'undefined') OrbitControlsClass = OrbitControls;
+
+    // --- 2. 核心变量 ---
+    let scene, camera, renderer, controls;
+    let coilGroup, arrowGroup; // arrowGroup存放所有磁感线箭头
+    let isRunning = false;
+    let time = 0;
+    
+    // 参数对象
+    const params = { 
+        B: 1.0, 
+        omega: 1.0, 
+        areaScale: 1.0, 
+        theta0: 0 
+    };
+    
+    // 绘图数据
+    let dataHistory = []; 
+    const maxDataPoints = 300;
+    const container = document.getElementById('canvas-container');
+
+    // --- 3. 初始化 ---
+    function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x222222);
+
+        // 相机：位于 Z 轴正向，正对屏幕
+        camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 100);
+        camera.position.set(0, 0, 15); 
+
+        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        if (OrbitControlsClass) {
+            controls = new OrbitControlsClass(camera, renderer.domElement);
+            controls.enableDamping = true;
+        }
+
+        // 灯光
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 8, 5);
+        scene.add(dirLight);
+
+        createSceneObjects();
+        
+        window.addEventListener('resize', onWindowResize);
+        animate();
+    }
+
+    // --- 4. 创建场景物体 ---
+    function createSceneObjects() {
+        // --- A. 磁铁 (带标签) ---
+        const magnetGeo = new THREE.BoxGeometry(1.5, 4, 3);
+        
+        // N极 (左侧 -X, 红色)
+        const nMagnet = new THREE.Mesh(magnetGeo, new THREE.MeshPhongMaterial({ color: 0xd62828 }));
+        nMagnet.position.set(-3.5, 0, 0); 
+        scene.add(nMagnet);
+        addLabel("N", new THREE.Vector3(-3.5, 2.5, 0), "#d62828");
+
+        // S极 (右侧 +X, 蓝色)
+        const sMagnet = new THREE.Mesh(magnetGeo, new THREE.MeshPhongMaterial({ color: 0x0077b6 }));
+        sMagnet.position.set(3.5, 0, 0);
+        scene.add(sMagnet);
+        addLabel("S", new THREE.Vector3(3.5, 2.5, 0), "#0077b6");
+
+        // --- B. 磁感线 (使用 ArrowHelper 显示方向) ---
+        arrowGroup = new THREE.Group();
+        // 定义磁场方向：从 -X 指向 +X (1, 0, 0)
+        const dir = new THREE.Vector3(1, 0, 0);
+        const length = 5.0; // 箭头总长
+        const hex = 0xffff00; // 黄色
+        
+        // 生成 3x3 阵列
+        for(let y = -1.2; y <= 1.2; y += 0.8) {
+            for(let z = -1.0; z <= 1.0; z += 0.5) {
+                // 起点
+                const origin = new THREE.Vector3(-2.5, y, z);
+                const arrowHelper = new THREE.ArrowHelper(dir, origin, length, hex, 0.5, 0.3);
+                arrowGroup.add(arrowHelper);
+            }
+        }
+        updateFieldOpacity(params.B); // 初始化透明度
+        scene.add(arrowGroup);
+
+        // --- C. 线圈装置 (绕 Z 轴转) ---
+        coilGroup = new THREE.Group();
+
+        // 1. 转轴 (沿 Z 轴)
+        const axisMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.1, 0.1, 6, 16),
+            new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8 })
+        );
+        axisMesh.rotation.x = Math.PI / 2; // 默认 Cylinder 是 Y 轴，转 90度变成 Z 轴
+        coilGroup.add(axisMesh);
+
+        // 2. 矩形线框
+        const cw = 3.0; // 沿轴向长
+        const ch = 2.0; // 垂直轴向宽
+        
+        const pts = [
+            new THREE.Vector3(0, ch/2, -cw/2),
+            new THREE.Vector3(0, ch/2, cw/2),
+            new THREE.Vector3(0, -ch/2, cw/2),
+            new THREE.Vector3(0, -ch/2, -cw/2),
+            new THREE.Vector3(0, ch/2, -cw/2) // 闭合
+        ];
+        const coilGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        const coilLine = new THREE.Line(coilGeo, new THREE.LineBasicMaterial({ color: 0x00ff00, linewidth: 3 }));
+        
+        // 3. 填充面 (半透明)
+        const coilFill = new THREE.Mesh(
+            new THREE.PlaneGeometry(ch, cw), // 宽高
+            new THREE.MeshBasicMaterial({ color: 0x00ff00, opacity: 0.15, transparent: true, side: THREE.DoubleSide })
+        );
+        coilFill.rotation.y = Math.PI / 2;
+
+        // 4. 法线箭头 (指示线圈方向，粉色)
+        const normalArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0), new THREE.Vector3(0,0,0), 2.5, 0xff00ff);
+
+        coilGroup.add(coilLine);
+        coilGroup.add(coilFill);
+        coilGroup.add(normalArrow);
+
+        scene.add(coilGroup);
+    }
+
+    // 辅助：设置磁场箭头透明度
+    function updateFieldOpacity(bValue) {
+        const op = bValue * 0.4;
+        arrowGroup.children.forEach(arrow => {
+            if(arrow.line) {
+                arrow.line.material.transparent = true;
+                arrow.line.material.opacity = op;
+            }
+            if(arrow.cone) {
+                arrow.cone.material.transparent = true;
+                arrow.cone.material.opacity = op;
+            }
+        });
+    }
+
+    // 辅助：创建标签
+    function addLabel(text, pos, color) {
+        const cvs = document.createElement('canvas');
+        cvs.width = 128; cvs.height = 128;
+        const ctx = cvs.getContext('2d');
+        
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(64,64,55,0,Math.PI*2); ctx.fill();
+        ctx.lineWidth=4; ctx.strokeStyle="#fff"; ctx.stroke();
+        
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 80px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(text, 64, 70);
+        
+        const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cvs) }));
+        sprite.position.copy(pos);
+        sprite.scale.set(1.5, 1.5, 1.5);
+        scene.add(sprite);
+    }
+
+    // --- 5. 动画逻辑 ---
+    function animate() {
+        requestAnimationFrame(animate);
+
+        if (isRunning) {
+            time += 0.016; // 模拟时间流逝
+        }
+        
+        const rad0 = params.theta0 * (Math.PI / 180);
+        const angle = params.omega * time + rad0;
+        
+        coilGroup.rotation.z = angle;
+
+        // --- 物理计算 ---
+        if (isRunning) {
+            const baseS = 5.0; 
+            const S = baseS * params.areaScale;
+
+            const flux = params.B * S * Math.cos(angle);
+            const emf = params.B * S * params.omega * Math.sin(angle);
+            const current = emf; 
+
+            dataHistory.push({ flux, emf, current });
+            if (dataHistory.length > maxDataPoints) dataHistory.shift();
+            
+            drawGraphs();
+        }
+
+        if (controls) controls.update();
+        renderer.render(scene, camera);
+    }
+
+    // --- 6. 绘图系统 ---
+    function drawGraphs() {
+        const scaleRef = 8.0; 
+        drawChart('chart-flux', 'flux', '#ff4444', scaleRef, '磁通量 Φ', 'Wb');
+        drawChart('chart-emf', 'emf', '#ffff00', scaleRef * 0.8, '电动势 e', 'V');
+        drawChart('chart-current', 'current', '#00ffff', scaleRef * 0.8, '电流 i', 'A');
+    }
+
+    function drawChart(id, key, color, scaleDiv, label, unit) {
+        const cvs = document.getElementById(id);
+        if (cvs.width !== cvs.clientWidth) { cvs.width = cvs.clientWidth; cvs.height = cvs.clientHeight; }
+        const ctx = cvs.getContext('2d');
+        const w = cvs.width, h = cvs.height, mid = h/2;
+
+        // 背景
+        ctx.fillStyle = "#000"; ctx.fillRect(0,0,w,h);
+        
+        // 坐标轴
+        ctx.strokeStyle = "#444"; ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(30, 0); ctx.lineTo(30, h); // Y轴
+        ctx.moveTo(30, mid); ctx.lineTo(w, mid); // X轴
+        ctx.stroke();
+
+        // 文字
+        ctx.fillStyle = color; ctx.font = "12px sans-serif"; ctx.textAlign="left";
+        ctx.fillText(label + " ("+unit+")", 35, 14);
+        ctx.fillStyle = "#888"; ctx.textAlign="right";
+        ctx.fillText("t", w-5, mid+14);
+
+        if (dataHistory.length < 2) return;
+
+        // 波形
+        ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.beginPath();
+        for(let i=0; i<dataHistory.length; i++){
+            const val = dataHistory[i][key];
+            const x = 30 + (i / maxDataPoints) * (w - 30);
+            const y = mid - (val * (25 / scaleDiv)); // 25是像素基准
+            if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+        }
+        ctx.stroke();
+    }
+
+    // --- 7. 交互事件 ---
+    document.getElementById('btn-start').onclick = () => isRunning = true;
+    document.getElementById('btn-pause').onclick = () => isRunning = false;
+    document.getElementById('btn-reset').onclick = () => {
+        isRunning = false; time = 0; dataHistory = [];
+        coilGroup.rotation.z = params.theta0 * (Math.PI/180);
+        ['chart-flux', 'chart-emf', 'chart-current'].forEach(id => {
+            const c = document.getElementById(id);
+            c.getContext('2d').clearRect(0,0,c.width,c.height);
+        });
+    };
+
+    function bindInput(id, objKey, callback) {
+        const el = document.getElementById('input-'+id);
+        const disp = document.getElementById('val-'+id);
+        el.oninput = (e) => {
+            const v = parseFloat(e.target.value);
+            params[objKey] = v;
+            disp.innerText = v;
+            if(callback) callback(v);
+        };
+    }
+
+    bindInput('area', 'areaScale', (v) => { coilGroup.scale.set(v, v, 1); });
+    bindInput('theta', 'theta0', (v) => {
+        if(!isRunning) {
+            coilGroup.rotation.z = v * (Math.PI/180);
+            time = 0; 
+        }
+    });
+    bindInput('B', 'B', (v) => updateFieldOpacity(v));
+    bindInput('omega', 'omega');
+
+    function onWindowResize() {
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    init();
+</script>
+ </body>
+</html>
