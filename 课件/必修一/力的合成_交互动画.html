@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>力的合成 - 交互演示</title>
+  <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eaeaea;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1.8fr;
+            gap: 30px;
+        }
+        @media (max-width: 900px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+        .control-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .control-group {
+            margin-bottom: 25px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #dfe6e9;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: #2980b9;
+        }
+        .value-display {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-top: 5px;
+        }
+        .visualization {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+        .canvas-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 15px;
+            text-align: center;
+        }
+        canvas {
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+        .result-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed #ddd;
+        }
+        .result-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .result-value {
+            font-weight: 600;
+            color: #e74c3c;
+        }
+        .explanation {
+            margin-top: 30px;
+            padding: 20px;
+            background: #e8f4fc;
+            border-radius: 10px;
+            border-left: 5px solid #3498db;
+        }
+        .explanation h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .explanation p {
+            margin-bottom: 10px;
+        }
+        .formula {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: #f1f9ff;
+            border-radius: 5px;
+        }
+        .angle-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .angle-value {
+            font-weight: 600;
+            color: #e74c3c; /* 改为红色 */
+        }
+        .theta-symbol {
+            font-style: italic;
+            font-family: 'Times New Roman', serif;
+        }
+        .angle-indicator {
+            position: absolute;
+            color: #e74c3c; /* 改为红色 */
+            font-weight: bold;
+            font-size: 16px;
+            pointer-events: none;
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABKYCsxwq4wIRACL5qAQ2qCAqYkJGwLAgMRQAQOAwiyANABKA=">
+ </head>
+ <body>
+  <div class="container">
+   <header>
+    <h1>力的合成交互演示</h1>
+    <p class="subtitle">通过调节两个分力的大小和角度<span class="theta-symbol">θ</span>，观察合力的变化</p>
+   </header>
+   <div class="content">
+    <div class="control-panel">
+     <h2>控制面板</h2>
+     <div class="control-group">
+      <h3>分力大小</h3>
+      <div class="slider-container"><label for="force1">分力 F₁ (N)</label> <input type="range" id="force1" min="0" max="100" value="50">
+       <div class="value-display" id="force1Value">
+        50 N <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAfCAIAAAAJNFjbAAAAlUlEQVR42u1TWw6AMAjr/Q9NjYmJk0fHh/oFMYsga0vdwDNsWdPUvbsGFXimFiBchVldKDBkoGJ1alhIuR80mthOHRTXCZQKaXL6w3KLWGvvz+eLCECVzNQB3Z9MsN8QfNhMiaKJNZBJ+s0pYs+lrfzWRUu1x9tenaLrE/SANS4l9F2HNPeFAD+OIRiCIRiCIRiCXwgOkJuUIlPJzeQAAAAASUVORK5CYII=" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+       </div>
+      </div>
+      <div class="slider-container"><label for="force2">分力 F₂ (N)</label> <input type="range" id="force2" min="0" max="100" value="50">
+       <div class="value-display" id="force2Value">
+        50 N
+       </div>
+      </div>
+     </div>
+     <div class="control-group">
+      <h3>分力角度</h3>
+      <div class="slider-container"><label for="angle">分力 F₁ 与 F₂ 之间的夹角 <span class="theta-symbol">θ</span> (°)</label> <input type="range" id="angle" min="0" max="360" value="90">
+       <div class="value-display" id="angleValue">
+        90
+       </div>
+      </div>
+      <div class="angle-display">
+       <div>
+        0 (同向)
+       </div>
+       <div>
+        90 (垂直)
+       </div>
+       <div>
+        180 (反向)
+       </div>
+       <div>
+        270 (垂直)
+       </div>
+       <div>
+        360 (同向)
+       </div>
+      </div>
+     </div>
+     <div class="result-panel">
+      <h3>计算结果</h3>
+      <div class="result-item"><span class="result-label">合力大小 F (N):</span> <span class="result-value" id="resultantForce">70.71</span>
+      </div>
+      <div class="result-item"><span class="result-label">合力方向 α (°):</span> <span class="result-value" id="resultantAngle">45.0</span>
+      </div>
+      <div class="result-item"><span class="result-label">合力公式:</span> <span class="result-value">F = √(F₁² + F₂² + 2F₁F₂cos<span class="theta-symbol">θ</span>)</span>
+      </div>
+     </div>
+    </div>
+    <div class="visualization">
+     <div class="canvas-container">
+      <h3>力的矢量图与平行四边形法则</h3>
+      <canvas id="vectorCanvas" width="700" height="500"></canvas>
+     </div>
+     <div class="canvas-container">
+      <h3>合力大小与角度<span class="theta-symbol">θ</span>关系 (0-360度)</h3>
+      <canvas id="graphCanvas" width="700" height="400"></canvas>
+     </div>
+    </div>
+   </div>
+   <div class="explanation">
+    <h3>力的合成原理</h3>
+    <p>力的合成是指当多个力同时作用于一个物体时，可以用一个力（合力）来替代这些力，使物体产生相同的运动效果。</p>
+    <p>两个力 F₁ 和 F₂ 的合成遵循平行四边形法则：</p>
+    <div class="formula">
+     F = √(F₁² + F₂² + 2F₁F₂cos<span class="theta-symbol">θ</span>)
+    </div>
+    <p>其中 <span class="theta-symbol">θ</span> 是两个分力之间的夹角（0-360度）。</p>
+    <p>合力方向由以下公式确定：</p>
+    <div class="formula">
+     tanα = (F₂ sin<span class="theta-symbol">θ</span>) / (F₁ + F₂ cos<span class="theta-symbol">θ</span>)
+    </div>
+    <p>其中 α 是合力与 F₁ 之间的夹角。</p>
+    <p><strong>注意：</strong>本演示中角度数值直接显示在合力一侧，使用红色字体表示。</p>
+   </div>
+  </div>
+  <script>
+        // 获取DOM元素
+        const force1Slider = document.getElementById('force1');
+        const force2Slider = document.getElementById('force2');
+        const angleSlider = document.getElementById('angle');
+        const force1Value = document.getElementById('force1Value');
+        const force2Value = document.getElementById('force2Value');
+        const angleValue = document.getElementById('angleValue');
+        const resultantForce = document.getElementById('resultantForce');
+        const resultantAngle = document.getElementById('resultantAngle');
+        const vectorCanvas = document.getElementById('vectorCanvas');
+        const graphCanvas = document.getElementById('graphCanvas');
+        
+        const vectorCtx = vectorCanvas.getContext('2d');
+        const graphCtx = graphCanvas.getContext('2d');
+        
+        // 初始化值
+        let force1 = 50;
+        let force2 = 50;
+        let angle = 90; // 角度
+        let resultant = 0;
+        let resultantDir = 0;
+        
+        // 更新显示值
+        function updateValues() {
+            force1Value.textContent = force1 + ' N';
+            force2Value.textContent = force2 + ' N';
+            angleValue.textContent = angle; // 不再显示度符号
+            
+            // 计算合力
+            const rad = angle * Math.PI / 180;
+            resultant = Math.sqrt(
+                force1 * force1 + 
+                force2 * force2 + 
+                2 * force1 * force2 * Math.cos(rad)
+            );
+            
+            // 计算合力方向（与F1的夹角）
+            if (force1 + force2 * Math.cos(rad) === 0) {
+                resultantDir = 90;
+            } else {
+                resultantDir = Math.atan2(
+                    force2 * Math.sin(rad), 
+                    force1 + force2 * Math.cos(rad)
+                ) * 180 / Math.PI;
+                
+                // 确保角度在0-360度范围内
+                if (resultantDir < 0) {
+                    resultantDir += 360;
+                }
+            }
+            
+            resultantForce.textContent = resultant.toFixed(2);
+            resultantAngle.textContent = resultantDir.toFixed(1);
+            
+            // 更新图形
+            drawVectorDiagram();
+            drawGraph();
+        }
+        
+        // 绘制矢量图
+        function drawVectorDiagram() {
+            vectorCtx.clearRect(0, 0, vectorCanvas.width, vectorCanvas.height);
+            
+            const centerX = vectorCanvas.width / 2;
+            const centerY = vectorCanvas.height / 2;
+            const scale = 2.5; // 增加缩放因子以适应更大的画布
+            
+            // 绘制坐标轴
+            vectorCtx.beginPath();
+            vectorCtx.moveTo(50, centerY);
+            vectorCtx.lineTo(vectorCanvas.width - 50, centerY);
+            vectorCtx.moveTo(centerX, 50);
+            vectorCtx.lineTo(centerX, vectorCanvas.height - 50);
+            vectorCtx.strokeStyle = '#aaa';
+            vectorCtx.lineWidth = 1;
+            vectorCtx.stroke();
+            
+            // 绘制坐标轴标签
+            vectorCtx.fillStyle = '#7f8c8d';
+            vectorCtx.font = '14px Arial';
+            vectorCtx.fillText('x', vectorCanvas.width - 30, centerY - 10);
+            vectorCtx.fillText('y', centerX + 10, 30);
+            
+            // 绘制F1
+            const f1X = centerX + force1 * scale;
+            const f1Y = centerY;
+            
+            vectorCtx.beginPath();
+            vectorCtx.moveTo(centerX, centerY);
+            vectorCtx.lineTo(f1X, f1Y);
+            vectorCtx.strokeStyle = '#3498db';
+            vectorCtx.lineWidth = 3;
+            vectorCtx.stroke();
+            
+            // 绘制F1箭头
+            drawArrowhead(vectorCtx, centerX, centerY, f1X, f1Y, '#3498db');
+            
+            // 绘制F1标签
+            vectorCtx.fillStyle = '#3498db';
+            vectorCtx.font = 'bold 16px Arial';
+            vectorCtx.fillText('F₁', f1X + 10, f1Y);
+            
+            // 绘制F2
+            const rad = angle * Math.PI / 180;
+            const f2X = centerX + force2 * scale * Math.cos(rad);
+            const f2Y = centerY - force2 * scale * Math.sin(rad);
+            
+            vectorCtx.beginPath();
+            vectorCtx.moveTo(centerX, centerY);
+            vectorCtx.lineTo(f2X, f2Y);
+            vectorCtx.strokeStyle = '#2ecc71';
+            vectorCtx.lineWidth = 3;
+            vectorCtx.stroke();
+            
+            // 绘制F2箭头
+            drawArrowhead(vectorCtx, centerX, centerY, f2X, f2Y, '#2ecc71');
+            
+            // 绘制F2标签
+            vectorCtx.fillStyle = '#2ecc71';
+            vectorCtx.fillText('F₂', f2X + 10, f2Y - 10);
+            
+            // 绘制平行四边形
+            vectorCtx.beginPath();
+            vectorCtx.moveTo(centerX, centerY);
+            vectorCtx.lineTo(f1X, f1Y);
+            vectorCtx.lineTo(f1X + f2X - centerX, f1Y + f2Y - centerY);
+            vectorCtx.lineTo(f2X, f2Y);
+            vectorCtx.closePath();
+            vectorCtx.strokeStyle = '#bdc3c7';
+            vectorCtx.lineWidth = 1;
+            vectorCtx.setLineDash([5, 3]);
+            vectorCtx.stroke();
+            vectorCtx.setLineDash([]);
+            
+            // 绘制合力
+            const resX = f1X + f2X - centerX;
+            const resY = f1Y + f2Y - centerY;
+            
+            vectorCtx.beginPath();
+            vectorCtx.moveTo(centerX, centerY);
+            vectorCtx.lineTo(resX, resY);
+            vectorCtx.strokeStyle = '#e74c3c';
+            vectorCtx.lineWidth = 4;
+            vectorCtx.stroke();
+            
+            // 绘制合力箭头
+            drawArrowhead(vectorCtx, centerX, centerY, resX, resY, '#e74c3c');
+            
+            // 绘制合力标签
+            vectorCtx.fillStyle = '#e74c3c';
+            vectorCtx.fillText('F', resX + 10, resY - 10);
+            
+            // 绘制角度指示器 - 无底纹，红色字体
+            if (angle > 0 && angle < 360) {
+                // 计算合力与F1的夹角
+                const resAngle = Math.atan2(resY - centerY, resX - centerX);
+                
+                // 计算F2与合力的夹角
+                const f2Angle = Math.atan2(f2Y - centerY, f2X - centerX);
+                
+                // 计算角度标签位置 - 放在合力一侧
+                const labelAngle = (0 + (-rad)) / 2;
+                const labelDistance = 120; // 增加距离以适应更大的画布
+                const labelX = centerX + labelDistance * Math.cos(labelAngle);
+                const labelY = centerY + labelDistance * Math.sin(labelAngle);
+                
+                // 绘制角度数值 - 红色字体，无底纹
+                vectorCtx.fillStyle = '#e74c3c'; // 红色
+                vectorCtx.font = 'bold 18px Arial'; // 增加字体大小
+                vectorCtx.textAlign = 'center';
+                vectorCtx.textBaseline = 'middle';
+                vectorCtx.fillText("θ = " + angle.toString(), labelX, labelY);
+                vectorCtx.textAlign = 'left';
+                vectorCtx.textBaseline = 'alphabetic';
+            }
+        }
+        
+        // 绘制箭头
+        function drawArrowhead(ctx, fromX, fromY, toX, toY, color) {
+            const headlen = 15;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(
+                toX - headlen * Math.cos(angle - Math.PI / 6),
+                toY - headlen * Math.sin(angle - Math.PI / 6)
+            );
+            ctx.lineTo(
+                toX - headlen * Math.cos(angle + Math.PI / 6),
+                toY - headlen * Math.sin(angle + Math.PI / 6)
+            );
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // 绘制关系图
+        function drawGraph() {
+            graphCtx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+            
+            const padding = 60; // 增加内边距以适应更大的画布
+            const graphWidth = graphCanvas.width - 2 * padding;
+            const graphHeight = graphCanvas.height - 2 * padding;
+            const maxForce = Math.sqrt(force1 * force1 + force2 * force2 + 2 * force1 * force2);
+            
+            // 绘制坐标轴
+            graphCtx.beginPath();
+            graphCtx.moveTo(padding, padding);
+            graphCtx.lineTo(padding, graphCanvas.height - padding);
+            graphCtx.lineTo(graphCanvas.width - padding, graphCanvas.height - padding);
+            graphCtx.strokeStyle = '#34495e';
+            graphCtx.lineWidth = 2;
+            graphCtx.stroke();
+            
+            // 绘制坐标轴标签
+            graphCtx.fillStyle = '#34495e';
+            graphCtx.font = '16px Arial'; // 增加字体大小
+            graphCtx.fillText('角度 θ', graphCanvas.width / 2 - 20, graphCanvas.height - 15);
+            graphCtx.save();
+            graphCtx.translate(20, graphCanvas.height / 2);
+            graphCtx.rotate(-Math.PI / 2);
+            graphCtx.fillText('合力 F (N)', 0, 0);
+            graphCtx.restore();
+            
+            // 绘制刻度
+            for (let i = 0; i <= 360; i += 45) {
+                const x = padding + (i / 360) * graphWidth;
+                graphCtx.beginPath();
+                graphCtx.moveTo(x, graphCanvas.height - padding - 5);
+                graphCtx.lineTo(x, graphCanvas.height - padding + 5);
+                graphCtx.stroke();
+                graphCtx.fillText(i, x - 10, graphCanvas.height - padding + 25); // 调整标签位置
+            }
+            
+            for (let i = 0; i <= maxForce; i += 20) {
+                const y = graphCanvas.height - padding - (i / maxForce) * graphHeight;
+                graphCtx.beginPath();
+                graphCtx.moveTo(padding - 5, y);
+                graphCtx.lineTo(padding + 5, y);
+                graphCtx.stroke();
+                graphCtx.fillText(i, padding - 45, y + 5); // 调整标签位置
+            }
+            
+            // 绘制曲线
+            graphCtx.beginPath();
+            for (let i = 0; i <= 360; i++) {
+                const rad = i * Math.PI / 180;
+                const force = Math.sqrt(
+                    force1 * force1 + 
+                    force2 * force2 + 
+                    2 * force1 * force2 * Math.cos(rad)
+                );
+                
+                const x = padding + (i / 360) * graphWidth;
+                const y = graphCanvas.height - padding - (force / maxForce) * graphHeight;
+                
+                if (i === 0) {
+                    graphCtx.moveTo(x, y);
+                } else {
+                    graphCtx.lineTo(x, y);
+                }
+            }
+            graphCtx.strokeStyle = '#e74c3c';
+            graphCtx.lineWidth = 3;
+            graphCtx.stroke();
+            
+            // 绘制当前角度点
+            const currentX = padding + (angle / 360) * graphWidth;
+            const currentY = graphCanvas.height - padding - (resultant / maxForce) * graphHeight;
+            
+            graphCtx.beginPath();
+            graphCtx.arc(currentX, currentY, 8, 0, Math.PI * 2);
+            graphCtx.fillStyle = '#3498db';
+            graphCtx.fill();
+            graphCtx.strokeStyle = '#2c3e50';
+            graphCtx.lineWidth = 2;
+            graphCtx.stroke();
+            
+            // 绘制当前点标签
+            graphCtx.fillStyle = '#e74c3c'; // 改为红色
+            graphCtx.font = '14px Arial';
+            graphCtx.fillText(`(θ = ${angle}, F = ${resultant.toFixed(1)}N)`, currentX + 10, currentY - 10);
+        }
+        
+        // 事件监听
+        force1Slider.addEventListener('input', function() {
+            force1 = parseInt(this.value);
+            updateValues();
+        });
+        
+        force2Slider.addEventListener('input', function() {
+            force2 = parseInt(this.value);
+            updateValues();
+        });
+        
+        angleSlider.addEventListener('input', function() {
+            angle = parseInt(this.value);
+            updateValues();
+        });
+        
+        // 初始化
+        updateValues();
+    </script>
+ </body>
+</html>
