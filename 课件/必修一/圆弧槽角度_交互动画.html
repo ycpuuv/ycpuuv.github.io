@@ -7,387 +7,519 @@
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#0b0b14;color:#d4d4dc;font-family:'Inter','PingFang SC','Microsoft YaHei',sans-serif;display:flex;flex-direction:column;align-items:center;min-height:100vh}
-  h1{font-size:1.05em;font-weight:600;margin:14px 0 2px;letter-spacing:1px;color:#d4a373}
-  .sub{font-size:.65em;color:#5c5c72;margin-bottom:6px}
-  canvas{display:block;margin:0 auto;border-radius:8px;background:#0a0a14;max-width:600px;width:100%}
-  .panel{max-width:600px;width:90%;margin:8px auto;padding:10px 14px;background:#0e0e1e;border-radius:8px;border:1px solid #18182a}
+  h1{font-size:1.05em;font-weight:600;margin:12px 0 2px;color:#d4a373;letter-spacing:1px}
+  .sub{font-size:.62em;color:#5c5c72;margin-bottom:6px}
+  .main{max-width:620px;width:95%;margin:0 auto}
+  canvas{display:block;width:100%;border-radius:8px;background:#0a0a14;margin:0 auto}
+  .panel{background:#0e0e1e;border-radius:8px;border:1px solid #18182a;padding:10px 14px;margin:6px 0}
   .row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
   .row:last-child{margin-bottom:0}
-  .row label{font-size:.7em;color:#7a7a92;white-space:nowrap;min-width:70px}
-  .row input[type=range]{flex:1;accent-color:#d4a373;height:4px}
-  .row .val{font-size:.68em;color:#d4a373;min-width:48px;text-align:right;font-variant-numeric:tabular-nums}
+  .row label{font-size:.7em;color:#7a7a92;white-space:nowrap;min-width:60px}
+  .row input[type=range]{flex:1;accent-color:#d4a373;height:4px;cursor:pointer}
+  .row .val{font-size:.68em;color:#d4a373;min-width:42px;text-align:right}
   .btns{display:flex;gap:6px}
-  .btns button{flex:1;border-radius:5px;font-size:.68em;cursor:pointer;transition:.2s;padding:5px 0}
-  .btn-play{background:#d4a373;border:none;color:#0b0b14;font-weight:600}
-  .btn-play:disabled{background:#1a1a30;color:#5c5c72}
+  .btns button{flex:1;padding:5px 0;border-radius:5px;font-size:.68em;cursor:pointer;transition:.2s}
+  .btn-go{background:#d4a373;border:none;color:#0b0b14;font-weight:600}
+  .btn-go:disabled{background:#1a1a30;color:#5c5c72}
   .btn-reset{background:transparent;border:1px solid #2a2a48;color:#7a7a92}
   .btn-reset:hover{border-color:#d4a373;color:#d4a373}
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:5px;padding-top:5px;border-top:1px solid #18182a}
-  .item{text-align:center;padding:3px 0}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:6px;padding-top:6px;border-top:1px solid #18182a}
+  .item{text-align:center;padding:3px}
   .item .l{font-size:.58em;color:#5c5c72}
-  .item .v{font-size:.78em;color:#e0e0e8;font-variant-numeric:tabular-nums;margin-top:1px}
+  .item .v{font-size:.8em;color:#e0e0e8;margin-top:1px;font-variant-numeric:tabular-nums}
   .item .v.gold{color:#f4a261}
+  .legends{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;padding-top:6px;border-top:1px solid #18182a;justify-content:center}
+  .leg{display:flex;align-items:center;gap:4px;font-size:.6em;color:#7a7a92}
+  .leg .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .compare{display:flex;gap:8px;margin-top:5px;flex-wrap:wrap}
+  .compare label{font-size:.6em;color:#5c5c72;display:flex;align-items:center;gap:4px;cursor:pointer}
+  .compare input[type=checkbox]{accent-color:#d4a373}
   @media(max-width:480px){h1{font-size:.9em}.grid{grid-template-columns:repeat(2,1fr)}}
+
+.tabs{display:flex;gap:4px;margin-bottom:6px}
+.tabs button{flex:1;padding:4px;border-radius:4px;border:1px solid #1a1a30;background:transparent;color:#5c5c72;font-size:.62em;cursor:pointer;transition:.2s}
+.tabs button.active{background:#1a1a30;border-color:#d4a373;color:#d4a373}
+.tabs button:hover{border-color:#2a2a48;color:#7a7a92}
 </style>
 </head>
 <body>
 <h1>圆弧槽角度 · 小球落地速度与距离</h1>
-<p class="sub">改变弧槽角度 θ → 释放高度不同 → 出口速度变化 → 平抛距离改变</p>
+<p class="sub">相同初速度 · 不同发射角度 → 落地速度与水平距离的变化规律</p>
+<div class="main">
 <canvas id="c"></canvas>
 <div class="panel">
-  <div class="row">
-    <label>弧槽角度 θ</label>
-    <input type="range" id="sAngle" min="10" max="170" value="90">
-    <span class="val" id="dAngle">90°</span>
+  <div class="tabs">
+    <button class="active" id="tabSingle">单角度</button>
+    <button id="tabMulti">多角度对比</button>
   </div>
   <div class="row">
-    <label>平台高度 H</label>
-    <input type="range" id="sHeight" min="30" max="120" value="70">
-    <span class="val" id="dHeight">70</span>
+    <label>发射角 θ</label>
+    <input type="range" id="sAngle" min="10" max="85" value="37">
+    <span class="val" id="dAngle">37°</span>
+  </div>
+  <div class="row">
+    <label>初速度 v₀</label>
+    <input type="range" id="sSpeed" min="30" max="120" value="70">
+    <span class="val" id="dSpeed">70</span>
   </div>
   <div class="row">
     <label></label>
     <div class="btns">
-      <button class="btn-play" id="btnPlay">▶ 释放</button>
+      <button class="btn-go" id="btnGo">▶ 发射</button>
       <button class="btn-reset" id="btnReset">⟲ 重置</button>
     </div>
   </div>
   <div class="grid">
-    <div class="item"><div class="l">出口速度 v</div><div class="v gold" id="vExit">—</div></div>
-    <div class="item"><div class="l">飞行时间 t</div><div class="v" id="tFlight">—</div></div>
     <div class="item"><div class="l">水平距离 d</div><div class="v gold" id="dHoriz">—</div></div>
     <div class="item"><div class="l">落地速度 v'</div><div class="v" id="vLand">—</div></div>
+    <div class="item"><div class="l">最大高度 h</div><div class="v" id="maxH">—</div></div>
+    <div class="item"><div class="l">飞行时间 t</div><div class="v" id="tFlight">—</div></div>
   </div>
+  <div class="legends" id="legends"></div>
 </div>
+</div>
+
 <script>
 const c = document.getElementById('c');
 const ctx = c.getContext('2d');
 let W, H, sc;
 
 function resize() {
-  const mw = Math.min(600, innerWidth - 12);
+  const mw = Math.min(620, innerWidth - 10);
   c.width = mw;
-  c.height = mw * 0.72;
+  c.height = mw * 0.75;
   W = c.width;
   H = c.height;
-  sc = H / 260;
+  sc = H / 280;
 }
 resize();
 addEventListener('resize', resize);
 
 const G = 9.8;
-const R = 70;  // arc radius (in world units)
-const PLATFORM = { x: W/2, baseY: 0, topY: 0 };
+const GROUND_Y = H - 25;
+const LAUNCH_X = 80;
 
-let ball = {}, trail = [], phase = 'ready', running = false;
-let stats = { vExit: 0, tFlight: 0, dHoriz: 0, vLand: 0 };
-let angle = 90, platH = 70;
+let mode = 'single'; // 'single' | 'multi'
+let angle = 37, speed = 70;
+let running = false;
+let singleTrail = [];
+let singleBall = null;
+let multiResults = [];
+let stats = { d:0, v:0, h:0, t:0 };
 
 // DOM
 const sAngle = document.getElementById('sAngle');
-const sHeight = document.getElementById('sHeight');
+const sSpeed = document.getElementById('sSpeed');
 const dAngle = document.getElementById('dAngle');
-const dHeight = document.getElementById('dHeight');
-const btnPlay = document.getElementById('btnPlay');
+const dSpeed = document.getElementById('dSpeed');
+const btnGo = document.getElementById('btnGo');
 const btnReset = document.getElementById('btnReset');
-const el = id => document.getElementById(id);
+const tabSingle = document.getElementById('tabSingle');
+const tabMulti = document.getElementById('tabMulti');
 
-sAngle.oninput = () => { if(phase!=='ready')reset(); angle=+sAngle.value; dAngle.textContent=angle+'°'; draw(); };
-sHeight.oninput = () => { if(phase!=='ready')reset(); platH=+sHeight.value; dHeight.textContent=platH; draw(); };
-btnPlay.onclick = start;
+sAngle.oninput = () => { if(running&&mode==='single')stop(); angle=+sAngle.value; dAngle.textContent=angle+'°'; if(mode==='single')draw(); };
+sSpeed.oninput = () => { if(running&&mode==='single')stop(); speed=+sSpeed.value; dSpeed.textContent=speed; if(mode==='single')draw(); };
+btnGo.onclick = () => { if(mode==='single')launch(); else multiLaunch(); };
 btnReset.onclick = reset;
+tabSingle.onclick = () => { setMode('single'); };
+tabMulti.onclick = () => { setMode('multi'); };
+
+function setMode(m) {
+  mode = m;
+  tabSingle.className = m==='single'?'active':'';
+  tabMulti.className = m==='multi'?'active':'';
+  if(m==='multi') sAngle.disabled = true;
+  else sAngle.disabled = false;
+  reset();
+}
 
 function reset() {
-  phase='ready'; running=false; trail=[]; stats={vExit:0,tFlight:0,dHoriz:0,vLand:0};
-  updateStats(); btnPlay.textContent='▶ 释放'; btnPlay.disabled=false; draw();
+  running = false;
+  singleTrail = [];
+  singleBall = null;
+  multiResults = [];
+  stats = {d:0,v:0,h:0,t:0};
+  updateStats();
+  btnGo.textContent = mode==='single'?'▶ 发射':'▶ 多角度发射';
+  btnGo.disabled = false;
+  draw();
+}
+
+function stop() {
+  running = false;
+  btnGo.textContent = '▶ 发射';
+  btnGo.disabled = false;
 }
 
 function updateStats() {
-  el('vExit').textContent = stats.vExit ? stats.vExit.toFixed(2) : '—';
-  el('tFlight').textContent = stats.tFlight ? stats.tFlight.toFixed(2)+'s' : '—';
-  el('dHoriz').textContent = stats.dHoriz ? stats.dHoriz.toFixed(1) : '—';
-  el('vLand').textContent = stats.vLand ? stats.vLand.toFixed(2) : '—';
+  el('dHoriz').textContent = stats.d ? stats.d.toFixed(1) : '—';
+  el('vLand').textContent = stats.v ? stats.v.toFixed(2) : '—';
+  el('maxH').textContent = stats.h ? stats.h.toFixed(1) : '—';
+  el('tFlight').textContent = stats.t ? stats.t.toFixed(2)+'s' : '—';
 }
+const el = id => document.getElementById(id);
 
-// Convert world coords (x,y) to screen coords
-// World: origin at platform center (top surface), x right, y up
 function w2s(wx, wy) {
-  return [W/2 + wx * sc, PLATFORM.baseY - wy * sc];
+  return [LAUNCH_X + wx * sc, GROUND_Y - wy * sc];
 }
 
-function start() {
+// Single launch
+function launch() {
   const θ = angle * Math.PI / 180;
-  const half = θ / 2;
+  const v0 = speed * 0.08;
+  const vx = v0 * Math.cos(θ);
+  const vy = v0 * Math.sin(θ);
   
-  // Arc parameters
-  // Circle center at (0, R) in world coords (y relative to platform top)
-  // Bottom of arc at (0, 0) — exit point
-  // Left edge: angle half from vertical, position = R·sin(half), R(1-cos(half))
-  const startH = R * (1 - Math.cos(half));  // height drop from start to exit
-  const startX = -R * Math.sin(half);       // x position of start
-  
-  // Exit velocity from conservation of energy: v = √(2g·Δh)
-  const vExit = Math.sqrt(2 * G * startH);
-  
-  ball = {
-    phase: 'arc',
-    angle: -half,        // start at left edge
-    da: 0,
-    x: startX,
-    y: startH,
-    vx: vExit,
-    vy: 0,
-    t: 0
-  };
-  
-  phase = 'sliding';
+  singleBall = { x:0, y:0, vx, vy, t:0 };
+  singleTrail = [];
   running = true;
-  trail = [];
-  stats = { vExit: 0, tFlight: 0, dHoriz: 0, vLand: 0 };
+  stats = {d:0,v:0,h:0,t:0};
   updateStats();
-  btnPlay.textContent = '⏵ 运行中';
-  btnPlay.disabled = true;
+  btnGo.textContent = '⏵ 飞行中';
+  btnGo.disabled = true;
+  
+  // Calculate full trajectory analytically
+  const tFlight = 2 * vy / G;
+  const dHoriz = vx * tFlight;
+  const maxH = vy*vy/(2*G);
+  const vLand = Math.sqrt(vx*vx + vy*vy);
+  
+  stats.d = dHoriz;
+  stats.v = vLand;
+  stats.h = maxH;
+  stats.t = tFlight;
+  updateStats();
   
   lastT = null;
-  requestAnimationFrame(anim);
+  requestAnimationFrame(singleAnim);
 }
 
-function toScreen(wx, wy) {
-  return [W/2 + wx * sc, H - 30 - (platH - wy) * sc];
+function singleAnim(t) {
+  if (!running) return;
+  const dt = lastT ? Math.min((t - lastT) / 1000, 0.02) : 0.016;
+  lastT = t;
+  
+  const spd = 2.0;
+  const b = singleBall;
+  b.vy -= G * dt * spd;
+  b.x += b.vx * dt * spd;
+  b.y += b.vy * dt * spd;
+  
+  singleTrail.push({x:b.x, y:b.y});
+  if (singleTrail.length > 1000) singleTrail.shift();
+  
+  if (b.y <= 0) {
+    b.y = 0;
+    running = false;
+    btnGo.textContent = '⟳ 再试';
+    btnGo.disabled = false;
+  }
+  
+  draw();
+  if (running) requestAnimationFrame(singleAnim);
 }
+
+// Multi launch: launch 4 angles at once
+function multiLaunch() {
+  multiResults = [];
+  running = true;
+  btnGo.textContent = '⏵ 运行';
+  btnGo.disabled = true;
+  
+  const v0 = speed * 0.08;
+  const testAngles = [20, 37, 53, 70];
+  
+  testAngles.forEach(a => {
+    const θ = a * Math.PI / 180;
+    const vx = v0 * Math.cos(θ);
+    const vy = v0 * Math.sin(θ);
+    const tF = 2 * vy / G;
+    const dH = vx * tF;
+    const mH = vy*vy/(2*G);
+    const vL = Math.sqrt(vx*vx + vy*vy);
+    
+    multiResults.push({
+      angle: a,
+      ball: { x:0, y:0, vx, vy, t:0 },
+      trail: [],
+      done: false,
+      stats: { d:dH, v:vL, h:mH, t:tF }
+    });
+  });
+  
+  // Show comparison stats
+  stats = multiResults[1].stats; // show 37° as default
+  updateStats();
+  
+  lastT = null;
+  requestAnimationFrame(multiAnim);
+}
+
+function multiAnim(t) {
+  if (!running) return;
+  const dt = lastT ? Math.min((t - lastT) / 1000, 0.02) : 0.016;
+  lastT = t;
+  
+  const spd = 2.0;
+  let allDone = true;
+  
+  multiResults.forEach(r => {
+    if (r.done) return;
+    allDone = false;
+    const b = r.ball;
+    b.vy -= G * dt * spd;
+    b.x += b.vx * dt * spd;
+    b.y += b.vy * dt * spd;
+    r.trail.push({x:b.x, y:b.y});
+    if (r.trail.length > 1000) r.trail.shift();
+    if (b.y <= 0) {
+      b.y = 0;
+      r.done = true;
+    }
+  });
+  
+  if (allDone) {
+    running = false;
+    btnGo.textContent = '⟳ 再试';
+    btnGo.disabled = false;
+  }
+  
+  draw();
+  if (running) requestAnimationFrame(multiAnim);
+}
+
+const COLORS = ['#f4a261', '#e76f51', '#2a9d8f', '#e9c46a'];
+const COLOR_NAMES = ['橙', '红', '青', '金'];
 
 function draw() {
   ctx.clearRect(0, 0, W, H);
   
-  const θ = angle * Math.PI / 180;
-  const half = θ / 2;
-  
-  const groundY = H - 30;
-  const platBottom = groundY - 4;
-  const platTop = platBottom - platH * sc;
-  PLATFORM.baseY = platTop;
-  
   // Ground
   ctx.fillStyle = '#12121e';
-  ctx.fillRect(0, groundY, W, H - groundY);
+  ctx.fillRect(0, GROUND_Y, W, H - GROUND_Y);
   ctx.beginPath();
-  ctx.moveTo(0, groundY);
-  ctx.lineTo(W, groundY);
+  ctx.moveTo(0, GROUND_Y);
+  ctx.lineTo(W, GROUND_Y);
   ctx.strokeStyle = '#1e1e30';
   ctx.lineWidth = 1;
   ctx.stroke();
   
-  // Platform
-  const pw = 160 * sc;
+  if (mode === 'single') {
+    drawSingle();
+  } else {
+    drawMulti();
+  }
+  
+  // Ground labels
+  ctx.fillStyle = '#3a3a50';
+  ctx.font = `${Math.round(8*sc/2.5)}px sans-serif`;
+  ctx.textAlign = 'left';
+  ctx.fillText('地面', 4, GROUND_Y - 4);
+}
+
+function drawSingle() {
+  const θ = angle * Math.PI / 180;
+  const v0 = speed * 0.08;
+  
+  // Launch platform
   ctx.fillStyle = '#0e0e1e';
-  ctx.fillRect(W/2 - pw/2, platTop, pw, platBottom - platTop);
+  ctx.fillRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
   ctx.strokeStyle = '#1a1a2e';
   ctx.lineWidth = 1;
-  ctx.strokeRect(W/2 - pw/2, platTop, pw, platBottom - platTop);
+  ctx.strokeRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
   
-  // Platform label
-  ctx.fillStyle = '#3a3a50';
-  ctx.font = `${Math.round(9*sc/2.5)}px sans-serif`;
-  ctx.textAlign = 'center';
-  ctx.fillText('H = ' + platH, W/2, platBottom - 8);
-  
-  // Arc (groove)
-  const arcCX = W/2;
-  const arcCY = platTop;
+  // Launch angle arc
   ctx.beginPath();
-  ctx.arc(arcCX, arcCY, R * sc, -Math.PI/2 - half, -Math.PI/2 + half);
-  ctx.strokeStyle = '#d4a373';
-  ctx.lineWidth = 3;
-  ctx.stroke();
-  
-  // Arc angle indicator
-  ctx.beginPath();
-  ctx.arc(arcCX, arcCY, 15, -Math.PI/2 - half, -Math.PI/2 + half);
+  ctx.arc(LAUNCH_X, GROUND_Y, 25, -θ, 0);
   ctx.strokeStyle = '#2a2a48';
   ctx.lineWidth = 1;
   ctx.stroke();
   ctx.fillStyle = '#5c5c72';
   ctx.font = `${Math.round(8*sc/2.5)}px sans-serif`;
   ctx.textAlign = 'center';
-  ctx.fillText('θ='+angle.toFixed(0)+'°', arcCX, arcCY + R*sc/2);
+  ctx.fillText('θ='+angle+'°', LAUNCH_X+35, GROUND_Y-10);
   
-  // Start height indicator (dashed line)
-  if (phase === 'ready') {
-    const sH = R * (1 - Math.cos(half));
-    const sX = -R * Math.sin(half);
-    const sx = w2s(sX, sH)[0];
-    const sy = w2s(sX, sH)[1];
-    ctx.setLineDash([3,3]);
+  // Velocity vector (from launch point)
+  const arrowLen = Math.min(v0 * sc * 0.8, 60);
+  ctx.beginPath();
+  ctx.moveTo(LAUNCH_X, GROUND_Y);
+  ctx.lineTo(LAUNCH_X + arrowLen*Math.cos(θ), GROUND_Y - arrowLen*Math.sin(θ));
+  ctx.strokeStyle = '#e6b17e';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // arrowhead
+  const ax = LAUNCH_X + arrowLen*Math.cos(θ);
+  const ay = GROUND_Y - arrowLen*Math.sin(θ);
+  ctx.beginPath();
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(ax-5*Math.cos(θ-0.4), ay+5*Math.sin(θ-0.4));
+  ctx.moveTo(ax, ay);
+  ctx.lineTo(ax-5*Math.cos(θ+0.4), ay+5*Math.sin(θ+0.4));
+  ctx.stroke();
+  ctx.fillStyle = '#e6b17e';
+  ctx.font = `${Math.round(7*sc/2.5)}px sans-serif`;
+  ctx.fillText('v₀', ax+4, ay-2);
+  
+  // Trail
+  if (singleTrail.length > 1) {
     ctx.beginPath();
-    ctx.moveTo(sx, sy);
-    ctx.lineTo(sx, platTop);
-    ctx.strokeStyle = '#4a4a60';
+    const trail = singleTrail;
+    for (let i = 0; i < trail.length; i++) {
+      const [sx, sy] = w2s(trail[i].x, trail[i].y);
+      if (i === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
+    }
+    ctx.strokeStyle = 'rgba(244,162,97,0.5)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Range marker
+    if (singleBall && singleBall.y <= 0 && stats.d > 0) {
+      const [lx, ly] = w2s(stats.d, 0);
+      ctx.beginPath();
+      ctx.moveTo(LAUNCH_X, GROUND_Y);
+      ctx.lineTo(lx, GROUND_Y);
+      ctx.strokeStyle = 'rgba(244,162,97,0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3,3]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#f4a261';
+      ctx.font = `${Math.round(9*sc/2.5)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('d = '+stats.d.toFixed(1), (LAUNCH_X+lx)/2, GROUND_Y-4);
+      
+      // Landing dot
+      ctx.beginPath();
+      ctx.arc(lx, GROUND_Y, 4, 0, Math.PI*2);
+      ctx.fillStyle = '#f4a261';
+      ctx.fill();
+    }
+    
+    // Ball
+    if (singleBall && singleBall.y > 0) {
+      const [bx, by] = w2s(singleBall.x, singleBall.y);
+      drawBall(bx, by, '#f4a261');
+      
+      // Velocity vector
+      const vm = Math.sqrt(singleBall.vx*singleBall.vx + singleBall.vy*singleBall.vy);
+      if (vm > 0.01) {
+        const al = Math.min(vm * sc * 0.4, 35);
+        ctx.beginPath();
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx + singleBall.vx/vm*al, by - singleBall.vy/vm*al);
+        ctx.strokeStyle = 'rgba(230,177,126,0.5)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+  }
+  
+  // Max height marker (static)
+  if (stats.h > 0 && singleTrail.length > 0) {
+    const θr = angle * Math.PI / 180;
+    const v0r = speed * 0.08;
+    const vx = v0r * Math.cos(θr);
+    const vy = v0r * Math.sin(θr);
+    const maxH = vy*vy/(2*G);
+    const maxX = vx*vy/G;
+    const [mx, my] = w2s(maxX, maxH);
+    ctx.setLineDash([2,2]);
+    ctx.beginPath();
+    ctx.moveTo(mx, my);
+    ctx.lineTo(mx, GROUND_Y);
+    ctx.strokeStyle = '#3a3a50';
     ctx.lineWidth = 1;
     ctx.stroke();
     ctx.setLineDash([]);
     ctx.fillStyle = '#5c5c72';
-    ctx.font = `${Math.round(8*sc/2.5)}px sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText('h', sx + 4, (sy + platTop)/2);
+    ctx.font = `${Math.round(7*sc/2.5)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('h_max='+stats.h.toFixed(1), mx, my-4);
   }
+}
+
+function drawMulti() {
+  // Launch point
+  ctx.fillStyle = '#0e0e1e';
+  ctx.fillRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
+  ctx.strokeStyle = '#1a1a2e';
+  ctx.strokeRect(LAUNCH_X-20, GROUND_Y-20, 40, 20);
   
-  // Trail
-  if (trail.length > 1) {
-    ctx.beginPath();
-    for (let i = 0; i < trail.length; i++) {
-      const [sx, sy] = toScreen(trail[i].x, trail[i].y);
-      if (i === 0) ctx.moveTo(sx, sy);
-      else ctx.lineTo(sx, sy);
+  // Clear legends
+  const legDiv = document.getElementById('legends');
+  legDiv.innerHTML = '';
+  
+  // Draw trajectories for each result
+  multiResults.forEach((r, idx) => {
+    const color = COLORS[idx];
+    const trail = r.trail;
+    
+    if (trail.length > 1) {
+      ctx.beginPath();
+      for (let i = 0; i < trail.length; i++) {
+        const [sx, sy] = w2s(trail[i].x, trail[i].y);
+        if (i === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      
+      // Ball at current position
+      const b = r.ball;
+      if (!r.done) {
+        const [bx, by] = w2s(b.x, b.y);
+        drawBall(bx, by, color);
+      } else {
+        // Landing dot
+        const [lx, ly] = w2s(r.stats.d, 0);
+        ctx.beginPath();
+        ctx.arc(lx, GROUND_Y, 3, 0, Math.PI*2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
     }
-    ctx.strokeStyle = 'rgba(244,162,97,0.35)';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4,4]);
+    
+    // Legend
+    const leg = document.createElement('span');
+    leg.className = 'leg';
+    leg.innerHTML = `<span class="dot" style="background:${color}"></span>θ=${r.angle}° d=${r.stats.d.toFixed(1)}`;
+    legDiv.appendChild(leg);
+  });
+  
+  // Launch angle indicators
+  multiResults.forEach((r, idx) => {
+    const θ = r.angle * Math.PI / 180;
+    const v0 = speed * 0.08;
+    const alen = Math.min(v0 * sc * 0.6, 45);
+    ctx.beginPath();
+    ctx.moveTo(LAUNCH_X, GROUND_Y);
+    ctx.lineTo(LAUNCH_X + alen*Math.cos(θ), GROUND_Y - alen*Math.sin(θ));
+    ctx.strokeStyle = COLORS[idx];
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
     ctx.stroke();
     ctx.setLineDash([]);
-  }
-  
-  // Ball position
-  let bx, by;
-  if (phase === 'arc' || phase === 'sliding') {
-    const b = ball;
-    bx = W/2 + b.x * sc;
-    by = platTop - b.y * sc;
-  } else if (phase === 'flying') {
-    const b = ball;
-    bx = W/2 + b.x * sc;
-    by = platTop - b.y * sc;
-  } else {
-    // ready state - ball at start position
-    const sH = R * (1 - Math.cos(half));
-    const sX = -R * Math.sin(half);
-    bx = W/2 + sX * sc;
-    by = platTop - sH * sc;
-  }
-  
-  // Ball glow
-  const grd = ctx.createRadialGradient(bx-2, by-2, 1, bx, by, 7*sc/8);
-  grd.addColorStop(0, '#f4a261');
-  grd.addColorStop(1, '#d4a373');
+    ctx.fillStyle = COLORS[idx];
+    ctx.font = `${Math.round(7*sc/2.5)}px sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(r.angle+'°', LAUNCH_X + (alen+10)*Math.cos(θ), GROUND_Y - (alen+10)*Math.sin(θ)+3);
+  });
+}
+
+function drawBall(x, y, color) {
+  const grd = ctx.createRadialGradient(x-2, y-2, 1, x, y, 6*sc/8);
+  grd.addColorStop(0, '#fff');
+  grd.addColorStop(0.3, color);
+  grd.addColorStop(1, color);
   ctx.beginPath();
-  ctx.arc(bx, by, 6*sc/8, 0, Math.PI*2);
+  ctx.arc(x, y, 5*sc/8, 0, Math.PI*2);
   ctx.fillStyle = grd;
   ctx.fill();
-  
-  // Ball highlight
-  ctx.beginPath();
-  ctx.arc(bx-2, by-2, 2*sc/8, 0, Math.PI*2);
-  ctx.fillStyle = 'rgba(255,255,255,0.25)';
-  ctx.fill();
-  
-  // Velocity vector during flight
-  if (phase === 'flying') {
-    const b = ball;
-    const vm = Math.sqrt(b.vx*b.vx + b.vy*b.vy);
-    if (vm > 0.01) {
-      const alen = Math.min(vm * sc * 0.4, 45);
-      const ex = bx + (b.vx/vm) * alen;
-      const ey = by - (b.vy/vm) * alen;
-      ctx.beginPath();
-      ctx.moveTo(bx, by);
-      ctx.lineTo(ex, ey);
-      ctx.strokeStyle = '#e6b17e';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-      const a = Math.atan2(-(ey-by), ex-bx);
-      ctx.beginPath();
-      ctx.moveTo(ex, ey);
-      ctx.lineTo(ex - 6*Math.cos(a-0.4), ey + 6*Math.sin(a-0.4));
-      ctx.moveTo(ex, ey);
-      ctx.lineTo(ex - 6*Math.cos(a+0.4), ey + 6*Math.sin(a+0.4));
-      ctx.stroke();
-    }
-  }
-  
-  // Landing marker
-  if (phase === 'landed') {
-    const lx = W/2 + ball.x * sc;
-    ctx.beginPath();
-    ctx.arc(lx, groundY, 4, 0, Math.PI*2);
-    ctx.fillStyle = '#f4a261';
-    ctx.fill();
-    ctx.fillStyle = '#5c5c72';
-    ctx.font = `${Math.round(9*sc/2.5)}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('d = ' + stats.dHoriz.toFixed(1), lx, groundY - 8);
-  }
 }
 
-let lastT = null;
-
-function anim(t) {
-  if (!running) return;
-  const dt = lastT ? Math.min((t - lastT) / 1000, 0.025) : 0.016;
-  lastT = t;
-  
-  const θ = angle * Math.PI / 180;
-  const half = θ / 2;
-  const spd = 2.0; // speed multiplier for visual appeal
-  
-  if (phase === 'sliding') {
-    const b = ball;
-    // Energy: v = √(2g·Δh) where Δh = y from bottom
-    b.vy = Math.sqrt(2 * G * Math.max(0, b.y));
-    
-    // Move along arc: angular step = v/R * dt
-    const dAngle_step = b.vy / R * dt * spd;
-    b.angle += dAngle_step;
-    
-    // Update position from angle
-    b.x = R * Math.sin(b.angle);
-    b.y = R * (1 - Math.cos(b.angle));
-    
-    // Check if reached bottom
-    if (b.angle >= 0) {
-      b.angle = 0;
-      b.x = 0;
-      b.y = 0;
-      
-      // Exit velocity = √(2g·H_drop)
-      const startH = R * (1 - Math.cos(half));
-      const vExit = Math.sqrt(2 * G * startH);
-      
-      b.vx = vExit;
-      b.vy = 0;
-      
-      phase = 'flying';
-      stats.vExit = vExit;
-      
-      // Time of flight from height = platH
-      stats.tFlight = Math.sqrt(2 * platH / G);
-      stats.dHoriz = vExit * stats.tFlight;
-      stats.vLand = Math.sqrt(vExit*vExit + 2*G*platH);
-      updateStats();
-    }
-  }
-  
-  if (phase === 'flying') {
-    const b = ball;
-    b.vy -= G * dt * spd;
-    b.x += b.vx * dt * spd;
-    b.y += b.vy * dt * spd;
-    
-    trail.push({x: b.x, y: b.y});
-    if (trail.length > 800) trail.shift();
-    
-    // Land when reaching ground level (below platform base)
-    if (b.y <= -platH) {
-      b.y = -platH;
-      phase = 'landed';
-      running = false;
-      btnPlay.textContent = '⟳ 再试';
-      btnPlay.disabled = false;
-    }
-  }
-  
-  draw();
-  if (running) requestAnimationFrame(anim);
-}
-
+// Initial draw
 draw();
 </script>
 </body>
