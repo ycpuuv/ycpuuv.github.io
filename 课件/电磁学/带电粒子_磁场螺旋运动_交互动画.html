@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>带电粒子在匀强磁场中的螺旋运动 - 3D交互模型 (加深加粗轨迹)</title>
+  <style>
+        body { margin: 0; overflow: hidden; font-family: 'Microsoft YaHei', sans-serif; background-color: #ffffff; }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #333;
+            background: rgba(255,255,255,0.9);
+            padding: 15px 25px;
+            border-radius: 8px;
+            pointer-events: none;
+            z-index: 10;
+            border-left: 4px solid #3a6ea5;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(5px);
+            border: 1px solid #ccc;
+        }
+        #info h1 {
+            margin: 0 0 8px 0;
+            font-size: 1.4rem;
+            font-weight: 400;
+            color: #3a6ea5;
+        }
+        #info p {
+            margin: 5px 0;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            color: #555;
+        }
+        #controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(10px);
+            color: #333;
+            padding: 20px 30px;
+            border-radius: 50px;
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 20;
+            pointer-events: all;
+            border-bottom: 3px solid #3a6ea5;
+        }
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 140px;
+        }
+        .slider-container label {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            color: #555;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+        .slider-container input {
+            width: 100%;
+            cursor: pointer;
+            accent-color: #3a6ea5;
+        }
+        .slider-container span {
+            margin-top: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #3a6ea5;
+        }
+        .value-badge {
+            background: #e0e0e0;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #333;
+        }
+        button {
+            background: #3a6ea5;
+            border: none;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: background 0.2s;
+            border: 1px solid #2a4f7a;
+            letter-spacing: 1px;
+            min-width: 100px;
+        }
+        button:hover {
+            background: #2a4f7a;
+        }
+        button.paused {
+            background: #aa3333;
+            border-color: #7a2a2a;
+        }
+        #h-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 12px 22px;
+            border-radius: 40px;
+            border: 1px solid #3a6ea5;
+            color: #333;
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 15;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #h-value {
+            color: #3a6ea5;
+            font-size: 1.6rem;
+            margin-left: 5px;
+            font-family: monospace;
+        }
+        .legend {
+            position: absolute;
+            top: 100px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 12px 18px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            color: #333;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 15;
+            backdrop-filter: blur(5px);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 4px;
+        }
+        @media (max-width: 1000px) {
+            #controls { flex-direction: column; gap: 15px; width: 90%; border-radius: 30px; padding: 20px; bottom: 15px; }
+            .slider-container { min-width: 100%; }
+        }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABQYYEggioAJJAAAgCQwGICkKYkACCCKgGBBAYoAABCANABAA=">
+ </head>
+ <body>
+  <div id="info">
+   <h1>⚡ 带电粒子斜射入匀强磁场 (加深加粗轨迹) ⚡</h1>
+   <p>粒子从边界发射 | 螺旋线宽6(深橙) | 虚线圆线宽2(深灰) | 矢量放大 | 磁场加密 | 速度放缓 | 夹角0-90°</p>
+   <p style="font-size:0.8rem; opacity:0.7;">鼠标拖拽旋转视角 | 蓝色箭头阵列 = 磁场方向</p>
+  </div>
+  <div id="h-display">
+   <span>📏 沿磁场距离 <em>h</em> =</span> <span id="h-value">0.00</span>
+  </div>
+  <div class="legend">
+   <div class="legend-item">
+    <div class="color-box" style="background:#3366cc;"></div> 磁场方向 (蓝色箭头阵列)<img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAUCAIAAABqGAhiAAAAtklEQVR4nO2UwRKCMAxEs8p/2y83MqCxZDcFL1wkwzBbSPPSbgHubjZf+NxNDY10vP0hpq5QTA7BmCClhHjCOaFxb+1R9IFCc7n+ITqRhlbBZLPj4I1ZI0z5wmStAQC0+WmWc3Ja2RHPg+HkDbbrQyoI9+cBEtvDHQzOyDukZ6iPmcRIbbyyGdb2yo1J8pPQRk7b1PGENVzp3iqvtjR55pSRmuCTJkM3iuV3dVLcTiNdsAv2v7AXDvo9Py3cnpkAAAAASUVORK5CYII=" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+   </div>
+   <div class="legend-item">
+    <div class="color-box" style="background:#33cc33;"></div> 总速度矢量 (绿色)
+   </div>
+   <div class="legend-item">
+    <div class="color-box" style="background:#0066ff;"></div> 平行速度矢量 (蓝色)
+   </div>
+   <div class="legend-item">
+    <div class="color-box" style="background:#cc3333;"></div> 受力矢量 (红色)
+   </div>
+   <div class="legend-item">
+    <div class="color-box" style="background:#cc7700;"></div> 实线螺旋轨迹 (线宽6,深橙)
+   </div>
+   <div class="legend-item">
+    <div class="color-box" style="background:#ffffff; border:2px dashed #555; border-width:2px;"></div> 虚线圆周轨迹 (线宽2,深灰)
+   </div>
+  </div>
+  <div id="controls">
+   <div class="slider-container">
+    <label for="magAngle">🧲 磁场方向 (绕X轴) <span style="color:#3a6ea5;" id="magAngleVal">0°</span></label> <input type="range" id="magAngle" min="0" max="360" value="0" step="1"> <span>0°=沿Z, 90°=沿Y</span>
+   </div>
+   <div class="slider-container">
+    <label for="speed">⚡ 速度大小 <span style="color:#3a6ea5;" id="speedVal">1.2</span></label> <input type="range" id="speed" min="0.3" max="2.5" value="1.2" step="0.01"> <span>相对值</span>
+   </div>
+   <div class="slider-container">
+    <label for="angle">📐 投射角 (与磁场夹角) <span style="color:#3a6ea5;" id="angleVal">45°</span></label> <input type="range" id="angle" min="0" max="90" value="45" step="1"> <span>0°~90°</span>
+   </div><button id="pauseBtn">⏸️ 暂停</button>
+  </div><!-- 引入 Three.js 核心库和轨道控制器 -->
+  <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+  <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- 初始化场景、相机、渲染器 (背景白色) ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(8, 6, 12);
+        camera.lookAt(0, 0, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = false;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // --- 轨道控制器 ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.maxPolarAngle = Math.PI / 2;
+        controls.target.set(0, 0, 0);
+
+        // --- 灯光 ---
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(2, 5, 3);
+        scene.add(dirLight);
+        
+        const backLight = new THREE.PointLight(0x4466aa, 0.5);
+        backLight.position.set(-3, 1, -5);
+        scene.add(backLight);
+        
+        // 辅助网格
+        const gridHelper = new THREE.GridHelper(20, 20, 0xaaaacc, 0xccccdd);
+        gridHelper.position.y = -0.5;
+        scene.add(gridHelper);
+        
+        // 原点参考小球 (缩小)
+        const sphereGeo = new THREE.SphereGeometry(0.15, 16, 16);
+        const sphereMat = new THREE.MeshStandardMaterial({ color: 0xaaaaff, emissive: 0x222233, transparent: true, opacity: 0.3 });
+        const refSphere = new THREE.Mesh(sphereGeo, sphereMat);
+        refSphere.position.set(0, 0, 0);
+        scene.add(refSphere);
+
+        // --- 磁场箭头阵列 (加密) ---
+        const fieldArrowGroup = new THREE.Group();
+        const arrowColor = 0x3366cc;
+        const arrowLen = 1.2;
+        const headLen = 0.4;
+        const headWidth = 0.3;
+        
+        for (let x = -6; x <= 6; x += 1.8) {
+            for (let y = -3; y <= 3; y += 1.5) {
+                for (let z = -6; z <= 6; z += 1.8) {
+                    const pos = new THREE.Vector3(x, y, z);
+                    const arrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), pos, arrowLen, arrowColor, headLen, headWidth);
+                    fieldArrowGroup.add(arrow);
+                }
+            }
+        }
+        scene.add(fieldArrowGroup);
+
+        // --- 粒子 (橙色小球，缩小到0.15) ---
+        const particleGeo = new THREE.SphereGeometry(0.15, 32, 32);
+        const particleMat = new THREE.MeshStandardMaterial({ color: 0xff6600, emissive: 0x442200, roughness: 0.3 });
+        const particle = new THREE.Mesh(particleGeo, particleMat);
+        scene.add(particle);
+        const particleLight = new THREE.PointLight(0xff5500, 0.8, 5);
+        scene.add(particleLight);
+        
+        // --- 速度矢量箭头 (绿色) - 放大比例因子2.0 ---
+        const velocityArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 1.0, 0x33cc33, 0.4, 0.25);
+        scene.add(velocityArrow);
+        
+        // --- 平行速度矢量 (蓝色) - 放大 ---
+        const parallelVelocityArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 1.0, 0x0066ff, 0.4, 0.25);
+        scene.add(parallelVelocityArrow);
+        
+        // --- 受力矢量 (红色) - 放大 ---
+        const forceArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 1.0, 0xcc3333, 0.4, 0.25);
+        scene.add(forceArrow);
+        
+        // --- 实线螺旋轨迹 (金色实线，加深加粗: 颜色 #cc7700, linewidth:6) ---
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0xcc7700, linewidth: 6 });
+        const lineGeometry = new THREE.BufferGeometry();
+        const trajectoryLine = new THREE.Line(lineGeometry, lineMaterial);
+        scene.add(trajectoryLine);
+
+        // --- 虚线圆周轨迹 (表示当前垂直平面上的圆周，加深加粗: 颜色 #555555, linewidth:2) ---
+        const circlePoints = [];
+        const segments = 64;
+        for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            circlePoints.push(new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0));
+        }
+        const circleGeometry = new THREE.BufferGeometry().setFromPoints(circlePoints);
+        const circleMaterial = new THREE.LineDashedMaterial({ color: 0x555555, dashSize: 0.1, gapSize: 0.08, linewidth: 2 });
+        const circleLoop = new THREE.LineLoop(circleGeometry, circleMaterial);
+        circleLoop.computeLineDistances();
+        scene.add(circleLoop);
+
+        // --- 全局状态 ---
+        const state = {
+            magAngle: 0,
+            speed: 1.2,
+            theta: 45,
+            time: 0,
+            bDir: new THREE.Vector3(0, 0, 1),
+            vParallel: 0,
+            vPerp: 0,
+            radius: 0,
+            omega: 1.0,          // 角速度降低，运动变慢
+            u1: new THREE.Vector3(1, 0, 0),
+            u2: new THREE.Vector3(0, 1, 0),
+            startOffset: new THREE.Vector3(0, 0, -5.5),
+            isPaused: false
+        };
+        
+        let needResetTime = false;
+        const maxTrajectoryTime = 20.0; // 总轨迹时间
+        
+        // --- UI 元素 ---
+        const hValueSpan = document.getElementById('h-value');
+        const pauseBtn = document.getElementById('pauseBtn');
+        
+        pauseBtn.addEventListener('click', () => {
+            state.isPaused = !state.isPaused;
+            pauseBtn.textContent = state.isPaused ? '▶️ 继续' : '⏸️ 暂停';
+            pauseBtn.classList.toggle('paused', state.isPaused);
+        });
+
+        // --- 更新派生参数 (磁场方向、基向量、半径、起点) ---
+        function updateDerivedParams() {
+            const angleRad = THREE.MathUtils.degToRad(state.magAngle);
+            // 绕X轴旋转：0°时 (0,0,1), 90°时 (0,1,0)
+            state.bDir.set(0, Math.sin(angleRad), Math.cos(angleRad)).normalize();
+            
+            const X = new THREE.Vector3(1, 0, 0);
+            state.u1.copy(X).cross(state.bDir).normalize();
+            state.u2.copy(state.bDir).cross(state.u1).normalize();
+            
+            // 更新磁场箭头方向
+            fieldArrowGroup.children.forEach(arrow => arrow.setDirection(state.bDir));
+            
+            const v = state.speed;
+            const thetaRad = THREE.MathUtils.degToRad(state.theta);
+            state.vParallel = v * Math.cos(thetaRad);
+            state.vPerp = v * Math.sin(thetaRad);
+            state.radius = (state.vPerp === 0) ? 0 : state.vPerp / state.omega;
+            
+            // 更新起点：在磁场反方向距离原点5.5处
+            state.startOffset.copy(state.bDir).multiplyScalar(-5.5);
+            
+            // 更新虚线圆周的半径
+            circleLoop.scale.set(state.radius, state.radius, state.radius);
+        }
+        
+        // --- 生成轨迹点 (基于起点偏移) ---
+        function generateTrajectoryPoints(segments = 500, totalTime = maxTrajectoryTime) {
+            const points = [];
+            const dt = totalTime / segments;
+            const pos = new THREE.Vector3();
+            const b = state.bDir;
+            const u1 = state.u1;
+            const u2 = state.u2;
+            const vp = state.vParallel;
+            const R = state.radius;
+            const omega = state.omega;
+            const start = state.startOffset;
+            
+            for (let i = 0; i <= segments; i++) {
+                const t = i * dt;
+                const paraMove = vp * t;
+                const angle = omega * t;
+                pos.copy(b).multiplyScalar(paraMove).add(start);
+                pos.addScaledVector(u1, R * Math.cos(angle));
+                pos.addScaledVector(u2, R * Math.sin(angle));
+                points.push(pos.clone());
+            }
+            return points;
+        }
+        
+        // --- 更新轨迹几何体 ---
+        function updateTrajectoryGeometry() {
+            const points = generateTrajectoryPoints(500, maxTrajectoryTime);
+            const positions = new Float32Array(points.length * 3);
+            points.forEach((p, idx) => {
+                positions[idx*3] = p.x;
+                positions[idx*3+1] = p.y;
+                positions[idx*3+2] = p.z;
+            });
+            trajectoryLine.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            trajectoryLine.geometry.setDrawRange(0, 0); // 初始不绘制
+        }
+        
+        // --- 初始化 ---
+        updateDerivedParams();
+        updateTrajectoryGeometry();
+        
+        // --- 滑块事件 ---
+        document.getElementById('magAngle').addEventListener('input', (e) => {
+            state.magAngle = parseFloat(e.target.value);
+            document.getElementById('magAngleVal').textContent = state.magAngle + '°';
+            updateDerivedParams();
+            updateTrajectoryGeometry();
+            needResetTime = true;
+        });
+        document.getElementById('speed').addEventListener('input', (e) => {
+            state.speed = parseFloat(e.target.value);
+            document.getElementById('speedVal').textContent = state.speed.toFixed(2);
+            updateDerivedParams();
+            updateTrajectoryGeometry();
+            needResetTime = true;
+        });
+        document.getElementById('angle').addEventListener('input', (e) => {
+            state.theta = parseFloat(e.target.value);
+            document.getElementById('angleVal').textContent = state.theta + '°';
+            updateDerivedParams();
+            updateTrajectoryGeometry();
+            needResetTime = true;
+        });
+        
+        // 初始显示
+        document.getElementById('magAngleVal').textContent = '0°';
+        document.getElementById('speedVal').textContent = '1.20';
+        document.getElementById('angleVal').textContent = '45°';
+
+        // --- 动画循环 ---
+        let clock = new THREE.Clock();
+        
+        function animate() {
+            const delta = clock.getDelta();
+            
+            if (!state.isPaused) {
+                state.time += delta;
+            }
+            
+            if (needResetTime) {
+                state.time = 0;
+                clock = new THREE.Clock();
+                needResetTime = false;
+            }
+            
+            const t = state.time;
+            const b = state.bDir;
+            const u1 = state.u1;
+            const u2 = state.u2;
+            const vp = state.vParallel;
+            const vPerp = state.vPerp;
+            const R = state.radius;
+            const omega = state.omega;
+            const start = state.startOffset;
+            
+            // 粒子位置
+            const paraMove = vp * t;
+            const angle = omega * t;
+            const cosA = Math.cos(angle);
+            const sinA = Math.sin(angle);
+            
+            const pos = new THREE.Vector3().copy(b).multiplyScalar(paraMove).add(start);
+            pos.addScaledVector(u1, R * cosA);
+            pos.addScaledVector(u2, R * sinA);
+            
+            particle.position.copy(pos);
+            particleLight.position.copy(pos);
+            
+            // --- 总速度矢量 (比例因子2.0) ---
+            const vDir = new THREE.Vector3().copy(b).multiplyScalar(vp);
+            vDir.addScaledVector(u1, -vPerp * sinA);
+            vDir.addScaledVector(u2, vPerp * cosA);
+            const vMag = Math.sqrt(vp*vp + vPerp*vPerp);
+            if (vMag > 0.01) {
+                velocityArrow.setDirection(vDir.clone().normalize());
+                velocityArrow.setLength(2.0 * vMag, 0.4, 0.25);
+                velocityArrow.position.copy(pos);
+            } else {
+                velocityArrow.setLength(0);
+            }
+            
+            // --- 平行速度矢量 (比例因子2.0) ---
+            if (Math.abs(vp) > 0.01) {
+                parallelVelocityArrow.setDirection(b.clone().normalize());
+                parallelVelocityArrow.setLength(2.0 * Math.abs(vp), 0.4, 0.25);
+                parallelVelocityArrow.position.copy(pos);
+            } else {
+                parallelVelocityArrow.setLength(0);
+            }
+            
+            // --- 受力矢量 (指向圆心，比例因子2.0) ---
+            if (vPerp > 0.01) {
+                const e_r = new THREE.Vector3().copy(u1).multiplyScalar(cosA).addScaledVector(u2, sinA);
+                const forceDir = e_r.clone().negate();
+                forceArrow.setDirection(forceDir);
+                forceArrow.setLength(2.0 * vPerp, 0.4, 0.25);
+                forceArrow.position.copy(pos);
+            } else {
+                forceArrow.setLength(0);
+            }
+            
+            // --- 虚线圆周轨迹 (圆心 = 起点 + 沿b位移) ---
+            const proj = new THREE.Vector3().copy(b).multiplyScalar(paraMove).add(start);
+            circleLoop.position.copy(proj);
+            // 旋转使圆平面垂直于b
+            const quat = new THREE.Quaternion().setFromUnitVectors(
+                new THREE.Vector3(0, 0, 1),
+                b.clone().normalize()
+            );
+            circleLoop.quaternion.copy(quat);
+            
+            // --- 沿磁场距离 h (从起点开始) ---
+            hValueSpan.textContent = paraMove.toFixed(2);
+            
+            // --- 实线轨迹动态出现 ---
+            const totalPoints = trajectoryLine.geometry.attributes.position.count;
+            if (totalPoints > 1) {
+                const progress = Math.min(t / maxTrajectoryTime, 1.0);
+                const drawCount = Math.floor(progress * (totalPoints - 1)) + 1;
+                trajectoryLine.geometry.setDrawRange(0, drawCount);
+            }
+            
+            controls.update();
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        // --- 窗口自适应 ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+ </body>
+</html>
