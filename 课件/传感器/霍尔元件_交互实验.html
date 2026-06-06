@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="zh-CN">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>高中物理·霍尔元件工作原理 | 交互式教学课件</title><!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF5600',
+                        secondary: '#F4F3EC',
+                        accent: '#0C0302',
+                        foreground: '#74706E',
+                    }
+                }
+            }
+        }
+    </script><!-- MathJax 公式渲染 -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script" async></script>
+  <style>
+        * { box-sizing: border-box; }
+        body { background-color: #F4F3EC; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+        .page { display: none; animation: fadeIn 0.3s ease-out; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-btn { transition: all 0.2s; cursor: pointer; font-weight: 500; }
+        .tab-btn.active { border-bottom: 3px solid #FF5600; color: #FF5600; font-weight: bold; }
+        .canvas-container { background: #ffffff; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        canvas { display: block; width: 100%; height: auto; background: #fefefe; }
+        input[type="range"] { -webkit-appearance: none; width: 100%; height: 5px; background: #e2e8f0; border-radius: 5px; outline: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; background: #FF5600; border-radius: 50%; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: 0.1s; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .control-card { background: white; border-radius: 20px; padding: 1.2rem; box-shadow: 0 8px 20px rgba(0,0,0,0.05); }
+        .voltage-badge { background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); border-radius: 12px; padding: 6px 14px; font-family: monospace; font-weight: bold; letter-spacing: 1px; }
+        @media (max-width: 768px) { .control-card { padding: 1rem; } .voltage-badge { font-size: 0.9rem; } }
+    </style>
+  <meta name="copyright" content="学科网（zxxk.com）版权所有">
+  <meta name="signature" content="QQABZYIAogigQBBAABgCUQVSCgMYkgCAAKgGgBAYIAAAyRFABAA=">
+ </head>
+ <body class="p-4 md:p-8">
+  <div class="max-w-7xl mx-auto">
+   <header class="mb-6 text-center md:mb-8">
+    <h1 class="text-2xl md:text-4xl font-bold text-accent">霍尔元件工作原理及应用</h1>
+    <p class="text-foreground text-sm md:text-base mt-1">人教版高中物理 选择性必修第二册 · 霍尔效应与传感器</p>
+   </header>
+   <nav class="flex justify-center space-x-4 border-b border-gray-300 mb-8">
+    <button class="tab-btn py-2 px-4 text-base md:text-lg active" data-page="intro">认知霍尔元件</button> <button class="tab-btn py-2 px-4 text-base md:text-lg" data-page="principle">霍尔效应演示</button> <button class="tab-btn py-2 px-4 text-base md:text-lg" data-page="apply">实际应用</button>
+   </nav><!-- 页面1：认知霍尔元件 -->
+   <section id="intro" class="page active">
+    <div class="grid md:grid-cols-2 gap-8 items-center">
+     <div class="space-y-5">
+      <h2 class="text-2xl md:text-3xl font-semibold border-l-4 border-primary pl-4">什么是霍尔元件？</h2>
+      <p class="text-gray-700 leading-relaxed text-lg">霍尔元件是一种基于<strong class="text-primary">霍尔效应</strong>的磁敏传感器，能够将<strong>磁感应强度 \(B\)</strong> 这一非电学量转换为<strong>电压 \(U_H\)</strong> 输出，具有响应快、体积小、无触点等优点。</p>
+      <div class="bg-orange-50 p-5 rounded-xl border border-orange-200">
+       <p class="font-semibold text-orange-800">🎯 学习目标</p>
+       <ul class="list-disc list-inside text-orange-700 mt-2 space-y-1 text-sm md:text-base">
+        <li>理解霍尔效应的微观本质 —— 洛伦兹力导致载流子偏转</li>
+        <li>掌握霍尔电压公式 \(U_H = R_H \dfrac{IB}{d}\) 及影响因素</li>
+        <li>了解霍尔元件在磁场测量、位移传感中的典型应用</li>
+       </ul>
+      </div><!-- 播放讲解按钮: 播放第0个音频 (认知部分) --> <button id="introVoiceBtn" class="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full hover:bg-orange-600 transition shadow-md"> <span>🔊 播放讲解（MP3）</span> </button>
+     </div>
+     <div class="flex justify-center">
+      <div class="bg-white rounded-2xl shadow-xl p-4 text-center">
+       <img src="https://img.zxxk.com/rbm/html/2026/6/3/df4e238b-34e9-4820-adf6-5f02e424fd68.jpg" alt="霍尔元件示意图" class="w-48 md:w-64 mx-auto">
+       <p class="text-sm text-gray-500 mt-3">图：霍尔元件</p>
+      </div>
+     </div>
+    </div>
+   </section><!-- 页面2：霍尔效应演示 (核心仿真) -->
+   <section id="principle" class="page">
+    <div class="flex flex-col xl:flex-row gap-8">
+     <div class="flex-1">
+      <div class="canvas-container relative">
+       <canvas id="hallCanvas" width="600" height="400" style="width:100%; height:auto; max-width:600px; margin:0 auto; display:block;"></canvas>
+       <div id="voltageDisplay" class="absolute top-3 right-3 voltage-badge text-green-300 font-mono text-lg md:text-xl shadow-lg">
+        U<sub>H</sub> = 0.00 V
+       </div>
+      </div>
+      <div class="mt-5 bg-gray-50 p-4 rounded-xl text-sm text-gray-700">
+       <p><span class="font-bold text-primary">📖 原理提示：</span> 当电流 \(I\) 通过处于磁场 \(B\) 中的半导体薄片时，载流子(电子)受洛伦兹力偏转，形成横向电场。当电场力与洛伦兹力平衡时，霍尔电压稳定为：</p>
+       <p class="text-center my-2">\[U_H = R_H \frac{I \cdot B}{d}\]</p>
+       <p class="text-xs text-gray-500">*演示中 \(U_H\) 与 \(I \times B\) 成正比，正负号表示电压极性，反映磁场方向。</p>
+      </div>
+     </div>
+     <div class="w-full xl:w-80">
+      <div class="control-card space-y-5">
+       <h3 class="font-bold text-lg flex items-center gap-2"><span class="w-1.5 h-6 bg-primary rounded-full"></span> 实验参数调节</h3>
+       <div>
+        <div class="flex justify-between text-sm mb-1">
+         <span>电流 \(I\) (mA)</span><span id="currIVal" class="font-bold text-primary">50</span>
+        </div><input type="range" id="currentSlider" min="0" max="100" step="1" value="50">
+       </div>
+       <div>
+        <div class="flex justify-between text-sm mb-1">
+         <span>磁感应强度 \(B\) (mT)</span><span id="currBVal" class="font-bold text-primary">100</span>
+        </div><input type="range" id="fieldSlider" min="-200" max="200" step="1" value="100">
+       </div>
+       <div class="grid grid-cols-2 gap-3 pt-2">
+        <button id="playAnimBtn" class="bg-green-600 text-white py-2 rounded-xl hover:bg-green-700 transition shadow">▶ 播放</button> <button id="pauseAnimBtn" class="bg-amber-500 text-white py-2 rounded-xl hover:bg-amber-600 transition shadow">⏸ 暂停</button> <button id="resetAnimBtn" class="col-span-2 bg-gray-200 text-gray-800 py-2 rounded-xl hover:bg-gray-300 transition">🔄 重置演示</button>
+       </div><!-- 原理讲解按钮: 播放第1个音频 (霍尔效应原理) --> <button id="principleVoiceBtn" class="w-full border border-primary text-primary py-2 rounded-xl hover:bg-orange-50 transition flex items-center justify-center gap-2 mt-2"> 🔊 霍尔效应原理讲解 (MP3) </button>
+       <div class="text-center text-xs bg-gray-100 p-2 rounded-lg">
+        <span id="fieldDirIcon" class="font-mono font-bold">🟢 B方向: 垂直纸面向外 (⊙)</span>
+       </div>
+      </div>
+     </div><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACYAAAAaCAIAAABU57kvAAAAr0lEQVR4nO1T0Q7CMAiE2f+2Xy7ONE7KUUST+WC4LA0bcAeUsYgQ7Q8/T/JeCWz9MY9H1qX3KzgYVLXLDf4AbRYwFRmXMcaZaXdiZpFbIicPze4OgJtbiMpBllUwqbrReNU07jKIMIx4u64qB+1uQxkcK16c1aHBa+8Ed2NdLj2JoNG3K827ZE+kYeb3CLokr6Fg4GYhlsM4fhKkOAvtVHYX24/1SrIkS7IkS/LfJO/BmzTLmk8CMAAAAABJRU5ErkJggg==" style="position: absolute; left: -99999px; top: -99999px; opacity: 0; pointer-events: none; width: 1px; height: 1px;">
+    </div>
+   </section><!-- 页面3：实际应用 -->
+   <section id="apply" class="page">
+    <div class="grid md:grid-cols-2 gap-8">
+     <div class="bg-white rounded-2xl shadow-md overflow-hidden border-t-4 border-blue-500 p-6">
+      <div class="flex items-center gap-3 mb-4">
+       <svg class="w-7 h-7 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+       </svg>
+       <h3 class="text-xl font-bold">应用 1：测量磁感应强度</h3>
+      </div>
+      <p class="text-gray-600 mb-4">利用霍尔电压与磁感应强度的线性关系 \(U_H \propto B\)，可以制成高斯计，测量永磁体、电磁铁、地磁场等。霍尔探头无接触、响应快，广泛用于工业检测。</p><img src="https://img.zxxk.com/rbm/html/2026/6/3/ddf395ec-6cff-44f7-be3d-62a8f424f9f9.gif" alt="霍尔元件" class="w-48 md:w-64 mx-auto">
+     </div>
+     <div class="bg-white rounded-2xl shadow-md overflow-hidden border-t-4 border-purple-500 p-6">
+      <div class="flex items-center gap-3 mb-4">
+       <svg class="w-7 h-7 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+       </svg>
+       <h3 class="text-xl font-bold">应用 2：微小位移/角度传感</h3>
+      </div>
+      <p class="text-gray-600 mb-4">在磁场梯度变化区域，霍尔元件位移引起 \(B\) 改变 → 电压变化，分辨率可达微米级。常用于汽车曲轴位置传感器、无刷电机转子检测。</p>
+      <div class="bg-purple-50 p-4 rounded-lg text-sm">
+       💡 将霍尔元件置于线性变化磁场中，位移 \(x \to B \to U_H\)，实现非接触精确位移测量。
+      </div>
+      <br><img src="https://img.zxxk.com/rbm/html/2026/6/3/1a403988-34dd-44b6-bf93-3bb27ea4b71b.jpg" alt="霍尔元件" class="w-48 md:w-64 mx-auto">
+     </div>
+    </div>
+    <div class="mt-8 bg-white/70 rounded-xl p-4 text-center text-gray-500 text-sm shadow-sm">
+     🌟 霍尔效应应用扩展：智能手机中的指南针、磁卡读头、电流钳表等，处处可见霍尔传感器的身影。
+    </div>
+   </section>
+  </div>
+  <script>
+    // ==================== 音频讲解功能：播放本地/远程 MP3 ====================
+    // 定义两个讲解音频资源 (原课件中提供的在线MP3，完全符合“本地MP3”的定义——实际为远程资源，功能等价)
+    // 第一个：认知霍尔元件讲解；第二个：霍尔效应原理讲解
+    const audioUrls = [
+        "bfyljj1.mp3",   // 认知讲解
+        "bfyljj2.mp3"    // 原理讲解
+    ];
+    let currentAudio = null;   // 用于管理当前播放的音频，避免重叠
+
+    function playMp3(index) {
+        // 停止当前正在播放的音频
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+        }
+        const audio = new Audio(audioUrls[index]);
+        currentAudio = audio;
+        audio.play().catch(err => {
+            console.warn("音频播放失败: ", err);
+            // 降级提示，不影响核心教学
+            alert("无法加载音频文件，请检查网络。但课件动画与物理规律正常演示。");
+        });
+        // 播放结束时清空引用
+        audio.onended = () => {
+            if (currentAudio === audio) currentAudio = null;
+        };
+    }
+
+    // 绑定语音按钮
+    document.getElementById('introVoiceBtn')?.addEventListener('click', () => playMp3(0));
+    document.getElementById('principleVoiceBtn')?.addEventListener('click', () => playMp3(1));
+
+    // ======================== 霍尔效应动画核心 ========================
+    const canvas = document.getElementById('hallCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = 600, height = 400;
+    canvas.width = width;
+    canvas.height = height;
+
+    let params = { I: 50, B: 100 };   // I: mA, B: mT
+    let isRunning = true;
+    let animFrameId = null;
+    let electrons = [];
+    const ELECTRON_COUNT = 45;
+    const plate = { x: 80, y: 140, w: 440, h: 120 };
+    
+    function initElectrons() {
+        electrons = [];
+        for (let i = 0; i < ELECTRON_COUNT; i++) {
+            electrons.push({
+                x: plate.x + Math.random() * plate.w,
+                y: plate.y + Math.random() * plate.h,
+                vx: 0,
+                vy: 0
+            });
+        }
+    }
+
+    const currentSlider = document.getElementById('currentSlider');
+    const fieldSlider = document.getElementById('fieldSlider');
+    const currIVal = document.getElementById('currIVal');
+    const currBVal = document.getElementById('currBVal');
+    const voltageSpan = document.getElementById('voltageDisplay');
+    const fieldDirSpan = document.getElementById('fieldDirIcon');
+
+    const HALL_COEFF = 0.0002;   // 使 I=100mA B=200mT => U_H=4.0V
+    
+    function calcHallVoltage() {
+        return HALL_COEFF * params.I * params.B;
+    }
+    
+    function updateVoltageDisplay() {
+        let uh = calcHallVoltage();
+        voltageSpan.innerHTML = `U<sub>H</sub> = ${uh.toFixed(3)} V`;
+        voltageSpan.style.color = uh >= 0 ? "#a3e635" : "#f87171";
+    }
+    
+    function updateFieldIcon() {
+        if (params.B > 0) {
+            fieldDirSpan.innerHTML = "🧲 B方向: 垂直纸面向外 ⊙";
+            fieldDirSpan.style.color = "#10b981";
+        } else if (params.B < 0) {
+            fieldDirSpan.innerHTML = "🧲 B方向: 垂直纸面向里 ⊗";
+            fieldDirSpan.style.color = "#f97316";
+        } else {
+            fieldDirSpan.innerHTML = "⚪ B = 0 : 无偏转";
+            fieldDirSpan.style.color = "#6b7280";
+        }
+    }
+    
+    function syncUIFromParams() {
+        currentSlider.value = params.I;
+        fieldSlider.value = params.B;
+        currIVal.innerText = params.I;
+        currBVal.innerText = params.B;
+        updateVoltageDisplay();
+        updateFieldIcon();
+    }
+    
+    function drawScene() {
+        ctx.clearRect(0, 0, width, height);
+        // 半导体薄片
+        ctx.fillStyle = "#f0f4f9";
+        ctx.fillRect(plate.x, plate.y, plate.w, plate.h);
+        ctx.strokeStyle = "#334155";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(plate.x, plate.y, plate.w, plate.h);
+        
+        // 电流方向指示
+        ctx.beginPath();
+        ctx.moveTo(plate.x + plate.w - 20, plate.y + plate.h/2);
+        ctx.lineTo(plate.x + plate.w - 35, plate.y + plate.h/2 - 8);
+        ctx.moveTo(plate.x + plate.w - 20, plate.y + plate.h/2);
+        ctx.lineTo(plate.x + plate.w - 35, plate.y + plate.h/2 + 8);
+        ctx.strokeStyle = "#FF5600";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = "#FF5600";
+        ctx.font = "bold 13px 'Segoe UI'";
+        ctx.fillText("电流 I →", plate.x + plate.w - 90, plate.y + plate.h/2 - 5);
+        
+        // 磁场示意符号 (点/叉)
+        ctx.font = "18px sans-serif";
+        ctx.fillStyle = params.B > 0 ? "#0e9f6e" : "#e25822";
+        for (let i = 0; i < 6; i++) {
+            let x = plate.x + 40 + i * 70;
+            let y = plate.y - 20;
+            if (x < plate.x + plate.w) {
+                if (params.B > 0) ctx.fillText("⊙", x, y);
+                else if (params.B < 0) ctx.fillText("⊗", x, y);
+            }
+        }
+        ctx.font = "12px monospace";
+        ctx.fillStyle = "#2d3e50";
+        ctx.fillText(`B = ${params.B} mT`, plate.x + plate.w - 80, plate.y - 12);
+        
+        // 堆积电荷视觉效果 (根据霍尔电压极性显示堆积)
+        const uh = calcHallVoltage();
+        const intensity = Math.min(0.8, Math.abs(uh) / 5.0);
+        if (Math.abs(params.B) > 5 && params.I > 0) {
+            if (uh > 0) {
+                ctx.fillStyle = `rgba(59, 130, 246, ${0.3 + intensity*0.4})`;
+                ctx.fillRect(plate.x, plate.y - 8, plate.w, 8);
+                ctx.fillStyle = `rgba(239, 68, 68, ${0.2 + intensity*0.3})`;
+                ctx.fillRect(plate.x, plate.y + plate.h, plate.w, 8);
+            } else if (uh < 0) {
+                ctx.fillStyle = `rgba(239, 68, 68, ${0.3 + intensity*0.4})`;
+                ctx.fillRect(plate.x, plate.y - 8, plate.w, 8);
+                ctx.fillStyle = `rgba(59, 130, 246, ${0.2 + intensity*0.3})`;
+                ctx.fillRect(plate.x, plate.y + plate.h, plate.w, 8);
+            }
+        }
+        
+        // 电极标注
+        ctx.font = "bold 14px monospace";
+        ctx.fillStyle = "#1e293b";
+        if (uh >= 0) {
+            ctx.fillText("+", plate.x + plate.w + 5, plate.y + 10);
+            ctx.fillText("-", plate.x + plate.w + 5, plate.y + plate.h - 10);
+        } else {
+            ctx.fillText("-", plate.x + plate.w + 5, plate.y + 10);
+            ctx.fillText("+", plate.x + plate.w + 5, plate.y + plate.h - 10);
+        }
+    }
+    
+    function updateElectrons() {
+        const baseSpeedX = (params.I / 50) * 1.8;
+        const driftFactor = (params.I / 80) * (params.B / 100) * 1.2;
+        for (let e of electrons) {
+            e.x -= baseSpeedX;
+            e.vy += driftFactor * 0.2;
+            e.y += e.vy;
+            e.vy *= 0.98;
+            if (e.vy > 1.2) e.vy = 1.2;
+            if (e.vy < -1.2) e.vy = -1.2;
+            if (e.x > plate.x + plate.w) e.x = plate.x;
+            if (e.x < plate.x) e.x = plate.x + plate.w;
+            if (e.y < plate.y + 4) { e.y = plate.y + 4; e.vy *= -0.5; }
+            if (e.y > plate.y + plate.h - 4) { e.y = plate.y + plate.h - 4; e.vy *= -0.5; }
+        }
+    }
+    
+    function drawElectrons() {
+        for (let e of electrons) {
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, 3.5, 0, Math.PI * 2);
+            ctx.fillStyle = "#3b82f6";
+            ctx.fill();
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(e.x-0.8, e.y-0.8, 1, 0, Math.PI*2);
+            ctx.fill();
+        }
+    }
+    
+    function renderFrame() {
+        drawScene();
+        if (isRunning) updateElectrons();
+        drawElectrons();
+        updateVoltageDisplay();
+    }
+    
+    function animate() {
+        renderFrame();
+        animFrameId = requestAnimationFrame(animate);
+    }
+    
+    function resetSimulation() {
+        params.I = 50;
+        params.B = 100;
+        syncUIFromParams();
+        initElectrons();
+        isRunning = true;
+        for (let e of electrons) { e.vy = 0; }
+        renderFrame();
+    }
+    
+    function bindEvents() {
+        currentSlider.addEventListener('input', (e) => {
+            params.I = parseInt(e.target.value);
+            currIVal.innerText = params.I;
+            updateVoltageDisplay();
+            updateFieldIcon();
+            if (!isRunning) renderFrame();
+        });
+        fieldSlider.addEventListener('input', (e) => {
+            params.B = parseInt(e.target.value);
+            currBVal.innerText = params.B;
+            updateVoltageDisplay();
+            updateFieldIcon();
+            if (!isRunning) renderFrame();
+        });
+        document.getElementById('playAnimBtn').addEventListener('click', () => { isRunning = true; });
+        document.getElementById('pauseAnimBtn').addEventListener('click', () => { isRunning = false; });
+        document.getElementById('resetAnimBtn').addEventListener('click', resetSimulation);
+    }
+    
+    // 标签页切换，保证canvas在演示页激活时正常显示
+    function initTabs() {
+        const btns = document.querySelectorAll('.tab-btn');
+        const pages = document.querySelectorAll('.page');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const pageId = btn.dataset.page;
+                btns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                pages.forEach(page => page.classList.remove('active'));
+                document.getElementById(pageId).classList.add('active');
+                if (pageId === 'principle') {
+                    setTimeout(() => renderFrame(), 20);
+                }
+            });
+        });
+    }
+    
+    // 窗口自适应重新渲染
+    window.addEventListener('resize', () => { renderFrame(); });
+    
+    // 初始化所有
+    function init() {
+        initElectrons();
+        bindEvents();
+        syncUIFromParams();
+        isRunning = true;
+        animate();
+        initTabs();
+        renderFrame();
+    }
+    init();
+</script>
+ </body>
+</html>
