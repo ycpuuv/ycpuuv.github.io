@@ -13,38 +13,29 @@ h1{text-align:center;font-size:1.3em;padding:24px 16px 4px;background:linear-gra
 .banner .b{font-size:.75em;color:#f4a261;font-weight:600;letter-spacing:1px}
 .banner .s{font-size:.62em;color:#5c5c72;margin-top:2px}
 .container{max-width:580px;margin:0 auto;padding:0 12px}
-.sec{margin-bottom:20px}
-.sec-title{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 10px;background:#0e0e1e;border-radius:6px;border-left:3px solid #d4a373}
-.sec-title .icon{font-size:1em}
-.sec-title .text{font-size:.82em;color:#d4a373;font-weight:600;letter-spacing:.5px}
-.sec-title .tag{font-size:.55em;color:#5c5c72;margin-left:auto;background:#1a1a30;padding:1px 6px;border-radius:4px}
-.card{background:#0e0e1e;border:1px solid #18182a;border-radius:6px;padding:10px 12px;margin-bottom:6px}
-.card-title{font-size:.78em;color:#e0e0e8;font-weight:600;margin-bottom:5px;display:flex;align-items:center;gap:5px}
-.card-title .badge{font-size:.65em;font-weight:400;padding:0 5px;border-radius:3px;background:#1a1a30;color:#a08060}
-.card-body{font-size:.7em;color:#b0b0c0;line-height:1.7}
-.card-body .hl{color:#f4a261;font-weight:600}
-.card-body .g{color:#7a9a7a}
-.card-body .b{color:#7a9aba}
-.card-body .r{color:#d47a7a}
-.card-body table{width:100%;border-collapse:collapse;margin:4px 0;font-size:.95em}
-.card-body td,.card-body th{border:1px solid #1a1a30;padding:3px 6px;text-align:center;color:#b0b0c0}
-.card-body th{background:#131328;color:#d4a373}
-.formula{background:#0a0a18;border:1px solid #1a1a30;border-radius:4px;padding:6px 10px;margin:4px 0;font-family:'Courier New',monospace;font-size:.85em;color:#f4a261;text-align:center}
-.formula .g{color:#7a9a7a}
-.formula .b{color:#7a9aba}
-.formula .r{color:#d47a7a}
-.tip{background:rgba(212,163,115,.06);border:1px solid rgba(212,163,115,.15);border-radius:4px;padding:6px 10px;margin:4px 0;font-size:.7em;color:#b0b0c0}
-.tip strong{color:#f4a261}
-.mindmap{background:#0a0a18;border:1px solid #1a1a30;border-radius:6px;padding:10px 12px;margin:6px 0}
-.mindmap .item{display:flex;align-items:flex-start;gap:6px;margin-bottom:3px;font-size:.68em;color:#b0b0c0;line-height:1.5}
-.mindmap .item .d{color:#d4a373;flex-shrink:0}
-.footer{text-align:center;padding:16px;color:#1e1e30;font-size:.6em;letter-spacing:1px}
-@media(max-width:480px){h1{font-size:1.1em}.container{padding:0 8px}.card{padding:8px 10px}.card-body{font-size:.68em}}
+
+.sec{margin-bottom:12px}
+.sec-title{display:flex;align-items:center;gap:8px;font-size:.82em;font-weight:600;color:#c8c8d0;padding:10px 0 6px;letter-spacing:1px;border-bottom:1px solid #1a1a30;margin-bottom:8px}
+.sec-title .icon{font-size:.9em}
+.sec-title .text{color:#d4d4dc}
+.card{background:#0e0e1e;border:1px solid #1a1a30;border-radius:6px;padding:12px 14px;margin-bottom:6px}
+.card-title{font-size:.78em;color:#c8c8d0;font-weight:600;margin-bottom:6px;letter-spacing:.5px}
+.card-body{font-size:.68em;line-height:1.7;color:#b0b0c0}
+.hl{color:#f4a261;font-weight:600}
+.mindmap{}.mindmap .item{display:flex;gap:6px;padding:1.5px 0}
+.mindmap .item .d{color:#d4a373;white-space:nowrap;font-weight:500;min-width:20px;flex-shrink:0}
+.mindmap .item .tag{color:#d4a373;background:rgba(212,163,115,.08);padding:0 4px;border-radius:3px;font-size:.75em;white-space:nowrap}
+.mindmap .item .g{color:#5c9;background:rgba(85,204,153,.08);padding:0 4px;border-radius:3px}
+.indent{padding-left:20px}
+.b{font-weight:600;color:#c8c8d0}
+.mt{margin-top:6px}
+.footer{text-align:center;padding:20px;color:#2a2a40;font-size:.62em;letter-spacing:1px}
+@media(max-width:480px){h1{font-size:1.1em}.card-body{font-size:.66em}}
 </style>
 </head>
 <body>
 
-<h1>⏳ 高考物理 · 考前最后一眼</h1>
+<h1>高考物理 · 考前最后一眼</h1>
 <p class="sub">把这些过一遍，明天考场上就是你的</p>
 
 <div class="banner">
@@ -73,9 +64,10 @@ h1{text-align:center;font-size:1.3em;padding:24px 16px 4px;background:linear-gra
 <div class="card-body">
 <div class="mindmap">
 <div class="item"><span class="d">①</span><span>早餐吃饱但别吃太油腻（粥+鸡蛋+面包就够了）</span></div>
-<div class="item"><span class="d">②</span><span>提前1小时到考场，给自己留缓冲时间</span></div>
-<div class="item"><span class="d">③</span><span>进考场前：深呼吸3次，告诉自己"我复习够了"</span></div>
-<div class="item"><span class="d">④</span><span>发卷后先<strong class="hl">浏览全卷5分钟</strong>，把简单题圈出来先做</span></div>
+<div class="item"><span class="d">②</span><span><strong class="hl">提前30分钟</strong>到考场，太早了在外面干等着反而紧张</span></div>
+<div class="item"><span class="d">③</span><span><strong class="hl">478呼吸法：</strong>吸气4秒 → 屏住7秒 → 缓慢吐气8秒，做1-2次，心率能降下来</span></div>
+<div class="item"><span class="d">④</span><span>进考场前对自己说：<strong class="hl">"我复习够了，该拿的分一分不少"</strong></span></div>
+<div class="item"><span class="d">⑤</span><span>发卷后先<strong class="hl">浏览全卷5分钟</strong>，标记简单题和难题，先易后难</span></div>
 </div>
 </div>
 </div>
@@ -89,6 +81,7 @@ h1{text-align:center;font-size:1.3em;padding:24px 16px 4px;background:linear-gra
 <div class="item"><span class="d">③</span><span>计算题：<strong class="hl">公式写上去就有分</strong>，不会算也把相关公式列一排</span></div>
 <div class="item"><span class="d">④</span><span>单位别忘写！数字题最后检查一遍有没有漏单位</span></div>
 <div class="item"><span class="d">⑤</span><span>考试结束前15分钟：<strong class="hl">先涂答题卡！</strong>没涂的赶紧涂</span></div>
+<div class="item"><span class="d">⑥</span><span>紧张时：闭眼做一次<strong class="hl">478呼吸</strong>，最多耗时20秒，换了心态更值</span></div>
 </div>
 </div>
 </div>
@@ -101,6 +94,8 @@ h1{text-align:center;font-size:1.3em;padding:24px 16px 4px;background:linear-gra
 <div class="item"><span class="d">•</span><span>大题第(1)问通常很简单，<strong class="hl">先拿稳这几分</strong>再想后面</span></div>
 <div class="item"><span class="d">•</span><span>考完一科<strong class="hl">绝对不要对答案</strong>，考完就忘掉，准备下一科</span></div>
 <div class="item"><span class="d">•</span><span>你觉得难别人也觉得难，<strong class="hl">分数线跟着降</strong>，别自己吓自己</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">深呼吸技巧：</strong>紧张时吸4→屏7→吐8。吸的时候想"平静"，吐的时候想"放松"</span></div>
+<div class="item"><span class="d">•</span><span>手抖的时候：把笔放下，双手握拳5秒再松开，重复2次</span></div>
 </div>
 </div>
 </div>
@@ -109,283 +104,284 @@ h1{text-align:center;font-size:1.3em;padding:24px 16px 4px;background:linear-gra
 
 <div class="container">
 
-<!-- ==================== 气体 ==================== -->
+<!-- ==================== 实验仪器读数 ==================== -->
 <div class="sec">
-<div class="sec-title"><span class="icon">🌡️</span><span class="text">气体实验定律 · 热力学</span><span class="tag">必考1道</span></div>
+<div class="sec-title"><span class="icon">🔬</span><span class="text">实验仪器读数 · 有效数字（必考！）</span></div>
 
 <div class="card">
-<div class="card-title">🧊 核心公式 <span class="badge">闭眼能写</span></div>
-<div class="card-body">
-<div class="formula">PV = nRT &nbsp;&nbsp;→&nbsp;&nbsp; <span class="hl">PV/T = C</span></div>
-<div class="formula">等温：<span class="hl">P₁V₁ = P₂V₂</span> &nbsp;|&nbsp; 等容：<span class="hl">P₁/T₁ = P₂/T₂</span> &nbsp;|&nbsp; 等压：<span class="hl">V₁/T₁ = V₂/T₂</span></div>
-<div class="formula">热力学第一定律：<span class="hl">ΔU = Q + W</span></div>
-<div style="font-size:.85em;margin-top:3px;color:#7a7a92">
-  ΔU↑吸热升温 &nbsp; Q&gt;0吸热 &nbsp; W&gt;0外界压缩气体
-</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">🔥 气体考点·必杀技</div>
+<div class="card-title">📏 刻度尺 / 毫米刻度尺</div>
 <div class="card-body">
 <div class="mindmap">
-<div class="item"><span class="d">①</span><span><strong class="hl">液柱/活塞问题</strong>——关键找压强关系！活塞内外侧压强相等，液柱底部压强=大气压+ρgh。画受力分析图！</span></div>
-<div class="item"><span class="d">②</span><span><strong class="hl">变质量气体</strong>——用理想气体状态方程推导，充气/漏气问题把前后状态写清楚再用</span></div>
-<div class="item"><span class="d">③</span><span><strong class="hl">p-V图</strong>——等温线是双曲线（PV=常数），等容线竖直，等压线水平。图线围的面积 = 做功大小</span></div>
-<div class="item"><span class="d">④</span><span><strong class="hl">分子动理论</strong>——温度=分子平均动能的标志，体积=分子间距离→影响分子势能</span></div>
+<div class="item"><span class="d">•</span><span>最小分度 <strong class="hl">1mm</strong> → 估读到 <strong class="hl">0.1mm</strong>（即读到毫米小数点后1位）</span></div>
+<div class="item"><span class="d">•</span><span>例：3.25cm（3.2cm是准确值，0.05cm是估读值）</span></div>
 </div>
-<div class="tip"><strong>⚡ 陷阱：</strong>"缓慢"=可视为等温过程（热交换充分）；"绝热"=Q=0，用ΔU=W；"理想气体"=忽略分子间作用力，内能只与温度有关</div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-title">📌 典型模型·手到擒来</div>
+<div class="card-title">⏱ 游标卡尺（<strong class="hl">不估读！</strong>）</div>
 <div class="card-body">
-<table>
-<tr><th>模型</th><th>突破口</th><th>注意</th></tr>
-<tr><td>U形管</td><td>两边液面等高→压强相等</td><td>高度差=ΔP</td></tr>
-<tr><td>气缸活塞</td><td>受力平衡求压强</td><td>别忘了大气压</td></tr>
-<tr><td>充气/打气</td><td>总摩尔数不变</td><td>分状态列方程</td></tr>
-<tr><td>漏气/放气</td><td>剩余气体+漏出气体</td><td>总质量守恒</td></tr>
-</table>
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span>10分度：精度0.1mm，读数=主尺(mm)+游标对齐格数×0.1</span></div>
+<div class="item"><span class="d">•</span><span>20分度：精度0.05mm，读数=主尺(mm)+游标对齐格数×0.05</span></div>
+<div class="item"><span class="d">•</span><span>50分度：精度0.02mm，读数=主尺(mm)+游标对齐格数×0.02</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">关键：</strong>看游标上哪条线与主尺对齐，不是看数字！最后一位0不能省略</span></div>
+<div class="item"><span class="d">•</span><span>例：50分度，主尺11mm，游标第24条对齐 → 11+24×0.02=<strong class="hl">11.48mm</strong></span></div>
 </div>
 </div>
 </div>
+
+<div class="card">
+<div class="card-title">🔩 螺旋测微器（千分尺）</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span>精度 <strong class="hl">0.01mm</strong>，估读到0.001mm（<strong class="hl">三位小数</strong>）</span></div>
+<div class="item"><span class="d">•</span><span>读数=主尺(mm)+半毫米刻度(0.5mm)+可动刻度×0.01</span></div>
+<div class="item"><span class="d">•</span><span>注意：<strong class="hl">半毫米刻度线</strong>有没有露出！经常有人漏了0.5mm</span></div>
+<div class="item"><span class="d">•</span><span>例：主尺5.5露出，可动刻度25.0 → 5.5+25.0×0.01=<strong class="hl">5.750mm</strong></span></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">⚡ 电流表 / 电压表</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span><strong class="hl">3A量程：</strong>分度值0.1A，估读到0.01A</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">0.6A量程：</strong>分度值0.02A，估读到0.01A</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">3V量程：</strong>分度值0.1V，估读到0.01V</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">15V量程：</strong>分度值0.5V，估读到0.1V</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">规则：</strong>看分度值是1、0.1、0.01 → 估读到下一位；分度值是2、0.5等 → 估读到本位</span></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title">⏲ 打点计时器 / 秒表</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span>打点计时器：<strong class="hl">50Hz → 0.02s/点</strong>，中间隔4个点=0.1s</span></div>
+<div class="item"><span class="d">•</span><span>秒表：分度值通常0.1s，估读或不估读看题目要求</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">有效数字：</strong>结果保留几位看题目要求，一般保留2-3位</span></div>
+<div class="item"><span class="d">•</span><span>读数的<strong class="hl">最后一位0不能省略</strong>（2.50cm ≠ 2.5cm，精度不同）</span></div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="container">
+
+<!-- ==================== 气体实验定律 ==================== -->
+<div class="sec">
+<div class="sec-title"><span class="icon">🌡️</span><span class="text">气体实验定律</span></div>
+
+<div class="card">
+<div class="card-title"><span class="tag">公式</span> 三个基本定律</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="tag">玻意耳</span><span>等温：pV = C &nbsp;→&nbsp; p₁V₁ = p₂V₂</span></div>
+<div class="item"><span class="tag">查理</span><span>等容：p/T = C &nbsp;→&nbsp; p₁/T₁ = p₂/T₂</span></div>
+<div class="item"><span class="tag">盖-吕萨克</span><span>等压：V/T = C &nbsp;→&nbsp; V₁/T₁ = V₂/T₂</span></div>
+<div class="item"><span class="tag">理想气体</span><span>pV = nRT &nbsp;（R=8.31 J/mol·K，T用开尔文！）</span></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="tag">微观</span> 压强的微观解释</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">①</span><span><strong class="hl">p = (1/3)n·mv̄²</strong>（n:分子密度，m:分子质量，v̄²:速度平方平均）</span></div>
+<div class="item"><span class="d">②</span><span><strong class="hl">p = (2/3)n·Ēₖ</strong>（Ēₖ:分子平均动能）——更常用！</span></div>
+<div class="item"><span class="d">→</span><span>温度T越高 → 平均动能Ēₖ越大 → 压强p越大（体积不变时）</span></div>
+<div class="item"><span class="d">→</span><span>体积V减小 → 分子密度n增大 → 压强p增大（温度不变时）</span></div>
+<div class="item"><span class="d">•</span><span>微观本质：<strong class="hl">压强=分子对器壁碰撞的平均冲击力×单位时间碰撞次数</strong></span></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="tag">图像</span> p-V图、p-T图、V-T图</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span><strong class="hl">p-V图：</strong>等温线是双曲线（pV=C），<strong class="hl">曲线下方围成的面积=气体对外做功</strong></span></div>
+<div class="item"><span class="indent"></span><span>— 体积增大→气体对外做功（W<0，系统对外输出能量）</span></div>
+<div class="item"><span class="indent"></span><span>— 体积减小→外界对气体做功（W>0，系统获得能量）</span></div>
+<div class="item"><span class="indent"></span><span>— <strong class="hl">面积大小对比：</strong>曲线越高（p越大）、跨度越大，做功越多</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">p-T图：</strong>等容线是过原点的直线（斜率∝1/V）</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">V-T图：</strong>等压线是过原点的直线（斜率∝1/p）</span></div>
+<div class="item"><span class="d">•</span><span>注意：<strong class="hl">原点处T=0K（-273℃）</strong>，画图时要把直线延长到原点附近</span></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="tag">绝热</span> 做工时间很短 → 绝热过程</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span><strong class="hl">绝热过程：</strong>Q=0，系统与外界无热交换</span></div>
+<div class="item"><span class="indent"></span><span>— 常见场景：气体被快速压缩/膨胀（打气筒、内燃机）</span></div>
+<div class="item"><span class="indent"></span><span>— 关键词：<strong class="hl">"快速"、"很短时间"、"来不及传热"</strong> → 按绝热处理</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">热力学第一定律：</strong>ΔU = Q + W&nbsp;&nbsp;（Q是吸热，W是做功）</span></div>
+<div class="item"><span class="indent"></span><span>— 绝热 Q=0 → <strong class="hl">ΔU = W</strong>（做功完全转化为内能变化）</span></div>
+<div class="item"><span class="indent"></span><span>— 压缩气体 → W>0 → ΔU>0 → 温度升高</span></div>
+<div class="item"><span class="indent"></span><span>— 气体膨胀 → W<0 → ΔU<0 → 温度降低</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">绝热线比等温线更陡：</strong>在p-V图上，同一气体绝热线斜率大于等温线</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">pVᵞ = C</strong>（γ=cp/cv，空气γ≈1.4）——绝热过程方程</span></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="tag">模型</span> 液柱/活塞/变质量气体</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="tag">液柱</span><span>压强相等：p₀ + ρgh = pᵢ（注意h是竖直高度，不是斜长）</span></div>
+<div class="item"><span class="tag">活塞</span><span>平衡：p·S = p₀·S + mg（受力分析！）</span></div>
+<div class="item"><span class="tag">变质量</span><span><strong class="hl">理想气体状态方程不能用</strong>，用克拉珀龙方程：pV = nRT</span></div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="container">
 
 <!-- ==================== 原子物理 ==================== -->
 <div class="sec">
-<div class="sec-title"><span class="icon">⚛️</span><span class="text">原子物理 · 核反应</span><span class="tag">必考1~2道</span></div>
+<div class="sec-title"><span class="icon">⚛️</span><span class="text">原子物理</span></div>
 
 <div class="card">
-<div class="card-title">🧬 必记衰变类型 <span class="badge">选择常考</span></div>
+<div class="card-title"><span class="tag">核反应</span> 四种衰变</div>
 <div class="card-body">
-<table>
-<tr><th>衰变</th><th>通式</th><th>本质</th><th>穿透力</th></tr>
-<tr><td>α衰变</td><td>ₐᵐX → ₐ₋₂ᵐ⁻⁴Y + ₂⁴He</td><td>2质子+2中子飞出</td><td>最弱（一张纸）</td></tr>
-<tr><td>β衰变</td><td>ₐᵐX → ₐ₊₁ᵐY + ₋₁⁰e</td><td>中子→质子+电子</td><td>中等（几mm铝）</td></tr>
-<tr><td>γ衰变</td><td>伴随α/β放出光子</td><td>激发态→基态</td><td>最强（几cm铅）</td></tr>
-</table>
-<div class="tip"><strong>⚡ 口诀：</strong>α衰变质量数减4电荷减2，β衰变质量数不变电荷加1，γ衰变是能量释放没有核子变化</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">☢️ 核反应四大类型</div>
-<div class="card-body">
-<table>
-<tr><th>类型</th><th>例子</th><th>特点</th></tr>
-<tr><td>α衰变</td><td>²³⁸U → ²³⁴Th + α</td><td>自发</td></tr>
-<tr><td>β衰变</td><td>²³⁴Th → ²³⁴Pa + β</td><td>自发</td></tr>
-<tr><td>人工核反应</td><td>¹⁴N + α → ¹⁷O + p</td><td>人为轰击</td></tr>
-<tr><td>裂变</td><td>²³⁵U + n → ¹⁴¹Ba + ⁹²Kr + 3n</td><td>重核分裂</td></tr>
-<tr><td>聚变</td><td>²H + ³H → ⁴He + n</td><td>轻核结合</td></tr>
-</table>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">📊 半衰期与质量亏损</div>
-<div class="card-body">
-<div class="formula">N = N₀·(½)^(t/T) &nbsp;&nbsp; m = m₀·(½)^(t/T)</div>
-<div style="font-size:.82em;margin:3px 0;color:#7a7a92">T=半衰期，t=经过时间。半衰期由原子核内部决定，与温度/压强/化合态无关！</div>
-<div class="formula">ΔE = Δm·c² &nbsp;&nbsp; 质量亏损<span class="r">↓</span> 结合能<span class="g">↑</span> 核越稳</div>
-<div class="tip"><strong>⚡ 比结合能：</strong>铁（⁵⁶Fe）附近比结合能最大，核最稳定。裂变和聚变都是比结合能小的变成大的，释放能量。</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">🔬 波粒二象性·光电效应</div>
-<div class="card-body">
-<div class="formula">E = hν = hc/λ &nbsp;&nbsp; p = h/λ</div>
-<div class="formula">光电效应：<span class="hl">Eₖ = hν - W₀</span></div>
-<div style="font-size:.82em;margin:3px 0;color:#7a7a92">
-  h=6.63×10⁻³⁴J·s &nbsp; c=3×10⁸m/s &nbsp; 1eV=1.6×10⁻¹⁹J
-</div>
-<div class="tip"><strong>⚡ 光电效应规律：</strong>①存在截止频率ν₀（ν₀=W₀/h）②光强只影响光电子数不影响动能③瞬时性（&lt;10⁻⁹s）④Eₖ随ν增大线性增大</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">🎯 氢原子能级 <span class="badge">必考1题</span></div>
-<div class="card-body">
-<div class="formula">Eₙ = -13.6/n² eV</div>
 <div class="mindmap">
-<div class="item"><span class="d">①</span><span>从高能级→低能级：<span class="hl">放出光子</span>，E = Eᵢ - Eⱼ = hν</span></div>
-<div class="item"><span class="d">②</span><span>从低能级→高能级：<span class="hl">吸收光子</span>，光子能量必须精确等于能级差</span></div>
-<div class="item"><span class="d">③</span><span>从n能级到基态：最多发出 <span class="hl">C²ₙ = n(n-1)/2</span> 种不同频率的光</span></div>
-<div class="item"><span class="d">④</span><span>电离能 = 13.6/n² eV（从n能级到无穷远）</span></div>
-</div>
-<div class="tip"><strong>⚡ 陷阱：</strong>入射光子能量大于能级差但不足以上一能级→<strong class="r">不会吸收</strong>（只能精确吸收）。但如果是实物粒子（电子）碰撞→能量给一部分也行！</div>
+<div class="item"><span class="tag">α衰变</span><span>₈₄²¹⁰Po → ₈₂²⁰⁶Pb + ₂⁴He&nbsp;&nbsp;（质量数减4，电荷数减2）</span></div>
+<div class="item"><span class="tag">β衰变</span><span>₉₂²³⁸U → ₉₃²³⁸Np + ₋₁⁰e + ν̄ₑ&nbsp;&nbsp;（一个中子变质子+电子）</span></div>
+<div class="item"><span class="tag">γ衰变</span><span>伴随α或β衰变，放出光子（原子核从激发态→基态）</span></div>
+<div class="item"><span class="tag">半衰期</span><span>τ = ln2/λ，N = N₀(½)^(t/T)，<strong class="hl">半衰期与外界条件无关</strong></span></div>
 </div>
 </div>
 </div>
+
+<div class="card">
+<div class="card-title"><span class="tag">光电效应</span> 爱因斯坦方程</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span><strong class="hl">hν = W₀ + Eₖ</strong>（光子能量=逸出功+光电子动能）</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">截止频率：</strong>ν₀ = W₀/h &nbsp;&nbsp; ＜ν₀怎么照都没光电子</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">I-U图：</strong>饱和电流(光强)→遏止电压(频率)→反向截止</span></div>
+</div>
+</div>
+</div>
+
+<div class="card">
+<div class="card-title"><span class="tag">能级</span> 氢原子跃迁</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span>Eₙ = -13.6/n² eV&nbsp;&nbsp; 基态E₁=-13.6eV</span></div>
+<div class="item"><span class="d">•</span><span>从n→m：ΔE = Eₙ - Eₘ = hν（放出一个光子）</span></div>
+<div class="item"><span class="d">•</span><span>能发射的光子种类：Cₙ² = n(n-1)/2（从n能级向下跃迁）</span></div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="container">
 
 <!-- ==================== 光学 ==================== -->
 <div class="sec">
-<div class="sec-title"><span class="icon">🔦</span><span class="text">几何光学 · 物理光学</span><span class="tag">必考1道</span></div>
+<div class="sec-title"><span class="icon">🔦</span><span class="text">光学</span></div>
 
 <div class="card">
-<div class="card-title">📐 折射定律·全反射 <span class="badge">大题可能考</span></div>
-<div class="card-body">
-<div class="formula">n = sinθ₁/sinθ₂ = c/v</div>
-<div class="formula">全反射：<span class="hl">sinC = 1/n</span></div>
-<div class="tip"><strong>⚡ 全反射条件：</strong>①光密→光疏（n₁>n₂）②入射角≥临界角C。C满足sinC=n₂/n₁。光导纤维用的就是这个原理！</div>
-<div style="font-size:.82em;margin:4px 0;color:#7a7a92">
-  <span class="hl">常见介质折射率：</span>空气≈1，水=4/3≈1.33，玻璃≈1.5，钻石≈2.4
-</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">🌈 光的干涉·衍射·偏振</div>
+<div class="card-title"><span class="tag">折射</span> 折射定律 + 全反射</div>
 <div class="card-body">
 <div class="mindmap">
-<div class="item"><span class="d">① 双缝干涉</span><span>——<span class="hl">Δx = λL/d</span>（λ波长，L缝到屏距离，d双缝间距）亮纹：光程差=kλ，暗纹：光程差=(2k+1)λ/2</span></div>
-<div class="item"><span class="d">② 薄膜干涉</span><span>——肥皂泡彩色条纹、油膜。上下表面反射光干涉</span></div>
-<div class="item"><span class="d">③ 单缝衍射</span><span>——缝越小衍射越明显。中央亮纹最宽最亮，两侧对称减弱</span></div>
-<div class="item"><span class="d">④ 偏振</span><span>——横波特有。自然光→偏振片→偏振光。3D电影、偏光太阳镜</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">n₁sinθ₁ = n₂sinθ₂</strong>&nbsp;&nbsp;（注意光路可逆）</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">全反射条件：</strong>光从光密→光疏，且入射角≥临界角C</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">sinC = 1/n</strong>&nbsp;&nbsp;（n是光密介质折射率）</span></div>
+<div class="item"><span class="d">•</span><span>n = c/v &nbsp; 频率越高→n越大→在介质中速度越慢</span></div>
 </div>
-<div class="tip"><strong>⚡ 区分：</strong>干涉是两列相干波叠加（等间距），衍射是一列波绕过障碍（中央宽两侧窄）。条纹间距越大→λ越大→频率越小→折射率越小！</div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-title">💡 光 vs 机械波</div>
+<div class="card-title"><span class="tag">干涉</span> 双缝干涉 + 薄膜干涉</div>
 <div class="card-body">
-<table>
-<tr><th>性质</th><th>光（电磁波）</th><th>机械波</th></tr>
-<tr><td>介质</td><td><span class="g">不需要</span></td><td>需要（固/液/气）</td></tr>
-<tr><td>速度</td><td>c=3×10⁸m/s（真空中）</td><td>v=λf（介质决定）</td></tr>
-<tr><td>快慢规律</td><td>n越大v越慢</td><td>固&gt;液&gt;气</td></tr>
-<tr><td>偏振</td><td><span class="g">能偏振</span>（横波）</td><td>横波能，纵波不能</td></tr>
-</table>
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span>明纹：Δx = kλL/d &nbsp;&nbsp; 暗纹：Δx = (2k+1)λL/2d</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">条纹间距：</strong>Δx = λL/d（d是缝距，L是缝到屏距）</span></div>
+<div class="item"><span class="d">•</span><span>用白光→中央白色，两边彩色（紫到红）</span></div>
 </div>
 </div>
 </div>
 
-<!-- ==================== 振动与波 ==================== -->
+<div class="card">
+<div class="card-title"><span class="tag">衍射</span> 明显衍射条件</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">•</span><span>缝宽/障碍物尺寸 <strong class="hl">≤ 波长</strong> 才明显衍射</span></div>
+<div class="item"><span class="d">•</span><span>光的波长越短（紫光），衍射越不明显</span></div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="container">
+
+<!-- ==================== 机械振动与波 ==================== -->
 <div class="sec">
-<div class="sec-title"><span class="icon">〰️</span><span class="text">机械振动 · 机械波</span><span class="tag">必考1道</span></div>
+<div class="sec-title"><span class="icon">〰️</span><span class="text">机械振动与波</span></div>
 
 <div class="card">
-<div class="card-title">🎵 简谐振动核心</div>
+<div class="card-title"><span class="tag">简谐振动</span> 基本公式</div>
 <div class="card-body">
-<div class="formula">F = -kx &nbsp;&nbsp; a = -kx/m &nbsp;&nbsp; T = 2π√(m/k)</div>
-<div class="formula">单摆：<span class="hl">T = 2π√(L/g)</span></div>
 <div class="mindmap">
-<div class="item"><span class="d">①</span><span><strong class="hl">对称性：</strong>从最大位移到平衡位置，动能↑势能↓，机械能守恒。质点在两端速度=0加速度最大，平衡位置速度最大加速度=0</span></div>
-<div class="item"><span class="d">②</span><span><strong class="hl">单摆周期T与摆球质量m无关！</strong>与振幅振幅无关（小角度条件下）</span></div>
-<div class="item"><span class="d">③</span><span><strong class="hl">受迫振动：</strong>驱动力频率=系统固有频率→共振（振幅最大）</span></div>
+<div class="item"><span class="d">•</span><span>x = A·sin(ωt+φ₀)&nbsp;&nbsp; v = Aω·cos(ωt+φ₀)</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">弹簧振子：</strong>T = 2π√(m/k)&nbsp;&nbsp;（与振幅无关！）</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">单摆：</strong>T = 2π√(L/g)&nbsp;&nbsp;（与振幅、摆球质量无关！）</span></div>
+<div class="item"><span class="d">•</span><span>回复力：F = -kx（注意负号，方向与位移相反）</span></div>
 </div>
 </div>
 </div>
 
 <div class="card">
-<div class="card-title">🌊 机械波</div>
+<div class="card-title"><span class="tag">机械波</span> 波速 · 波长 · 频率</div>
 <div class="card-body">
-<div class="formula">v = λf = λ/T &nbsp;（波速仅取决于介质，与频率无关！）</div>
 <div class="mindmap">
-<div class="item"><span class="d">①</span><span><strong class="hl">振动与波的关系：</strong>振动是质点的运动，波是振动形式的传播。质点不随波迁移！</span></div>
-<div class="item"><span class="d">②</span><span><strong class="hl">波形图vs振动图：</strong>波形图横轴x（谁在振动），振动图横轴t（什么时候振动）。波形图看波长λ，振动图看周期T</span></div>
-<div class="item"><span class="d">③</span><span><strong class="hl">波的叠加：</strong>两列波相遇——位移=各自位移的矢量和。干涉条件：频率相同、相位差恒定</span></div>
-<div class="item"><span class="d">④</span><span><strong class="hl">多普勒效应：</strong>波源靠近→频率变高（声音变尖），远离→频率变低（声音变沉）</span></div>
-</div>
-<div class="tip"><strong>⚡ 判断质点振动方向：</strong>"上坡下振，下坡上振"——波形图向上走时质点向下振动，反之向上。或者用"同侧法"。多画图！</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">📏 波的干涉·加强减弱</div>
-<div class="card-body">
-<div class="formula">加强：Δr = <span class="hl">nλ</span> &nbsp;（n=0,±1,±2……）</div>
-<div class="formula">减弱：Δr = <span class="hl">(2n+1)λ/2</span></div>
-<div style="font-size:.82em;margin:3px 0;color:#7a7a92;line-height:1.6">
-  加强点振幅 = A₁ + A₂（振动最剧烈）<br>
-  减弱点振幅 = |A₁ - A₂|（可能完全不振动）<br>
-  注意：加强点不是一直处于波峰，而是振幅更大！
-</div>
+<div class="item"><span class="d">•</span><span><strong class="hl">v = λf = λ/T</strong>（波速由介质决定，频率由波源决定）</span></div>
+<div class="item"><span class="d">•</span><span>波传到各质点：振动方向与传播方向的关系（横波⊥，纵波∥）</span></div>
+<div class="item"><span class="d">•</span><span>判断波的传播方向与质点振动方向的关系：<strong class="hl">"上下坡法"或"同侧法"</strong></span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">多普勒效应：</strong>波源靠近→频率变高（音调变高），远离→频率变低</span></div>
 </div>
 </div>
 </div>
 
-<!-- ==================== 动量与能量 ==================== -->
+</div>
+
+<div class="container">
+
+<!-- ==================== 动量 ==================== -->
 <div class="sec">
-<div class="sec-title"><span class="icon">💥</span><span class="text">动量 · 碰撞 · 能量</span><span class="tag">常考</span></div>
+<div class="sec-title"><span class="icon">💥</span><span class="text">动量 · 碰撞</span></div>
 
 <div class="card">
-<div class="card-title">⚡ 动量守恒·三种碰撞</div>
-<div class="card-body">
-<div class="formula">m₁v₁ + m₂v₂ = m₁v₁' + m₂v₂'</div>
-<table>
-<tr><th>碰撞类型</th><th>动量</th><th>动能</th><th>特点</th></tr>
-<tr><td>弹性</td><td>守恒✓</td><td>守恒✓</td><td>不粘在一起，如台球</td></tr>
-<tr><td>非弹性</td><td>守恒✓</td><td>减少</td><td>一般碰撞</td></tr>
-<tr><td>完全非弹性</td><td>守恒✓</td><td>损失最大</td><td>粘在一起运动</td></tr>
-</table>
-<div class="tip"><strong>⚡ 爆炸/反冲：</strong>动量也守恒（内力远大于外力）。人船模型、火箭发射、原子核衰变反冲都是典型！</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">📐 人船模型（必会）</div>
-<div class="card-body">
-<div class="formula">m₁x₁ = m₂x₂ &nbsp; x₁ + x₂ = L（相对位移）</div>
-<div style="font-size:.82em;color:#7a7a92;line-height:1.6">
-  人在船上走→船向反方向移动。系统质心位置不变。<br>
-  适用于：人在船上、大炮发射、劈上滑块等——所有"系统内一部分运动带动另一部分"的问题！
-</div>
-</div>
-</div>
-</div>
-
-<!-- ==================== 实验 ==================== -->
-<div class="sec">
-<div class="sec-title"><span class="icon">🔬</span><span class="text">必看实验</span><span class="tag">实验题15分</span></div>
-
-<div class="card">
-<div class="card-title">📊 力学&电学实验要点</div>
-<div class="card-body">
-<table>
-<tr><th>实验</th><th>关键操作</th><th>误差来源</th></tr>
-<tr><td>测重力加速度g</td><td>单摆测L和T，T≥5次取平均</td><td>摆角过大、空气阻力</td></tr>
-<tr><td>验证动量守恒</td><td>气垫导轨水平、碰前碰后各测一次</td><td>摩擦力、测距误差</td></tr>
-<tr><td>测折射率</td><td>插大头针，画入射/出射光线</td><td>针不垂直、画线偏移</td></tr>
-<tr><td>伏安法测电阻</td><td><span class="hl">大内小外</span></td><td>电表内阻影响</td></tr>
-</table>
-<div class="tip"><strong>⚡ 大内小外：</strong>大电阻用内接法（电流表内接），小电阻用外接法（电流表外接）。"大"指电阻远大于电流表内阻，"小"指电阻远小于电压表内阻。</div>
-</div>
-</div>
-
-<div class="card">
-<div class="card-title">🔢 读数·有效数字·仪器使用</div>
+<div class="card-title"><span class="tag">公式</span> 动量守恒 + 冲量定理</div>
 <div class="card-body">
 <div class="mindmap">
-<div class="item"><span class="d">① 游标卡尺</span><span>——不用估读！主尺mm+游标对齐格数×精度（10分度0.1，20分度0.05，50分度0.02）</span></div>
-<div class="item"><span class="d">② 螺旋测微器</span><span>——<strong class="hl">要估读！</strong>主尺mm+半刻度(0.5)+转筒读数×0.01mm，结果保留3位小数</span></div>
-<div class="item"><span class="d">③ 多用电表</span><span>——欧姆档：指针在中央附近最准（选合适倍率）；每次换档要调零！不测电阻时断开电源！</span></div>
-<div class="item"><span class="d">④ 打点计时器</span><span>——先通电后放纸带，50Hz→T=0.02s，Δx=aT²求加速度，中间时刻速度=平均速度</span></div>
-</div>
+<div class="item"><span class="d">•</span><span><strong class="hl">动量定理：</strong>Ft = Δp = mv₂ - mv₁（冲量=动量变化）</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">动量守恒：</strong>m₁v₁+m₂v₂ = m₁v₁'+m₂v₂'（合外力为零时用）</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">碰撞类型：</strong>弹性的→动量守恒+机械能守恒；非弹性的→动量守恒+机械能不守恒</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">人船模型：</strong>m₁x₁ = m₂x₂（人是m₁，船是m₂，x₁+x₂=L）</span></div>
 </div>
 </div>
 </div>
 
-<!-- ==================== 蒙题技巧 ==================== -->
-<div class="sec">
-<div class="sec-title"><span class="icon">🎯</span><span class="text">选择题蒙题·得分技巧</span><span class="tag">临场救命</span></div>
+</div>
 
-<div class="card">
-<div class="card-title">🧠 实在不会的题怎么蒙？</div>
-<div class="card-body">
-<div class="mindmap">
-<div class="item"><span class="d">①</span><span><strong class="hl">单位检验法：</strong>看选项的单位对不对。物理题单位不对一定错！</span></div>
-<div class="item"><span class="d">②</span><span><strong class="hl">极端值法：</strong>把变量推到0或无穷大，看结果是否合理</span></div>
-<div class="item"><span class="d">③</span><span><strong class="hl">量级排除法：</strong>核反应能量≈MeV，可见光波长≈几百nm，分子直径≈10⁻¹⁰m</span></div>
-<div class="item"><span class="d">④</span><span><strong class="hl">对称性：</strong>题目对称→答案往往也对称（左右对称结构选对称选项）</span></div>
-<div class="item"><span class="d">⑤</span><span><strong class="hl">多选保守策略：</strong>不确定的坚决不选！3分到手比0分强</span></div>
-</div>
-</div>
-</div>
-</div>
+<div class="container">
 
 <!-- ==================== 考前叮嘱 ==================== -->
 <div class="sec">
@@ -415,6 +411,7 @@ h1{text-align:center;font-size:1.3em;padding:24px 16px 4px;background:linear-gra
 </div>
 </div>
 </div>
+
 </div>
 
 </div>
