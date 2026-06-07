@@ -21,7 +21,9 @@
     letter-spacing:6px;
   }
   .hero .sub{color:#5c5c72;font-size:.8em;margin-top:6px;letter-spacing:2px;font-weight:300;}
-  .container{max-width:420px;margin:0 auto;padding:0 20px 40px;flex:1;display:flex;flex-direction:column;gap:10px;justify-content:center;}
+  .container{max-width:420px;margin:0 auto;padding:0 20px 40px;flex:1;display:flex;flex-direction:column;gap:8px;justify-content:center;}
+
+  /* Normal cards */
   .card{
     display:flex;align-items:center;gap:14px;
     background:#0e0e1e;border-radius:10px;padding:18px 20px;
@@ -43,12 +45,34 @@
   }
   .card .arrow{color:#2a2a40;font-size:.75em;transition:.2s;flex-shrink:0;}
   .card:hover .arrow{color:#d4a373;transform:translateX(3px);}
+
+  /* Special exam banner */
+  .special{
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(135deg,rgba(212,163,115,.12),rgba(244,162,97,.05));
+    border-radius:12px;padding:16px 20px;
+    border:1.5px solid #d4a373;text-decoration:none;color:inherit;
+    transition:all .25s;position:relative;overflow:hidden;
+  }
+  .special::before{
+    content:'🔥 考前最后一眼';position:absolute;top:6px;right:10px;
+    font-size:.55em;color:#d4a373;letter-spacing:1px;opacity:.6;
+  }
+  .special:hover{background:rgba(212,163,115,.18);border-color:#f4a261;transform:translateX(4px);}
+  .special .icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3em;flex-shrink:0;background:rgba(212,163,115,.12);}
+  .special .info{flex:1;min-width:0;}
+  .special .info .name{font-size:.92em;color:#f4e8d0;font-weight:600;}
+  .special .info .desc{font-size:.65em;color:#a08060;margin-top:2px;}
+  .special .arrow{color:#d4a373;font-size:.8em;transition:.2s;flex-shrink:0;}
+  .special:hover .arrow{color:#f4a261;transform:translateX(4px);}
+  .tag-exam{font-size:.55em;padding:2px 8px;border-radius:6px;background:#d4a373;color:#0b0b14;flex-shrink:0;font-weight:600;letter-spacing:.5px;}
+
   footer{text-align:center;padding:20px;color:#1e1e30;font-size:.6em;letter-spacing:1px;}
   @media(max-width:480px){
     .hero{padding:36px 16px 20px;}
     .hero h1{font-size:1.6em;}
-    .container{gap:8px;padding:0 14px 30px;}
-    .card{padding:14px 16px;}
+    .container{gap:6px;padding:0 14px 30px;}
+    .card,.special{padding:14px 16px;}
   }
 </style>
 </head>
@@ -58,6 +82,12 @@
   <p class="sub">教学 · 心理 · 规划</p>
 </div>
 <div class="container">
+  <a class="special" href="高考物理_考前最后一眼.html">
+    <div class="icon">🎯</div>
+    <div class="info"><div class="name">高考物理·考前最后一眼</div><div class="desc">公式干货·蒙题技巧·考场时间分配</div></div>
+    <span class="tag-exam">6/7-8</span>
+    <span class="arrow">→</span>
+  </a>
   <a class="card" href="jiaoxue.html">
     <div class="icon">📐</div>
     <div class="info"><div class="name">教学资源</div><div class="desc">物理课件 · 题库 · 视频</div></div>
