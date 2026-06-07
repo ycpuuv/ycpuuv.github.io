@@ -313,6 +313,27 @@ hr{margin:4px 0;border:none;border-top:1px solid #1a1a2e}
 </div>
 </div>
 
+<!-- ===== 第三种表达：碰撞个数×2mv ===== -->
+<div class="card">
+<div class="card-title"><span class="t t-pur">碰撞角度</span> <strong class="hl">p = (单位时间·单位面积碰撞数) × 2m⟨vₓ⟩</strong></div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">—</span><span>压强也可以用"分子对器壁碰撞"来理解：</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">p = N<sub>碰</sub> × (2mvₓ)</strong></span></div>
+<div class="item"><span class="indent"></span><span>其中：</span></div>
+<div class="item"><span class="indent"></span><span><strong class="hl">N<sub>碰</sub></strong> = 单位时间、单位面积上撞击器壁的分子个数</span></div>
+<div class="item"><span class="indent"></span><span><strong class="hl">2mvₓ</strong> = 每个分子与壁发生<strong class="hl">弹性碰撞</strong>的动量变化量（从+vₓ到-vₓ，Δp=2mvₓ）</span></div>
+<div class="item"><span class="d">→</span><span><strong class="hl">三个表达式本质等价：</strong></span></div>
+<div class="item"><span class="indent"></span><span>① p = ⅓ n·m·v̄² &nbsp;（数密度+分子质量+速率平方）</span></div>
+<div class="item"><span class="indent"></span><span>② p = ⅔ n·Ēₖ &nbsp;&nbsp;（数密度+平均动能，最简洁）</span></div>
+<div class="item"><span class="indent"></span><span>③ p = N<sub>碰</sub>·2mvₓ &nbsp;（碰撞角度，帮助理解"为什么温度越高压强越大"）</span></div>
+<div class="item"><span class="d">•</span><span>三种表达式都在说同一件事：<strong class="hl">压强来自分子撞击器壁</strong></span></div>
+<div class="item"><span class="d">•</span><span>温度↑ → 分子运动更快 → 撞壁更频繁、每次撞得更猛 → 压强↑</span></div>
+<div class="item"><span class="d">•</span><span>体积↓ → 分子更密集 → 撞壁更频繁 → 压强↑</span></div>
+</div>
+</div>
+</div>
+
 <div class="card">
 <div class="card-title"><span class="t t-org">p-V图像</span> 面积 = 做功 &nbsp;|&nbsp; 绝热过程 Q=0</div>
 <div class="card-body">
@@ -346,6 +367,85 @@ hr{margin:4px 0;border:none;border-top:1px solid #1a1a2e}
 </div>
 </div>
 
+</div>
+
+<!-- ==================== 传感器控制电路（考题版） ==================== -->
+<div class="container">
+<div class="sec">
+<div class="sec-title"><span class="icon">🔌</span><span class="text">传感器控制电路 · 典型考题</span></div>
+
+<div class="card card-tip">
+<div class="card-title"><span class="t t-red">【必考题型】</span> 光控路灯电路调节</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">📋</span><span>电路如图所示：Vcc → 光敏电阻R<sub>L</sub> → ├接比较器正端 → 变阻器R → GND</span></div>
+<div class="item"><span class="indent"></span><span>比较器：当 V<sub>+</sub> > V<sub>ref</sub>时输出高电平，灯亮</span></div>
+<div class="item"><span class="d">•</span><span><strong class="hl">光敏电阻特性：</strong>光照越强 → 电阻越小；光照越弱 → 电阻越大</span></div>
+<div class="item"><span class="d">❓</span><span><strong class="hl">问：</strong>想要路灯在<strong class="hl">天色更暗时</strong>才点亮（即"暗得迟一些"），变阻器R应该<strong class="hl">增大还是减小</strong>？说明理由。</span></div>
+<div class="item"><span class="d">✏️</span><span><strong class="hl">答：减小变阻器R。</strong>理由：R减小→分压减小→参考电压V<sub>ref</sub>降低→需要V<sub>+</sub>更大才能V<sub>+</sub>>V<sub>ref</sub>→需要R<sub>L</sub>更大→需要更暗→灯在更暗时才点亮。</span></div>
+</div>
+</div>
+</div>
+
+<div class="card card-tip">
+<div class="card-title"><span class="t t-red">【变式1】</span> 光敏电阻在下方</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">📋</span><span>电路：Vcc → 变阻器R → ├接控制端 → 光敏电阻R<sub>L</sub> → GND</span></div>
+<div class="item"><span class="d">❓</span><span><strong class="hl">问：</strong>想要路灯在<strong class="hl">天刚黑时</strong>就点亮（即"亮得早一些"），变阻器R应该增大还是减小？</span></div>
+<div class="item"><span class="d">✏️</span><span><strong class="hl">答：增大R。</strong>R增大→控制端电压V<sub>控</sub>升高→更早达到触发阈值→天还没全黑灯就亮了。</span></div>
+</div>
+</div>
+</div>
+
+<div class="card card-tip">
+<div class="card-title"><span class="t t-red">【变式2】</span> 温度控制（热敏电阻）</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">📋</span><span>电路：Vcc → 热敏电阻R<sub>T</sub> → ├接比较器→ 变阻器R → GND</span></div>
+<div class="item"><span class="indent"></span><span><strong class="hl">热敏电阻（负温度系数NTC）特性：</strong>温度↑→电阻↓</span></div>
+<div class="item"><span class="d">❓</span><span><strong class="hl">问：</strong>这是一个<strong class="hl">温控风扇</strong>电路，温度超过设定值时风扇启动。想要<strong class="hl">在更高温时才启动</strong>，变阻器R如何调？</span></div>
+<div class="item"><span class="d">✏️</span><span><strong class="hl">答：减小R。</strong>R减小→V<sub>ref</sub>降低→需要V<sub>+</sub>更小才能触发（V<sub>+</sub>在温度高时R<sub>T</sub>小→V<sub>+</sub>小）→需要更高温度才能降到触发值以下。</span></div>
+</div>
+</div>
+</div>
+
+<div class="card card-tip">
+<div class="card-title"><span class="t t-red">【变式3】</span> 干簧管+磁控</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">📋</span><span>干簧管：磁铁靠近→触点闭合；磁铁远离→触点断开</span></div>
+<div class="item"><span class="d">❓</span><span><strong class="hl">问：</strong>楼道声控+光控灯电路，白天不亮，晚上有声音才亮。两个传感器应该<strong class="hl">串联还是并联</strong>？</span></div>
+<div class="item"><span class="d">✏️</span><span><strong class="hl">答：串联。</strong>光控（白天断开、晚上闭合）和声控（无声音断开、有声音闭合）<strong class="hl">串联</strong>，只有晚上+有声音两个同时满足，灯才亮。</span></div>
+<div class="item"><span class="indent"></span><span>如果是<strong class="hl">并联</strong>，只要任意一个条件满足，灯就亮了，不符合逻辑。</span></div>
+</div>
+</div>
+</div>
+
+<div class="card card-tip">
+<div class="card-title"><span class="t t-red">【变式4】</span> 湿敏+自动灌溉</div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">📋</span><span>湿敏电阻：湿度越大→电阻越小</span></div>
+<div class="item"><span class="d">❓</span><span><strong class="hl">问：</strong>自动灌溉系统，土壤干燥时自动浇水。湿敏电阻应该接到电路的哪一端？</span></div>
+<div class="item"><span class="d">✏️</span><span><strong class="hl">答：湿敏电阻接Vcc侧。</strong>土壤干燥→湿度小→湿敏电阻大→控制端电压高→触发浇水。土壤湿润时电阻小→控制端电压低→不触发。</span></div>
+</div>
+</div>
+</div>
+
+<div class="card sec-tip">
+<div class="card-title"><span class="t t-grn">💡 传感器调节·通用口诀</span></div>
+<div class="card-body">
+<div class="mindmap">
+<div class="item"><span class="d">▶</span><span><strong class="hl">"越……才动作" = 阈值提高</strong></span></div>
+<div class="item"><span class="d">▶</span><span>传感器在Vcc侧：<strong class="hl">减小</strong>变阻器（降低参考电压）→ 需要传感器变化更大 → 阈值提高</span></div>
+<div class="item"><span class="d">▶</span><span>传感器在GND侧：<strong class="hl">增大</strong>变阻器（提高参考电压）→ 需要传感器变化更大 → 阈值提高</span></div>
+<div class="item"><span class="d">▶</span><span><strong class="hl">先判断传感器特性，再看接法，最后定调节方向</strong>——三步走，不会错</span></div>
+</div>
+</div>
+</div>
+
+</div>
 </div>
 
 <!-- ==================== 8. 原子核物理（大幅扩充） ==================== -->
