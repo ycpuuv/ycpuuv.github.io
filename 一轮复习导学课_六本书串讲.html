@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>高三物理一轮复习 · 六本书导学</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0b14;color:#d4d4dc;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:0 0 40px;overflow-x:hidden}
+
+/* Header */
+.header{text-align:center;padding:28px 16px 8px;position:relative}
+.header h1{font-size:1.6em;background:linear-gradient(135deg,#f4a261,#d4a373);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:3px;font-weight:700}
+.header .sub{font-size:.75em;color:#5c5c72;margin-top:3px;letter-spacing:1px}
+.header .divider{width:60px;height:2px;background:linear-gradient(90deg,#f4a261,#d4a373);margin:8px auto;border-radius:2px}
+
+/* Intro card */
+.intro{max-width:600px;margin:10px auto;padding:12px 14px;background:#0e0e1e;border:1px solid #1a1a30;border-radius:6px;text-align:center}
+.intro p{font-size:.78em;line-height:1.7;color:#b0b0c0}
+
+/* Books Grid */
+.books-grid{max-width:640px;margin:10px auto;padding:0 8px}
+.book-card{background:#0e0e1e;border:1px solid #1a1a30;border-radius:6px;margin-bottom:5px;overflow:hidden;transition:all .3s}
+.book-card:hover{border-color:#2a2a42}
+.book-card.active{border-color:#d4a373}
+.book-header{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer;gap:8px}
+.book-header .left{display:flex;align-items:center;gap:8px;flex:1}
+.book-num{font-size:.6em;color:#d4a373;font-weight:600;background:rgba(212,163,115,.1);padding:2px 6px;border-radius:3px;white-space:nowrap}
+.book-name{font-size:.82em;color:#c8c8d0;font-weight:600}
+.book-sub{font-size:.65em;color:#5c5c72;margin-top:1px}
+.book-icon{font-size:1.2em;flex-shrink:0}
+.book-arrow{font-size:.7em;color:#5c5c72;transition:transform .3s;flex-shrink:0}
+.book-card.active .book-arrow{transform:rotate(180deg);color:#d4a373}
+
+.book-body{max-height:0;overflow:hidden;transition:max-height .4s ease}
+.book-card.active .book-body{max-height:800px}
+.book-inner{padding:0 12px 10px}
+.book-inner .chunk{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0}
+.chunk-tag{font-size:.62em;background:#12122a;color:#b0b0c0;padding:3px 8px;border-radius:3px;border:1px solid #1a1a30}
+.chunk-tag.dot-red{border-left:2px solid #ff6666}
+.chunk-tag.dot-blue{border-left:2px solid #5af}
+.chunk-tag.dot-green{border-left:2px solid #5c9}
+.chunk-tag.dot-amber{border-left:2px solid #f4a261}
+
+/* Formula highlight */
+.formula-line{font-size:.7em;color:#d4a373;padding:3px 0;line-height:1.6;border-top:1px solid #1a1a1e;margin-top:3px;padding-top:4px}
+.formula-line .hl{color:#f4a261;font-weight:600}
+
+/* Transition sentence per book */
+.transition{text-align:center;font-size:.62em;color:#3a3a50;padding:4px 0;font-style:italic;letter-spacing:.3px}
+
+/* Strategy Section */
+.strategy-section{max-width:640px;margin:14px auto;padding:0 8px}
+.strategy-title{font-size:.85em;color:#f4a261;font-weight:600;padding:6px 0;border-bottom:1px solid #1a1a30;margin-bottom:5px;display:flex;align-items:center;gap:6px}
+.strategy-card{background:#0e0e1e;border:1px solid #1a1a30;border-radius:5px;padding:8px 10px;margin-bottom:4px}
+.strategy-card .s-title{font-size:.73em;color:#c8c8d0;font-weight:600;display:flex;align-items:center;gap:5px}
+.strategy-card .s-body{font-size:.65em;line-height:1.6;color:#b0b0c0;margin-top:3px}
+.strategy-card .s-body .warn{color:#ff6666;font-weight:500}
+.strategy-card .s-body .key{color:#f4a261;font-weight:500}
+
+/* Phase timeline */
+.timeline{display:flex;flex-direction:column;gap:3px;padding:4px 0}
+.timeline-item{display:flex;gap:8px;align-items:flex-start}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.tl-dot.d1{background:#f4a261}
+.tl-dot.d2{background:#d4a373}
+.tl-dot.d3{background:#5af}
+.tl-dot.d4{background:#5c9}
+.tl-text{font-size:.65em;line-height:1.5;color:#b0b0c0}
+.tl-text strong{color:#c8c8d0}
+
+/* Footer */
+.footer{text-align:center;padding:16px;font-size:.58em;color:#2a2a40;letter-spacing:1px}
+
+/* Responsive */
+@media(max-width:480px){
+  .header h1{font-size:1.3em}
+  .book-name{font-size:.75em}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>高三物理 · 一轮复习导学课</h1>
+  <p class="sub">六本教材串讲 · 知识地图 + 复习策略</p>
+  <div class="divider"></div>
+</div>
+
+<div class="intro">
+  <p>从必修一到选必三，物理六本书其实是一张完整的网。<br>
+  一轮复习的目标不是"学新东西"，而是<strong style="color:#f4a261;">把散落的知识点串成体系</strong>。<br>
+  今天我们先把这张地图铺开，看看到底要复习什么、怎么复习。</p>
+</div>
+
+<!-- ==================== Books ==================== -->
+<div class="books-grid">
+
+<!-- Book 1: 必修一 -->
+<div class="book-card">
+  <div class="book-header" onclick="toggleBook(this)">
+    <div class="left">
+      <span class="book-icon">📐</span>
+      <div>
+        <div class="book-name">必修一 · 力学基础</div>
+        <div class="book-sub">运动的描述 → 相互作用 → 牛顿定律</div>
+      </div>
+    </div>
+    <span class="book-num">第1本</span>
+    <span class="book-arrow">▼</span>
+  </div>
+  <div class="book-body">
+    <div class="book-inner">
+      <div class="chunk">
+        <span class="chunk-tag dot-red">质点·参考系·位移</span>
+        <span class="chunk-tag dot-red">速度·加速度·x-t/v-t图</span>
+        <span class="chunk-tag dot-red">匀变速公式·自由落体</span>
+        <span class="chunk-tag dot-amber">重力·弹力·摩擦力</span>
+        <span class="chunk-tag dot-amber">受力分析·正交分解</span>
+        <span class="chunk-tag dot-blue">牛顿一·二·三定律</span>
+        <span class="chunk-tag dot-blue">超重失重·连接体</span>
+      </div>
+      <div class="formula-line">
+        <span class="hl">v = v₀+at</span> · <span class="hl">x = v₀t+½at²</span> · <span class="hl">v²-v₀²=2ax</span> · <span class="hl">F=ma</span>
+      </div>
+      <p class="transition">→ 从运动到力，从描述到因果，这是物理的起点</p>
+    </div>
+  </div>
+</div>
+
+<!-- Book 2: 必修二 -->
+<div class="book-card">
+  <div class="book-header" onclick="toggleBook(this)">
+    <div class="left">
+      <span class="book-icon">🌀</span>
+      <div>
+        <div class="book-name">必修二 · 曲线运动与能量</div>
+        <div class="book-sub">抛体 → 圆周 → 万有引力 → 机械能</div>
+      </div>
+    </div>
+    <span class="book-num">第2本</span>
+    <span class="book-arrow">▼</span>
+  </div>
+  <div class="book-body">
+    <div class="book-inner">
+      <div class="chunk">
+        <span class="chunk-tag dot-red">运动的合成与分解</span>
+        <span class="chunk-tag dot-red">平抛·斜抛</span>
+        <span class="chunk-tag dot-amber">圆周运动·向心力</span>
+        <span class="chunk-tag dot-amber">竖直面圆周·临界条件</span>
+        <span class="chunk-tag dot-blue">万有引力定律</span>
+        <span class="chunk-tag dot-blue">卫星·宇宙速度·变轨</span>
+        <span class="chunk-tag dot-green">功·功率·动能定理</span>
+        <span class="chunk-tag dot-green">机械能守恒·功能关系</span>
+      </div>
+      <div class="formula-line">
+        <span class="hl">F=G·Mm/r²</span> · <span class="hl">W=ΔEₖ</span> · <span class="hl">E₁+E₂=E₁'+E₂'</span> · <span class="hl">a=v²/r</span>
+      </div>
+      <p class="transition">→ 从直线到曲线，从力到能，视野被彻底打开</p>
+    </div>
+  </div>
+</div>
+
+<!-- Book 3: 必修三 -->
+<div class="book-card">
+  <div class="book-header" onclick="toggleBook(this)">
+    <div class="left">
+      <span class="book-icon">⚡</span>
+      <div>
+        <div class="book-name">必修三 · 电磁学入门</div>
+        <div class="book-sub">电场 → 电流 → 磁场 → 电磁感应 → 交变电流</div>
+      </div>
+    </div>
+    <span class="book-num">第3本</span>
+    <span class="book-arrow">▼</span>
+  </div>
+  <div class="book-body">
+    <div class="book-inner">
+      <div class="chunk">
+        <span class="chunk-tag dot-red">电场强度·电场线·电势</span>
+        <span class="chunk-tag dot-red">电容器·带电粒子在电场中</span>
+        <span class="chunk-tag dot-amber">欧姆定律·电阻定律</span>
+        <span class="chunk-tag dot-amber">闭合电路·电功率</span>
+        <span class="chunk-tag dot-blue">磁感应强度·安培力</span>
+        <span class="chunk-tag dot-blue">洛伦兹力·带电粒子在磁场中</span>
+        <span class="chunk-tag dot-green">楞次定律·法拉第电磁感应</span>
+        <span class="chunk-tag dot-green">交变电流·有效值</span>
+      </div>
+      <div class="formula-line">
+        <span class="hl">E=F/q</span> · <span class="hl">U=Ed</span> · <span class="hl">F=BIL</span> · <span class="hl">F=qvB</span> · <span class="hl">E=nΔΦ/Δt</span>
+      </div>
+      <p class="transition">→ 到这里，你手里的工具已经能解释物理世界的半壁江山了</p>
+    </div>
+  </div>
+</div>
+
+<!-- Book 4: 选必一 -->
+<div class="book-card">
+  <div class="book-header" onclick="toggleBook(this)">
+    <div class="left">
+      <span class="book-icon">〰️</span>
+      <div>
+        <div class="book-name">选必一 · 动量与波</div>
+        <div class="book-sub">动量 → 振动 → 波 → 光</div>
+      </div>
+    </div>
+    <span class="book-num">第4本</span>
+    <span class="book-arrow">▼</span>
+  </div>
+  <div class="book-body">
+    <div class="book-inner">
+      <div class="chunk">
+        <span class="chunk-tag dot-red">动量·冲量·动量定理</span>
+        <span class="chunk-tag dot-red">动量守恒·碰撞·爆炸</span>
+        <span class="chunk-tag dot-amber">简谐运动·单摆·弹簧振子</span>
+        <span class="chunk-tag dot-amber">受迫振动·共振</span>
+        <span class="chunk-tag dot-blue">机械波·波动图像</span>
+        <span class="chunk-tag dot-blue">干涉·衍射·多普勒效应</span>
+        <span class="chunk-tag dot-green">折射·全反射·sinC=1/n</span>
+        <span class="chunk-tag dot-green">干涉·衍射·偏振</span>
+      </div>
+      <div class="formula-line">
+        <span class="hl">I=Δp</span> · <span class="hl">m₁v₁+m₂v₂=m₁v₁'+m₂v₂'</span> · <span class="hl">T=2π√(L/g)</span>
+      </div>
+      <p class="transition">→ 动量和能量一起，构成了守恒量的完整版图</p>
+    </div>
+  </div>
+</div>
+
+<!-- Book 5: 选必二 -->
+<div class="book-card">
+  <div class="book-header" onclick="toggleBook(this)">
+    <div class="left">
+      <span class="book-icon">🔌</span>
+      <div>
+        <div class="book-name">选必二 · 电磁学进阶</div>
+        <div class="book-sub">电磁感应深化 → 交变电流深化 → 传感器</div>
+      </div>
+    </div>
+    <span class="book-num">第5本</span>
+    <span class="book-arrow">▼</span>
+  </div>
+  <div class="book-body">
+    <div class="book-inner">
+      <div class="chunk">
+        <span class="chunk-tag dot-red">动生电动势·感生电动势</span>
+        <span class="chunk-tag dot-red">自感·涡流·电磁阻尼</span>
+        <span class="chunk-tag dot-amber">变压器·远距离输电</span>
+        <span class="chunk-tag dot-amber">电感电容对交变电流影响</span>
+        <span class="chunk-tag dot-blue">传感器原理·光敏/热敏/霍尔</span>
+        <span class="chunk-tag dot-blue">控制电路·光控/温控</span>
+      </div>
+      <div class="formula-line">
+        <span class="hl">E=BLv</span> · <span class="hl">U₁/U₂=n₁/n₂</span> · <span class="hl">P输=I²R</span>
+      </div>
+      <p class="transition">→ 电磁学在必修三的基础上，长出技术应用的翅膀</p>
+    </div>
+  </div>
+</div>
+
+<!-- Book 6: 选必三 -->
+<div class="book-card">
+  <div class="book-header" onclick="toggleBook(this)">
+    <div class="left">
+      <span class="book-icon">⚛️</span>
+      <div>
+        <div class="book-name">选必三 · 热学与原子物理</div>
+        <div class="book-sub">分子动理论 → 气体 → 热力学 → 原子 → 核</div>
+      </div>
+    </div>
+    <span class="book-num">第6本</span>
+    <span class="book-arrow">▼</span>
+  </div>
+  <div class="book-body">
+    <div class="book-inner">
+      <div class="chunk">
+        <span class="chunk-tag dot-red">分子动理论·温度·内能</span>
+        <span class="chunk-tag dot-red">气体实验定律·pV=nRT</span>
+        <span class="chunk-tag dot-amber">热力学第一·二定律</span>
+        <span class="chunk-tag dot-amber">热力学第二定律·熵</span>
+        <span class="chunk-tag dot-blue">原子结构·玻尔模型·能级</span>
+        <span class="chunk-tag dot-blue">光电效应·康普顿效应</span>
+        <span class="chunk-tag dot-green">原子核·衰变·半衰期</span>
+        <span class="chunk-tag dot-green">核能·E=mc²·比结合能</span>
+      </div>
+      <div class="formula-line">
+        <span class="hl">pV=nRT</span> · <span class="hl">ΔU=Q+W</span> · <span class="hl">E=hv</span> · <span class="hl">E=mc²</span>
+      </div>
+      <p class="transition">→ 从宏观到微观，从经典到量子，六本书在此汇合</p>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ==================== Knowledge Map ==================== -->
+<div class="strategy-section">
+  <div class="strategy-title">🗺️ 六本书·知识地图</div>
+  <div class="strategy-card" style="background:linear-gradient(135deg,#0e0e1e,#0e0e1e);border-color:#1a1a30;">
+    <div class="s-body" style="font-size:.72em;line-height:2;text-align:center;">
+      <span style="color:#ff6666;">力学</span>
+      <span style="color:#5c5c72;"> → </span>
+      <span style="color:#5af;">电磁学</span>
+      <span style="color:#5c5c72;"> → </span>
+      <span style="color:#5c9;">热学</span>
+      <span style="color:#5c5c72;"> → </span>
+      <span style="color:#d4a373;">光学</span>
+      <span style="color:#5c5c72;"> → </span>
+      <span style="color:#f4a261;">原子物理</span>
+      <br>
+      <span style="color:#5c5c72;font-size:.82em;">必修一+二 = 力学 · 必修三+选必二 = 电磁学 · 选必一 = 动量+波+光 · 选必三 = 热+原子</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Review Strategy ==================== -->
+<div class="strategy-section">
+  <div class="strategy-title">🎯 一轮复习策略</div>
+
+  <div class="strategy-card">
+    <div class="s-title">🎯 目标定位</div>
+    <div class="s-body">
+      一轮复习的目标不是攻克难题，而是<strong class="key">地毯式覆盖、不遗漏任何一个知识点</strong>。<br>
+      <span class="warn">⚠️ 最常见的错误：</span>一轮嫌弃简单、想直接刷难题——到二轮才发现基础概念有漏洞，补都来不及。
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="s-title">📋 四步复习法</div>
+    <div class="s-body">
+      <div class="timeline">
+        <div class="timeline-item">
+          <span class="tl-dot d1"></span>
+          <span class="tl-text"><strong>① 知识梳理</strong> — 每节先通读课本，画出思维导图，把公式和条件列清楚</span>
+        </div>
+        <div class="timeline-item">
+          <span class="tl-dot d2"></span>
+          <span class="tl-text"><strong>② 重做例题</strong> — 课本例题一定要自己动手做一遍，不是"看懂了"就算完</span>
+        </div>
+        <div class="timeline-item">
+          <span class="tl-dot d3"></span>
+          <span class="tl-text"><strong>③ 变式训练</strong> — 做完一道题就问自己：条件改一下还能做吗？这是真正学会的标志</span>
+        </div>
+        <div class="timeline-item">
+          <span class="tl-dot d4"></span>
+          <span class="tl-text"><strong>④ 错题归档</strong> — 错题本不是抄题！用<span class="key">红黄绿灯</span>分类：🔴高频错→🟡时对时错→🟢已掌握</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="s-title">📌 避开三个坑</div>
+    <div class="s-body">
+      <span class="warn">坑1：只看不写</span> — 物理是手脑并用的学科，看懂了≠会做了，<strong class="key">一定要动笔算</strong><br>
+      <span class="warn">坑2：只做题不看书</span> — 课本上的小字、旁批、思考题里藏着大量考点<br>
+      <span class="warn">坑3：只刷量不总结</span> — 做100道题不如把1道题吃透，<strong class="key">错题的价值远大于新题</strong>
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="s-title">📅 时间建议</div>
+    <div class="s-body">
+      一轮一般持续到<span class="key">2027年2月（高三上学期末）</span>。<br>
+      <span style="color:#5c5c72;">现在约6月→明年2月，约8个月。平均每月看完不到1本书，节奏完全来得及。</span><br>
+      <span class="warn">⚠️ 关键是：不要因为某本书难就停下来，硬着头皮往前推，二轮再来回炉。</span>
+    </div>
+  </div>
+
+  <div class="strategy-card">
+    <div class="s-title">💡 给你的工具</div>
+    <div class="s-body">
+      <span style="color:#d4a373;">✦</span> <strong class="key">思维导图</strong> — 每章结束画一张，把公式和条件串起来<br>
+      <span style="color:#d4a373;">✦</span> <strong class="key">交互课件</strong> — 我做的那些HTML动画（气体压强、核裂变、传感器等），不懂的可以反复看<br>
+      <span style="color:#d4a373;">✦</span> <strong class="key">错题红绿灯</strong> — 🔴必搞懂 🟡再巩固 🟢已过，考前只看🔴和🟡
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  启明 · 高三物理一轮复习导学课<br>
+  "六本书一张网，一轮过后你再回头看，会发现它们本来就是一体的。"
+</div>
+
+<script>
+function toggleBook(header){
+  var card = header.closest('.book-card');
+  card.classList.toggle('active');
+}
+</script>
+</body>
+</html>
