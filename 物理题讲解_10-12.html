@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>物理题讲解：第10、11、12题</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f3f3f5;
+    color: #1a1a1e;
+    padding: 20px;
+    line-height: 1.6;
+  }
+  .page-header {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .page-header h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a1e;
+    margin-bottom: 4px;
+  }
+  .page-header p {
+    font-size: 13px;
+    color: #6e6e73;
+  }
+  .container {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .tab-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 13px;
+    background: #eeeef0;
+    color: #6e6e73;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { background: #e0e0e5; }
+  .tab-btn.active {
+    background: #e8f0fe;
+    color: #185fac;
+    border-color: #185fac;
+  }
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    border: 0.5px solid #c6c6c8;
+    padding: 20px;
+    display: none;
+  }
+  .card.active { display: block; }
+  .card-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0 0 6px 0;
+    color: #1a1a1e;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: #6e6e73;
+    margin: 0 0 14px 0;
+  }
+  /* 原题呈现 */
+  .original-q {
+    background: #f8f6f0;
+    border: 1px solid #e0dcd0;
+    border-left: 4px solid #b8a060;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+    line-height: 2;
+    color: #3a3a3e;
+  }
+  .original-q .oq-tag {
+    display: inline-block;
+    background: #b8a060;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .original-q .oq-option {
+    padding-left: 4px;
+  }
+  .original-q .oq-option .correct-mark {
+    color: #2e7d32;
+    font-weight: 700;
+  }
+  .svg-wrap {
+    width: 100%;
+    background: #fafafa;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .svg-wrap svg { display: block; }
+  .btn-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    border: 0.5px solid #c6c6c8;
+    background: #f5f5f7;
+    color: #1a1a1e;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: #eaeaf0; }
+  .btn-info {
+    background: #e8f0fe;
+    color: #185fac;
+    border-color: #b3cef5;
+  }
+  .btn-info:hover { background: #d4e4fd; }
+  .btn-danger {
+    background: #fcebeb;
+    color: #a32d2d;
+    border-color: #f7c1c1;
+  }
+  .btn-danger:hover { background: #f5d0d0; }
+  .btn-success {
+    background: #eaf3de;
+    color: #3b6d11;
+    border-color: #c0dd97;
+  }
+  .btn-success:hover { background: #d4e8c0; }
+  .btn-warn {
+    background: #fff8e6;
+    color: #854f0b;
+    border-color: #fac775;
+  }
+  .btn-warn:hover { background: #ffe8b3; }
+  .explain {
+    font-size: 13px;
+    line-height: 1.75;
+    color: #1a1a1e;
+    margin: 0;
+  }
+  .explain p { margin: 0 0 6px 0; }
+  .explain p:last-child { margin: 0; }
+  .highlight { color: #185fac; font-weight: 500; }
+  .panel {
+    display: none;
+    margin-top: 12px;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .panel.show { display: block; }
+  .panel-gray { background: #f5f5f7; border: 0.5px solid #dcdce0; }
+  .panel-yellow { background: #fff8e6; border: 0.5px solid #fac775; }
+  .panel-red { background: #fcebeb; border: 0.5px solid #f7c1c1; }
+  .panel-green { background: #eaf3de; border: 0.5px solid #c0dd97; }
+  .panel-title {
+    font-weight: 600;
+    margin: 0 0 6px 0;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 32px;
+    font-size: 12px;
+    color: #aeaeb2;
+  }
+  /* 动画状态指示 */
+  .anim-status {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .anim-status.playing { background: #d4e4fd; color: #185fac; }
+  .anim-status.done { background: #d4e8c0; color: #3b6d11; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="page-header">
+    <h1>📐 高中物理题讲解动画</h1>
+    <p>第10、11、12题 · 原题呈现 + 交互式动画讲解</p>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="showTab(10)">第10题：相对运动</button>
+    <button class="tab-btn" onclick="showTab(11)">第11题：球面位移</button>
+    <button class="tab-btn" onclick="showTab(12)">第12题：超声测速</button>
+  </div>
+
+  <!-- ==================== Q10 ==================== -->
+  <div id="card10" class="card active">
+    <p class="card-title">第10题：车厢中的相对运动</p>
+    <p class="card-desc">汽车匀加速直线运动，甲、乙从车厢中间分别向前后壁移动，同时到达。</p>
+
+    <!-- 原题呈现 -->
+    <div class="original-q">
+      <div class="oq-tag">原题呈现</div>
+      <p>一辆汽车在平直公路上做匀加速直线运动，车厢内甲、乙两名乘客分别从车厢正中间同时向车头和车尾走去，恰好同时到达车头和车尾，则：</p>
+      <div class="oq-option">
+        <p>A. 甲对地的位移大于乙对地的位移</p>
+        <p>B. 乙对地的平均速度大于甲对地的平均速度</p>
+        <p>C. 甲对地的平均速度大于乙对地的平均速度 <span class="correct-mark">✓</span></p>
+        <p>D. 甲对地的平均速度等于乙对地的平均速度</p>
+      </div>
+    </div>
+
+    <div class="svg-wrap">
+      <svg id="svg10" viewBox="0 0 680 220" xmlns="http://www.w3.org/2000/svg">
+        <!-- 车厢 -->
+        <rect x="20" y="50" width="640" height="80" fill="#e8f4fd" stroke="#378add" stroke-width="2" rx="6"/>
+        <!-- 车轮 -->
+        <circle cx="100" cy="135" r="12" fill="#6e6e73" stroke="#3a3a3e" stroke-width="2"/>
+        <circle cx="580" cy="135" r="12" fill="#6e6e73" stroke="#3a3a3e" stroke-width="2"/>
+        <!-- 中线 -->
+        <line x1="340" y1="50" x2="340" y2="130" stroke="#d85a30" stroke-width="1.2" stroke-dasharray="5"/>
+        <text x="340" y="44" text-anchor="middle" font-size="10" fill="#d85a30" font-weight="500">中间</text>
+        <!-- 甲 -->
+        <g id="personA">
+          <circle cx="340" cy="90" r="15" fill="#534ab7"/>
+          <text x="340" y="95" text-anchor="middle" font-size="11" fill="white" font-weight="600">甲</text>
+        </g>
+        <!-- 乙 -->
+        <g id="personB">
+          <circle cx="340" cy="90" r="15" fill="#0f6e56"/>
+          <text x="340" y="95" text-anchor="middle" font-size="11" fill="white" font-weight="600">乙</text>
+        </g>
+        <!-- 运动方向 -->
+        <polygon points="660,82 674,90 660,98" fill="#d85a30"/>
+        <text x="628" y="78" font-size="11" fill="#d85a30" font-weight="600">加速→</text>
+        <text x="28" y="168" font-size="10" fill="#6e6e73">后壁</text>
+        <text x="630" y="168" font-size="10" fill="#6e6e73">前壁</text>
+        <!-- 地面参考 -->
+        <line x1="10" y1="175" x2="670" y2="175" stroke="#c6c6c8" stroke-width="1"/>
+        <text x="10" y="190" font-size="9" fill="#aeaeb2">地面参考系</text>
+        <!-- 位移标注 (动画时显示) -->
+        <g id="dispLabels" opacity="0">
+          <line x1="340" y1="200" x2="580" y2="200" stroke="#534ab7" stroke-width="2" marker-end="url(#arrowPurple)"/>
+          <text x="460" y="215" text-anchor="middle" font-size="10" fill="#534ab7" font-weight="600">甲对地位移 = d+L</text>
+          <line x1="340" y1="200" x2="460" y2="200" stroke="#0f6e56" stroke-width="2" marker-end="url(#arrowGreen)"/>
+          <text x="400" y="215" text-anchor="middle" font-size="10" fill="#0f6e56" font-weight="600" dy="14">乙对地位移 = d−L</text>
+        </g>
+        <defs>
+          <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#534ab7"/>
+          </marker>
+          <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <polygon points="0 0, 8 3, 0 6" fill="#0f6e56"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-info" onclick="playQ10()">▶ 播放动画</button>
+      <button class="btn" onclick="resetQ10()">↺ 重置</button>
+    </div>
+
+    <div class="explain">
+      <p><span class="highlight">核心分析（地面参考系）：</span></p>
+      <p>设汽车在时间 t 内前进距离为 d，车厢半长为 L。</p>
+      <p>甲向车头走：对地位移 = <b>d + L</b>（与车同向，叠加）</p>
+      <p>乙向车尾走：对地位移 = <b>d − L</b>（与车反向，抵消）</p>
+      <p>∵ d + L > d − L，且时间相同 t</p>
+      <p>∴ <b>甲对地的平均速度 > 乙对地的平均速度</b>，选项C正确 ✓</p>
+    </div>
+  </div>
+
+  <!-- ==================== Q11 ==================== -->
+  <div id="card11" class="card">
+    <p class="card-title">第11题：地球仪上的位移与平均速度</p>
+    <p class="card-desc">小虫从P点沿0°经线向南到南极点，再沿90°E经线向北到Q点。</p>
+
+    <!-- 原题呈现 -->
+    <div class="original-q">
+      <div class="oq-tag">原题呈现</div>
+      <p>如图所示，地球仪的半径为R，P点位于赤道与本初子午线的交点。一只小虫从P点出发，沿0°经线向南爬行到达南极点，再沿90°E经线向北爬行到达赤道上的Q点。小虫从P到南极点的时间为t，从南极点到Q的时间也为t。则：</p>
+      <div class="oq-option">
+        <p>A. 位移大小为πR</p>
+        <p>B. 位移大小为2R</p>
+        <p>C. P到南极点的平均速度大于南极点到Q的平均速度</p>
+        <p>D. P到南极点的平均速度是南极点到Q的2倍 <span class="correct-mark">✓</span></p>
+      </div>
+    </div>
+
+    <div class="svg-wrap">
+      <svg id="svg11" viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="globeGrad" cx="38%" cy="28%">
+            <stop offset="0%" stop-color="#d6ecfd"/>
+            <stop offset="100%" stop-color="#a8ccee"/>
+          </radialGradient>
+        </defs>
+        <!-- 地球 -->
+        <circle cx="220" cy="160" r="110" fill="url(#globeGrad)" stroke="#378add" stroke-width="1.5"/>
+        <!-- 赤道 -->
+        <ellipse cx="220" cy="160" rx="110" ry="35" fill="none" stroke="#378add" stroke-width="1" stroke-dasharray="4" opacity="0.5"/>
+        <text x="330" y="162" font-size="9" fill="#378add">赤道</text>
+        <!-- 本初子午线（0°经线） -->
+        <ellipse cx="220" cy="160" rx="35" ry="110" fill="none" stroke="#d85a30" stroke-width="1.8"/>
+        <text x="255" y="140" font-size="9" fill="#d85a30">0°</text>
+        <!-- 90°E经线 -->
+        <ellipse cx="220" cy="160" rx="35" ry="110" fill="none" stroke="#0f6e56" stroke-width="1.8" transform="rotate(90 220 160)"/>
+        <text x="215" y="48" font-size="9" fill="#0f6e56">90°E</text>
+        <!-- 路径动画线 -->
+        <path id="pathP2S" d="M 330,160 A 110,110 0 0,1 220,270" fill="none" stroke="#d85a30" stroke-width="3" stroke-dasharray="400" stroke-dashoffset="400" opacity="0.7"/>
+        <path id="pathS2Q" d="M 220,270 A 110,110 0 0,1 220,50" fill="none" stroke="#0f6e56" stroke-width="3" stroke-dasharray="400" stroke-dashoffset="400" opacity="0.7"/>
+        <!-- 0°经线与赤道交点 = P -->
+        <circle cx="330" cy="160" r="7" fill="#d85a30"/>
+        <text x="345" y="164" font-size="12" fill="#d85a30" font-weight="600">P</text>
+        <text x="345" y="177" font-size="9" fill="#d85a30">(0°,赤道)</text>
+        <!-- 南极点 -->
+        <circle cx="220" cy="270" r="7" fill="#534ab7"/>
+        <text x="235" y="286" font-size="12" fill="#534ab7" font-weight="600">南极点S</text>
+        <!-- 90°E与赤道交点 = Q -->
+        <circle cx="220" cy="50" r="7" fill="#0f6e56"/>
+        <text x="235" y="46" font-size="12" fill="#0f6e56" font-weight="600">Q</text>
+        <text x="235" y="59" font-size="9" fill="#0f6e56">(90°E,赤道)</text>
+        <!-- 位移矢量（隐藏） -->
+        <line id="vecPQ" x1="330" y1="160" x2="220" y2="50" stroke="#993556" stroke-width="2.5" stroke-dasharray="8 4" opacity="0"/>
+        <text id="vecLabel" x="286" y="95" text-anchor="middle" font-size="12" fill="#993556" font-weight="600" opacity="0">位移 = R√2</text>
+        <!-- 右侧说明 -->
+        <g transform="translate(430, 40)">
+          <circle cx="0" cy="0" r="4" fill="#d85a30"/>
+          <text x="12" y="4" font-size="11" fill="#3a3a3e">P→南极 路程 = πR/2</text>
+          <circle cx="0" cy="22" r="4" fill="#0f6e56"/>
+          <text x="12" y="26" font-size="11" fill="#3a3a3e">南极→Q 路程 = πR/2</text>
+          <circle cx="0" cy="44" r="4" fill="#993556"/>
+          <text x="12" y="48" font-size="11" fill="#3a3a3e">总路程 = πR</text>
+          <text x="0" y="82" font-size="11" fill="#3a3a3e" font-weight="500">三维坐标（球心为原点）：</text>
+          <text x="0" y="100" font-size="11" fill="#6e6e73">P = (R, 0, 0)</text>
+          <text x="0" y="118" font-size="11" fill="#6e6e73">Q = (0, R, 0)</text>
+          <text x="0" y="140" font-size="12" fill="#993556" font-weight="600">|PQ| = √(R²+R²) = R√2</text>
+        </g>
+        <!-- 虫子动画点 -->
+        <circle id="bugDot" cx="330" cy="160" r="5" fill="#d85a30" opacity="0"/>
+      </svg>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-info" onclick="playQ11()">▶ 路径动画 + 位移矢量</button>
+      <button class="btn" onclick="resetQ11()">↺ 重置</button>
+      <button class="btn btn-success" onclick="togglePanel('q11calc')">📐 平均速度计算</button>
+    </div>
+
+    <div class="explain">
+      <p><span class="highlight">位移分析：</span>位移是初位置指向末位置的有向线段，与路径无关。</p>
+      <p>建立三维坐标系（球心为原点）：P = (R, 0, 0)，Q = (0, R, 0)</p>
+      <p>位移大小 = |PQ| = √[(R−0)² + (0−R)²] = <b>R√2</b></p>
+      <p style="color:#6e6e73;">注意：路程为 πR，位移为 R√2，两者不同。选项A(πR)、B(2R)均错误。</p>
+    </div>
+
+    <div id="q11calc" class="panel panel-gray">
+      <p class="panel-title" style="color:#185fac;">平均速度计算</p>
+      <p style="margin:0 0 4px 0;">P→南极：位移大小 = R√2，时间 = t，平均速度 v₁ = R√2 / t</p>
+      <p style="margin:0 0 4px 0;">南极→Q：位移大小 = R√2，时间 = t，平均速度 v₂ = R√2 / t</p>
+      <p style="margin:0 0 4px 0;">P→Q全程：位移大小 = R√2，时间 = 2t，平均速度 v<sub>全</sub> = R√2 / (2t)</p>
+      <p style="margin:8px 0 0 0; color:#d85a30; font-weight:600;">∴ v₁ = v₂ = 2·v<sub>全</sub>，选项D正确 ✓</p>
+      <p style="margin:4px 0 0 0; color:#6e6e73;">选项C说"大于"不准确，实际是"等于"，C错误。</p>
+    </div>
+  </div>
+
+  <!-- ==================== Q12 ==================== -->
+  <div id="card12" class="card">
+    <p class="card-title">第12题：超声波测速系统（重点：C、D选项分析）</p>
+    <p class="card-desc">发射器A在运动物体上，同时发射红外线和超声波；接收器B固定。</p>
+
+    <!-- 原题呈现 -->
+    <div class="original-q">
+      <div class="oq-tag">原题呈现</div>
+      <p>如图所示，发射器A固定在运动物体上，接收器B固定不动。A同时发射红外线和超声波脉冲，B接收到红外线时开始计时，接收到超声波时停止计时。系统通过 s = v₀·Δt 计算A与B之间的距离（v₀为超声波速度），通过两次测距差计算物体速度v。已知红外线传播速度为c。则：</p>
+      <div class="oq-option">
+        <p>A. 该系统可以精确测量A到B的距离</p>
+        <p>B. 红外线从A到B的传播时间不可忽略</p>
+        <p>C. 该测量产生的误差属于偶然误差</p>
+        <p>D. 系统算出的速度大于物体的实际速度 <span class="correct-mark">✓</span></p>
+      </div>
+    </div>
+
+    <div class="svg-wrap">
+      <svg id="svg12" viewBox="0 0 680 380" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- 超声波纹 -->
+          <radialGradient id="waveGrad" cx="50%" cy="50%">
+            <stop offset="0%" stop-color="#378add" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#378add" stop-opacity="0"/>
+          </radialGradient>
+          <!-- 红外闪光 -->
+          <radialGradient id="irGlow" cx="50%" cy="50%">
+            <stop offset="0%" stop-color="#ff6030" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="#ff6030" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+
+        <!-- 背景：运动轨道 -->
+        <rect x="20" y="120" width="640" height="100" fill="#f5f5f7" rx="8" stroke="#dcdce0" stroke-width="0.5"/>
+        <text x="35" y="138" font-size="9" fill="#aeaeb2">运动轨道</text>
+
+        <!-- 刻度线 -->
+        <g stroke="#dcdce0" stroke-width="0.5">
+          <line x1="100" y1="215" x2="100" y2="222"/>
+          <line x1="200" y1="215" x2="200" y2="222"/>
+          <line x1="300" y1="215" x2="300" y2="222"/>
+          <line x1="400" y1="215" x2="400" y2="222"/>
+          <line x1="500" y1="215" x2="500" y2="222"/>
+          <line x1="600" y1="215" x2="600" y2="222"/>
+        </g>
+
+        <!-- 发射器A (可动画移动) -->
+        <g id="transmitterA">
+          <rect x="60" y="155" width="70" height="40" fill="#534ab7" rx="6"/>
+          <text x="95" y="179" text-anchor="middle" font-size="12" fill="white" font-weight="600">A</text>
+          <text x="95" y="204" text-anchor="middle" font-size="9" fill="#8b85d0">（运动物体）</text>
+        </g>
+
+        <!-- 接收器B -->
+        <rect x="570" y="150" width="70" height="50" fill="#0f6e56" rx="6"/>
+        <text x="605" y="179" text-anchor="middle" font-size="12" fill="white" font-weight="600">B</text>
+        <text x="605" y="196" text-anchor="middle" font-size="9" fill="#7ec9a8">（固定）</text>
+
+        <!-- 运动方向箭头 -->
+        <polygon points="135,175 155,175 150,170 162,175 150,180 155,175" fill="#d85a30"/>
+        <text x="165" y="179" font-size="11" fill="#d85a30" font-weight="600">v→</text>
+
+        <!-- 红外线光束（动画用） -->
+        <line id="irBeam" x1="130" y1="160" x2="570" y2="168" stroke="#d85a30" stroke-width="1.5" stroke-dasharray="6 3" opacity="0"/>
+        <!-- 红外信号点 -->
+        <circle id="irDot" cx="130" cy="160" r="6" fill="#d85a30" opacity="0"/>
+        <!-- 红外到达闪光 -->
+        <circle id="irFlash" cx="570" cy="168" r="20" fill="url(#irGlow)" opacity="0"/>
+
+        <!-- 超声波波前（多个同心弧，动画用） -->
+        <g id="waveFronts" opacity="0">
+          <circle id="wf1" cx="130" cy="185" r="10" fill="none" stroke="#378add" stroke-width="1.5" opacity="0.7"/>
+          <circle id="wf2" cx="130" cy="185" r="10" fill="none" stroke="#378add" stroke-width="1.2" opacity="0.5"/>
+          <circle id="wf3" cx="130" cy="185" r="10" fill="none" stroke="#378add" stroke-width="1" opacity="0.3"/>
+        </g>
+        <!-- 超声信号点 -->
+        <circle id="usDot" cx="130" cy="185" r="6" fill="#378add" opacity="0"/>
+        <!-- 超声到达脉冲 -->
+        <circle id="usFlash" cx="570" cy="168" r="15" fill="url(#waveGrad)" opacity="0"/>
+
+        <!-- 红外标注 -->
+        <text id="irLabel" x="350" y="145" text-anchor="middle" font-size="10" fill="#d85a30" font-weight="500" opacity="0">红外线（光速c，tᵢᵣ = d/c ≈ 0）</text>
+        <!-- 超声标注 -->
+        <text id="usLabel" x="350" y="235" text-anchor="middle" font-size="10" fill="#378add" font-weight="500" opacity="0">超声波（声速v₀，Δt = d/v₀）</text>
+
+        <!-- ===== 时间轴 ===== -->
+        <g transform="translate(30, 260)">
+          <text x="0" y="0" font-size="11" fill="#3a3a3e" font-weight="600">计时时间轴</text>
+          <line x1="0" y1="18" x2="620" y2="18" stroke="#c6c6c8" stroke-width="1.5"/>
+          <!-- 刻度 -->
+          <line x1="0" y1="14" x2="0" y2="22" stroke="#3a3a3e" stroke-width="1.5"/>
+          <text x="0" y="35" font-size="9" fill="#6e6e73">0</text>
+
+          <line x1="50" y1="14" x2="50" y2="22" stroke="#d85a30" stroke-width="2"/>
+          <text id="tIrLabel" x="50" y="35" font-size="9" fill="#d85a30" opacity="0">tᵢᵣ≈0（B收到红外）</text>
+
+          <line id="tUsMark" x1="400" y1="14" x2="400" y2="22" stroke="#378add" stroke-width="2" opacity="0"/>
+          <text id="tUsLabel" x="400" y="35" font-size="9" fill="#378add" opacity="0">Δt（B收到超声）</text>
+
+          <!-- Δt 标注 -->
+          <line id="dtBracket1" x1="50" y1="45" x2="50" y2="50" stroke="#3b6d11" stroke-width="1" opacity="0"/>
+          <line id="dtLine" x1="50" y1="50" x2="400" y2="50" stroke="#3b6d11" stroke-width="1.5" opacity="0"/>
+          <line id="dtBracket2" x1="400" y1="45" x2="400" y2="50" stroke="#3b6d11" stroke-width="1" opacity="0"/>
+          <text id="dtText" x="225" y="64" text-anchor="middle" font-size="10" fill="#3b6d11" font-weight="600" opacity="0">Δt = 计时时间</text>
+        </g>
+
+        <!-- 误差说明（动画后期显示） -->
+        <g id="errorNote" opacity="0" transform="translate(30, 345)">
+          <text x="0" y="0" font-size="10" fill="#d85a30" font-weight="500">
+            ⚠ 红外到达B时，A已移动了 v·d/c → 超声实际传播距离 ≠ d → 系统误差
+          </text>
+        </g>
+      </svg>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-info" onclick="playQ12()">▶ 信号传播动画</button>
+      <button class="btn" onclick="resetQ12()">↺ 重置</button>
+      <button class="btn btn-warn" onclick="togglePanel('q12error')">⚠️ 误差来源</button>
+      <button class="btn btn-danger" onclick="togglePanel('q12c')">❌ 选项C为什么错</button>
+      <button class="btn btn-success" onclick="togglePanel('q12d')">✓ 选项D分析</button>
+    </div>
+
+    <div class="explain">
+      <p><span class="highlight">测量原理：</span>红外先到B → 启动计时；超声后到B → 停止计时。</p>
+      <p>系统认为：红外传播时间≈0，故 Δt = 超声从A传到B的时间，s = v₀·Δt。</p>
+      <p style="color:#6e6e73;">但实际上红外以光速c传播需时间 tᵢᵣ = d/c，此间A已移动 → 产生系统误差。</p>
+    </div>
+
+    <!-- 误差来源 -->
+    <div id="q12error" class="panel panel-yellow">
+      <p class="panel-title" style="color:#854f0b;">误差来源：忽略红外传播时间</p>
+      <p style="margin:0 0 4px 0;">红外以光速c传播，从A到B需时间 tᵢᵣ = d/c。</p>
+      <p style="margin:0 0 4px 0;">在这段时间内，A已移动 Δx = v·tᵢᵣ。</p>
+      <p style="margin:4px 0 0 0; color:#3a3a3e;">→ A靠近B：超声传播距离变短 → 测距偏小</p>
+      <p style="margin:0; color:#3a3a3e;">→ A远离B：超声传播距离变长 → 测距偏大</p>
+      <p style="margin:8px 0 0 0; color:#854f0b; font-weight:500;">误差方向固定（非随机）→ 属于<b>系统误差</b>。</p>
+    </div>
+
+    <!-- 选项C -->
+    <div id="q12c" class="panel panel-red">
+      <p class="panel-title" style="color:#a32d2d;">选项C："该误差属于偶然误差" —— ❌ 错误！</p>
+      <p style="margin:0 0 6px 0;"><b>系统误差</b>：由仪器原理或测量方法的固有缺陷导致，方向<b>确定</b>（总偏大或总偏小），具有重现性。</p>
+      <p style="margin:0 0 6px 0;"><b>偶然误差</b>：由随机不可控因素导致，方向<b>不确定</b>（时大时小），服从正态分布。</p>
+      <p style="margin:0; padding:8px; background:#f5d0d0; border-radius:6px; color:#791f1f; font-weight:600;">
+        忽略红外传播时间 → 误差方向由运动方向唯一确定 → 系统误差，不是偶然误差。
+      </p>
+    </div>
+
+    <!-- 选项D -->
+    <div id="q12d" class="panel panel-green">
+      <p class="panel-title" style="color:#3b6d11;">选项D："系统算出的速度大于物体实际速度" —— ✓ 正确</p>
+      <p style="margin:0 0 4px 0;">以A远离B为例：每次测距 s<sub>测</sub> = d·(1+v/c)，偏大。</p>
+      <p style="margin:0 0 4px 0;">两次测距求速度：v<sub>测</sub> = (s₂测 − s₁测)/T = v·(1+v/c)</p>
+      <p style="margin:8px 0 0 0; padding:8px; background:#d4e8c0; border-radius:6px; color:#27500a; font-weight:600;">
+        ∵ v/c > 0，∴ v<sub>测</sub> = v(1+v/c) > v ✓
+      </p>
+    </div>
+  </div>
+
+  <div class="footer">交互式物理题讲解 · 设计用于课堂演示</div>
+</div>
+
+<script>
+// ---- Tab switching ----
+function showTab(n) {
+  [10, 11, 12].forEach(i => {
+    const card = document.getElementById('card' + i);
+    const btn = document.querySelectorAll('.tab-btn')[i - 10];
+    if (i === n) {
+      card.classList.add('active');
+      btn.classList.add('active');
+    } else {
+      card.classList.remove('active');
+      btn.classList.remove('active');
+    }
+  });
+}
+
+// ---- Panel toggle ----
+function togglePanel(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('show');
+}
+
+// ---- Q10 Animation ----
+let q10Timer = null;
+function playQ10() {
+  resetQ10();
+  const a = document.getElementById('personA');
+  const b = document.getElementById('personB');
+  const dispLabels = document.getElementById('dispLabels');
+  let frame = 0;
+  q10Timer = setInterval(() => {
+    frame++;
+    const t = Math.min(frame / 80, 1);
+    // 甲向前（右）移动
+    const ax = 340 + t * 290;
+    a.querySelector('circle').setAttribute('cx', ax);
+    a.querySelector('text').setAttribute('x', ax);
+    // 乙向后（左）移动
+    const bx = 340 - t * 310;
+    b.querySelector('circle').setAttribute('cx', bx);
+    b.querySelector('text').setAttribute('x', bx);
+    // 最后显示位移标注
+    if (t >= 1) {
+      clearInterval(q10Timer);
+      dispLabels.setAttribute('opacity', '1');
+    }
+  }, 20);
+}
+function resetQ10() {
+  if (q10Timer) clearInterval(q10Timer);
+  const a = document.getElementById('personA');
+  const b = document.getElementById('personB');
+  a.querySelector('circle').setAttribute('cx', 340);
+  a.querySelector('text').setAttribute('x', 340);
+  b.querySelector('circle').setAttribute('cx', 340);
+  b.querySelector('text').setAttribute('x', 340);
+  document.getElementById('dispLabels').setAttribute('opacity', '0');
+}
+
+// ---- Q11 Animation ----
+let q11Timer = null;
+function playQ11() {
+  resetQ11();
+  const bugDot = document.getElementById('bugDot');
+  const pathP2S = document.getElementById('pathP2S');
+  const pathS2Q = document.getElementById('pathS2Q');
+  bugDot.setAttribute('opacity', '1');
+  let frame = 0;
+  const totalFrames = 160;
+  q11Timer = setInterval(() => {
+    frame++;
+    const t = frame / totalFrames;
+
+    if (t <= 0.5) {
+      // 阶段1：P → 南极
+      const p = t * 2; // 0→1
+      pathP2S.setAttribute('stroke-dashoffset', 400 * (1 - p));
+      // 沿弧线移动虫子
+      const angle = Math.PI / 2 * p;
+      const cx = 220 + 110 * Math.cos(Math.PI/2 + angle); // 不对，用参数方程
+      // P at (330,160), S at (220,270) — 简化用线性插值+弧度修正
+      const bx = 330 + (220 - 330) * p;
+      const by = 160 + (270 - 160) * p + 30 * Math.sin(Math.PI * p); // 弧线偏移
+      bugDot.setAttribute('cx', bx);
+      bugDot.setAttribute('cy', by);
+      bugDot.setAttribute('fill', '#d85a30');
+    } else {
+      // 阶段2：南极 → Q
+      const p = (t - 0.5) * 2;
+      pathS2Q.setAttribute('stroke-dashoffset', 400 * (1 - p));
+      const bx = 220 + (220 - 220) * p;
+      const by = 270 + (50 - 270) * p + 30 * Math.sin(Math.PI * p);
+      bugDot.setAttribute('cx', bx);
+      bugDot.setAttribute('cy', by);
+      bugDot.setAttribute('fill', '#0f6e56');
+    }
+
+    if (t >= 1) {
+      clearInterval(q11Timer);
+      // 显示位移矢量
+      document.getElementById('vecPQ').setAttribute('opacity', '1');
+      document.getElementById('vecLabel').setAttribute('opacity', '1');
+      bugDot.setAttribute('opacity', '0');
+    }
+  }, 25);
+}
+function resetQ11() {
+  if (q11Timer) clearInterval(q11Timer);
+  document.getElementById('bugDot').setAttribute('opacity', '0');
+  document.getElementById('pathP2S').setAttribute('stroke-dashoffset', '400');
+  document.getElementById('pathS2Q').setAttribute('stroke-dashoffset', '400');
+  document.getElementById('vecPQ').setAttribute('opacity', '0');
+  document.getElementById('vecLabel').setAttribute('opacity', '0');
+}
+
+// ---- Q12 Animation ----
+let q12Timer = null;
+let q12Phase = 0; // 0=idle, 1=emitting, 2=ir travel, 3=us travel, 4=done
+
+function resetQ12() {
+  if (q12Timer) clearInterval(q12Timer);
+  q12Phase = 0;
+  // 重置所有动画元素
+  document.getElementById('irBeam').setAttribute('opacity', '0');
+  document.getElementById('irDot').setAttribute('opacity', '0');
+  document.getElementById('irFlash').setAttribute('opacity', '0');
+  document.getElementById('irLabel').setAttribute('opacity', '0');
+  document.getElementById('usDot').setAttribute('opacity', '0');
+  document.getElementById('usFlash').setAttribute('opacity', '0');
+  document.getElementById('usLabel').setAttribute('opacity', '0');
+  document.getElementById('waveFronts').setAttribute('opacity', '0');
+  document.getElementById('tIrLabel').setAttribute('opacity', '0');
+  document.getElementById('tUsMark').setAttribute('opacity', '0');
+  document.getElementById('tUsLabel').setAttribute('opacity', '0');
+  document.getElementById('dtBracket1').setAttribute('opacity', '0');
+  document.getElementById('dtLine').setAttribute('opacity', '0');
+  document.getElementById('dtBracket2').setAttribute('opacity', '0');
+  document.getElementById('dtText').setAttribute('opacity', '0');
+  document.getElementById('errorNote').setAttribute('opacity', '0');
+  // 重置发射器位置
+  document.getElementById('transmitterA').setAttribute('transform', 'translate(0,0)');
+  // 重置波前
+  ['wf1','wf2','wf3'].forEach(id => {
+    const el = document.getElementById(id);
+    el.setAttribute('cx', '130');
+    el.setAttribute('cy', '185');
+    el.setAttribute('r', '10');
+  });
+}
+
+function playQ12() {
+  resetQ12();
+  let frame = 0;
+  const totalFrames = 200; // ~4 seconds
+
+  q12Timer = setInterval(() => {
+    frame++;
+    const t = frame / totalFrames;
+
+    const transmitter = document.getElementById('transmitterA');
+    const irBeam = document.getElementById('irBeam');
+    const irDot = document.getElementById('irDot');
+    const irFlash = document.getElementById('irFlash');
+    const irLabel = document.getElementById('irLabel');
+    const usDot = document.getElementById('usDot');
+    const usFlash = document.getElementById('usFlash');
+    const usLabel = document.getElementById('usLabel');
+    const waveFronts = document.getElementById('waveFronts');
+    const wf1 = document.getElementById('wf1');
+    const wf2 = document.getElementById('wf2');
+    const wf3 = document.getElementById('wf3');
+
+    // 阶段划分：
+    // 0-5%: A发射信号（闪光效果）
+    // 5-15%: 红外飞速到达B
+    // 15-85%: 超声波缓慢传播
+    // 85-100%: 超声到达B，显示时间轴标注
+
+    // A持续缓慢右移（模拟物体运动）
+    const moveX = t * 30; // 全程移动30px
+    transmitter.setAttribute('transform', `translate(${moveX},0)`);
+
+    if (t <= 0.05) {
+      // 发射闪光
+      const p = t / 0.05;
+      waveFronts.setAttribute('opacity', '1');
+      wf1.setAttribute('r', 8 + p * 15);
+      wf1.setAttribute('cx', 130 + moveX);
+      wf1.setAttribute('opacity', 0.8);
+      irDot.setAttribute('opacity', '0');
+      usDot.setAttribute('opacity', '0');
+    }
+    else if (t <= 0.15) {
+      // 红外飞速到达B
+      const p = (t - 0.05) / 0.10;
+      irDot.setAttribute('opacity', '1');
+      irBeam.setAttribute('opacity', '0.4');
+      irLabel.setAttribute('opacity', '1');
+
+      const irX = 130 + p * 440;
+      irDot.setAttribute('cx', irX + moveX * 0.05);
+      irDot.setAttribute('cy', 160 + (168 - 160) * p);
+
+      // 波前继续扩散
+      waveFronts.setAttribute('opacity', '1');
+      const baseCx = 130 + moveX;
+      wf1.setAttribute('cx', baseCx);
+      wf1.setAttribute('r', 20 + p * 20);
+      wf1.setAttribute('opacity', 0.6);
+      wf2.setAttribute('cx', baseCx);
+      wf2.setAttribute('r', 10 + p * 12);
+      wf2.setAttribute('opacity', 0.5);
+      wf3.setAttribute('cx', baseCx);
+      wf3.setAttribute('r', 5 + p * 5);
+      wf3.setAttribute('opacity', 0.3);
+
+      if (p >= 0.95) {
+        // 红外到达B
+        irFlash.setAttribute('opacity', '1');
+        irDot.setAttribute('opacity', '0');
+        // 时间轴：B收到红外
+        document.getElementById('tIrLabel').setAttribute('opacity', '1');
+      }
+    }
+    else if (t <= 0.85) {
+      // 超声波缓慢传播
+      const p = (t - 0.15) / 0.70;
+      irDot.setAttribute('opacity', '0');
+      irFlash.setAttribute('opacity', Math.max(0, 1 - (p * 3)));
+      irBeam.setAttribute('opacity', '0.3');
+
+      // 超声波信号点移动
+      usDot.setAttribute('opacity', '1');
+      usLabel.setAttribute('opacity', '1');
+      const usX = 130 + p * 440;
+      usDot.setAttribute('cx', usX);
+      usDot.setAttribute('cy', 185 + (168 - 185) * p);
+
+      // 波前从A当前位置向外扩散（三层波纹）
+      waveFronts.setAttribute('opacity', '1');
+      const baseCx = 130 + moveX;
+      // 周期性波纹
+      const wavePhase = p * 12;
+      for (let i = 0; i < 3; i++) {
+        const wf = [wf1, wf2, wf3][i];
+        const r = ((wavePhase + i * 1.5) % 6) * 25 + 10;
+        const op = Math.max(0, 0.7 - r / 200);
+        wf.setAttribute('cx', baseCx);
+        wf.setAttribute('cy', '185');
+        wf.setAttribute('r', r);
+        wf.setAttribute('opacity', op);
+      }
+    }
+    else {
+      // 超声到达B + 显示时间轴
+      const p = (t - 0.85) / 0.15;
+      usDot.setAttribute('opacity', '0');
+      waveFronts.setAttribute('opacity', '0');
+
+      // 到达闪光
+      usFlash.setAttribute('opacity', Math.max(0, 1 - p));
+
+      // 时间轴标注逐步出现
+      document.getElementById('tUsMark').setAttribute('opacity', String(p));
+      document.getElementById('tUsLabel').setAttribute('opacity', String(p));
+
+      if (p > 0.3) {
+        document.getElementById('dtBracket1').setAttribute('opacity', '1');
+        document.getElementById('dtLine').setAttribute('opacity', '1');
+        document.getElementById('dtBracket2').setAttribute('opacity', '1');
+        document.getElementById('dtText').setAttribute('opacity', '1');
+      }
+      if (p > 0.6) {
+        document.getElementById('errorNote').setAttribute('opacity', String((p - 0.6) / 0.4));
+      }
+
+      if (t >= 1) {
+        clearInterval(q12Timer);
+      }
+    }
+  }, 20);
+}
+</script>
+
+</body>
+</html>
