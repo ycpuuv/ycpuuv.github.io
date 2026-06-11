@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>加速度易混辨析 · 9道判断题</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0b14;color:#d4d4dc;font-family:'PingFang SC','Microsoft YaHei',sans-serif;padding:0 0 40px}
+.header{text-align:center;padding:28px 16px 10px}
+.header h1{font-size:1.3em;background:linear-gradient(135deg,#f4a261,#d4a373);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:2px;font-weight:700}
+.header .sub{font-size:.7em;color:#5c5c72;margin-top:3px}
+.header .divider{width:50px;height:2px;background:linear-gradient(90deg,#f4a261,#d4a373);margin:8px auto;border-radius:2px}
+.container{max-width:520px;margin:0 auto;padding:0 10px}
+.q-card{background:#0e0e1e;border:1px solid #1a1a30;border-radius:6px;margin-bottom:6px;overflow:hidden;transition:all .2s}
+.q-header{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;cursor:pointer}
+.q-num{font-size:.65em;color:#d4a373;font-weight:600;background:rgba(212,163,115,.1);padding:2px 7px;border-radius:3px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+.q-text{font-size:.78em;line-height:1.6;color:#c8c8d0;flex:1}
+.q-toggle{font-size:.7em;color:#5c5c72;flex-shrink:0;margin-top:2px;transition:transform .2s}
+.q-card.open .q-toggle{transform:rotate(90deg);color:#d4a373}
+.q-answer{max-height:0;overflow:hidden;transition:max-height .35s ease}
+.q-card.open .q-answer{max-height:500px}
+.q-inner{padding:0 12px 10px 12px}
+.q-judge{display:inline-block;font-size:.7em;font-weight:700;padding:2px 10px;border-radius:4px;margin-bottom:4px}
+.q-judge.right{background:rgba(92,204,153,.15);color:#5c9}
+.q-judge.wrong{background:rgba(255,80,80,.12);color:#ff6666}
+.q-explain{font-size:.68em;line-height:1.7;color:#b0b0c0;padding:6px 8px;background:#0a0a18;border-radius:4px;margin-top:4px}
+.q-explain .hl{color:#f4a261;font-weight:500}
+.q-explain .eg{color:#5c5c72;font-size:.92em}
+.summary{text-align:center;margin:14px 0;font-size:.7em;color:#5c5c72;line-height:1.8}
+footer{text-align:center;padding:16px;color:#2a2a40;font-size:.58em;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>加速度 · 9道判断题</h1>
+  <p class="sub">点开每道题看解析 → 这些都是学生最容混的</p>
+  <div class="divider"></div>
+</div>
+
+<div class="container">
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">①</span>
+    <span class="q-text">加速度为零，速度一定为零</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">反例：</span>匀速直线运动。<br>a=0，但 v≠0（如汽车以10m/s匀速行驶）。<br><span class="eg">※ 加速度描述的是速度变化的快慢，不是速度的大小。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">②</span>
+    <span class="q-text">速度为零，加速度一定为零</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">反例：</span>竖直上抛的最高点。<br>v=0，但 a=g≠0（下一秒就要下落）。<br><span class="eg">※ 速度为零的瞬间，加速度可以不为零——这正是由静到动的转折点。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">③</span>
+    <span class="q-text">加速度越大，速度一定越大</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">反例：</span>刹车过程。<br>刹车时加速度很大（如 -5m/s²），但速度在减小，从20m/s→0。<br><span class="eg">※ 加速度大说明速度变<strong>化</strong>快，但变大还是变小要看方向。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">④</span>
+    <span class="q-text">加速度减小，速度一定减小</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">反例：</span>汽车启动后逐渐收油。<br>a从3→2→1 m/s²（减小），但 v 仍在增大，只是增加得越来越慢。<br><span class="eg">※ a与v同向时，a减小→v增加变慢，但仍在增加。a的正负变化才决定增减。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">⑤</span>
+    <span class="q-text">速度变化越大，加速度一定越大</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">分析：</span>加速度 = 速度变化 ÷ 时间。Δv大，但如果Δt也很大，a可以很小。<br><span class="hl">反例：</span>高铁从0加速到300km/h，变化很大，但用了好几分钟，a很小（约0.1m/s²）。<br><span class="eg">※ 加速度不是看Δv的大小，要看Δv/Δt——速度变<strong>化率</strong>。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">⑥</span>
+    <span class="q-text">加速度不变，速度一定不变</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">反例：</span>自由落体（或匀加速直线运动）。<br>a=g 恒定不变，但 v=gt 在均匀增大。<br><span class="eg">※ a不变→速度均匀变化（匀变速）。a不变≠v不变。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">⑦</span>
+    <span class="q-text">物体有加速度，速度一定增大</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">反例：</span>匀减速直线运动。<br>a与v反向→a>0但v减小（或a<0但v>0）。<br><span class="eg">※ 判断加速还是减速不看a的正负，看 a 与 v 方向：<br>同向→加速，反向→减速。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">⑧</span>
+    <span class="q-text">加速度为负值，物体一定做减速运动</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge wrong">✘ 错误</span>
+      <div class="q-explain"><span class="hl">分析：</span>正负号取决于规定的正方向。<br><span class="hl">反例：</span>规定向右为正，若物体向左运动（v负）且加速度也为负→a与v同向→<strong>加速</strong>。<br><span class="eg">※ a为负只说明方向与正方向相反。判断加减速要看 a 与 v 是否同向，而不是看a的符号。</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="q-card" onclick="toggle(this)">
+  <div class="q-header">
+    <span class="q-num">⑨</span>
+    <span class="q-text">速度变化越快，加速度越大</span>
+    <span class="q-toggle">▶</span>
+  </div>
+  <div class="q-answer">
+    <div class="q-inner">
+      <span class="q-judge right">✔ 正确</span>
+      <div class="q-explain"><span class="hl">分析：</span>这就是加速度的定义——速度变化的快慢。<br>"快"就是单位时间内变化量大，即 Δv/Δt 大→a大。<br><span class="eg">※ 这是唯一直接对应加速度定义的描述，正确。</span></div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="summary">
+  <strong style="color:#f4a261;">一句话总结：</strong><br>
+  a的大小看Δv/Δt（变化率），a的正负看正方向，加减速看 a 与 v 是否同向。
+</div>
+
+<footer>启明 · 加速度易混辨析 · 9道题吃透概念</footer>
+
+<script>
+function toggle(el){
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>
