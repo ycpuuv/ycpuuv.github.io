@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>运动学追击问题 — 交互式探究课</title>
+<style>
+:root {
+  --primary: #2563eb;
+  --primary-light: #60a5fa;
+  --secondary: #f59e0b;
+  --danger: #ef4444;
+  --success: #10b981;
+  --bg: #0f172a;
+  --bg2: #1e293b;
+  --bg3: #334155;
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --card: #1e293b;
+  --border: #334155;
+  --car1: #3b82f6;
+  --car2: #ef4444;
+  --radius: 12px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+.header { background:linear-gradient(135deg,#1e3a5f,#0f172a); padding:28px 40px; border-bottom:1px solid var(--border); }
+.header h1 { font-size:28px; font-weight:700; background:linear-gradient(90deg,#60a5fa,#a78bfa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header p { color:var(--text2); margin-top:6px; font-size:14px; }
+.tabs { display:flex; gap:4px; padding:12px 40px; background:var(--bg2); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.tab { padding:10px 20px; border:none; background:transparent; color:var(--text2); cursor:pointer; border-radius:8px 8px 0 0; font-size:14px; font-weight:500; transition:all .2s; }
+.tab:hover { background:var(--bg3); color:var(--text); }
+.tab.active { background:var(--bg); color:var(--primary-light); border-bottom:2px solid var(--primary); }
+.container { max-width:1200px; margin:0 auto; padding:24px 40px; }
+.module { display:none; animation:fadeIn .3s; }
+.module.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:20px; }
+.card h2 { font-size:20px; margin-bottom:16px; color:var(--primary-light); display:flex; align-items:center; gap:8px; }
+.card h3 { font-size:16px; margin:16px 0 10px; color:var(--secondary); }
+.canvas-wrap { background:#0c1222; border-radius:8px; overflow:hidden; position:relative; margin:12px 0; border:1px solid var(--border); }
+canvas { display:block; width:100%; }
+.controls { display:flex; flex-wrap:wrap; gap:16px; margin:16px 0; align-items:center; }
+.ctrl-group { display:flex; flex-direction:column; gap:4px; min-width:180px; }
+.ctrl-group label { font-size:13px; color:var(--text2); display:flex; justify-content:space-between; }
+.ctrl-group label span { color:var(--secondary); font-weight:600; }
+input[type=range] { -webkit-appearance:none; height:6px; border-radius:3px; background:var(--bg3); outline:none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--primary); cursor:pointer; border:2px solid var(--primary-light); }
+.btn { padding:10px 24px; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-weight:600; transition:all .2s; }
+.btn-primary { background:var(--primary); color:#fff; }
+.btn-primary:hover { background:#3b82f6; }
+.btn-secondary { background:var(--bg3); color:var(--text); }
+.btn-secondary:hover { background:#475569; }
+.btn-success { background:var(--success); color:#fff; }
+.btn-danger { background:var(--danger); color:#fff; }
+.btn-group { display:flex; gap:8px; flex-wrap:wrap; }
+.status-bar { display:flex; gap:24px; padding:12px 16px; background:var(--bg); border-radius:8px; margin:12px 0; font-size:14px; flex-wrap:wrap; }
+.status-bar .item { display:flex; align-items:center; gap:6px; }
+.status-bar .dot { width:10px; height:10px; border-radius:50%; }
+.formula { background:var(--bg); padding:14px 20px; border-radius:8px; border-left:3px solid var(--primary); margin:12px 0; font-family:'Courier New',monospace; font-size:15px; line-height:1.8; }
+.step { padding:12px 16px; background:var(--bg); border-radius:8px; margin:8px 0; border-left:3px solid var(--secondary); }
+.step-num { display:inline-block; width:24px; height:24px; background:var(--secondary); color:#000; border-radius:50%; text-align:center; line-height:24px; font-size:12px; font-weight:700; margin-right:8px; }
+.answer-box { background:var(--bg); padding:16px; border-radius:8px; margin:12px 0; border:1px dashed var(--border); }
+.answer-box.revealed { border-color:var(--success); background:rgba(16,185,129,.08); }
+.tag { display:inline-block; padding:2px 10px; border-radius:12px; font-size:12px; font-weight:600; }
+.tag-blue { background:rgba(59,130,246,.2); color:#60a5fa; }
+.tag-red { background:rgba(239,68,68,.2); color:#f87171; }
+.tag-green { background:rgba(16,185,129,.2); color:#34d399; }
+.tag-yellow { background:rgba(245,158,11,.2); color:#fbbf24; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+@media(max-width:768px) { .grid2{grid-template-columns:1fr} .container{padding:16px} .header{padding:20px} .tabs{padding:8px 16px} }
+.highlight { color:var(--secondary); font-weight:600; }
+.warn { color:var(--danger); font-weight:600; }
+.check-list { list-style:none; }
+.check-list li { padding:6px 0; display:flex; align-items:center; gap:8px; }
+.check-list li::before { content:''; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--success); flex-shrink:0; }
+.quiz-input { background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:10px 14px; color:var(--text); font-size:14px; width:120px; }
+.quiz-input:focus { outline:none; border-color:var(--primary); }
+.result { padding:10px 16px; border-radius:8px; margin-top:8px; font-weight:600; }
+.result.correct { background:rgba(16,185,129,.15); color:#34d399; }
+.result.wrong { background:rgba(239,68,68,.15); color:#f87171; }
+.example-nav { display:flex; gap:8px; margin-bottom:16px; }
+.example-nav .btn { flex:1; }
+.legend { display:flex; gap:16px; margin:8px 0; font-size:13px; }
+.legend span { display:flex; align-items:center; gap:4px; }
+.legend .swatch { width:16px; height:4px; border-radius:2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>运动学追击问题 — 交互式探究课</h1>
+  <p>适用对象：高中物理拔尖学生 &nbsp;|&nbsp; 核心素养：科学推理、科学论证、模型建构</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(0)">一、情境导入</button>
+  <button class="tab" onclick="switchTab(1)">二、概念探究</button>
+  <button class="tab" onclick="switchTab(2)">三、典型例题</button>
+  <button class="tab" onclick="switchTab(3)">四、临界分析</button>
+  <button class="tab" onclick="switchTab(4)">五、综合挑战</button>
+</div>
+
+<!-- ==================== 模块1：情境导入 ==================== -->
+<div class="container">
+<div class="module active" id="mod0">
+  <div class="card">
+    <h2>情境导入：高速公路上的追击</h2>
+    <p style="color:var(--text2);margin-bottom:12px">一辆慢车以 v₁ 匀速行驶，后方一辆快车以 v₂ 匀速追赶（v₂ > v₁）。观察两车的运动，思考：快车何时追上慢车？</p>
+    <div class="canvas-wrap">
+      <canvas id="c1" height="200"></canvas>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--car1)"></span> 慢车 A</span>
+      <span><span class="swatch" style="background:var(--car2)"></span> 快车 B</span>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>慢车速度 v₁ <span id="v1Val">5</span> m/s</label>
+        <input type="range" id="v1Slider" min="1" max="15" value="5" step="0.5">
+      </div>
+      <div class="ctrl-group">
+        <label>快车速度 v₂ <span id="v2Val">10</span> m/s</label>
+        <input type="range" id="v2Slider" min="2" max="25" value="10" step="0.5">
+      </div>
+      <div class="ctrl-group">
+        <label>初始间距 d <span id="dVal">100</span> m</label>
+        <input type="range" id="dSlider" min="20" max="300" value="100" step="10">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btnPlay1" onclick="togglePlay1()">▶ 播放</button>
+        <button class="btn btn-secondary" onclick="resetAnim1()">↺ 重置</button>
+      </div>
+    </div>
+    <div class="status-bar" id="status1">
+      <div class="item">时间：<span class="highlight" id="tDisp1">0.0</span> s</div>
+      <div class="item">间距：<span class="highlight" id="gapDisp1">100.0</span> m</div>
+      <div class="item">状态：<span id="stateDisp1">等待播放</span></div>
+    </div>
+    <div class="formula">
+      追上条件：v₂ · t = v₁ · t + d<br>
+      追上时间：t = d / (v₂ − v₁) = <span id="catchTime">10.0</span> s
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>思考题</h2>
+    <p>1. 如果 v₂ = v₁，快车能否追上慢车？为什么？</p>
+    <p>2. 追上时间与初始间距 d 是什么关系？与速度差 (v₂−v₁) 呢？</p>
+    <p>3. 如果快车不是匀速而是匀加速，情况会怎样变化？</p>
+  </div>
+</div>
+
+<!-- ==================== 模块2：概念探究 ==================== -->
+<div class="module" id="mod1">
+  <div class="card">
+    <h2>核心概念：追击问题的运动学分析</h2>
+    <p style="color:var(--text2);margin-bottom:8px">调节参数，观察 x-t 图和 v-t 图的变化，理解追击的本质。</p>
+
+    <h3>设置运动参数</h3>
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>前车初速度 v₁₀ <span id="v10Val">8</span> m/s</label>
+        <input type="range" id="v10Slider" min="0" max="20" value="8" step="0.5">
+      </div>
+      <div class="ctrl-group">
+        <label>前车加速度 a₁ <span id="a1Val">0</span> m/s²</label>
+        <input type="range" id="a1Slider" min="-3" max="5" value="0" step="0.1">
+      </div>
+      <div class="ctrl-group">
+        <label>后车初速度 v₂₀ <span id="v20Val">5</span> m/s</label>
+        <input type="range" id="v20Slider" min="0" max="25" value="5" step="0.5">
+      </div>
+      <div class="ctrl-group">
+        <label>后车加速度 a₂ <span id="a2Val">1</span> m/s²</label>
+        <input type="range" id="a2Slider" min="0" max="5" value="1" step="0.1">
+      </div>
+      <div class="ctrl-group">
+        <label>初始间距 d <span id="d2Val">50</span> m</label>
+        <input type="range" id="d2Slider" min="10" max="200" value="50" step="5">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="analyzeChase()">分析追击情况</button>
+      <button class="btn btn-secondary" onclick="resetAnalysis()">重置</button>
+    </div>
+
+    <div class="grid2" style="margin-top:16px">
+      <div>
+        <h3>位置-时间图 (x-t)</h3>
+        <div class="canvas-wrap"><canvas id="c_xt" height="280"></canvas></div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--car1)"></span> 前车 x₁(t)</span>
+          <span><span class="swatch" style="background:var(--car2)"></span> 后车 x₂(t)</span>
+        </div>
+      </div>
+      <div>
+        <h3>速度-时间图 (v-t)</h3>
+        <div class="canvas-wrap"><canvas id="c_vt" height="280"></canvas></div>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--car1)"></span> 前车 v₁(t)</span>
+          <span><span class="swatch" style="background:var(--car2)"></span> 后车 v₂(t)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar" id="analysisResult">
+      <div class="item">结论：<span id="analysisText">点击"分析"按钮查看结果</span></div>
+    </div>
+
+    <div class="formula" id="analysisFormula" style="display:none"></div>
+  </div>
+
+  <div class="card">
+    <h2>追击问题分类总结</h2>
+    <table style="width:100%;border-collapse:collapse;font-size:14px">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:8px;text-align:left;color:var(--primary-light)">类型</th>
+          <th style="padding:8px;text-align:left;color:var(--primary-light)">条件</th>
+          <th style="padding:8px;text-align:left;color:var(--primary-light)">特征</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px">匀速追匀速</td>
+          <td style="padding:8px">v₂ > v₁</td>
+          <td style="padding:8px">必能追上，追上时间 t = d/(v₂−v₁)</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px">匀速追匀加速</td>
+          <td style="padding:8px">前车有加速度</td>
+          <td style="padding:8px">可能追上也可能追不上，存在临界条件</td>
+        </tr>
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:8px">匀加速追匀速</td>
+          <td style="padding:8px">后车有加速度</td>
+          <td style="padding:8px">一定能追上（若持续加速），但可能二次相遇</td>
+        </tr>
+        <tr>
+          <td style="padding:8px">匀加速追匀加速</td>
+          <td style="padding:8px">两车都有加速度</td>
+          <td style="padding:8px">需比较相对加速度和相对初速度</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ==================== 模块3：典型例题 ==================== -->
+<div class="module" id="mod2">
+  <div class="card">
+    <h2>典型例题精讲</h2>
+    <div class="example-nav">
+      <button class="btn btn-primary" onclick="showExample(0)">例题1</button>
+      <button class="btn btn-secondary" onclick="showExample(1)">例题2</button>
+      <button class="btn btn-secondary" onclick="showExample(2)">例题3</button>
+    </div>
+
+    <div id="exampleContent"></div>
+  </div>
+</div>
+
+<!-- ==================== 模块4：临界分析 ==================== -->
+<div class="module" id="mod3">
+  <div class="card">
+    <h2>临界条件深度分析</h2>
+    <p style="color:var(--text2);margin-bottom:12px">追击问题的核心在于<span class="highlight">临界条件</span>的判断。调节参数，观察"恰好追上"和"恰好追不上"的临界状态。</p>
+
+    <h3>场景：后车（匀加速）追前车（匀速）</h3>
+    <div class="controls">
+      <div class="ctrl-group">
+        <label>前车速度 v₁ <span id="v1cVal">10</span> m/s</label>
+        <input type="range" id="v1cSlider" min="5" max="20" value="10" step="0.5">
+      </div>
+      <div class="ctrl-group">
+        <label>后车初速度 v₂₀ <span id="v20cVal">5</span> m/s</label>
+        <input type="range" id="v20cSlider" min="0" max="15" value="5" step="0.5">
+      </div>
+      <div class="ctrl-group">
+        <label>后车加速度 a₂ <span id="a2cVal">2</span> m/s²</label>
+        <input type="range" id="a2cSlider" min="0.5" max="5" value="2" step="0.1">
+      </div>
+      <div class="ctrl-group">
+        <label>初始间距 d <span id="dcVal">40</span> m</label>
+        <input type="range" id="dcSlider" min="10" max="200" value="40" step="5">
+      </div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-primary" onclick="analyzeCritical()">分析临界条件</button>
+    </div>
+
+    <div class="canvas-wrap" style="margin-top:12px">
+      <canvas id="c_critical" height="300"></canvas>
+    </div>
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--car1)"></span> 前车（匀速）</span>
+      <span><span class="swatch" style="background:var(--car2)"></span> 后车（匀加速）</span>
+      <span><span class="swatch" style="background:#a78bfa"></span> 间距 Δx(t)</span>
+    </div>
+
+    <div class="status-bar" id="criticalResult">
+      <div class="item">结论：<span id="criticalText">点击"分析"查看结果</span></div>
+    </div>
+
+    <div id="criticalDetail" style="display:none" class="formula"></div>
+  </div>
+
+  <div class="card">
+    <h2>临界条件求解策略</h2>
+    <h3>方法一：代数法（判别式法）</h3>
+    <div class="step"><span class="step-num">1</span>建立位移方程：x₂(t) = x₁(t) → 关于 t 的方程</div>
+    <div class="step"><span class="step-num">2</span>令 Δ = 0（判别式），求临界参数</div>
+    <div class="step"><span class="step-num">3</span>Δ > 0：有两个解（追上两次）；Δ = 0：恰好追上；Δ < 0：追不上</div>
+
+    <h3>方法二：物理分析法（速度相等法）</h3>
+    <div class="step"><span class="step-num">1</span>找出两车速度相等的时刻 t₀</div>
+    <div class="step"><span class="step-num">2</span>计算 t₀ 时刻的间距 Δx(t₀)</div>
+    <div class="step"><span class="step-num">3</span>若 Δx(t₀) = 0：恰好追上；Δx(t₀) > 0：追不上；Δx(t₀) < 0：已超过</div>
+
+    <div class="formula">
+      <span class="highlight">关键洞察</span>：对于"匀加速追匀速"问题，<br>
+      速度相等时距离取极值（最近或最远）！<br>
+      这是因为当 v后 > v前 时，间距在缩小；v后 < v前 时，间距在增大。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 模块5：综合挑战 ==================== -->
+<div class="module" id="mod4">
+  <div class="card">
+    <h2>综合挑战</h2>
+
+    <div id="challengeContent">
+      <h3>挑战1：含刹车的追击问题</h3>
+      <p style="color:var(--text2)">A车以10 m/s匀速行驶，B车在A车后方50 m处，以20 m/s的初速度、−2 m/s²的加速度（刹车）追赶。B车速度减为0后停止。问：B车能否追上A车？若能，何时追上？</p>
+
+      <div class="canvas-wrap">
+        <canvas id="c_challenge" height="250"></canvas>
+      </div>
+      <div class="btn-group" style="margin:12px 0">
+        <button class="btn btn-primary" onclick="runChallenge1()">播放动画</button>
+        <button class="btn btn-secondary" onclick="resetChallenge1()">重置</button>
+      </div>
+
+      <div class="answer-box" id="ans1">
+        <p>请先独立思考，然后点击查看答案：</p>
+        <button class="btn btn-success" onclick="revealAnswer(1)">显示解答过程</button>
+        <div id="ans1Detail" style="display:none;margin-top:12px">
+          <div class="step"><span class="step-num">1</span>B车刹车到停止的时间：t₀ = v₀/a = 20/2 = 10 s</div>
+          <div class="step"><span class="step-num">2</span>B车停止时的位移：x_B = v₀t₀ − ½at₀² = 200 − 100 = 100 m</div>
+          <div class="step"><span class="step-num">3</span>A车在10s内的位移：x_A = 10 × 10 = 100 m</div>
+          <div class="step"><span class="step-num">4</span>t=10s时：x_B = 100 m，A车位置 = 50 + 100 = 150 m</div>
+          <div class="step"><span class="step-num">5</span>B车在A车后方 150 − 100 = 50 m，B车已停，<span class="warn">追不上</span></div>
+          <div class="formula">
+            结论：B车虽然初速度大，但因刹车减速，最终停止时仍落后A车50 m，<span class="warn">无法追上</span>。
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:24px">挑战2：自主探究</h3>
+      <p style="color:var(--text2)">设定你自己的追击问题参数，系统帮你分析：</p>
+      <div class="controls">
+        <div class="ctrl-group">
+          <label>前车 v₀ <span id="fvVal">10</span> m/s</label>
+          <input type="range" id="fvSlider" min="0" max="20" value="10" step="0.5">
+        </div>
+        <div class="ctrl-group">
+          <label>前车 a <span id="faVal">0</span> m/s²</label>
+          <input type="range" id="faSlider" min="-3" max="3" value="0" step="0.1">
+        </div>
+        <div class="ctrl-group">
+          <label>后车 v₀ <span id="bvVal">15</span> m/s</label>
+          <input type="range" id="bvSlider" min="0" max="30" value="15" step="0.5">
+        </div>
+        <div class="ctrl-group">
+          <label>后车 a <span id="baVal">1</span> m/s²</label>
+          <input type="range" id="baSlider" min="-3" max="5" value="1" step="0.1">
+        </div>
+        <div class="ctrl-group">
+          <label>初始间距 <span id="fdVal">80</span> m</label>
+          <input type="range" id="fdSlider" min="10" max="300" value="80" step="5">
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="analyzeCustom()">分析</button>
+      </div>
+      <div class="canvas-wrap" style="margin-top:12px">
+        <canvas id="c_custom" height="250"></canvas>
+      </div>
+      <div id="customResult" class="formula" style="display:none"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ========== Tab Switching ==========
+function switchTab(n) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
+  document.querySelectorAll('.module').forEach((m,i) => m.classList.toggle('active', i===n));
+}
+
+// ========== 模块1：情境导入动画 ==========
+let anim1 = { running:false, t:0, raf:null };
+const c1 = document.getElementById('c1');
+const ctx1 = c1.getContext('2d');
+
+function resizeCanvas(canvas) {
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width * devicePixelRatio;
+  canvas.height = canvas.offsetHeight * devicePixelRatio;
+  canvas.getContext('2d').setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+function getW(canvas) { return canvas.width / devicePixelRatio; }
+function getH(canvas) { return canvas.height / devicePixelRatio; }
+
+function drawRoad(ctx, w, h) {
+  ctx.fillStyle = '#1a2744';
+  ctx.fillRect(0, 0, w, h);
+  // road
+  const roadY = h * 0.55;
+  ctx.fillStyle = '#2d3748';
+  ctx.fillRect(0, roadY - 40, w, 80);
+  // lane markings
+  ctx.setLineDash([20, 15]);
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, roadY);
+  ctx.lineTo(w, roadY);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  // distance markers
+  ctx.fillStyle = '#64748b';
+  ctx.font = '11px sans-serif';
+  for (let x = 0; x <= 500; x += 50) {
+    const px = 40 + x * (w - 80) / 500;
+    ctx.fillRect(px, roadY + 40, 1, 8);
+    ctx.fillText(x + 'm', px - 10, roadY + 60);
+  }
+}
+
+function drawCar(ctx, x, y, color, label) {
+  // body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(x - 20, y - 12, 40, 24, 4);
+  ctx.fill();
+  // window
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillRect(x - 8, y - 10, 16, 10);
+  // wheels
+  ctx.fillStyle = '#1a1a2e';
+  ctx.beginPath(); ctx.arc(x - 12, y + 12, 5, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(x + 12, y + 12, 5, 0, Math.PI * 2); ctx.fill();
+  // label
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 12px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, x, y - 18);
+}
+
+function drawScene1() {
+  resizeCanvas(c1);
+  const w = getW(c1), h = getH(c1);
+  const ctx = ctx1;
+  drawRoad(ctx, w, h);
+
+  const v1 = parseFloat(document.getElementById('v1Slider').value);
+  const v2 = parseFloat(document.getElementById('v2Slider').value);
+  const d = parseFloat(document.getElementById('dSlider').value);
+  const t = anim1.t;
+
+  const scale = (w - 80) / 500;
+  const x1 = 40 + (v1 * t) * scale;
+  const x2 = 40 + (v2 * t) * scale;
+  const roadY = h * 0.55;
+
+  drawCar(ctx, x1, roadY - 25, '#3b82f6', 'A');
+  drawCar(ctx, x2, roadY + 25, '#ef4444', 'B');
+
+  // gap indicator
+  if (x2 < x1 + 30 && x2 > x1 - 30) {
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(x1 + 22, roadY);
+    ctx.lineTo(x2 - 22, roadY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    const gap = Math.max(0, d - (v2 - v1) * t);
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(gap.toFixed(1) + 'm', (x1 + x2) / 2, roadY - 5);
+  }
+
+  document.getElementById('tDisp1').textContent = t.toFixed(1);
+  const gap = Math.max(0, d - (v2 - v1) * t);
+  document.getElementById('gapDisp1').textContent = gap.toFixed(1);
+
+  if (gap <= 0 && v2 > v1) {
+    document.getElementById('stateDisp1').innerHTML = '<span class="tag tag-green">已追上！</span>';
+    anim1.running = false;
+  } else if (v2 <= v1) {
+    document.getElementById('stateDisp1').innerHTML = '<span class="tag tag-red">永远追不上</span>';
+  } else {
+    document.getElementById('stateDisp1').innerHTML = '<span class="tag tag-blue">追赶中...</span>';
+  }
+
+  const catchT = v2 > v1 ? d / (v2 - v1) : Infinity;
+  document.getElementById('catchTime').textContent = catchT === Infinity ? '∞' : catchT.toFixed(1);
+}
+
+function animLoop1() {
+  if (!anim1.running) return;
+  anim1.t += 0.05;
+  drawScene1();
+  const v1 = parseFloat(document.getElementById('v1Slider').value);
+  const v2 = parseFloat(document.getElementById('v2Slider').value);
+  const d = parseFloat(document.getElementById('dSlider').value);
+  if (v2 > v1 && anim1.t >= d / (v2 - v1)) {
+    anim1.running = false;
+    return;
+  }
+  if (anim1.t > 60) { anim1.running = false; return; }
+  anim1.raf = requestAnimationFrame(animLoop1);
+}
+
+function togglePlay1() {
+  if (anim1.running) {
+    anim1.running = false;
+    document.getElementById('btnPlay1').textContent = '▶ 播放';
+  } else {
+    anim1.running = true;
+    document.getElementById('btnPlay1').textContent = '⏸ 暂停';
+    animLoop1();
+  }
+}
+
+function resetAnim1() {
+  anim1.running = false;
+  anim1.t = 0;
+  document.getElementById('btnPlay1').textContent = '▶ 播放';
+  drawScene1();
+}
+
+// slider bindings for module 1
+['v1Slider','v2Slider','dSlider'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function() {
+    const map = {v1Slider:'v1Val', v2Slider:'v2Val', dSlider:'dVal'};
+    document.getElementById(map[id]).textContent = this.value;
+    if (!anim1.running) drawScene1();
+  });
+});
+
+// ========== 模块2：概念探究 ==========
+const c_xt = document.getElementById('c_xt');
+const c_vt = document.getElementById('c_vt');
+
+function drawAxes(ctx, w, h, xLabel, yLabel, xMax, yMax) {
+  const ml = 50, mb = 30, mt = 10, mr = 10;
+  ctx.fillStyle = '#0c1222';
+  ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = '#334155';
+  ctx.lineWidth = 1;
+  // grid
+  ctx.setLineDash([2,4]);
+  for (let i = 1; i <= 5; i++) {
+    const y = mt + (h - mt - mb) * (1 - i/5);
+    ctx.beginPath(); ctx.moveTo(ml, y); ctx.lineTo(w - mr, y); ctx.stroke();
+    const x = ml + (w - ml - mr) * i/5;
+    ctx.beginPath(); ctx.moveTo(x, mt); ctx.lineTo(x, h - mb); ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  // axes
+  ctx.strokeStyle = '#64748b';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(ml, mt);
+  ctx.lineTo(ml, h - mb);
+  ctx.lineTo(w - mr, h - mb);
+  ctx.stroke();
+  // labels
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(xLabel, w / 2, h - 5);
+  ctx.save();
+  ctx.translate(12, h / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.fillText(yLabel, 0, 0);
+  ctx.restore();
+  // tick labels
+  ctx.font = '10px sans-serif';
+  for (let i = 0; i <= 5; i++) {
+    ctx.fillText((xMax * i / 5).toFixed(0), ml + (w - ml - mr) * i / 5, h - mb + 14);
+    ctx.textAlign = 'right';
+    ctx.fillText((yMax * i / 5).toFixed(0), ml - 4, h - mb - (h - mt - mb) * i / 5 + 4);
+    ctx.textAlign = 'center';
+  }
+  return { ml, mb, mt, mr, pw: w - ml - mr, ph: h - mt - mb };
+}
+
+function drawCurve(ctx, ax, xMax, yMax, fn, color, lw=2) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lw;
+  ctx.beginPath();
+  let started = false;
+  for (let px = 0; px <= ax.pw; px += 1) {
+    const t = (px / ax.pw) * xMax;
+    const y = fn(t);
+    const py = ax.mt + ax.ph * (1 - y / yMax);
+    if (py < ax.mt - 10 || py > ax.mt + ax.ph + 10) { started = false; continue; }
+    if (!started) { ctx.moveTo(ax.ml + px, py); started = true; }
+    else ctx.lineTo(ax.ml + px, py);
+  }
+  ctx.stroke();
+}
+
+function analyzeChase() {
+  const v10 = parseFloat(document.getElementById('v10Slider').value);
+  const a1 = parseFloat(document.getElementById('a1Slider').value);
+  const v20 = parseFloat(document.getElementById('v20Slider').value);
+  const a2 = parseFloat(document.getElementById('a2Slider').value);
+  const d = parseFloat(document.getElementById('d2Slider').value);
+
+  const tMax = 30;
+  const xMax = 300;
+
+  // x-t chart
+  resizeCanvas(c_xt);
+  const w1 = getW(c_xt), h1 = getH(c_xt);
+  const ctxX = c_xt.getContext('2d');
+  const ax1 = drawAxes(ctxX, w1, h1, 't (s)', 'x (m)', tMax, xMax);
+  drawCurve(ctxX, ax1, tMax, xMax, t => v10*t + 0.5*a1*t*t, '#3b82f6');
+  drawCurve(ctxX, ax1, tMax, xMax, t => d + v20*t + 0.5*a2*t*t, '#ef4444');
+
+  // intersection marker
+  const relV = v20 - v10, relA = a2 - a1;
+  let catchT = null;
+  if (Math.abs(relA) < 0.001) {
+    if (relV > 0) catchT = d / relV;
+  } else {
+    const disc = relV * relV + 2 * relA * d;
+    if (disc >= 0 && relA > 0) catchT = (-relV + Math.sqrt(disc)) / relA;
+    else if (disc >= 0 && relA < 0) {
+      const t1 = (-relV + Math.sqrt(disc)) / relA;
+      const t2 = (-relV - Math.sqrt(disc)) / relA;
+      catchT = Math.min(t1, t2);
+      if (catchT < 0) catchT = Math.max(t1, t2);
+      if (catchT < 0) catchT = null;
+    }
+  }
+  if (catchT !== null && catchT > 0 && catchT <= tMax) {
+    const px = ax1.ml + (catchT / tMax) * ax1.pw;
+    const xv = v10 * catchT + 0.5 * a1 * catchT * catchT;
+    const py = ax1.mt + ax1.ph * (1 - xv / xMax);
+    ctxX.fillStyle = '#fbbf24';
+    ctxX.beginPath(); ctxX.arc(px, py, 5, 0, Math.PI * 2); ctxX.fill();
+    ctxX.fillStyle = '#fbbf24';
+    ctxX.font = '11px sans-serif';
+    ctxX.fillText('追上 t=' + catchT.toFixed(1) + 's', px + 8, py - 8);
+  }
+
+  // v-t chart
+  resizeCanvas(c_vt);
+  const w2 = getW(c_vt), h2 = getH(c_vt);
+  const ctxV = c_vt.getContext('2d');
+  const vMax = Math.max(v10 + Math.abs(a1) * tMax, v20 + Math.abs(a2) * tMax, 30);
+  const ax2 = drawAxes(ctxV, w2, h2, 't (s)', 'v (m/s)', tMax, vMax);
+  drawCurve(ctxV, ax2, tMax, vMax, t => v10 + a1 * t, '#3b82f6');
+  drawCurve(ctxV, ax2, tMax, vMax, t => v20 + a2 * t, '#ef4444');
+
+  // result
+  let resultText = '';
+  if (catchT !== null && catchT > 0) {
+    resultText = `<span class="tag tag-green">能追上</span> 追上时间 t = ${catchT.toFixed(2)} s`;
+  } else {
+    const eqT = relA !== 0 ? -relV / relA : null;
+    if (eqT !== null && eqT > 0) {
+      const minGap = d + relV * eqT + 0.5 * relA * eqT * eqT;
+      resultText = `<span class="tag tag-red">追不上</span> 最近间距 Δx = ${minGap.toFixed(2)} m，发生在 t = ${eqT.toFixed(2)} s（速度相等时）`;
+    } else {
+      resultText = `<span class="tag tag-red">追不上</span> 间距持续增大`;
+    }
+  }
+  document.getElementById('analysisText').innerHTML = resultText;
+
+  const fDiv = document.getElementById('analysisFormula');
+  fDiv.style.display = 'block';
+  fDiv.innerHTML =
+    `前车：x₁(t) = ${v10}t + ½×(${a1})t² = ${v10}t + ${a1}t²<br>` +
+    `后车：x₂(t) = ${d} + ${v20}t + ½×(${a2})t² = ${d} + ${v20}t + ${a2}t²<br>` +
+    `相对位移方程：Δx(t) = ${d} + (${relV})t + (${relA})t²<br>` +
+    (catchT !== null && catchT > 0
+      ? `令 Δx = 0，解得 t = <span class="highlight">${catchT.toFixed(2)} s</span>`
+      : `判别式 Δ = ${relV*relV + 2*relA*d} ${relV*relV + 2*relA*d < 0 ? '< 0，无实数解' : '≥ 0'}`);
+}
+
+function resetAnalysis() {
+  ['v10Slider','a1Slider','v20Slider','a2Slider','d2Slider'].forEach(id => {
+    const defaults = {v10Slider:8, a1Slider:0, v20Slider:5, a2Slider:1, d2Slider:50};
+    document.getElementById(id).value = defaults[id];
+  });
+  document.getElementById('v10Val').textContent = '8';
+  document.getElementById('a1Val').textContent = '0';
+  document.getElementById('v20Val').textContent = '5';
+  document.getElementById('a2Val').textContent = '1';
+  document.getElementById('d2Val').textContent = '50';
+  document.getElementById('analysisText').textContent = '点击"分析"按钮查看结果';
+  document.getElementById('analysisFormula').style.display = 'none';
+  // clear canvases
+  [c_xt, c_vt].forEach(c => {
+    resizeCanvas(c);
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#0c1222';
+    ctx.fillRect(0, 0, c.width, c.height);
+  });
+}
+
+// slider bindings for module 2
+const m2sliders = [
+  ['v10Slider','v10Val'],['a1Slider','a1Val'],['v20Slider','v20Val'],
+  ['a2Slider','a2Val'],['d2Slider','d2Val']
+];
+m2sliders.forEach(([sid, vid]) => {
+  document.getElementById(sid).addEventListener('input', function() {
+    document.getElementById(vid).textContent = this.value;
+  });
+});
+
+// ========== 模块3：例题 ==========
+const examples = [
+  {
+    title: '例题1：匀速追匀速',
+    problem: '甲车以 v₁ = 10 m/s 匀速行驶，乙车在甲车后方 100 m 处以 v₂ = 15 m/s 匀速追赶。求：(1) 乙车追上甲车的时间；(2) 追上时乙车的位移。',
+    v1:10, v2:15, d:100, a1:0, a2:0,
+    solution: [
+      '设追上时间为 t，此时两车位移关系：x₂ = x₁ + d',
+      'v₂·t = v₁·t + d',
+      't = d/(v₂−v₁) = 100/(15−10) = 20 s',
+      '乙车位移：x₂ = v₂·t = 15 × 20 = 300 m'
+    ],
+    answer: 't = 20 s，乙车位移 300 m',
+    variation: '变式：若乙车在甲车前方 50 m 处以 8 m/s 行驶，甲车从后方以 15 m/s 追赶，结果如何？'
+  },
+  {
+    title: '例题2：匀加速追匀速（临界条件）',
+    problem: '警车以 v₁ = 30 m/s 匀速行驶，一辆违规车在警车后方 200 m 处从静止出发，以 a = 2 m/s² 匀加速追赶。问：(1) 违规车能否追上警车？(2) 若能，何时追上？(3) 追上时违规车速度多大？',
+    v1:30, v2:0, d:200, a1:0, a2:2,
+    solution: [
+      '设追上时间为 t，位移关系：½at² = v₁t + d',
+      '½×2×t² = 30t + 200',
+      't² − 30t − 200 = 0',
+      't = (30 ± √(900+800))/2 = (30 ± √1700)/2',
+      't = (30 + 41.23)/2 ≈ 35.6 s（取正值）',
+      '此时违规车速度：v = at = 2 × 35.6 = 71.2 m/s'
+    ],
+    answer: '能追上，t ≈ 35.6 s，此时速度约 71.2 m/s',
+    variation: '思考：如果违规车有最大速度限制 60 m/s，结果如何？'
+  },
+  {
+    title: '例题3：匀速追匀加速（含刹车）',
+    problem: 'A车以 20 m/s 匀速行驶，B车在A车后方 50 m 处以 30 m/s 初速度、−1 m/s² 的加速度（刹车）行驶。问：(1) B车能否追上A车？(2) 两车之间的最小距离是多少？',
+    v1:20, v2:30, d:50, a1:0, a2:-1,
+    solution: [
+      'B车速度：v_B(t) = 30 − t',
+      'A车速度：v_A = 20 m/s',
+      '速度相等时：30 − t = 20 → t = 10 s',
+      '此时A车位移：x_A = 20 × 10 = 200 m',
+      'B车位移：x_B = 30×10 − ½×1×100 = 300 − 50 = 250 m',
+      '间距：Δx = (200 + 50) − 250 = 0 m',
+      '恰好追上！之后B车减速，间距增大。'
+    ],
+    answer: '恰好追上！t = 10 s 时两车位置相同，最小距离为 0',
+    variation: '变式：若B车初速度为 25 m/s（其他不变），能否追上？'
+  }
+];
+
+let currentExample = 0;
+function showExample(n) {
+  currentExample = n;
+  document.querySelectorAll('.example-nav .btn').forEach((b,i) => {
+    b.className = i === n ? 'btn btn-primary' : 'btn btn-secondary';
+  });
+  const ex = examples[n];
+  let html = `<h3>${ex.title}</h3>`;
+  html += `<div class="step" style="border-left-color:var(--primary)"><strong>题目：</strong>${ex.problem}</div>`;
+
+  html += `<div class="canvas-wrap"><canvas id="c_example" height="180"></canvas></div>`;
+  html += `<div class="btn-group" style="margin:8px 0"><button class="btn btn-primary" onclick="playExample()">播放动画</button></div>`;
+
+  html += `<h3>解答过程</h3>`;
+  ex.solution.forEach((s, i) => {
+    html += `<div class="step"><span class="step-num">${i+1}</span>${s}</div>`;
+  });
+  html += `<div class="answer-box revealed"><strong>答案：</strong>${ex.answer}</div>`;
+  html += `<div class="step" style="border-left-color:#a78bfa"><strong>拓展思考：</strong>${ex.variation}</div>`;
+
+  document.getElementById('exampleContent').innerHTML = html;
+  drawExampleStatic();
+}
+
+function drawExampleStatic() {
+  const canvas = document.getElementById('c_example');
+  if (!canvas) return;
+  resizeCanvas(canvas);
+  const w = getW(canvas), h = getH(canvas);
+  const ctx = canvas.getContext('2d');
+  drawRoad(ctx, w, h);
+  const ex = examples[currentExample];
+  const roadY = h * 0.55;
+  drawCar(ctx, 40 + ex.d * (w-80)/500, roadY - 25, '#3b82f6', '前车');
+  drawCar(ctx, 40, roadY + 25, '#ef4444', '后车');
+}
+
+let exAnim = { running:false, t:0, raf:null };
+function playExample() {
+  exAnim.running = true;
+  exAnim.t = 0;
+  exAnimLoop();
+}
+function exAnimLoop() {
+  if (!exAnim.running) return;
+  const canvas = document.getElementById('c_example');
+  if (!canvas) return;
+  resizeCanvas(canvas);
+  const w = getW(canvas), h = getH(canvas);
+  const ctx = canvas.getContext('2d');
+  const ex = examples[currentExample];
+  drawRoad(ctx, w, h);
+  const roadY = h * 0.55;
+  const scale = (w - 80) / 500;
+  const x1 = 40 + (ex.v1 * exAnim.t + 0.5 * ex.a1 * exAnim.t * exAnim.t) * scale;
+  const x2 = 40 + (ex.v2 * exAnim.t + 0.5 * ex.a2 * exAnim.t * exAnim.t) * scale;
+  drawCar(ctx, Math.min(x1, w - 40), roadY - 25, '#3b82f6', '前车');
+  drawCar(ctx, Math.min(x2, w - 40), roadY + 25, '#ef4444', '后车');
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('t = ' + exAnim.t.toFixed(1) + ' s', w - 100, 30);
+  exAnim.t += 0.08;
+  if (exAnim.t > 40) { exAnim.running = false; return; }
+  exAnim.raf = requestAnimationFrame(exAnimLoop);
+}
+
+// ========== 模块4：临界分析 ==========
+const c_crit = document.getElementById('c_critical');
+let critAnim = { running:false, t:0, raf:null };
+
+function analyzeCritical() {
+  const v1 = parseFloat(document.getElementById('v1cSlider').value);
+  const v20 = parseFloat(document.getElementById('v20cSlider').value);
+  const a2 = parseFloat(document.getElementById('a2cSlider').value);
+  const d = parseFloat(document.getElementById('dcVal').textContent);
+
+  // critical condition: speed equal time
+  const t_eq = (v1 - v20) / a2; // when v2 = v1
+  let minGap = Infinity;
+  let resultText = '';
+
+  if (t_eq > 0) {
+    minGap = d + v20 * t_eq + 0.5 * a2 * t_eq * t_eq - v1 * t_eq;
+    if (Math.abs(minGap) < 0.5) {
+      resultText = `<span class="tag tag-yellow">恰好追上！</span> 在 t = ${t_eq.toFixed(2)} s 时（速度相等时刻），间距为 0。这是临界状态！`;
+    } else if (minGap > 0) {
+      resultText = `<span class="tag tag-red">追不上</span> 最小间距 Δx = ${minGap.toFixed(2)} m，发生在 t = ${t_eq.toFixed(2)} s`;
+    } else {
+      resultText = `<span class="tag tag-green">能追上</span> 且会超过前车，速度相等时间距最远（已超过）`;
+    }
+  } else {
+    resultText = `<span class="tag tag-green">后车初始速度 ≥ 前车</span>，直接分析追上时间`;
+    // solve quadratic
+    const relV = v20 - v1;
+    const disc = relV * relV + 2 * a2 * d;
+    if (disc >= 0) {
+      const t_catch = (-relV + Math.sqrt(disc)) / a2;
+      if (t_catch > 0) resultText += `，追上时间 t ≈ ${t_catch.toFixed(2)} s`;
+    }
+  }
+
+  document.getElementById('criticalText').innerHTML = resultText;
+
+  const detail = document.getElementById('criticalDetail');
+  detail.style.display = 'block';
+  detail.innerHTML =
+    `后车速度：v₂(t) = ${v20} + ${a2}t<br>` +
+    `前车速度：v₁ = ${v1} m/s（恒定）<br>` +
+    `速度相等时刻：${v20} + ${a2}t = ${v1} → t = ${t_eq > 0 ? t_eq.toFixed(2) : '无正解'} s<br>` +
+    `此时间距：Δx = ${d} + (${v20-v1})t + ½×${a2}×t² = ${minGap.toFixed(2)} m`;
+
+  // animate
+  critAnim.running = true;
+  critAnim.t = 0;
+  critAnimLoop();
+}
+
+function critAnimLoop() {
+  if (!critAnim.running) return;
+  resizeCanvas(c_crit);
+  const w = getW(c_crit), h = getH(c_crit);
+  const ctx = c_crit.getContext('2d');
+  const v1 = parseFloat(document.getElementById('v1cSlider').value);
+  const v20 = parseFloat(document.getElementById('v20cSlider').value);
+  const a2 = parseFloat(document.getElementById('a2cSlider').value);
+  const d = parseFloat(document.getElementById('dcVal').textContent);
+  const t = critAnim.t;
+
+  const tMax = 30;
+  const xMax = 400;
+
+  // draw x-t curves
+  const ax = drawAxes(ctx, w, h, 't (s)', 'x (m)', tMax, xMax);
+  drawCurve(ctx, ax, tMax, xMax, tt => v1 * tt, '#3b82f6');
+  drawCurve(ctx, ax, tMax, xMax, tt => d + v20 * tt + 0.5 * a2 * tt * tt, '#ef4444');
+
+  // current position marker
+  const x1t = v1 * t;
+  const x2t = d + v20 * t + 0.5 * a2 * t * t;
+  const px1 = ax.ml + (t / tMax) * ax.pw;
+  const py1 = ax.mt + ax.ph * (1 - x1t / xMax);
+  const py2 = ax.mt + ax.ph * (1 - x2t / xMax);
+
+  ctx.fillStyle = '#3b82f6';
+  ctx.beginPath(); ctx.arc(px1, py1, 5, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath(); ctx.arc(px1, py2, 5, 0, Math.PI*2); ctx.fill();
+
+  // gap line
+  ctx.strokeStyle = 'rgba(251,191,36,0.5)';
+  ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(px1, py2); ctx.stroke();
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '11px sans-serif';
+  ctx.fillText('t = ' + t.toFixed(1) + 's', w - 80, 25);
+
+  critAnim.t += 0.1;
+  if (critAnim.t > tMax) { critAnim.running = false; return; }
+  critAnim.raf = requestAnimationFrame(critAnimLoop);
+}
+
+// slider bindings for module 4
+[['v1cSlider','v1cVal'],['v20cSlider','v20cVal'],['a2cSlider','a2cVal'],['dcSlider','dcVal']].forEach(([sid,vid]) => {
+  document.getElementById(sid).addEventListener('input', function() {
+    document.getElementById(vid).textContent = this.value;
+  });
+});
+
+// ========== 模块5：挑战 ==========
+const c_ch = document.getElementById('c_challenge');
+let chAnim = { running:false, t:0, raf:null };
+
+function runChallenge1() {
+  chAnim.running = true;
+  chAnim.t = 0;
+  chAnimLoop();
+}
+
+function chAnimLoop() {
+  if (!chAnim.running) return;
+  resizeCanvas(c_ch);
+  const w = getW(c_ch), h = getH(c_ch);
+  const ctx = c_ch.getContext('2d');
+  const t = chAnim.t;
+  const roadY = h * 0.55;
+
+  drawRoad(ctx, w, h);
+  const scale = (w - 80) / 500;
+
+  // A: 10 m/s constant
+  const xA = 10 * t;
+  // B: 20 m/s, -2 m/s^2, stops at t=10
+  let xB;
+  if (t <= 10) {
+    xB = 20 * t - 0.5 * 2 * t * t;
+  } else {
+    xB = 20 * 10 - 0.5 * 2 * 100; // = 100
+  }
+
+  drawCar(ctx, Math.min(40 + xA * scale, w - 40), roadY - 25, '#3b82f6', 'A');
+  drawCar(ctx, Math.min(40 + xB * scale, w - 40), roadY + 25, '#ef4444', 'B');
+
+  ctx.fillStyle = '#94a3b8';
+  ctx.font = '12px sans-serif';
+  ctx.fillText('t = ' + t.toFixed(1) + ' s', w - 100, 30);
+  ctx.fillText('间距: ' + (50 + xA - xB).toFixed(1) + ' m', w - 100, 50);
+
+  chAnim.t += 0.1;
+  if (chAnim.t > 30) { chAnim.running = false; return; }
+  chAnim.raf = requestAnimationFrame(chAnimLoop);
+}
+
+function resetChallenge1() {
+  chAnim.running = false;
+  chAnim.t = 0;
+  resizeCanvas(c_ch);
+  const w = getW(c_ch), h = getH(c_ch);
+  const ctx = c_ch.getContext('2d');
+  drawRoad(ctx, w, h);
+  const roadY = h * 0.55;
+  drawCar(ctx, 40 + 50 * (w-80)/500, roadY - 25, '#3b82f6', 'A');
+  drawCar(ctx, 40, roadY + 25, '#ef4444', 'B');
+}
+
+function revealAnswer(n) {
+  const el = document.getElementById('ans' + n + 'Detail');
+  el.style.display = 'block';
+  el.parentElement.classList.add('revealed');
+}
+
+// Custom analysis
+const c_custom = document.getElementById('c_custom');
+
+function analyzeCustom() {
+  const fv = parseFloat(document.getElementById('fvSlider').value);
+  const fa = parseFloat(document.getElementById('faSlider').value);
+  const bv = parseFloat(document.getElementById('bvSlider').value);
+  const ba = parseFloat(document.getElementById('baSlider').value);
+  const fd = parseFloat(document.getElementById('fdSlider').value);
+
+  const tMax = 30;
+  const relV = bv - fv, relA = ba - fa;
+
+  resizeCanvas(c_custom);
+  const w = getW(c_custom), h = getH(c_custom);
+  const ctx = c_custom.getContext('2d');
+
+  // estimate xMax
+  let xMax = 100;
+  for (let t = 0; t <= tMax; t += 0.5) {
+    const x1 = fv*t + 0.5*fa*t*t;
+    const x2 = fd + bv*t + 0.5*ba*t*t;
+    xMax = Math.max(xMax, x1, x2);
+  }
+  xMax = Math.ceil(xMax / 100) * 100;
+
+  const ax = drawAxes(ctx, w, h, 't (s)', 'x (m)', tMax, xMax);
+  drawCurve(ctx, ax, tMax, xMax, t => fv*t + 0.5*fa*t*t, '#3b82f6');
+  drawCurve(ctx, ax, tMax, xMax, t => fd + bv*t + 0.5*ba*t*t, '#ef4444');
+
+  // analysis
+  let result = '';
+  if (Math.abs(relA) < 0.001) {
+    if (relV > 0) {
+      const tCatch = fd / relV;
+      result = `匀速追匀速：能追上，t = ${tCatch.toFixed(2)} s`;
+    } else if (relV === 0) {
+      result = '两车速度始终相同，间距保持 ' + fd + ' m，追不上';
+    } else {
+      result = '后车速度更小，间距持续增大，追不上';
+    }
+  } else {
+    const disc = relV * relV + 2 * relA * fd;
+    if (disc < 0) {
+      result = '判别式 < 0，追不上';
+      if (relA < 0) {
+        const tEq = -relV / relA;
+        if (tEq > 0) {
+          const minGap = fd + relV*tEq + 0.5*relA*tEq*tEq;
+          result += `，最小间距 ${minGap.toFixed(2)} m（t = ${tEq.toFixed(2)} s）`;
+        }
+      }
+    } else {
+      const t1 = (-relV + Math.sqrt(disc)) / relA;
+      const t2 = (-relV - Math.sqrt(disc)) / relA;
+      const tCatch = Math.min(t1,t2) > 0 ? Math.min(t1,t2) : Math.max(t1,t2);
+      if (tCatch > 0) {
+        result = `能追上，t = ${tCatch.toFixed(2)} s`;
+      } else {
+        result = '追不上（解为负值）';
+      }
+    }
+  }
+
+  const resDiv = document.getElementById('customResult');
+  resDiv.style.display = 'block';
+  resDiv.innerHTML =
+    `前车：x₁(t) = ${fv}t + ½(${fa})t²<br>` +
+    `后车：x₂(t) = ${fd} + ${bv}t + ½(${ba})t²<br>` +
+    `结果：${result}`;
+}
+
+// slider bindings for module 5
+[['fvSlider','fvVal'],['faSlider','faVal'],['bvSlider','bvVal'],['baSlider','baVal'],['fdSlider','fdVal']].forEach(([sid,vid]) => {
+  document.getElementById(sid).addEventListener('input', function() {
+    document.getElementById(vid).textContent = this.value;
+  });
+});
+
+// ========== Init ==========
+window.addEventListener('resize', () => {
+  drawScene1();
+});
+drawScene1();
+showExample(0);
+</script>
+</body>
+</html>
