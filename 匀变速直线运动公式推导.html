@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>匀变速直线运动基本公式推导</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+  background:#0b0b14;color:#d4d4dc;min-height:100vh;
+  background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%);
+  font-size:17px;line-height:1.7
+}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.72em;padding:16px 24px 0;transition:.2s}
+.back:hover{color:#d4a373;gap:10px}
+.container{max-width:1100px;margin:0 auto;padding:20px 20px 60px}
+.title{text-align:center;padding:30px 0 20px}
+.title h1{font-size:1.8em;color:#e8d5b0;font-weight:600;letter-spacing:2px}
+.title .sub{font-size:.8em;color:#5c5c72;letter-spacing:1px;margin-top:6px}
+
+.section{margin:36px 0}
+.section h2{
+  font-size:1.3em;color:#d4a373;font-weight:600;padding-bottom:8px;
+  border-bottom:1px solid rgba(212,163,115,.15);margin-bottom:24px
+}
+.section h3{
+  font-size:1.05em;color:#e8c49a;font-weight:600;margin:28px 0 12px;
+  padding-left:12px;border-left:3px solid #d4a373
+}
+
+.formula-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:16px 0}
+@media(max-width:768px){.formula-grid{grid-template-columns:1fr}}
+
+.card{
+  background:#0e0e1e;border:1px solid #18182a;border-radius:12px;
+  padding:18px 20px;transition:.2s
+}
+.card:hover{border-color:#2a2a48;background:#131328}
+.card .label{font-size:.75em;color:#707088;letter-spacing:1px;margin-bottom:6px}
+.card .formula{
+  font-family:'Courier New',monospace;font-size:1.2em;color:#e8c49a;
+  text-align:center;padding:10px 0;letter-spacing:1px
+}
+.card .derive{
+  font-size:.88em;color:#b0b0b8;padding:8px 0 0;
+  border-top:1px solid rgba(255,255,255,.04)
+}
+.card .derive .step{color:#b8b8c0;margin:4px 0;padding-left:12px}
+.card .derive .highlight{color:#f4a261}
+
+.warn{
+  background:rgba(224,96,80,.06);border:1px solid rgba(224,96,80,.2);
+  border-radius:10px;padding:14px 18px;margin:14px 0
+}
+.warn .title{color:#e06050;font-weight:600;font-size:.92em;text-align:left;padding:0 0 4px}
+.warn p{font-size:.88em;color:#c8b8b0}
+
+.strategy{
+  background:rgba(122,184,120,.06);border:1px solid rgba(122,184,120,.2);
+  border-radius:10px;padding:14px 18px;margin:14px 0
+}
+.strategy .title{color:#7ab878;font-weight:600;font-size:.92em;text-align:left;padding:0 0 4px}
+.strategy p{font-size:.88em;color:#b8c8b8}
+
+canvas{display:block;margin:12px auto;border-radius:8px}
+
+.example{
+  background:#0e0e1e;border:1px solid #2a2a48;border-radius:12px;
+  padding:20px;margin:18px 0
+}
+.example .q{color:#d4d4dc;font-size:.95em;margin-bottom:12px}
+.example .q .num{color:#d4a373;font-weight:600}
+.example .sol{font-size:.88em;color:#b0b0b8;line-height:1.8}
+.example .sol .red{color:#e8c49a;font-weight:600}
+.example .sol .green{color:#7ab878}
+.example .sol .step-label{color:#707088;font-size:.82em;letter-spacing:1px;margin:8px 0 4px}
+
+.tag{display:inline-block;background:rgba(212,163,115,.12);color:#d4a373;font-size:.72em;padding:2px 10px;border-radius:4px;margin-left:8px}
+
+.compare-table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.9em}
+.compare-table th,.compare-table td{
+  border:1px solid #18182a;padding:10px 14px;text-align:left
+}
+.compare-table th{background:#0e0e1e;color:#d4a373;font-weight:600}
+.compare-table td{color:#c0c0c8;background:rgba(14,14,30,.5)}
+.compare-table .highlight-cell{color:#f4a261}
+
+.note{font-size:.82em;color:#5c5c72;text-align:center;margin:30px 0 10px;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<a class="back" href="jiaoxue.html">← 返回教学资源</a>
+<div class="container">
+
+<div class="title">
+<h1>匀变速直线运动基本公式</h1>
+<div class="sub">公式法 + 图像法 全程推导 · 两类减速运动辨析 · 方程组例题</div>
+</div>
+
+<!-- ========= 一、五个基本公式 ========= -->
+<div class="section">
+<h2>一、五个基本公式 · 全程推导</h2>
+
+<p style="color:#828290;font-size:.88em;margin-bottom:16px">
+匀变速直线运动的五个物理量：初速度 v₀、末速度 v、加速度 a、时间 t、位移 x。<br>
+五个公式任意两个独立，已知三个可求另外两个（知三求二）。但有些题只给两个条件——这就是<strong style="color:#e8c49a">知二求三</strong>，需要列方程组。
+</p>
+
+<!-- 公式1 -->
+<h3>① 速度公式 v = v₀ + at</h3>
+<div class="formula-grid">
+<div class="card">
+<div class="label">📐 公式法推导</div>
+<div class="formula">v = v₀ + at</div>
+<div class="derive">
+由加速度定义：<br>
+<div class="step">a = Δv / t = (v − v₀) / t</div>
+<div class="step">→ at = v − v₀</div>
+<div class="step" style="color:#f4a261;font-weight:600">→ v = v₀ + at</div>
+</div>
+</div>
+<div class="card">
+<div class="label">📊 图像法推导</div>
+<div class="derive">
+在 v−t 图中，匀变速运动是一条直线。
+<div class="step">• 纵截距 = v₀（初速度）</div>
+<div class="step">• 斜率 k = Δv/Δt = a（加速度）</div>
+<div class="step">• 直线上任意一点：v = v₀ + at</div>
+</div>
+</div>
+</div>
+
+<!-- 公式2 -->
+<h3>② 位移公式 x = v₀t + ½at²</h3>
+<div class="formula-grid">
+<div class="card">
+<div class="label">📐 公式法推导</div>
+<div class="formula">x = v₀t + ½at²</div>
+<div class="derive">
+由平均速度求位移：
+<div class="step">x = v̄·t</div>
+<div class="step">匀变速平均速度 v̄ = (v₀+v)/2</div>
+<div class="step">代入 v = v₀+at：</div>
+<div class="step">v̄ = (v₀+v₀+at)/2 = v₀ + ½at</div>
+<div class="step" style="color:#f4a261;font-weight:600">x = (v₀+½at)·t = v₀t + ½at²</div>
+</div>
+</div>
+<div class="card">
+<div class="label">📊 图像法推导</div>
+<div class="derive">
+v−t 图下的面积 = 位移。<br>
+图形为直角梯形：
+<div class="step">• 上底 = v₀（t=0时速度）</div>
+<div class="step">• 下底 = v（t时刻速度）</div>
+<div class="step">• 高 = t</div>
+<div class="step">梯形面积 = ½(v₀+v)·t</div>
+<div class="step">= ½[v₀+(v₀+at)]·t</div>
+<div class="step" style="color:#f4a261;font-weight:600">= v₀t + ½at²</div>
+</div>
+</div>
+</div>
+
+<!-- 公式3 -->
+<h3>③ 速度位移公式 v² − v₀² = 2ax</h3>
+<div class="formula-grid">
+<div class="card">
+<div class="label">📐 公式法推导</div>
+<div class="formula">v² − v₀² = 2ax</div>
+<div class="derive">
+由①②消去时间 t：
+<div class="step">由 ①：t = (v−v₀)/a</div>
+<div class="step">代入 ②：x = v₀·(v−v₀)/a + ½a·(v−v₀)²/a²</div>
+<div class="step">= (v₀v−v₀²)/a + (v²−2vv₀+v₀²)/(2a)</div>
+<div class="step">通分：= (2v₀v−2v₀²+v²−2vv₀+v₀²)/(2a)</div>
+<div class="step">= (v²−v₀²)/(2a)</div>
+<div class="step" style="color:#f4a261;font-weight:600">→ v² − v₀² = 2ax</div>
+</div>
+</div>
+<div class="card">
+<div class="label">📊 图像法推导</div>
+<div class="derive">
+v−t 图面积 = x = ½(v₀+v)·t<br>
+又 t = (v−v₀)/a
+<div class="step">x = ½(v₀+v)·(v−v₀)/a</div>
+<div class="step">= (v²−v₀²)/(2a)</div>
+<div class="step" style="color:#f4a261;font-weight:600">→ v² − v₀² = 2ax</div>
+</div>
+</div>
+</div>
+
+<!-- 公式4 -->
+<h3>④ 平均速度公式 x = (v₀+v)·t / 2</h3>
+<div class="formula-grid">
+<div class="card">
+<div class="label">📐 公式法推导</div>
+<div class="formula">x = (v₀+v)·t / 2</div>
+<div class="derive">
+直接由匀变速的定义：
+<div class="step">匀变速运动中，</div>
+<div class="step">平均速度 v̄ = (v₀+v)/2</div>
+<div class="step" style="color:#f4a261;font-weight:600">x = v̄·t = (v₀+v)t/2</div>
+<div class="step" style="color:#7ab878;font-size:.85em">★ 注意：只对匀变速成立！</div>
+</div>
+</div>
+<div class="card">
+<div class="label">📊 图像法推导</div>
+<div class="derive">
+v−t 图梯形面积：
+<div class="step">• 梯形面积 = ½(上底+下底)×高</div>
+<div class="step">• 上底 = v₀，下底 = v，高 = t</div>
+<div class="step" style="color:#f4a261;font-weight:600">S = ½(v₀+v)·t = x</div>
+</div>
+</div>
+</div>
+
+<!-- 公式5 -->
+<h3>⑤ 逆向公式 x = vt − ½at²</h3>
+<div class="formula-grid">
+<div class="card">
+<div class="label">📐 公式法推导</div>
+<div class="formula">x = vt − ½at²</div>
+<div class="derive">
+将 v₀ 用 v 和 a 表示：
+<div class="step">由 ①：v₀ = v − at</div>
+<div class="step">代入 ②：x = (v−at)·t + ½at²</div>
+<div class="step">= vt − at² + ½at²</div>
+<div class="step" style="color:#f4a261;font-weight:600">= vt − ½at²</div>
+</div>
+</div>
+<div class="card">
+<div class="label">📊 图像法推导</div>
+<div class="derive">
+<strong style="color:#e8c49a">逆向思维</strong>——把时间倒流：
+<div class="step">末速度 v 看作"逆向初速度"</div>
+<div class="step">加速度 a 方向不变但作用相反</div>
+<div class="step">在 t 时间内倒退：x = vt − ½at²</div>
+<div class="step" style="color:#7ab878">★ 对刹车问题求最后一段位移特别好用</div>
+</div>
+</div>
+</div>
+
+<div class="strategy">
+<div class="title">💡 五个公式的关系速记</div>
+<p>
+①②独立 → ③由①②消去t得到<br>
+④直接由v-t图面积得到，是②的另一种形式<br>
+⑤把v₀换成v（逆向思维），与②对称<br>
+<strong style="color:#e8c49a">核心口诀：知三求二，无t用③，无v用⑤</strong>
+</p>
+</div>
+</div>
+
+<!-- ========= p5.js v-t 图交互 ========= -->
+<div class="section">
+<h2>📊 交互式 v−t 图像 · 面积 = 位移</h2>
+<p style="color:#828290;font-size:.85em;margin-bottom:8px">拖拽滑块改变加速度和末速度，观察面积（位移）变化。梯形面积 = ½(v₀+v)×t 为位移公式的几何直观。</p>
+<div id="vt-graph"></div>
+</div>
+
+<!-- ========= 二、两类减速运动 ========= -->
+<div class="section">
+<h2>二、两类减速运动必须辨析</h2>
+
+<h3>类型Ⅰ：刹车问题（单向减速）</h3>
+<div class="formula-grid">
+<div class="card">
+<div class="label">🚗 特点</div>
+<div class="derive">
+<div class="step">• 减速到 v=0 后<strong style="color:#e06050">停止不动</strong>，不会反向</div>
+<div class="step">• 实际运动时间 ≤ 理论停止时间</div>
+<div class="step">• 位移不能用完整公式代入过大t</div>
+</div>
+</div>
+<div class="card">
+<div class="label">⚠️ 核心陷阱</div>
+<div class="derive" style="color:#e8c49a">
+<strong>必须先算停止时间 t₀ = v₀/a</strong>
+<div class="step" style="color:#b0b0b8">如果题目给的 t > t₀：</div>
+<div class="step">• ❌ 直接代入 t 算位移 → 错误！</div>
+<div class="step">• ✅ 用 t₀ 代替 t 计算位移</div>
+<div class="step" style="color:#7ab878">或直接用 v²=2ax 求总位移</div>
+</div>
+</div>
+</div>
+
+<h3>类型Ⅱ：竖直上抛类（双向减速）</h3>
+<div class="formula-grid">
+<div class="card">
+<div class="label">🎯 特点</div>
+<div class="derive">
+<div class="step">• 减速到 v=0 后<strong style="color:#f4a261">反向加速</strong></div>
+<div class="step">• 全程加速度<strong style="color:#e06050">恒定不变</strong></div>
+<div class="step">• 位移、速度全程用统一公式</div>
+<div class="step">• 只需注意正负号代入</div>
+</div>
+</div>
+<div class="card">
+<div class="label">✨ 重要性质</div>
+<div class="derive" style="color:#e8c49a">
+<strong>对称性</strong>
+<div class="step">• 上升时间 = 下降时间</div>
+<div class="step">• 同一高度速度大小相等，方向相反</div>
+<div class="step">• 上升段是匀减速，下降段是匀加速</div>
+<div class="step" style="color:#7ab878">★ 全程用 v=v₀−gt 时：</div>
+<div class="step">  v>0 表示向上，v<0 表示向下</div>
+</div>
+</div>
+</div>
+
+<div class="warn">
+<div class="title">🚨 两类减速运动对比——必考易错</div>
+<table class="compare-table">
+<tr><th>对比维度</th><th>刹车类</th><th>竖直上抛类</th></tr>
+<tr><td>停止后</td><td>静止不动</td><td>反向加速</td></tr>
+<tr><td>加速度方向</td><td>与速度反向</td><td>恒定向下（重力g）</td></tr>
+<tr><td>时间陷阱</td><td class="highlight-cell">t > t₀时必须用t₀</td><td>t 可以任意代入公式</td></tr>
+<tr><td>典型例子</td><td>汽车刹车、滑块在粗糙面</td><td>竖直上抛、光滑斜面上滑</td></tr>
+<tr><td>对称性</td><td>无</td><td class="highlight-cell">上升=下降时间</td></tr>
+</table>
+</div>
+
+<div class="strategy">
+<div class="title">💡 判断方法</div>
+<p>
+看物体停下来后，有没有<strong style="color:#f4a261">让它反向的力</strong>。<br>
+汽车刹车→摩擦力消失→停下不动。<br>
+竖直上抛→重力始终存在→停下后接着拉下来。<br>
+光滑斜面上滑→重力下滑分量始终存在→到顶后下滑。
+</p>
+</div>
+</div>
+
+<!-- ========= 三、例题精讲 ========= -->
+<div class="section">
+<h2>三、例题精讲 · 方程组解法</h2>
+
+<!-- 例1 -->
+<div class="example">
+<div class="q">
+<span class="num">【例1 · 知二求三】</span>
+一辆汽车做匀加速直线运动，测得第2秒内的位移为6m，第4秒内的位移为10m。求：汽车的初速度v₀、加速度a和第3秒末的速度v₃。
+<span class="tag">知二求三</span>
+</div>
+<div class="sol">
+<div class="step-label">🔍 分析</div>
+题中只给了<strong style="color:#e8c49a">两个</strong>位移条件（第2s内、第4s内），要解出三个未知量（v₀、a、v₃），必须列<strong style="color:#e8c49a">方程组</strong>。<br>
+这里的技巧是将"第N秒内位移"表示为"前N秒位移 − 前(N−1)秒位移"。
+
+<div class="step-label">📝 解：设初速度 v₀，加速度 a</div>
+
+<strong>第2秒内位移 = 6m：</strong><br>
+前1s：x₁ = v₀·1 + ½a·1² = v₀ + 0.5a<br>
+前2s：x₂ = v₀·2 + ½a·2² = 2v₀ + 2a<br>
+第2s内：Δx₂ = x₂ − x₁ = (2v₀+2a) − (v₀+0.5a) = <span class="red">v₀ + 1.5a = 6</span> ……①
+
+<strong>第4秒内位移 = 10m：</strong><br>
+前3s：x₃ = v₀·3 + ½a·3² = 3v₀ + 4.5a<br>
+前4s：x₄ = v₀·4 + ½a·4² = 4v₀ + 8a<br>
+第4s内：Δx₄ = x₄ − x₃ = (4v₀+8a) − (3v₀+4.5a) = <span class="red">v₀ + 3.5a = 10</span> ……②
+
+<strong>解方程组：</strong><br>
+② − ①：2a = 4 → <span class="green">a = 2 m/s²</span><br>
+代入①：v₀ + 3 = 6 → <span class="green">v₀ = 3 m/s</span><br>
+v₃ = v₀ + 3a = 3 + 3×2 = <span class="green">9 m/s</span>
+
+<div class="step-label">✅ 验证</div>
+第2s内：Δx₂ = v₀ + 1.5a = 3 + 3 = 6m ✓<br>
+第4s内：Δx₄ = v₀ + 3.5a = 3 + 7 = 10m ✓
+
+<div class="strategy" style="margin-top:10px">
+<strong>📌 知二求三的套路：</strong>当只知道两个条件要解三个物理量时，关键是找到两个独立的方程。<br>
+常用方法：①用位移差公式（逐差法）②用两段位移分别列式③用平均速度找中间时刻速度
+</div>
+</div>
+</div>
+
+<!-- 例2 -->
+<div class="example">
+<div class="q">
+<span class="num">【例2 · 方程组 + 刹车陷阱】</span>
+一物体做匀变速直线运动，通过A、B两点用时2s，AB=8m；通过B、C两点用时3s，BC=15m。已知物体做的是<strong style="color:#e06050">减速</strong>运动。<br>
+求：(1) 加速度 a &nbsp; (2) 经过A点时的速度 v_A &nbsp; (3) 物体停止前总共走了多远？
+<span class="tag">刹车判断</span>
+</div>
+<div class="sol">
+<div class="step-label">🔍 分析</div>
+已知两段位移和对应时间，要求加速度和初速度——列方程组。<br>
+⚠️ 需要先判断这是哪种减速运动：题中只说"减速"，需算停止时间看是否在停止前就通过了BC段。
+
+<div class="step-label">📝 解：(1)(2) 列方程组</div>
+设v_A = v₀，加速度为a（注意减速，a应为负值）
+
+<strong>AB段：</strong>t₁ = 2s，x₁ = 8m<br>
+x₁ = v₀t₁ + ½at₁² → <span class="red">2v₀ + 2a = 8</span> ……①
+
+<strong>AC段（全程）：</strong>t = 5s，x = 8+15 = 23m<br>
+x = v₀t + ½at² → <span class="red">5v₀ + 12.5a = 23</span> ……②
+
+由①：v₀ = 4 − a，代入②：<br>
+5(4−a) + 12.5a = 20 − 5a + 12.5a = 20 + 7.5a = 23<br>
+→ 7.5a = 3 → <span class="green">a = 0.4 m/s²</span>
+
+但是……a = +0.4是正值，而物体是<strong style="color:#e06050">减速</strong>运动！<br>
+说明我们设的加速方向错了——实际加速度为<strong style="color:#e06050">a = −0.4 m/s²</strong>
+
+代入①：2v₀ + 2(−0.4) = 8 → 2v₀ − 0.8 = 8 → v₀ = 4.4<br>
+<span class="green">v_A = 4.4 m/s</span> &nbsp; &nbsp; <span class="green">a = −0.4 m/s²</span>
+
+<div class="step-label">📝 (3) 刹车判断 + 总位移</div>
+<strong>停止时间：</strong>t₀ = |v₀/a| = 4.4/0.4 = <span class="red">11s</span>
+
+由于物体通过BC用了3s（总时间5s），而停止时间11s远大于5s，说明物体<strong style="color:#7ab878">在BC段尚未停止</strong>，两个位移数据都有效。
+
+<strong>总位移（减速到零）：</strong>x_max = v₀²/(2|a|) = 4.4²/(2×0.4) = 19.36/0.8 = <span class="green">24.2 m</span>
+
+<div class="warn" style="margin-top:10px">
+<strong>⚠️ 此题两个陷阱：</strong><br>
+① 列方程解的a为正，要结合"减速"条件判断正负号方向<br>
+② 要先算停止时间确认物体在BC段是否已停止，否则求出的v₀就是错的
+</div>
+</div>
+</div>
+
+</div>
+
+<!-- 小结 -->
+<div class="section">
+<h2>📋 课时小结</h2>
+<div class="card" style="padding:20px">
+<div class="derive" style="font-size:.92em">
+<strong style="color:#d4a373">五个公式核心：</strong>
+<div class="step">v = v₀ + at &nbsp;→&nbsp; 知时间求速度</div>
+<div class="step">x = v₀t + ½at² &nbsp;→&nbsp; 知时间求位移</div>
+<div class="step">v² − v₀² = 2ax &nbsp;→&nbsp; <strong style="color:#e8c49a">无时间优先用</strong></div>
+<div class="step">x = (v₀+v)t/2 &nbsp;→&nbsp; <strong style="color:#e8c49a">平均速度巧解</strong></div>
+<div class="step">x = vt − ½at² &nbsp;→&nbsp; <strong style="color:#e8c49a">逆向思维求刹车最后一段</strong></div>
+
+<strong style="color:#d4a373;display:block;margin-top:12px">两类减速辨析：</strong>
+<div class="step">🚗 刹车类 → <strong style="color:#e06050">先算停止时间 t₀</strong>，t > t₀ 时用 t₀</div>
+<div class="step">🎯 竖抛类 → 全程用统一公式，注意正负号即可</div>
+
+<strong style="color:#d4a373;display:block;margin-top:12px">知二求三方法论：</strong>
+<div class="step">① 把已知量写成表达式（如"第N秒内位移"展开）</div>
+<div class="step">② 列独立方程组（两个条件→两个方程→两个未知量）</div>
+<div class="step">③ 解出后再求第三个量</div>
+</div>
+</div>
+</div>
+
+<div class="note">—— 优桥物理 · 启明教学资源 ——</div>
+
+</div>
+
+<script>
+// ========== p5.js 互动 v-t 图 ==========
+new p5(function(p){
+
+  let v0 = 4, a = 1.2, tMax = 6;
+  let dragA = false, dragV = false;
+
+  p.setup = function(){
+    let c = p.createCanvas(700,340);
+    c.parent('vt-graph');
+    p.textFont('Inter, sans-serif');
+  };
+
+  p.draw = function(){
+    p.background(12,12,22);
+
+    // 坐标轴
+    let ox = 70, oy = 270, sx = 95, sy = 210;
+
+    // 网格
+    p.stroke(30,30,50);
+    p.strokeWeight(0.5);
+    for(let i=0;i<=6;i++){
+      let x = ox + i*sx/6;
+      p.line(x, oy, x, oy-sy);
+    }
+    for(let i=0;i<=5;i++){
+      let y = oy - i*sy/6;
+      p.line(ox, y, ox+sx, y);
+    }
+
+    // 轴
+    p.stroke(100,100,130);
+    p.strokeWeight(1.5);
+    p.line(ox, oy, ox+sx+20, oy);  // t轴
+    p.line(ox, oy, ox, oy-sy-15);  // v轴
+    // 箭头
+    p.line(ox+sx+20, oy, ox+sx+12, oy-4);
+    p.line(ox+sx+20, oy, ox+sx+12, oy+4);
+    p.line(ox, oy-sy-15, ox-4, oy-sy-7);
+    p.line(ox, oy-sy-15, ox+4, oy-sy-7);
+
+    // 轴标签
+    p.noStroke();
+    p.fill(140,140,170);
+    p.textSize(14);
+    p.text('t/s', ox+sx+25, oy+5);
+    p.text('v/(m·s⁻¹)', ox-8, oy-sy-18);
+    p.text('O', ox-18, oy+18);
+
+    // 刻度
+    p.fill(100,100,130);
+    p.textSize(11);
+    for(let i=1;i<=5;i++){
+      p.text(i, ox+i*sx/6-3, oy+16);
+    }
+    for(let i=1;i<=5;i++){
+      p.text(i, ox-24, oy-i*sy/6+4);
+    }
+
+    // 计算实际y坐标
+    let vEnd = v0 + a*tMax;
+    let vMax = Math.max(v0, vEnd, 6);
+    let scaleV = sy / vMax;
+
+    // 限制让图像在框内
+    let vt = v0 + a*tMax;
+    let p1x = ox, p1y = oy - v0*scaleV;
+    let p2x = ox+sx, p2y = oy - vt*scaleV;
+
+    // 梯形填充
+    p.noStroke();
+    p.fill(212,163,115,30);
+    p.beginShape();
+    p.vertex(ox, oy);
+    p.vertex(ox, p1y);
+    p.vertex(p2x, p2y);
+    p.vertex(p2x, oy);
+    p.endShape(p.CLOSE);
+
+    // v-t 线
+    p.stroke(244,162,97);
+    p.strokeWeight(3);
+    p.line(ox, p1y, p2x, p2y);
+
+    // v0 标注
+    p.noStroke();
+    p.fill(244,162,97);
+    p.textSize(13);
+    p.text('v₀='+v0.toFixed(1)+' ', ox+5, p1y-8);
+
+    // vt 标注
+    p.fill(200,180,140);
+    p.text('v='+vt.toFixed(1), p2x-60, p2y-10);
+
+    // 面积标注
+    p.fill(212,163,115,180);
+    p.textSize(13);
+    let area = ((v0 + vt)/2)*tMax;
+    p.text('S='+area.toFixed(1)+'m', p2x-100, oy-12);
+
+    // 拖拽点 (红点调时间/末速度)
+    let hx = p2x, hy = p2y;
+    p.noFill();
+    p.stroke(244,162,97,200);
+    p.strokeWeight(2);
+    p.circle(hx, hy, 14);
+
+    // 提示
+    p.noStroke();
+    p.fill(140,140,170);
+    p.textSize(12);
+    p.text('← 拖动红点调末速度', 20, 40);
+
+    // a 滑块
+    let sliderY = 310;
+    p.stroke(50,50,70);
+    p.strokeWeight(2);
+    p.line(ox, sliderY, ox+sx, sliderY);
+
+    let aSliderX = ox + (a+1)/5*sx;
+    p.noFill();
+    p.stroke(130,200,130);
+    p.strokeWeight(2);
+    p.circle(aSliderX, sliderY, 12);
+
+    p.noStroke();
+    p.fill(130,200,130);
+    p.textSize(12);
+    p.text('a = '+a.toFixed(1)+' m/s²', aSliderX-25, sliderY-12);
+    p.fill(100,100,130);
+    p.textSize(11);
+    p.text('拖动绿点调加速度', ox, sliderY+18);
+
+    // 公式显示
+    p.fill(200,190,170);
+    p.textSize(15);
+    p.text('v = v₀ + at', ox+sx+30, 50);
+    p.fill(140,140,170);
+    p.textSize(12);
+    p.text('='+v0.toFixed(1)+' + ('+a.toFixed(1)+')×'+tMax.toFixed(1), ox+sx+30, 72);
+    p.text('='+vt.toFixed(1)+' m/s', ox+sx+30, 92);
+    p.fill(212,163,115);
+    p.textSize(13);
+    p.text('梯形面积 = 位移 x', ox+sx+30, 120);
+    p.text('= '+area.toFixed(1)+' m', ox+sx+30, 142);
+
+    // 交互: 拖动红点
+    if(p.mouseIsPressed && p.mouseX>ox && p.mouseX<ox+sx+20 && p.mouseY>oy-sy-15 && p.mouseY<oy+20){
+      let distH = p.dist(p.mouseX, p.mouseY, hx, hy);
+      if(distH < 20 || dragV){
+        dragV = true;
+        // 拖动意味着改变末速度 -> 保持a不变，改变t
+        let newT = (p.mouseX - ox)/sx * 6;
+        newT = Math.max(0.5, Math.min(6, newT));
+        tMax = newT;
+      }
+    }
+    if(!p.mouseIsPressed) dragV = false;
+
+    // 交互: 拖动绿点(加速度)
+    if(p.mouseIsPressed && p.mouseY>sliderY-15 && p.mouseY<sliderY+15 && p.mouseX>ox && p.mouseX<ox+sx){
+      let distA = p.dist(p.mouseX, p.mouseY, aSliderX, sliderY);
+      if(distA < 20 || dragA){
+        dragA = true;
+        let newA = (p.mouseX - ox)/sx * 5 - 1;
+        newA = Math.max(-0.8, Math.min(4, newA));
+        a = newA;
+      }
+    }
+    if(!p.mouseIsPressed) dragA = false;
+  };
+
+});
+</script>
+
+</body>
+</html>
