@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>运动学推论应用 · 思维导图 · 启明</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;background:#0b0b14;color:#d4d4dc;min-height:100vh;overflow-x:hidden;
+  background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%)}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.72em;padding:12px 18px 0;transition:.2s;position:relative;z-index:2}
+.back:hover{color:#d4a373;gap:10px}
+.container{max-width:1200px;margin:0 auto;padding:20px 18px 50px}
+.title{text-align:center;margin-bottom:30px}
+.title h1{font-size:1.6em;color:#e8d5b0;font-weight:600;letter-spacing:2px}
+.title .sub{font-size:.75em;color:#5c5c72;margin-top:4px;letter-spacing:1px}
+/* 思维导图容器 */
+.mindmap{position:relative;width:100%;overflow-x:auto;overflow-y:hidden;padding:20px 0}
+.mindmap-inner{position:relative;min-width:fit-content;padding:20px}
+/* 根节点 */
+.root-node{text-align:center;margin:0 auto 40px;position:relative}
+.root-node .node-box{display:inline-block;background:linear-gradient(135deg,#d4a373,#e8c49a);color:#0b0b14;padding:14px 40px;border-radius:10px;font-size:1.3em;font-weight:700;letter-spacing:3px;box-shadow:0 4px 30px rgba(212,163,115,.25)}
+/* 层级 */
+.level{display:flex;justify-content:center;gap:20px;margin-bottom:30px;flex-wrap:wrap}
+.level-1{gap:18px}
+.level-2{gap:14px;padding:0 30px}
+.level-3{gap:10px;padding:0 60px}
+.level-4{gap:8px;padding:0 100px}
+
+/* 节点卡片 */
+.node{background:#111125;border:1px solid #1e1e38;border-radius:8px;padding:0;overflow:hidden;flex:1;min-width:140px;max-width:280px;transition:all .2s}
+.node:hover{border-color:#d4a37355;transform:translateY(-2px);box-shadow:0 4px 20px rgba(212,163,115,.08)}
+.node-header{background:linear-gradient(135deg,#1a1a30,#151528);padding:8px 12px;border-bottom:1px solid #1e1e38;display:flex;align-items:center;gap:6px}
+.node-header .icon{font-size:.85em}
+.node-header .label{font-size:.78em;font-weight:600;color:#d4a373;letter-spacing:.5px}
+.node-body{padding:8px 12px}
+.node-item{font-size:.7em;color:#b0b0c0;padding:3px 0;line-height:1.5;border-bottom:1px solid #15152a}
+.node-item:last-child{border-bottom:none}
+.node-item .highlight{color:#e8c49a;font-weight:500}
+.node-item .warn{color:#e06050;font-weight:500}
+.node-item .formula{font-family:'Courier New',monospace;color:#c8a878;font-size:1em;background:rgba(212,163,115,.06);padding:1px 6px;border-radius:3px;display:inline-block;margin:1px 0}
+.node-item .sub{color:#707088;font-size:.88em}
+/* 连接线 */
+.connector{position:relative;display:flex;justify-content:center;align-items:center;height:16px}
+.connector::before{content:'';position:absolute;top:0;left:50%;width:2px;height:100%;background:linear-gradient(to bottom,#2a2a48,transparent)}
+/* 公式特殊展示 */
+.formula-block{background:rgba(212,163,115,.04);border:1px solid #1e1e38;border-radius:6px;padding:6px 10px;margin:4px 0;text-align:center}
+.formula-block .eq{font-family:'Courier New',monospace;color:#e8c49a;font-size:.85em;font-weight:500}
+.formula-block .note{font-size:.65em;color:#707088;margin-top:2px}
+
+/* 易错警示 */
+.warn-block{background:rgba(224,96,80,.06);border:1px solid rgba(224,96,80,.2);border-radius:6px;padding:6px 10px;margin:4px 0}
+.warn-block .warn-title{font-size:.65em;color:#e06050;font-weight:600;letter-spacing:1px}
+.warn-block .warn-text{font-size:.68em;color:#c08070;margin-top:2px}
+
+/* 策略卡片高亮 */
+.node.strategy .node-header{background:linear-gradient(135deg,#1a2a20,#152820);border-bottom-color:#2a4838}
+.node.strategy .node-header .label{color:#7ab878}
+
+/* 虚线连接指示 */
+.level-label{text-align:center;font-size:.6em;color:#3a3a50;letter-spacing:3px;margin:-10px 0 10px;position:relative}
+
+@media(max-width:768px){
+  .level{flex-direction:column;align-items:center;padding:0!important}
+  .node{min-width:120px;max-width:100%}
+  .root-node .node-box{padding:12px 24px;font-size:1.1em}
+  .level-3,.level-4{padding:0!important}
+}
+</style>
+</head>
+<body>
+<a class="back" href="jiaoxue.html">← 返回教学资源</a>
+<div class="container">
+<div class="title">
+  <h1>🧠 运动学推论应用</h1>
+  <div class="sub">匀变速直线运动 · 知识点体系</div>
+</div>
+
+<div class="mindmap">
+<div class="mindmap-inner">
+
+<!-- 根节点 -->
+<div class="root-node">
+  <div class="node-box">运动学推论应用</div>
+</div>
+
+<!-- 第一层：五大分支 -->
+<div class="level level-1">
+
+  <!-- 1. 基本公式 -->
+  <div class="node">
+    <div class="node-header"><span class="icon">📐</span><span class="label">基本公式</span></div>
+    <div class="node-body">
+      <div class="formula-block"><div class="eq">v = v₀ + at</div><div class="note">速度公式</div></div>
+      <div class="formula-block"><div class="eq">x = v₀t + ½at²</div><div class="note">位移公式</div></div>
+      <div class="formula-block"><div class="eq">v² − v₀² = 2ax</div><div class="note">速度位移公式 · 缺t首选</div></div>
+    </div>
+  </div>
+
+  <!-- 2. 核心推论 -->
+  <div class="node">
+    <div class="node-header"><span class="icon">🔑</span><span class="label">核心推论</span></div>
+    <div class="node-body">
+      <div class="node-item"><span class="highlight">平均速度</span>：v̄ = (v₀+v)/2 = v<sub>t/2</sub></div>
+      <div class="node-item"><span class="highlight">中间位置速度</span>：v<sub>x/2</sub> = √[(v₀²+v²)/2]<br><span class="sub">匀加速时 v<sub>x/2</sub> ＞ v<sub>t/2</sub></span></div>
+      <div class="node-item"><span class="highlight">位移差</span>：<span class="formula">Δx = aT²</span><br><span class="sub">x<sub>m</sub> − x<sub>n</sub> = (m−n)aT²</span></div>
+      <div class="node-item"><span class="highlight">初速为零比例</span><br><span class="sub">速度1:2:3… | 位移1:4:9…</span><br><span class="sub">相邻位移1:3:5… | 等位移时间1:(√2-1):…</span></div>
+    </div>
+  </div>
+
+  <!-- 3. 应用场景 -->
+  <div class="node">
+    <div class="node-header"><span class="icon">🎯</span><span class="label">应用场景</span></div>
+    <div class="node-body">
+      <div class="node-item"><span class="highlight">打点计时器</span><br>瞬时速度 v<sub>n</sub> = (x<sub>n</sub>+x<sub>n+1</sub>)/2T<br>逐差法 a = [(x₄+x₅+x₆)−(x₁+x₂+x₃)]/9T²</div>
+      <div class="node-item"><span class="highlight">追及相遇</span><br>临界：速度相等时距最近/最远<br>二次函数极值法 · v-t图像面积法</div>
+      <div class="node-item"><span class="highlight">自由落体</span><br>v₀=0, a=g, v=gt, h=½gt², v²=2gh</div>
+      <div class="node-item"><span class="highlight">竖直上抛</span><br>对称性 · 分段法 vs 全程矢量法</div>
+    </div>
+  </div>
+
+  <!-- 4. 解题策略 -->
+  <div class="node strategy">
+    <div class="node-header"><span class="icon">💡</span><span class="label">解题策略</span></div>
+    <div class="node-body">
+      <div class="node-item"><span class="highlight">选公式口诀</span><br>缺v→缺v公式 · 缺t→v²−v₀²=2ax<br>纸带→Δx=aT²</div>
+      <div class="node-item"><span class="highlight">图像法</span><br>v-t：斜率=加速度，面积=位移<br>x-t：斜率=速度</div>
+      <div class="node-item"><span class="highlight">逆向思维</span><br>匀减速→反向匀加速<br>刹车、上抛问题常用</div>
+    </div>
+  </div>
+
+  <!-- 5. 易错警示 -->
+  <div class="node">
+    <div class="node-header"><span class="icon">⚠️</span><span class="label" style="color:#e06050">易错警示</span></div>
+    <div class="node-body">
+      <div class="warn-block">
+        <div class="warn-title">刹车陷阱</div>
+        <div class="warn-text">先求刹车时间 t₀=v₀/a<br>判断是否停止再代入<br>不可直接代公式超过t₀</div>
+      </div>
+      <div class="warn-block">
+        <div class="warn-title">正负号</div>
+        <div class="warn-text">矢量方程方向混淆<br>上抛全程法注意符号</div>
+      </div>
+      <div class="warn-block">
+        <div class="warn-title">比例限制</div>
+        <div class="warn-text">初速为零比例关系<br>只适用于v₀=0</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /level-1 -->
+
+</div><!-- /mindmap-inner -->
+</div><!-- /mindmap -->
+
+</div><!-- /container -->
+
+<script>
+// 页面加载动画效果
+document.querySelectorAll('.node').forEach((el,i)=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(15px)';
+  el.style.transition='all .4s ease';
+  setTimeout(()=>{
+    el.style.opacity='1';
+    el.style.transform='translateY(0)';
+  },100+i*80);
+});
+</script>
+</body>
+</html>
