@@ -1,559 +1,736 @@
-     1|<!DOCTYPE html>
-     2|<html lang="zh-CN">
-     3|<head>
-     4|<meta charset="UTF-8">
-     5|<meta name="viewport" content="width=device-width,initial-scale=1.0">
-     6|<title>运动学推论：一题多解 · 多解归一</title>
-     7|<script>MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};</script>
-     8|<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async>
-function expandAllProofs(expand){
-  var cards=document.querySelectorAll('.proof-card');
-  cards.forEach(function(c){
-    if(expand)c.classList.add('open');
-    else c.classList.remove('open');
-    var badge=c.querySelector('.badge');
-    if(badge)badge.textContent=expand?'点击收起':'点击展开';
-  });
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>运动学推论：一题多解 · 多解归一</title>
+<script>MathJax={tex:{inlineMath:[['$','$'],['\\(','\\)']],displayMath:[['$$','$$']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+  background:#0b0b14;color:#d4d4dc;min-height:100vh;
+  background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%);
+  font-size:17px;line-height:1.85
 }
-</script>
-     9|<style>
-    10|*{margin:0;padding:0;box-sizing:border-box}
-    11|body{
-    12|  font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
-    13|  background:#0b0b14;color:#d4d4dc;min-height:100vh;
-    14|  background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),
-    15|    radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%);
-    16|  font-size:17px;line-height:1.85
-    17|}
-    18|.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.72em;padding:16px 24px 0;transition:.2s}
-    19|.back:hover{color:#d4a373;gap:10px}
-    20|.container{max-width:920px;margin:0 auto;padding:20px 20px 60px}
-    21|
-    22|.hero{
-    23|  background:linear-gradient(135deg,#0e0e1e,#141428 40%,#1a1a30 100%);
-    24|  padding:40px 0 32px;text-align:center;position:relative;overflow:hidden;
-    25|  border-bottom:1px solid rgba(212,163,115,.08);margin-bottom:0
-    26|}
-    27|.hero::before{
-    28|  content:"x = v₀t + ½at²";position:absolute;font-size:80px;font-weight:900;
-    29|  opacity:0.03;top:-5px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#d4a373
-    30|}
-    31|.hero h1{font-size:1.5em;color:#e8d5b0;font-weight:600;letter-spacing:2px}
-    32|.hero .sub{margin-top:8px;font-size:.78em;color:#5c5c72}
-    33|.hero .tags{margin-top:12px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
-    34|.hero .tag{
-    35|  background:rgba(212,163,115,.1);padding:3px 14px;border-radius:14px;
-    36|  font-size:.72em;border:1px solid rgba(212,163,115,.15);color:#c8a878
-    37|}
-    38|
-    39|.nav{
-    40|  background:#0e0e1e;border-bottom:1px solid #18182a;position:sticky;top:0;z-index:100
-    41|}
-    42|.nav .wrap{display:flex;gap:0;overflow-x:auto;max-width:920px;margin:0 auto;padding:0 12px}
-    43|.nav a{
-    44|  display:block;padding:12px 16px;font-size:.75em;color:#707088;
-    45|  text-decoration:none;white-space:nowrap;border-bottom:3px solid transparent;transition:.2s;flex-shrink:0
-    46|}
-    47|.nav a:hover,.nav a.active{color:#d4a373;border-bottom-color:#d4a373}
-    48|
-    49|.section{padding:36px 0}
-    50|.section-title{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-    51|.section-num{
-    52|  background:#d4a373;color:#0b0b14;width:36px;height:36px;border-radius:8px;
-    53|  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1em;flex-shrink:0
-    54|}
-    55|.section-title h2{font-size:1.15em;color:#e8d5b0;font-weight:600}
-    56|.section-title .time{
-    57|  background:rgba(212,163,115,.08);color:#c8a878;padding:2px 10px;
-    58|  border-radius:4px;font-size:.7em;font-weight:600
-    59|}
-    60|
-    61|.card{
-    62|  background:#0e0e1e;border:1px solid #18182a;border-radius:12px;
-    63|  padding:24px 28px;margin-bottom:18px;transition:.2s
-    64|}
-    65|.card:hover{border-color:#2a2a48}
-    66|
-    67|.proof-card{border-left:4px solid #d4a373}
-    68|.proof-card .proof-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
-    69|.proof-card .proof-header h3{font-size:.95em;color:#e8c49a}
-    70|.proof-card .proof-header .badge{
-    71|  background:rgba(212,163,115,.12);color:#c8a878;
-    72|  padding:2px 12px;border-radius:12px;font-size:.68em;font-weight:600;flex-shrink:0
-    73|}
-    74|.proof-card .proof-body{display:none;margin-top:16px;padding-top:16px;border-top:1px dashed rgba(255,255,255,.06);font-size:.88em;color:#b0b0b8}
-    75|.proof-card.open .proof-body{display:block}
-    76|.proof-card .click-hint{font-size:.72em;color:#5c5c72;margin-top:3px}
-    77|
-    78|.problem-card{border-left:4px solid #e06050}
-    79|.problem-card .prob-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-    80|.problem-card .prob-num{
-    81|  background:#e06050;color:#fff;padding:2px 10px;border-radius:4px;
-    82|  font-size:.68em;font-weight:700;white-space:nowrap;flex-shrink:0
-    83|}
-    84|.problem-card .prob-text{flex:1;font-size:.9em}
-    85|.problem-card .prob-text p{margin-bottom:6px}
-    86|
-    87|.sol-btn{
-    88|  display:inline-block;margin:10px 6px 0 0;padding:6px 16px;
-    89|  border:1px solid #2a2a48;border-radius:6px;background:transparent;
-    90|  color:#b0b0b8;font-size:.78em;font-weight:600;cursor:pointer;transition:.2s
-    91|}
-    92|.sol-btn:hover{border-color:#d4a373;color:#d4a373}
-    93|.sol-btn.active{background:#d4a373;color:#0b0b14;border-color:#d4a373}
-    94|
-    95|.sol-content{display:none;margin-top:14px;padding:16px 20px;border-radius:8px;font-size:.85em;line-height:1.8}
-    96|.sol-content.show{display:block}
-    97|.sol-content.sol-a{background:rgba(21,101,192,.06);border:1px solid rgba(21,101,192,.15);color:#b0c8e0}
-    98|.sol-content.sol-b{background:rgba(46,125,50,.06);border:1px solid rgba(46,125,50,.15);color:#b0d0b0}
-    99|.sol-content.sol-c{background:rgba(239,108,0,.06);border:1px solid rgba(239,108,0,.15);color:#e0c0a0}
-   100|.sol-content.sol-d{background:rgba(106,27,154,.06);border:1px solid rgba(106,27,154,.15);color:#c0b0d0}
-   101|
-   102|.sol-tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.72em;font-weight:700;color:#fff;margin-bottom:8px}
-   103|.sol-a .sol-tag{background:#1565c0}
-   104|.sol-b .sol-tag{background:#2e7d32}
-   105|.sol-c .sol-tag{background:#ef6c00}
-   106|.sol-d .sol-tag{background:#6a1b9a}
-   107|
-   108|.guiyi{
-   109|  background:rgba(122,184,120,.06);border:2px solid rgba(122,184,120,.2);
-   110|  border-radius:10px;padding:16px 20px;margin-top:14px;font-size:.82em
-   111|}
-   112|.guiyi .title{font-weight:700;color:#7ab878;font-size:.92em;margin-bottom:6px}
-   113|.guiyi p{color:#a0c0a0}
-   114|
-   115|.dianbo{
-   116|  background:rgba(224,96,80,.06);border:1px solid rgba(224,96,80,.15);
-   117|  border-radius:8px;padding:12px 16px;margin-top:12px;font-size:.82em;color:#c8a898
-   118|}
-   119|.dianbo strong{color:#e06050}
-   120|
-   121|.hint-bar{
-   122|  background:rgba(255,248,225,.04);border:1px solid rgba(255,224,130,.1);
-   123|  border-radius:8px;padding:10px 16px;margin:10px 0;font-size:.82em;color:#c8b888
-   124|}
-   125|
-   126|table{
-   127|  width:100%;border-collapse:collapse;margin:10px 0;font-size:.82em
-   128|}
-   129|th{
-   130|  background:#0e0e1e;color:#d4a373;padding:8px 14px;text-align:left;
-   131|  border:1px solid #18182a;font-weight:600
-   132|}
-   133|td{padding:8px 14px;border:1px solid #18182a;color:#b0b0b8}
-   134|tr:nth-child(even) td{background:rgba(14,14,30,.3)}
-   135|
-   136|pre{
-   137|  background:#0a0a14;color:#a8d8ea;padding:14px 18px;border-radius:8px;
-   138|  font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:.78em;
-   139|  line-height:1.5;overflow-x:auto;margin:10px 0
-   140|}
-   141|
-   142|.summary-box{
-   143|  margin-top:20px;display:flex;gap:14px;flex-wrap:wrap
-   144|}
-   145|.summary-box .stat{
-   146|  flex:1;min-width:140px;padding:14px;border-radius:8px;text-align:center
-   147|}
-   148|.summary-box .stat .num{font-size:1.4em;font-weight:800}
-   149|.summary-box .stat .desc{font-size:.7em;color:#707088;margin-top:2px}
-   150|
-   151|.quote{
-   152|  margin-top:20px;padding:18px 22px;
-   153|  background:rgba(212,163,115,.04);border-left:4px solid #d4a373;
-   154|  border-radius:0 10px 10px 0
-   155|}
-   156|.quote p{font-size:.88em;color:#c8b898;font-style:italic}
-   157|
-   158|.footer{text-align:center;padding:20px;font-size:.72em;color:#5c5c72;border-top:1px solid #18182a;margin-top:20px}
-   159|
-   160|@media(max-width:768px){
-   161|  .card{padding:18px 16px}
-   162|  .hero h1{font-size:1.2em}
-   163|  .container{padding:12px}
-   164|}
-   165|
-   166|@media print{
-   167|  .nav{display:none}
-   168|  .sol-content,.proof-body{display:block!important}
-   169|  .click-hint{display:none}
-   170|  body{background:#fff;color:#000}
-   171|}
-   172|</style>
-   173|</head>
-   174|<body>
-   175|
-   176|<a class="back" href="jiaoxue.html">← 返回教学资源</a>
-   177|
-   178|<div class="hero">
-   179|<div class="container">
-   180|<h1>运动学推论：证明 · 一题多解 · 多解归一</h1>
-   181|<div class="sub">高三一轮复习 · 匀变速直线运动专题 · 45 分钟</div>
-   182|<div class="tags">
-   183|<span class="tag">先证后用</span>
-   184|<span class="tag">一题多解</span>
-   185|<span class="tag">多解归一</span>
-   186|<span class="tag">18+种解法</span>
-   187|</div>
-   188|</div>
-   189|</div>
-   190|
-   191|<div class="nav">
-   192|<div class="wrap">
-   193|<a href="#s1">推论证明</a>
-   194|<a href="#s2">热身题</a>
-   195|<a href="#s3">核心例题</a>
-   196|<a href="#s4">变式提升</a>
-   197|<a href="#s5">综合挑战</a>
-   198|<a href="#s6">课堂总结</a>
-   199|</div>
-   200|</div>
-<!-- ===== 公式→推论 关系图 ===== -->
-<div class="section" style="padding:20px 0 8px">
-<div class="card" style="padding:16px 20px">
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.72em;padding:16px 24px 0;transition:.2s}
+.back:hover{color:#d4a373;gap:10px}
+.container{max-width:920px;margin:0 auto;padding:20px 20px 60px}
+
+.hero{
+  background:linear-gradient(135deg,#0e0e1e,#141428 40%,#1a1a30 100%);
+  padding:40px 0 32px;text-align:center;position:relative;overflow:hidden;
+  border-bottom:1px solid rgba(212,163,115,.08);margin-bottom:0
+}
+.hero::before{
+  content:"x = v₀t + ½at²";position:absolute;font-size:80px;font-weight:900;
+  opacity:0.03;top:-5px;left:50%;transform:translateX(-50%);white-space:nowrap;color:#d4a373
+}
+.hero h1{font-size:1.5em;color:#e8d5b0;font-weight:600;letter-spacing:2px}
+.hero .sub{margin-top:8px;font-size:.78em;color:#5c5c72}
+.hero .tags{margin-top:12px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.hero .tag{
+  background:rgba(212,163,115,.1);padding:3px 14px;border-radius:14px;
+  font-size:.72em;border:1px solid rgba(212,163,115,.15);color:#c8a878
+}
+
+/* 关系图 */
+.rel-map{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:6px;font-size:.75em}
+.rel-map .item{
+  background:rgba(212,163,115,.06);border:1px solid rgba(212,163,115,.12);
+  border-radius:6px;padding:8px 10px;text-align:center
+}
+.rel-map .item .formula{color:#d4a373;font-weight:600;font-size:.85em}
+.rel-map .item .desc{color:#5c5c72;font-size:.7em;margin:1px 0}
+.rel-map .item .arrow{color:#2a2a48;margin:1px 0}
+.rel-map .item .result{color:#7ab878}
+
+.nav{
+  background:#0e0e1e;border-bottom:1px solid #18182a;position:sticky;top:0;z-index:100
+}
+.nav .wrap{display:flex;gap:0;overflow-x:auto;max-width:920px;margin:0 auto;padding:0 12px}
+.nav a{
+  display:block;padding:12px 16px;font-size:.75em;color:#707088;
+  text-decoration:none;white-space:nowrap;border-bottom:3px solid transparent;transition:.2s;flex-shrink:0
+}
+.nav a:hover,.nav a.active{color:#d4a373;border-bottom-color:#d4a373}
+
+.section{padding:36px 0}
+.section-title{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-num{
+  background:#d4a373;color:#0b0b14;width:36px;height:36px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1em;flex-shrink:0
+}
+.section-title h2{font-size:1.15em;color:#e8d5b0;font-weight:600}
+.section-title .time{
+  background:rgba(212,163,115,.08);color:#c8a878;padding:2px 10px;
+  border-radius:4px;font-size:.7em;font-weight:600
+}
+
+.card{
+  background:#0e0e1e;border:1px solid #18182a;border-radius:12px;
+  padding:24px 28px;margin-bottom:18px;transition:.2s
+}
+.card:hover{border-color:#2a2a48}
+
+.proof-card{border-left:4px solid #d4a373}
+.proof-card .proof-header{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.proof-card .proof-header h3{font-size:.95em;color:#e8c49a}
+.proof-card .proof-header .badge{
+  background:rgba(212,163,115,.12);color:#c8a878;
+  padding:2px 12px;border-radius:12px;font-size:.68em;font-weight:600;flex-shrink:0
+}
+.proof-card .proof-body{display:none;margin-top:16px;padding-top:16px;border-top:1px dashed rgba(255,255,255,.06);font-size:.88em;color:#b0b0b8}
+.proof-card.open .proof-body{display:block}
+.proof-card .click-hint{font-size:.72em;color:#5c5c72;margin-top:3px}
+
+.problem-card{border-left:4px solid #e06050}
+.problem-card .prob-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.problem-card .prob-num{
+  background:#e06050;color:#fff;padding:2px 10px;border-radius:4px;
+  font-size:.68em;font-weight:700;white-space:nowrap;flex-shrink:0
+}
+.problem-card .prob-text{flex:1;font-size:.9em}
+.problem-card .prob-text p{margin-bottom:6px}
+
+.sol-btn{
+  display:inline-block;margin:10px 6px 0 0;padding:6px 16px;
+  border:1px solid #2a2a48;border-radius:6px;background:transparent;
+  color:#b0b0b8;font-size:.78em;font-weight:600;cursor:pointer;transition:.2s
+}
+.sol-btn:hover{border-color:#d4a373;color:#d4a373}
+.sol-btn.active{background:#d4a373;color:#0b0b14;border-color:#d4a373}
+
+.sol-content{display:none;margin-top:14px;padding:16px 20px;border-radius:8px;font-size:.85em;line-height:1.8}
+.sol-content.show{display:block}
+.sol-content.sol-a{background:rgba(21,101,192,.06);border:1px solid rgba(21,101,192,.15);color:#b0c8e0}
+.sol-content.sol-b{background:rgba(46,125,50,.06);border:1px solid rgba(46,125,50,.15);color:#b0d0b0}
+.sol-content.sol-c{background:rgba(239,108,0,.06);border:1px solid rgba(239,108,0,.15);color:#e0c0a0}
+.sol-content.sol-d{background:rgba(106,27,154,.06);border:1px solid rgba(106,27,154,.15);color:#c0b0d0}
+
+.sol-tag{display:inline-block;padding:2px 10px;border-radius:4px;font-size:.72em;font-weight:700;color:#fff;margin-bottom:8px}
+.sol-a .sol-tag{background:#1565c0}
+.sol-b .sol-tag{background:#2e7d32}
+.sol-c .sol-tag{background:#ef6c00}
+.sol-d .sol-tag{background:#6a1b9a}
+
+.guiyi{
+  background:rgba(122,184,120,.06);border:2px solid rgba(122,184,120,.2);
+  border-radius:10px;padding:16px 20px;margin-top:14px;font-size:.82em
+}
+.guiyi .title{font-weight:700;color:#7ab878;font-size:.92em;margin-bottom:6px}
+.guiyi p{color:#a0c0a0}
+
+.dianbo{
+  background:rgba(224,96,80,.06);border:1px solid rgba(224,96,80,.15);
+  border-radius:8px;padding:12px 16px;margin-top:12px;font-size:.82em;color:#c8a898
+}
+.dianbo strong{color:#e06050}
+
+.hint-bar{
+  background:rgba(255,248,225,.04);border:1px solid rgba(255,224,130,.1);
+  border-radius:8px;padding:10px 16px;margin:10px 0;font-size:.82em;color:#c8b888
+}
+
+table{
+  width:100%;border-collapse:collapse;margin:10px 0;font-size:.82em
+}
+th{
+  background:#0e0e1e;color:#d4a373;padding:8px 14px;text-align:left;
+  border:1px solid #18182a;font-weight:600
+}
+td{padding:8px 14px;border:1px solid #18182a;color:#b0b0b8}
+tr:nth-child(even) td{background:rgba(14,14,30,.3)}
+
+pre{
+  background:#0a0a14;color:#a8d8ea;padding:14px 18px;border-radius:8px;
+  font-family:'Cascadia Code','Fira Code',Consolas,monospace;font-size:.78em;
+  line-height:1.5;overflow-x:auto;margin:10px 0
+}
+
+.summary-box{
+  margin-top:20px;display:flex;gap:14px;flex-wrap:wrap
+}
+.summary-box .stat{
+  flex:1;min-width:140px;padding:14px;border-radius:8px;text-align:center
+}
+.summary-box .stat .num{font-size:1.4em;font-weight:800}
+.summary-box .stat .desc{font-size:.7em;color:#707088;margin-top:2px}
+
+.quote{
+  margin-top:20px;padding:18px 22px;
+  background:rgba(212,163,115,.04);border-left:4px solid #d4a373;
+  border-radius:0 10px 10px 0
+}
+.quote p{font-size:.88em;color:#c8b898;font-style:italic}
+
+.footer{text-align:center;padding:20px;font-size:.72em;color:#5c5c72;border-top:1px solid #18182a;margin-top:20px}
+
+@media(max-width:768px){
+  .card{padding:18px 16px}
+  .hero h1{font-size:1.2em}
+  .container{padding:12px}
+}
+
+@media print{
+  .nav{display:none}
+  .sol-content,.proof-body{display:block!important}
+  .click-hint{display:none}
+  body{background:#fff;color:#000}
+}
+
+.expand-bar{text-align:right;margin-bottom:12px}
+.expand-bar button{
+  background:transparent;border:1px solid #2a2a48;color:#b0b0b8;
+  padding:4px 14px;border-radius:6px;font-size:.72em;cursor:pointer;margin:0 3px
+}
+.expand-bar button:hover{border-color:#d4a373;color:#d4a373}
+</style>
+</head>
+<body>
+
+<a class="back" href="jiaoxue.html">← 返回教学资源</a>
+
+<div class="hero">
+<div class="container" style="padding:0 20px">
+<h1>运动学推论：证明 · 一题多解 · 多解归一</h1>
+<div class="sub">高三一轮复习 · 匀变速直线运动专题 · 45 分钟</div>
+<div class="tags">
+<span class="tag">先证后用</span>
+<span class="tag">一题多解</span>
+<span class="tag">多解归一</span>
+<span class="tag">18+种解法</span>
+</div>
+</div>
+</div>
+
+<div class="nav">
+<div class="wrap">
+<a href="#s0">关系图</a>
+<a href="#s1">推论证明</a>
+<a href="#s2">热身题</a>
+<a href="#s3">核心例题</a>
+<a href="#s4">变式提升</a>
+<a href="#s5">综合挑战</a>
+<a href="#s6">课堂总结</a>
+</div>
+</div>
+
+<div class="container">
+
+<!-- 关系图 -->
+<div class="section" id="s0" style="padding:20px 0 8px">
+<div class="card" style="padding:14px 18px">
 <div style="text-align:center;margin-bottom:8px">
 <span style="color:#707088;font-size:.72em;letter-spacing:1px">▎五个基本公式 → 五大推论</span>
 </div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;font-size:.75em">
-<div style="background:rgba(212,163,115,.06);border:1px solid rgba(212,163,115,.12);border-radius:6px;padding:8px 10px;text-align:center">
-<div style="color:#d4a373;font-weight:600;font-size:.85em">v=v₀+at</div>
-<div style="color:#5c5c72;font-size:.7em">速度公式</div>
-<div style="color:#2a2a48;margin:2px 0">↓</div>
-<div style="color:#7ab878">推论① 平均速度</div>
+<div class="rel-map">
+<div class="item">
+<div class="formula">v = v₀ + at</div>
+<div class="desc">速度公式</div>
+<div class="arrow">↓</div>
+<div class="result">推论① 平均速度</div>
 </div>
-<div style="background:rgba(212,163,115,.06);border:1px solid rgba(212,163,115,.12);border-radius:6px;padding:8px 10px;text-align:center">
-<div style="color:#d4a373;font-weight:600;font-size:.85em">x=v₀t+½at²</div>
-<div style="color:#5c5c72;font-size:.7em">位移公式</div>
-<div style="color:#2a2a48;margin:2px 0">↓</div>
-<div style="color:#7ab878">推论③ 逐差法</div>
+<div class="item">
+<div class="formula">x = v₀t + ½at²</div>
+<div class="desc">位移公式</div>
+<div class="arrow">↓</div>
+<div class="result">推论③ 逐差公式</div>
 </div>
-<div style="background:rgba(212,163,115,.06);border:1px solid rgba(212,163,115,.12);border-radius:6px;padding:8px 10px;text-align:center">
-<div style="color:#d4a373;font-weight:600;font-size:.85em">v²−v₀²=2ax</div>
-<div style="color:#5c5c72;font-size:.7em">速位公式</div>
-<div style="color:#2a2a48;margin:2px 0">↓</div>
-<div style="color:#7ab878">推论② 中点速度</div>
+<div class="item">
+<div class="formula">v² − v₀² = 2ax</div>
+<div class="desc">速位公式</div>
+<div class="arrow">↓</div>
+<div class="result">推论② 中点速度</div>
 </div>
-<div style="background:rgba(212,163,115,.06);border:1px solid rgba(212,163,115,.12);border-radius:6px;padding:8px 10px;text-align:center">
-<div style="color:#d4a373;font-weight:600;font-size:.85em">x=½at²</div>
-<div style="color:#5c5c72;font-size:.7em">初速为零</div>
-<div style="color:#2a2a48;margin:2px 0">↓</div>
-<div style="color:#7ab878">推论④ 比例关系</div>
+<div class="item">
+<div class="formula">x = ½at²</div>
+<div class="desc">初速为零</div>
+<div class="arrow">↓</div>
+<div class="result">推论④ 比例关系</div>
 </div>
-<div style="background:rgba(212,163,115,.06);border:1px solid rgba(212,163,115,.12);border-radius:6px;padding:8px 10px;text-align:center">
-<div style="color:#d4a373;font-weight:600;font-size:.85em">v=v₀+at</div>
-<div style="color:#5c5c72;font-size:.7em">时间反演</div>
-<div style="color:#2a2a48;margin:2px 0">↓</div>
-<div style="color:#7ab878">推论⑤ 逆向思维</div>
+<div class="item">
+<div class="formula">t → −t</div>
+<div class="desc">时间反演</div>
+<div class="arrow">↓</div>
+<div class="result">推论⑤ 逆向思维</div>
 </div>
+</div>
+</div>
+</div>
+
+<!-- ========= 第一部分：推论证明 ========= -->
+<div class="section" id="s1">
+<div class="section-title">
+<div class="section-num">1</div>
+<h2>推论证明：知其然，更知其所以然</h2>
+<span class="time">10 min</span>
+</div>
+
+<div class="expand-bar">
+<button onclick="exP(true)">全部展开</button>
+<button onclick="exP(false)">全部收起</button>
+</div>
+
+<div class="card proof-card" onclick="togP(this)">
+<div class="proof-header">
+<div>
+<h3>推论① 平均速度公式</h3>
+<div class="click-hint">点击展开证明 ↓</div>
+</div>
+<span class="badge">点击展开</span>
+</div>
+<div class="proof-body">
+<p><strong>结论：</strong>匀变速直线运动中，某段时间内的平均速度等于该段时间中间时刻的瞬时速度。</p>
+<p>$$\bar{v} = v_{t/2} = \frac{v_0 + v}{2}$$</p>
+<div class="dianbo"><strong>证明：</strong></div>
+<p>设物体做匀变速直线运动，初速度 $v_0$，末速度 $v$，加速度 $a$，运动时间 $t$。</p>
+<p>由位移公式：$x = v_0 t + \frac{1}{2}at^2$</p>
+<p>平均速度定义：$\bar{v} = \frac{x}{t} = v_0 + \frac{1}{2}at$</p>
+<p>中间时刻 $t/2$ 的瞬时速度：$v_{t/2} = v_0 + a\cdot\frac{t}{2} = v_0 + \frac{1}{2}at$</p>
+<p>因此 $\bar{v} = v_{t/2}$。</p>
+<p>又由 $v = v_0 + at$ 得 $at = v - v_0$，代入：</p>
+<p>$$\bar{v} = v_0 + \frac{v - v_0}{2} = \frac{v_0 + v}{2} \quad \blacksquare$$</p>
+<div class="dianbo"><strong>点拨：</strong>平均速度只有在匀变速运动中才等于首末速度的算术平均值。这是推论，不是定义！</div>
+</div>
+</div>
+
+<div class="card proof-card" onclick="togP(this)">
+<div class="proof-header">
+<div>
+<h3>推论② 中点位置速度公式</h3>
+<div class="click-hint">点击展开证明 ↓</div>
+</div>
+<span class="badge">点击展开</span>
+</div>
+<div class="proof-body">
+<p><strong>结论：</strong>匀变速直线运动中，经过位移中点时的瞬时速度：</p>
+<p>$$v_{s/2} = \sqrt{\frac{v_0^2 + v^2}{2}}$$</p>
+<div class="dianbo"><strong>证明：</strong></div>
+<p>对前半段位移，由 $v^2 - v_0^2 = 2as$：</p>
+<p>$$v_{s/2}^2 - v_0^2 = 2a \cdot \frac{s}{2} \quad \cdots (1)$$</p>
+<p>对后半段位移：</p>
+<p>$$v^2 - v_{s/2}^2 = 2a \cdot \frac{s}{2} \quad \cdots (2)$$</p>
+<p>由 $(1) = (2)$：$v_{s/2}^2 - v_0^2 = v^2 - v_{s/2}^2$</p>
+<p>$$2v_{s/2}^2 = v_0^2 + v^2 \;\Rightarrow\; v_{s/2} = \sqrt{\frac{v_0^2 + v^2}{2}} \quad \blacksquare$$</p>
+<div class="dianbo"><strong>点拨：</strong>证明的关键是"两段位移相等，加速度相同"→两段的 $v^2$ 增量相等。这个技巧叫<strong>位移对称法</strong>。</div>
+</div>
+</div>
+
+<div class="card proof-card" onclick="togP(this)">
+<div class="proof-header">
+<div>
+<h3>推论③ 逐差公式 $\Delta x = aT^2$</h3>
+<div class="click-hint">点击展开证明 ↓</div>
+</div>
+<span class="badge">点击展开</span>
+</div>
+<div class="proof-body">
+<p><strong>结论：</strong>匀变速运动中，连续相等时间 $T$ 内的位移之差为常量：</p>
+<p>$$\Delta x = x_2 - x_1 = aT^2$$</p>
+<div class="dianbo"><strong>证明：</strong></div>
+<p>设第 1 个 $T$ 内初速度为 $v_0$，则：$x_1 = v_0 T + \frac{1}{2}aT^2$</p>
+<p>第 1 个 $T$ 末速度 $v_1 = v_0 + aT$，第 2 个 $T$ 内：</p>
+<p>$$x_2 = v_1 T + \frac{1}{2}aT^2 = v_0 T + \frac{3}{2}aT^2$$</p>
+<p>因此：$x_2 - x_1 = aT^2$</p>
+<p>同理 $x_3 - x_2 = aT^2$，逐差相等。$\blacksquare$</p>
+<p style="margin-top:10px;"><strong>推广（逐差法求加速度）：</strong>若有连续 6 段位移 $x_1 \cdots x_6$：</p>
+<p>$$a = \frac{(x_4 + x_5 + x_6) - (x_1 + x_2 + x_3)}{9T^2}$$</p>
+<div class="dianbo"><strong>点拨：</strong>逐差法的精髓是<strong>充分利用所有数据</strong>，减小偶然误差。</div>
+</div>
+</div>
+
+<div class="card proof-card" onclick="togP(this)">
+<div class="proof-header">
+<div>
+<h3>推论④ 初速为零的比例关系</h3>
+<div class="click-hint">点击展开证明 ↓</div>
+</div>
+<span class="badge">点击展开</span>
+</div>
+<div class="proof-body">
+<p><strong>结论一（等时分割）：</strong>连续相等时间 $T$ 内的位移之比：</p>
+<p>$$x_1 : x_2 : x_3 : \cdots : x_n = 1 : 3 : 5 : \cdots : (2n-1)$$</p>
+<p><strong>结论二（等距分割）：</strong>通过连续相等位移所用时间之比：</p>
+<p>$$t_1 : t_2 : t_3 : \cdots : t_n = 1 : (\sqrt{2}-1) : (\sqrt{3}-\sqrt{2}) : \cdots$$</p>
+<div class="dianbo"><strong>证明结论一：</strong></div>
+<p>$v_0 = 0$，第 $k$ 个 $T$ 内的位移：</p>
+<p>$$x_k = \frac{1}{2}a(kT)^2 - \frac{1}{2}a((k-1)T)^2 = \frac{1}{2}aT^2(2k-1)$$</p>
+<p>因此 $x_k \propto (2k-1)$，即 $x_1:x_2:x_3 = 1:3:5$。$\blacksquare$</p>
+<div class="dianbo"><strong>证明结论二：</strong></div>
+<p>通过前 $k$ 段位移的总时间 $T_k = \sqrt{\frac{2ks}{a}}$，第 $k$ 段所用时间：</p>
+<p>$$t_k = T_k - T_{k-1} = \sqrt{\frac{2s}{a}}(\sqrt{k} - \sqrt{k-1})$$</p>
+<p>因此 $t_k \propto (\sqrt{k} - \sqrt{k-1})$。$\blacksquare$</p>
+<div class="dianbo"><strong>点拨：</strong>结论一是<strong>奇数比</strong>，结论二是<strong>相邻根号之差</strong>。记住推导过程比记住结论更重要！</div>
+</div>
+</div>
+
+<div class="card proof-card" onclick="togP(this)">
+<div class="proof-header">
+<div>
+<h3>推论⑤ 逆向思维（时间反演对称性）</h3>
+<div class="click-hint">点击展开证明 ↓</div>
+</div>
+<span class="badge">点击展开</span>
+</div>
+<div class="proof-body">
+<p><strong>结论：</strong>末速度为零的匀减速直线运动，可以<strong>逆向</strong>看作初速度为零的匀加速直线运动。</p>
+<div class="dianbo"><strong>证明：</strong></div>
+<p>物体以初速 $v_0$、加速度 $-a$ 做匀减速，经时间 $t$ 停下。</p>
+<p>令 $\tau = \frac{v_0}{a} - t$（倒转时间轴），代入 $v(t) = v_0 - at$：</p>
+<p>$$v(t) = a\tau$$</p>
+<p>这正是初速为零、加速度为 $a$ 的匀加速运动！位移：</p>
+<p>$$x(t) = v_0 t - \frac{1}{2}at^2 = x_{\text{总}} - \frac{1}{2}a\tau^2$$</p>
+<p>即逆向看，从终点出发走过的距离 $= \frac{1}{2}a\tau^2$。$\blacksquare$</p>
+<div class="dianbo"><strong>点拨：</strong>刹车问题、竖直上抛的下落段，都可以"倒着看"。这不仅是技巧，更是一种<strong>对称性思维</strong>。</div>
 </div>
 </div>
 </div>
 
-
-   201|
-   202|<div class="container">
-   203|
-   204|<!-- ========= 第一部分：推论证明 ========= -->
-   205|<div class="section" id="s1">
-   206|<div class="section-title">
-   207|<div class="section-num">1</div>
-   208|<h2>推论证明：知其然，更知其所以然</h2>
-   209|<span class="time">10 min</span>
-   210|</div>
-   211|
-   212|<div 
-<div style="text-align:right;margin-bottom:12px">
-<button onclick="expandAllProofs(true)" style="background:transparent;border:1px solid #2a2a48;color:#b0b0b8;padding:4px 14px;border-radius:6px;font-size:.72em;cursor:pointer;margin-right:6px">全部展开</button>
-<button onclick="expandAllProofs(false)" style="background:transparent;border:1px solid #2a2a48;color:#b0b0b8;padding:4px 14px;border-radius:6px;font-size:.72em;cursor:pointer">全部收起</button>
+<!-- ========= 第二部分：热身题 ========= -->
+<div class="section" id="s2">
+<div class="section-title">
+<div class="section-num">2</div>
+<h2>热身激活：推论初步应用</h2>
+<span class="time">5 min</span>
 </div>
 
-class="card proof-card" onclick="toggleProof(this)">
-   213|<div class="proof-header">
-   214|<div>
-   215|<h3>推论① 平均速度公式</h3>
-   216|<div class="click-hint">点击展开证明 ↓</div>
-   217|</div>
-   218|<span class="badge">点击展开</span>
-   219|</div>
-   220|<div class="proof-body">
-   221|<p><strong>结论：</strong>匀变速直线运动中，某段时间内的平均速度等于该段时间中间时刻的瞬时速度。</p>
-   222|<p>$$\bar{v} = v_{t/2} = \frac{v_0 + v}{2}$$</p>
-   223|<div class="dianbo"><strong>证明：</strong></div>
-   224|<p>设物体做匀变速直线运动，初速度 $v_0$，末速度 $v$，加速度 $a$，运动时间 $t$。</p>
-   225|<p>由位移公式：$x = v_0 t + \frac{1}{2}at^2$</p>
-   226|<p>平均速度定义：$\bar{v} = \frac{x}{t} = v_0 + \frac{1}{2}at$</p>
-   227|<p>中间时刻 $t/2$ 的瞬时速度：$v_{t/2} = v_0 + a\cdot\frac{t}{2} = v_0 + \frac{1}{2}at$</p>
-   228|<p>因此 $\bar{v} = v_{t/2}$。</p>
-   229|<p>又由 $v = v_0 + at$ 得 $at = v - v_0$，代入：</p>
-   230|<p>$$\bar{v} = v_0 + \frac{v - v_0}{2} = \frac{v_0 + v}{2} \quad \blacksquare$$</p>
-   231|<div class="dianbo"><strong>点拨：</strong>平均速度只有在匀变速运动中才等于首末速度的算术平均值。这是推论，不是定义！</div>
-   232|</div>
-   233|</div>
-   234|
-   235|<div class="card proof-card" onclick="toggleProof(this)">
-   236|<div class="proof-header">
-   237|<div>
-   238|<h3>推论② 中点位置速度公式</h3>
-   239|<div class="click-hint">点击展开证明 ↓</div>
-   240|</div>
-   241|<span class="badge">点击展开</span>
-   242|</div>
-   243|<div class="proof-body">
-   244|<p><strong>结论：</strong>匀变速直线运动中，经过位移中点时的瞬时速度：</p>
-   245|<p>$$v_{s/2} = \sqrt{\frac{v_0^2 + v^2}{2}}$$</p>
-   246|<div class="dianbo"><strong>证明：</strong></div>
-   247|<p>对前半段位移，由 $v^2 - v_0^2 = 2as$：</p>
-   248|<p>$$v_{s/2}^2 - v_0^2 = 2a \cdot \frac{s}{2} \quad \cdots (1)$$</p>
-   249|<p>对后半段位移：</p>
-   250|<p>$$v^2 - v_{s/2}^2 = 2a \cdot \frac{s}{2} \quad \cdots (2)$$</p>
-   251|<p>由 $(1) = (2)$：$v_{s/2}^2 - v_0^2 = v^2 - v_{s/2}^2$</p>
-   252|<p>$$2v_{s/2}^2 = v_0^2 + v^2 \;\Rightarrow\; v_{s/2} = \sqrt{\frac{v_0^2 + v^2}{2}} \quad \blacksquare$$</p>
-   253|<div class="dianbo"><strong>点拨：</strong>证明的关键是"两段位移相等，加速度相同"→两段的 $v^2$ 增量相等。这个技巧叫<strong>位移对称法</strong>。</div>
-   254|</div>
-   255|</div>
-   256|
-   257|<div class="card proof-card" onclick="toggleProof(this)">
-   258|<div class="proof-header">
-   259|<div>
-   260|<h3>推论③ 逐差公式 $\Delta x = aT^2$</h3>
-   261|<div class="click-hint">点击展开证明 ↓</div>
-   262|</div>
-   263|<span class="badge">点击展开</span>
-   264|</div>
-   265|<div class="proof-body">
-   266|<p><strong>结论：</strong>匀变速运动中，连续相等时间 $T$ 内的位移之差为常量：</p>
-   267|<p>$$\Delta x = x_2 - x_1 = aT^2$$</p>
-   268|<div class="dianbo"><strong>证明：</strong></div>
-   269|<p>设第 1 个 $T$ 内初速度为 $v_0$，则：$x_1 = v_0 T + \frac{1}{2}aT^2$</p>
-   270|<p>第 1 个 $T$ 末速度 $v_1 = v_0 + aT$，第 2 个 $T$ 内：</p>
-   271|<p>$$x_2 = v_1 T + \frac{1}{2}aT^2 = v_0 T + \frac{3}{2}aT^2$$</p>
-   272|<p>因此：$x_2 - x_1 = aT^2$</p>
-   273|<p>同理 $x_3 - x_2 = aT^2$，逐差相等。$\blacksquare$</p>
-   274|<p style="margin-top:10px;"><strong>推广（逐差法求加速度）：</strong>若有连续 6 段位移 $x_1 \cdots x_6$：</p>
-   275|<p>$$a = \frac{(x_4 + x_5 + x_6) - (x_1 + x_2 + x_3)}{9T^2}$$</p>
-   276|<div class="dianbo"><strong>点拨：</strong>逐差法的精髓是<strong>充分利用所有数据</strong>，减小偶然误差。</div>
-   277|</div>
-   278|</div>
-   279|
-   280|<div class="card proof-card" onclick="toggleProof(this)">
-   281|<div class="proof-header">
-   282|<div>
-   283|<h3>推论④ 初速为零的比例关系</h3>
-   284|<div class="click-hint">点击展开证明 ↓</div>
-   285|</div>
-   286|<span class="badge">点击展开</span>
-   287|</div>
-   288|<div class="proof-body">
-   289|<p><strong>结论一（等时分割）：</strong>连续相等时间 $T$ 内的位移之比：</p>
-   290|<p>$$x_1 : x_2 : x_3 : \cdots : x_n = 1 : 3 : 5 : \cdots : (2n-1)$$</p>
-   291|<p><strong>结论二（等距分割）：</strong>通过连续相等位移所用时间之比：</p>
-   292|<p>$$t_1 : t_2 : t_3 : \cdots : t_n = 1 : (\sqrt{2}-1) : (\sqrt{3}-\sqrt{2}) : \cdots$$</p>
-   293|<div class="dianbo"><strong>证明结论一：</strong></div>
-   294|<p>$v_0 = 0$，第 $k$ 个 $T$ 内的位移：</p>
-   295|<p>$$x_k = \frac{1}{2}a(kT)^2 - \frac{1}{2}a((k-1)T)^2 = \frac{1}{2}aT^2(2k-1)$$</p>
-   296|<p>因此 $x_k \propto (2k-1)$，即 $x_1:x_2:x_3 = 1:3:5$。$\blacksquare$</p>
-   297|<div class="dianbo"><strong>证明结论二：</strong></div>
-   298|<p>通过前 $k$ 段位移的总时间 $T_k = \sqrt{\frac{2ks}{a}}$，第 $k$ 段所用时间：</p>
-   299|<p>$$t_k = T_k - T_{k-1} = \sqrt{\frac{2s}{a}}(\sqrt{k} - \sqrt{k-1})$$</p>
-   300|<p>因此 $t_k \propto (\sqrt{k} - \sqrt{k-1})$。$\blacksquare$</p>
-   301|<div class="dianbo"><strong>点拨：</strong>结论一是<strong>奇数比</strong>，结论二是<strong>相邻根号之差</strong>。记住推导过程比记住结论更重要！</div>
-   302|</div>
-   303|</div>
-   304|
-   305|<div class="card proof-card" onclick="toggleProof(this)">
-   306|<div class="proof-header">
-   307|<div>
-   308|<h3>推论⑤ 逆向思维（时间反演对称性）</h3>
-   309|<div class="click-hint">点击展开证明 ↓</div>
-   310|</div>
-   311|<span class="badge">点击展开</span>
-   312|</div>
-   313|<div class="proof-body">
-   314|<p><strong>结论：</strong>末速度为零的匀减速直线运动，可以<strong>逆向</strong>看作初速度为零的匀加速直线运动。</p>
-   315|<div class="dianbo"><strong>证明：</strong></div>
-   316|<p>物体以初速 $v_0$、加速度 $-a$ 做匀减速，经时间 $t$ 停下。</p>
-   317|<p>令 $\tau = \frac{v_0}{a} - t$（倒转时间轴），代入 $v(t) = v_0 - at$：</p>
-   318|<p>$$v(t) = a\tau$$</p>
-   319|<p>这正是初速为零、加速度为 $a$ 的匀加速运动！位移：</p>
-   320|<p>$$x(t) = v_0 t - \frac{1}{2}at^2 = x_{\text{总}} - \frac{1}{2}a\tau^2$$</p>
-   321|<p>即逆向看，从终点出发走过的距离 $= \frac{1}{2}a\tau^2$。$\blacksquare$</p>
-   322|<div class="dianbo"><strong>点拨：</strong>刹车问题、竖直上抛的下落段，都可以"倒着看"。这不仅是技巧，更是一种<strong>对称性思维</strong>。</div>
-   323|</div>
-   324|</div>
-   325|</div>
-   326|
-   327|<!-- ========= 第二部分：热身题 ========= -->
-   328|<div class="section" id="s2">
-   329|<div class="section-title">
-   330|<div class="section-num">2</div>
-   331|<h2>热身激活：推论初步应用</h2>
-   332|<span class="time">5 min</span>
-   333|</div>
-   334|
-   335|<div class="card problem-card">
-   336|<div class="prob-header">
-   337|<span class="prob-num">热身 1</span>
-   338|<div class="prob-text">
-   339|<p>一辆汽车以 20 m/s 行驶，刹车做匀减速运动，加速度大小为 5 m/s²。求刹车后 <strong>第 3 秒内</strong> 的位移。</p>
-   340|</div>
-   341|</div>
-   342|<div>
-   343|<button class="sol-btn" onclick="showSol(this,'sol-w1a')">解法A 基本公式</button>
-   344|<button class="sol-btn" onclick="showSol(this,'sol-w1b')">解法B 逆向思维</button>
-   345|<button class="sol-btn" onclick="showSol(this,'sol-w1c')">解法C 逐差公式</button>
-   346|</div>
-   347|<div id="sol-w1a" class="sol-content sol-a">
-   348|<span class="sol-tag">基本公式法</span>
-   349|<p>刹车总时间 $t_0 = \dfrac{v_0}{a} = \dfrac{20}{5} = 4$ s > 3 s，第 3 秒内存在。</p>
-   350|<p>前 3 秒位移：$x_3 = 20 \times 3 - \dfrac{1}{2} \times 5 \times 9 = 37.5$ m</p>
-   351|<p>前 2 秒位移：$x_2 = 20 \times 2 - \dfrac{1}{2} \times 5 \times 4 = 30$ m</p>
-   352|<p>第 3 秒内位移：$x_{III} = 37.5 - 30 = \mathbf{7.5}$ m</p>
-   353|</div>
-   354|<div id="sol-w1b" class="sol-content sol-b">
-   355|<span class="sol-tag">逆向思维 + 平均速度</span>
-   356|<p>逆向看作初速为 0 的匀加速。第 3 秒内（即逆向的第 2 秒内）：</p>
-   357|<p>逆向第 2 秒初速度 $v_1 = 5$ m/s，末速度 $v_2 = 10$ m/s</p>
-   358|<p>$$x_{III} = \bar{v} \times 1 = \frac{5 + 10}{2} \times 1 = \mathbf{7.5} \text{ m}$$</p>
-   359|</div>
-   360|<div id="sol-w1c" class="sol-content sol-c">
-   361|<span class="sol-tag">逐差公式</span>
-   362|<p>逆向看作匀加速，$\Delta x = aT^2$（$T = 1$ s）：</p>
-   363|<p>逆向第 1 秒位移 $x'_1 = \dfrac{1}{2} \times 5 \times 1 = 2.5$ m</p>
-   364|<p>逆向第 2 秒位移 $x'_2 = 2.5 + 5 = 7.5$ m（即正向第 3 秒内位移）</p>
-   365|<p>$$x_{III} = \mathbf{7.5} \text{ m}$$</p>
-   366|</div>
-   367|<div class="guiyi">
-   368|<div class="title">归一</div>
-   369|<p>三种方法最终都回到 $x = \bar{v} \cdot t$。公式是工具，<strong>选择取决于条件给了什么</strong>。</p>
-   370|</div>
-   371|</div>
-   372|
-   373|<div class="card problem-card">
-   374|<div class="prob-header">
-   375|<span class="prob-num">热身 2</span>
-   376|<div class="prob-text">
-   377|<p>一个做匀加速直线运动的物体，在连续两个 2 s 内的位移分别为 4 m 和 10 m，求加速度和初速度。</p>
-   378|</div>
-   379|</div>
-   380|<div>
-   381|<button class="sol-btn" onclick="showSol(this,'sol-w2a')">解法A 联立方程</button>
-   382|<button class="sol-btn" onclick="showSol(this,'sol-w2b')">解法B 逐差公式</button>
-   383|</div>
-   384|<div id="sol-w2a" class="sol-content sol-a">
-   385|<span class="sol-tag">联立方程法</span>
-   386|<p>设初速度 $v_0$，加速度 $a$：</p>
-   387|<p>$$x_1 = v_0 \cdot 2 + \frac{1}{2}a \cdot 4 = 4 \quad \cdots (1)$$</p>
-   388|<p>$$x_1 + x_2 = v_0 \cdot 4 + \frac{1}{2}a \cdot 16 = 14 \quad \cdots (2)$$</p>
-   389|<p>$(2) - 2 \times (1)$：$4a = 6$，$a = \mathbf{1.5}$ m/s²</p>
-   390|<p>代入 $(1)$：$2v_0 + 3 = 4$，$v_0 = \mathbf{0.5}$ m/s</p>
-   391|</div>
-   392|<div id="sol-w2b" class="sol-content sol-b">
-   393|<span class="sol-tag">逐差公式（推荐）</span>
-   394|<p>$$\Delta x = x_2 - x_1 = aT^2 \;\Rightarrow\; 10 - 4 = a \times 4 \;\Rightarrow\; a = \mathbf{1.5} \text{ m/s}^2$$</p>
-   395|<p>由 $x_1 = v_0 T + \frac{1}{2}aT^2$：$4 = 2v_0 + 3 \;\Rightarrow\; v_0 = \mathbf{0.5}$ m/s</p>
-   396|</div>
-   397|<div class="guiyi">
-   398|<div class="title">归一</div>
-   399|<p>逐差公式 $\Delta x = aT^2$ 是联立方程的"快捷方式"。<strong>看到"连续相等时间内的位移"，第一反应就该是逐差法。</strong></p>
-   400|</div>
-   401|</div>
-   402|</div>
-   403|
-   404|<!-- ========= 第三部分：核心例题 ========= -->
-   405|<div class="section" id="s3">
-   406|<div class="section-title">
-   407|<div class="section-num">3</div>
-   408|<h2>核心例题：一题多解 · 多解归一</h2>
-   409|<span class="time">15 min</span>
-   410|</div>
-   411|
-   412|<div class="card problem-card">
-   413|<div class="prob-header">
-   414|<span class="prob-num">例题 1</span>
-   415|<div class="prob-text">
-   416|<p>一物体做初速度为零的匀加速直线运动，通过连续三段<strong>相等位移</strong>所用时间之比 $t_1 : t_2 : t_3 = ?$</p>
-   417|</div>
-   418|</div>
-   419|<div>
-   420|<button class="sol-btn" onclick="showSol(this,'sol-e1a')">解法A 基本公式</button>
-   421|<button class="sol-btn" onclick="showSol(this,'sol-e1b')">解法B 比例法（推论④）</button>
-   422|<button class="sol-btn" onclick="showSol(this,'sol-e1c')">解法C v-t 图像</button>
-   423|</div>
-   424|<div id="sol-e1a" class="sol-content sol-a">
-   425|<span class="sol-tag">基本公式法</span>
-   426|<p>通过前 $k$ 段位移的总时间 $T_k = \sqrt{\dfrac{2ks}{a}}$</p>
-   427|<p>$$t_1 = \sqrt{\frac{2s}{a}},\; t_2 = \sqrt{\frac{4s}{a}} - \sqrt{\frac{2s}{a}},\; t_3 = \sqrt{\frac{6s}{a}} - \sqrt{\frac{4s}{a}}$$</p>
-   428|<p>$$t_1 : t_2 : t_3 = \sqrt{2} : (\sqrt{4}-\sqrt{2}) : (\sqrt{6}-\sqrt{4}) = \mathbf{1 : (\sqrt{2}-1) : (\sqrt{3}-\sqrt{2})}$$</p>
-   429|</div>
-   430|<div id="sol-e1b" class="sol-content sol-b">
-   431|<span class="sol-tag">比例法（直接用推论④）</span>
-   432|<p>初速为零匀加速，通过<strong>连续相等位移</strong>所用时间比：</p>
-   433|<p>$$t_1 : t_2 : t_3 = 1 : (\sqrt{2}-1) : (\sqrt{3}-\sqrt{2})$$</p>
-   434|<p style="color:#7ab878;font-weight:600;">直接得到结论，用时 10 秒。</p>
-   435|</div>
-   436|<div id="sol-e1c" class="sol-content sol-c">
-   437|<span class="sol-tag">v-t 图像法（最直观）</span>
-   438|<pre>v ↑
-   439|  |          /
-   440|  |        / |
-   441|  |      /   |   面积 = s（每段相等）
-   442|  |    /     |
-   443|  |  /       |
-   444|  |/_________|____→ t
-   445|  0   t₁  t₁+t₂  t₁+t₂+t₃</pre>
-   446|<p>$v = at$，面积 $= \frac{1}{2}at^2 = s$。三个等面积条带在三角形中。</p>
-   447|<p>由相似三角形：第 $k$ 条带对应的底边 $\propto \sqrt{k} - \sqrt{k-1}$。</p>
-   448|</div>
-   449|<div class="guiyi">
-   450|<div class="title">多解归一</div>
-   451|<p>三种方法的共同本质：$x = \frac{1}{2}at^2 \Rightarrow t \propto \sqrt{x}$。推论是公式的"预包装"，图像是公式的"翻译"。</p>
-   452|</div>
-   453|</div>
-   454|
-   455|<div class="card problem-card">
-   456|<div class="prob-header">
-   457|<span class="prob-num">例题 2</span>
-   458|<div class="prob-text">
-   459|<p>一物体从静止开始做匀加速直线运动，经时间 $T$ 后做匀减速运动，又经时间 $2T$ 停止。求：</p>
-   460|<p>（1）加速与减速阶段的<strong>加速度之比</strong></p>
-   461|<p>（2）加速与减速阶段的<strong>位移之比</strong></p>
-   462|<p>（3）<strong>全程平均速度</strong></p>
-   463|</div>
-   464|</div>
-   465|
-   466|<div style="margin-top:14px;padding:14px 18px;background:rgba(14,14,30,.4);border-radius:8px;">
-   467|<strong style="color:#e06050;">（1）加速度之比</strong>
-   468|<div>
-   469|<button class="sol-btn" onclick="showSol(this,'sol-e2a1')">公式法</button>
-   470|<button class="sol-btn" onclick="showSol(this,'sol-e2a2')">v-t 图像</button>
-   471|</div>
-   472|<div id="sol-e2a1" class="sol-content sol-a">
-   473|<span class="sol-tag">基本公式</span>
-   474|<p>加速末速度 $v = a_1 T$</p>
-   475|<p>减速：$0 = v - a_2 \cdot 2T \Rightarrow v = 2a_2 T$</p>
-   476|<p>$$\frac{a_1}{a_2} = \mathbf{2:1}$$</p>
-   477|</div>
-   478|<div id="sol-e2a2" class="sol-content sol-b">
-   479|<span class="sol-tag">v-t 图像</span>
-   480|<pre>v ↑
-   481|  |    /\
-   482|  |   /  \
-   483|  |  /    \
-   484|  | /      \
-   485|  |/________\____→ t
-   486|  0    T    3T</pre>
-   487|<p>斜率 = 加速度。左边斜率 : 右边斜率 $= \dfrac{v}{T} : \dfrac{v}{2T} = \mathbf{2:1}$</p>
-   488|</div>
-   489|</div>
-   490|
-   491|<div style="margin-top:12px;padding:14px 18px;background:rgba(14,14,30,.4);border-radius:8px;">
-   492|<strong style="color:#e06050;">（2）位移之比</strong>
-   493|<div>
-   494|<button class="sol-btn" onclick="showSol(this,'sol-e2b1')">平均速度法</button>
-   495|<button class="sol-btn" onclick="showSol(this,'sol-e2b2')">图像面积</button>
-   496|</div>
-   497|<div id="sol-e2b1" class="sol-content sol-a">
-   498|<span class="sol-tag">平均速度法</span>
-   499|<p>加速：$\bar{v}_1 = \dfrac{0+v}{2} = \dfrac{v}{2}$，$x_1 = \dfrac{v}{2} \cdot T$</p>
-   500|<p>减速：$\bar{v}_2 = \dfrac{v+0}{2} = \dfrac{v}{2}$，$x_2 = \dfrac{v}{2} \cdot 2T$</p>
-   501|
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">热身 1</span>
+<div class="prob-text">
+<p>一辆汽车以 20 m/s 行驶，刹车做匀减速运动，加速度大小为 5 m/s²。求刹车后 <strong>第 3 秒内</strong> 的位移。</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'w1a')">解法A 基本公式</button>
+<button class="sol-btn" onclick="shS(this,'w1b')">解法B 逆向思维</button>
+<button class="sol-btn" onclick="shS(this,'w1c')">解法C 逐差公式</button>
+</div>
+<div id="w1a" class="sol-content sol-a">
+<span class="sol-tag">基本公式法</span>
+<p>刹车总时间 $t_0 = \dfrac{v_0}{a} = \dfrac{20}{5} = 4$ s > 3 s，第 3 秒内存在。</p>
+<p>前 3 秒位移：$x_3 = 20 \times 3 - \dfrac{1}{2} \times 5 \times 9 = 37.5$ m</p>
+<p>前 2 秒位移：$x_2 = 20 \times 2 - \dfrac{1}{2} \times 5 \times 4 = 30$ m</p>
+<p>第 3 秒内位移：$x_{III} = 37.5 - 30 = \mathbf{7.5}$ m</p>
+</div>
+<div id="w1b" class="sol-content sol-b">
+<span class="sol-tag">逆向思维 + 平均速度</span>
+<p>逆向看作初速为 0 的匀加速。第 3 秒内（即逆向的第 2 秒内）：</p>
+<p>逆向第 2 秒初速度 $v_1 = 5$ m/s，末速度 $v_2 = 10$ m/s</p>
+<p>$$x_{III} = \bar{v} \times 1 = \frac{5 + 10}{2} \times 1 = \mathbf{7.5} \text{ m}$$</p>
+</div>
+<div id="w1c" class="sol-content sol-c">
+<span class="sol-tag">逐差公式</span>
+<p>逆向看作匀加速，$\Delta x = aT^2$（$T = 1$ s）：</p>
+<p>逆向第 1 秒位移 $x'_1 = \dfrac{1}{2} \times 5 \times 1 = 2.5$ m</p>
+<p>逆向第 2 秒位移 $x'_2 = 2.5 + 5 = 7.5$ m（即正向第 3 秒内位移）</p>
+</div>
+<div class="guiyi">
+<div class="title">归一</div>
+<p>三种方法最终都回到 $x = \bar{v} \cdot t$。公式是工具，<strong>选择取决于条件给了什么</strong>。</p>
+</div>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">热身 2</span>
+<div class="prob-text">
+<p>一个做匀加速直线运动的物体，在连续两个 2 s 内的位移分别为 4 m 和 10 m，求加速度和初速度。</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'w2a')">解法A 联立方程</button>
+<button class="sol-btn" onclick="shS(this,'w2b')">解法B 逐差公式</button>
+</div>
+<div id="w2a" class="sol-content sol-a">
+<span class="sol-tag">联立方程法</span>
+<p>设初速度 $v_0$，加速度 $a$：$x_1 = v_0 \cdot 2 + \frac{1}{2}a \cdot 4 = 4$</p>
+<p>$x_1 + x_2 = v_0 \cdot 4 + \frac{1}{2}a \cdot 16 = 14$</p>
+<p>$4a = 6$，$a = \mathbf{1.5}$ m/s²，$v_0 = \mathbf{0.5}$ m/s</p>
+</div>
+<div id="w2b" class="sol-content sol-b">
+<span class="sol-tag">逐差公式（推荐）</span>
+<p>$$\Delta x = x_2 - x_1 = aT^2 \;\Rightarrow\; 10 - 4 = a \times 4 \;\Rightarrow\; a = \mathbf{1.5} \text{ m/s}^2$$</p>
+<p>$4 = 2v_0 + 3 \;\Rightarrow\; v_0 = \mathbf{0.5}$ m/s</p>
+</div>
+<div class="guiyi">
+<div class="title">归一</div>
+<p>看到"连续相等时间内的位移"，第一反应就该是逐差法。</p>
+</div>
+</div>
+</div>
+
+<!-- ========= 第三部分：核心例题 ========= -->
+<div class="section" id="s3">
+<div class="section-title">
+<div class="section-num">3</div>
+<h2>核心例题：一题多解 · 多解归一</h2>
+<span class="time">15 min</span>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">例题 1</span>
+<div class="prob-text">
+<p>一物体做初速度为零的匀加速直线运动，通过连续三段<strong>相等位移</strong>所用时间之比 $t_1 : t_2 : t_3 = ?$</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'e1a')">解法A 基本公式</button>
+<button class="sol-btn" onclick="shS(this,'e1b')">解法B 比例法</button>
+<button class="sol-btn" onclick="shS(this,'e1c')">解法C v-t 图像</button>
+</div>
+<div id="e1a" class="sol-content sol-a">
+<span class="sol-tag">基本公式法</span>
+<p>$T_k = \sqrt{\dfrac{2ks}{a}}$</p>
+<p>$$t_1:t_2:t_3 = \sqrt{2}:(\sqrt{4}-\sqrt{2}):(\sqrt{6}-\sqrt{4}) = \mathbf{1:(\sqrt{2}-1):(\sqrt{3}-\sqrt{2})}$$</p>
+</div>
+<div id="e1b" class="sol-content sol-b">
+<span class="sol-tag">比例法（推论④）</span>
+<p>$$t_1 : t_2 : t_3 = 1 : (\sqrt{2}-1) : (\sqrt{3}-\sqrt{2})$$</p>
+</div>
+<div id="e1c" class="sol-content sol-c">
+<span class="sol-tag">v-t 图像法</span>
+<p>$v = at$，面积 $= \frac{1}{2}at^2 = s$。三个等面积条带，由相似三角形得 $t_k \propto \sqrt{k} - \sqrt{k-1}$。</p>
+</div>
+<div class="guiyi">
+<div class="title">多解归一</div>
+<p>三种方法的共同本质：$x = \frac{1}{2}at^2 \Rightarrow t \propto \sqrt{x}$。</p>
+</div>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">例题 2</span>
+<div class="prob-text">
+<p>一物体从静止开始做匀加速直线运动，经时间 $T$ 后做匀减速运动，又经时间 $2T$ 停止。求加速度之比、位移之比和全程平均速度。</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'e2a')">加速度比</button>
+<button class="sol-btn" onclick="shS(this,'e2b')">位移比</button>
+<button class="sol-btn" onclick="shS(this,'e2c')">平均速度</button>
+</div>
+<div id="e2a" class="sol-content sol-a">
+<span class="sol-tag">加速度之比</span>
+<p>$v = a_1 T$，$0 = v - a_2 \cdot 2T \Rightarrow a_1/a_2 = \mathbf{2:1}$</p>
+</div>
+<div id="e2b" class="sol-content sol-b">
+<span class="sol-tag">位移之比</span>
+<p>$x_1 = \frac{v}{2}T$，$x_2 = \frac{v}{2} \cdot 2T$，$x_1:x_2 = \mathbf{1:2}$</p>
+</div>
+<div id="e2c" class="sol-content sol-c">
+<span class="sol-tag">全程平均速度</span>
+<p>$$\bar{v} = \frac{x_1+x_2}{3T} = \mathbf{\frac{v}{2}}$$</p>
+</div>
+<div class="guiyi">
+<div class="title">多解归一</div>
+<p>加速度看斜率、位移看面积、平均速度用推论。图像是运动学的统一语言。</p>
+</div>
+</div>
+</div>
+
+<!-- ========= 第四部分：变式提升 ========= -->
+<div class="section" id="s4">
+<div class="section-title">
+<div class="section-num">4</div>
+<h2>变式提升：灵活选择方法</h2>
+<span class="time">12 min</span>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">变式 1</span>
+<div class="prob-text">
+<p>一列火车从静止出发做匀加速运动，测得第一节车厢通过站台上的人用时 4 s，求第 n 节车厢通过用时及第 8 节用时。</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'v1a')">公式推导</button>
+<button class="sol-btn" onclick="shS(this,'v1b')">比例法</button>
+<button class="sol-btn" onclick="shS(this,'v1c')">代入数值</button>
+</div>
+<div id="v1a" class="sol-content sol-a">
+<span class="sol-tag">公式推导</span>
+<p>$t_n = \sqrt{\dfrac{2L}{a}}(\sqrt{n} - \sqrt{n-1})$，$t_1 = 4$，故 $t_n = 4(\sqrt{n} - \sqrt{n-1})$ s</p>
+</div>
+<div id="v1b" class="sol-content sol-b">
+<span class="sol-tag">比例法</span>
+<p>$t_1 : t_2 : \cdots : t_n = 1 : (\sqrt{2}-1) : \cdots : (\sqrt{n}-\sqrt{n-1})$</p>
+<p>$t_n = 4(\sqrt{n} - \sqrt{n-1})$ s</p>
+</div>
+<div id="v1c" class="sol-content sol-c">
+<span class="sol-tag">代入数值</span>
+<p>$$t_8 = 4(\sqrt{8} - \sqrt{7}) = 4 \times 0.183 = \mathbf{0.73} \text{ s}$$</p>
+</div>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">变式 2</span>
+<div class="prob-text">
+<p>物体依次经过 A、B、C，AB = BC = s，v_A、v_C已知，求 v_B。</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'v2a')">公式法</button>
+<button class="sol-btn" onclick="shS(this,'v2b')">中点速度公式</button>
+</div>
+<div id="v2a" class="sol-content sol-a">
+<span class="sol-tag">公式法</span>
+<p>$v_B^2 - v_A^2 = 2as$，$v_C^2 - v_B^2 = 2as$</p>
+<p>$$v_B = \sqrt{\frac{v_A^2 + v_C^2}{2}}$$</p>
+</div>
+<div id="v2b" class="sol-content sol-b">
+<span class="sol-tag">中点速度公式（推论②）</span>
+<p>$$v_B = v_{s/2} = \sqrt{\frac{v_A^2 + v_C^2}{2}}$$</p>
+</div>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">变式 3</span>
+<div class="prob-text">
+<p>匀减速运动经 6 s 停下，求最后 2 s、中间 2 s、最前 2 s 的位移之比。</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'v3a')">逆向思维</button>
+<button class="sol-btn" onclick="shS(this,'v3b')">直接计算</button>
+</div>
+<div id="v3a" class="sol-content sol-a">
+<span class="sol-tag">逆向思维（推荐）</span>
+<p>逆向看作初速为 0 的匀加速。最后:中间:最前 $= 4:12:20 = \mathbf{1:3:5}$</p>
+</div>
+<div id="v3b" class="sol-content sol-b">
+<span class="sol-tag">直接计算</span>
+<p>$$x_{\text{后}}:x_{\text{中}}:x_{\text{前}} = \mathbf{1:3:5}$$</p>
+</div>
+</div>
+</div>
+
+<!-- ========= 第五部分：综合挑战 ========= -->
+<div class="section" id="s5">
+<div class="section-title">
+<div class="section-num">5</div>
+<h2>综合挑战：多推论联合应用</h2>
+<span class="time">8 min</span>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">挑战 1</span>
+<div class="prob-text">
+<p>车从A到B匀加速，B到C匀速，C到D匀减速至停止。AB=BC=CD，三段时间相等。求三段加速度大小之比。</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'c1')">分析</button>
+</div>
+<div id="c1" class="sol-content sol-a">
+<span class="sol-tag">分析</span>
+<p>"三段位移相等且三段时间相等"在速度连续条件下<strong>自相矛盾</strong>。按对称性，加速与减速对称。</p>
+<p>$$\frac{a_1}{a_3} = \mathbf{1:1}$$</p>
+<div class="dianbo"><strong>点拨：</strong>这道题的价值在于发现矛盾。能指出条件的内在冲突，比算出答案更重要。</div>
+</div>
+</div>
+
+<div class="card problem-card">
+<div class="prob-header">
+<span class="prob-num">挑战 2</span>
+<div class="prob-text">
+<p>每隔0.1s释放一小球做匀加速。拍照时各球间距：5cm, 7cm, 9cm, 11cm。求加速度、球3速度、球3上方还有几个球？</p>
+</div>
+</div>
+<div>
+<button class="sol-btn" onclick="shS(this,'c2a')">（1）加速度</button>
+<button class="sol-btn" onclick="shS(this,'c2b')">（2）球3速度</button>
+<button class="sol-btn" onclick="shS(this,'c2c')">（3）上方球数</button>
+</div>
+<div id="c2a" class="sol-content sol-a">
+<span class="sol-tag">逐差法求加速度</span>
+<p>$\Delta x = 2$ cm，$a = \dfrac{0.02}{0.01} = \mathbf{2} \text{ m/s}^2$</p>
+</div>
+<div id="c2b" class="sol-content sol-b">
+<span class="sol-tag">平均速度推论</span>
+<p>$v_3 = \dfrac{x_2+x_3}{2T} = \dfrac{16}{0.2} = \mathbf{0.8} \text{ m/s}$</p>
+</div>
+<div id="c2c" class="sol-content sol-c">
+<span class="sol-tag">分析球数</span>
+<p>$t = v_3/a = 0.4$ s，每0.1s一个，球3上方还有 <strong>3 个球</strong>。</p>
+</div>
+</div>
+</div>
+
+<!-- ========= 第六部分：课堂总结 ========= -->
+<div class="section" id="s6">
+<div class="section-title">
+<div class="section-num">6</div>
+<h2>课堂总结：方法选择策略</h2>
+<span class="time">5 min</span>
+</div>
+
+<div class="card">
+<h3 style="margin-bottom:14px;color:#e8c49a;font-size:.95em;">方法选择速查表</h3>
+<table>
+<tr><th>题目特征</th><th>首选方法</th><th>依据</th></tr>
+<tr><td>连续等时间位移</td><td>逐差法 $\Delta x = aT^2$</td><td>推论③</td></tr>
+<tr><td>等距分割（时间比）</td><td>$t \propto \sqrt{n}-\sqrt{n-1}$</td><td>推论④</td></tr>
+<tr><td>等时分割（位移比）</td><td>$x \propto 2n-1$</td><td>推论④</td></tr>
+<tr><td>位移中点速度</td><td>$v_{s/2} = \sqrt{(v_0^2+v^2)/2}$</td><td>推论②</td></tr>
+<tr><td>刹车 / 末速为零</td><td>逆向思维</td><td>推论⑤</td></tr>
+<tr><td>已知 $v_0, v, t$</td><td>平均速度 $\bar{v} = (v_0+v)/2$</td><td>推论①</td></tr>
+<tr><td>无从下手</td><td>v-t 图像</td><td>全部推论</td></tr>
+</table>
+
+<div class="quote">
+<p>"公式不是用来背的，是用来<strong>组合</strong>的。<br>你组合出多少种路径，就有多少种理解。<br>多解归一的'一'，才是真正的物理直觉。"</p>
+</div>
+
+<div class="summary-box">
+<div style="background:rgba(212,163,115,.06);" class="stat"><div class="num" style="color:#d4a373;">5</div><div class="desc">大推论</div></div>
+<div style="background:rgba(122,184,120,.06);" class="stat"><div class="num" style="color:#7ab878;">7</div><div class="desc">道题目</div></div>
+<div style="background:rgba(239,108,0,.06);" class="stat"><div class="num" style="color:#ef6c00;">18+</div><div class="desc">种解法</div></div>
+<div style="background:rgba(106,27,154,.06);" class="stat"><div class="num" style="color:#7b1fa2;">1</div><div class="desc">个核心思想</div></div>
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="footer">运动学推论：一题多解 · 多解归一 — 高三一轮复习</div>
+
+<script>
+function togP(c){c.classList.toggle('open');
+  var b=c.querySelector('.badge');b.textContent=c.classList.contains('open')?'收起':'展开';}
+function shS(b,i){
+  var c=b.closest('.problem-card')||b.closest('.card');
+  if(b.classList.contains('active')){b.classList.remove('active');
+    document.getElementById(i).classList.remove('show');return;}
+  var g=b.parentElement;
+  g.querySelectorAll('.sol-btn').forEach(function(x){x.classList.remove('active');});
+  var n=g.nextElementSibling;
+  while(n&&n.classList.contains('sol-content')){n.classList.remove('show');n=n.nextElementSibling;}
+  b.classList.add('active');document.getElementById(i).classList.add('show');
+}
+function exP(e){
+  document.querySelectorAll('.proof-card').forEach(function(c){
+    if(e)c.classList.add('open');else c.classList.remove('open');
+    c.querySelector('.badge').textContent=e?'收起':'展开';
+  });
+}
+window.addEventListener('scroll',function(){
+  var s=document.querySelectorAll('.section'),l=document.querySelectorAll('.nav a'),p=window.scrollY+80;
+  s.forEach(function(x,i){if(x.offsetTop<=p&&x.offsetTop+x.offsetHeight>p){l.forEach(function(y){y.classList.remove('active');});if(l[i])l[i].classList.add('active');}});
+});
+document.querySelectorAll('.nav a').forEach(function(a){
+  a.addEventListener('click',function(e){e.preventDefault();
+    var t=document.querySelector(this.getAttribute('href'));
+    if(t)window.scrollTo({top:t.offsetTop-50,behavior:'smooth'});});
+});
+</script>
+</body>
+</html>
