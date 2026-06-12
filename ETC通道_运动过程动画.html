@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ETC通道·运动过程动画</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+  background:#0b0b14;color:#d4d4dc;min-height:100vh;
+  background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%);
+  font-size:16px;line-height:1.7
+}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.72em;padding:16px 24px 0;transition:.2s}
+.back:hover{color:#d4a373;gap:10px}
+.container{max-width:960px;margin:0 auto;padding:12px 16px 40px}
+.title{text-align:center;padding:18px 0 10px}
+.title h1{font-size:1.3em;color:#e8d5b0;font-weight:600;letter-spacing:1px}
+.title .sub{font-size:.72em;color:#5c5c72;margin-top:4px}
+
+.problem{
+  background:#0e0e1e;border:1px solid #18182a;border-radius:10px;padding:14px 18px;margin:12px 0;font-size:.82em;color:#b0b0b8;line-height:1.75
+}
+.problem strong{color:#e8c49a}
+.problem .hl{color:#f4a261}
+.problem .tag{display:inline-block;background:rgba(212,163,115,.1);color:#d4a373;font-size:.72em;padding:1px 8px;border-radius:4px;margin:0 4px}
+
+#canvas-wrap{background:#0e0e1e;border:1px solid #18182a;border-radius:10px;padding:8px;margin:10px 0}
+canvas{display:block;margin:0 auto;border-radius:6px}
+
+.ctrls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 12px;justify-content:center}
+.ctrls button{
+  background:transparent;border:1px solid #2a2a48;color:#b0b0b8;
+  padding:6px 18px;border-radius:6px;font-size:.78em;cursor:pointer;transition:.2s;font-weight:600
+}
+.ctrls button:hover{border-color:#d4a373;color:#d4a373}
+.ctrls button.on{background:#d4a373;color:#0b0b14;border-color:#d4a373}
+.ctrls .label{font-size:.7em;color:#5c5c72}
+.ctrls .val{color:#f4a261;font-weight:600;font-size:.82em}
+
+.phase-bar{display:flex;height:24px;border-radius:6px;overflow:hidden;margin:8px 0;font-size:.6em;font-weight:600;text-align:center;line-height:24px}
+.phase-bar .d{background:#e06050;color:#fff;transition:.4s}
+.phase-bar .c{background:#f4a261;color:#0b0b14;transition:.4s}
+.phase-bar .a{background:#7ab878;color:#0b0b14;transition:.4s}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+.card{
+  background:#0e0e1e;border:1px solid #18182a;border-radius:8px;padding:10px 14px
+}
+.card .l{font-size:.62em;color:#5c5c72;letter-spacing:.5px}
+.card .v{font-size:1.05em;color:#e8c49a;font-weight:600;margin-top:2px}
+.card .v .u{font-size:.55em;color:#707088;font-weight:400;margin-left:3px}
+.card .g{color:#7ab878}
+.card .o{color:#f4a261}
+
+.form-box{
+  background:rgba(212,163,115,.04);border:1px solid rgba(212,163,115,.12);
+  border-radius:8px;padding:12px 16px;margin:8px 0;font-size:.78em
+}
+.form-box .t{color:#d4a373;font-weight:600;margin-bottom:6px}
+.form-box .r{color:#b0b0b8;margin:3px 0;padding-left:6px}
+.form-box .r .n{color:#f4a261;font-weight:600}
+.form-box .r .a{color:#e8c49a;font-weight:600}
+
+.info{
+  background:rgba(122,184,120,.04);border:1px solid rgba(122,184,120,.12);
+  border-radius:8px;padding:10px 14px;margin:8px 0;font-size:.75em;color:#a0c0a0;line-height:1.6
+}
+.info .l{color:#7ab878;font-weight:600}
+
+.note{font-size:.7em;color:#5c5c72;text-align:center;margin:18px 0 6px;letter-spacing:1px}
+</style>
+</head>
+<body>
+
+<a class="back" href="jiaoxue.html">← 返回教学资源</a>
+<div class="container">
+
+<div class="title">
+<h1>🚗 ETC通道 · 运动过程模拟</h1>
+<div class="sub">第11题 · 匀变速直线运动综合 · 交互式动画</div>
+</div>
+
+<div class="problem">
+<strong>📝 原题（14分）</strong>　<span class="tag">经典模型</span><br>
+汽车以 <span class="hl">v₀ = 30 m/s</span> 匀速行驶，过ETC通道时，在收费站中心线前 <span class="hl">d = 10 m</span> 处匀减速至 <span class="hl">v₁ = 4 m/s</span>，匀速通过中心线后匀加速至v₀正常行驶。加速度大小均为 <span class="hl">a = 1 m/s²</span>。<br>
+<strong>(1)</strong> 求从开始减速到恢复正常行驶的位移大小。<br>
+<strong>(2)</strong> 若以 <span class="hl">v₂ = 10 m/s</span> 匀速通过匀速行驶区间，求比提速前节省的时间。
+</div>
+
+<div class="ctrls">
+<button id="playBtn" onclick="togPlay()">▶ 播放</button>
+<button id="rstBtn" onclick="rst()">⟲ 重置</button>
+<span class="label">匀速速度：</span>
+<button class="on" id="spd1" onclick="setV(1)">v=4m/s</button>
+<button id="spd2" onclick="setV(2)">v=10m/s</button>
+</div>
+
+<div id="canvas-wrap"><div id="p5cvs"></div></div>
+
+<div class="phase-bar" id="phBar">
+<div class="d" id="phD" style="width:0%">减速</div>
+<div class="c" id="phC" style="width:0%">匀速</div>
+<div class="a" id="phA" style="width:0%">加速</div>
+</div>
+
+<div class="grid2">
+<div class="card">
+<div class="l">当前速度</div>
+<div class="v" id="dSpd">30.0 <span class="u">m/s</span></div>
+</div>
+<div class="card">
+<div class="l">行驶位移</div>
+<div class="v" id="dDist">0 <span class="u">m</span></div>
+</div>
+<div class="card">
+<div class="l">当前阶段</div>
+<div class="v" id="dPh" style="color:#7ab878">等待开始</div>
+</div>
+<div class="card">
+<div class="l">已用时间</div>
+<div class="v" id="dTim">0.0 <span class="u">s</span></div>
+</div>
+</div>
+
+<div class="grid2">
+<div class="card">
+<div class="l">总位移</div>
+<div class="v" id="totD">—</div>
+</div>
+<div class="card">
+<div class="l">总时间</div>
+<div class="v" id="totT">—</div>
+</div>
+<div class="card">
+<div class="l">与v₁=4方案对比</div>
+<div class="v" id="savLbl" style="color:#5c5c72;font-size:.8em">切换v=10查看</div>
+</div>
+<div class="card">
+<div class="l">节省时间</div>
+<div class="v" id="savVal" style="color:#7ab878">—</div>
+</div>
+</div>
+
+<div class="form-box" id="calcBox">
+<div class="t">📐 详细计算</div>
+<div id="calcHtml"></div>
+</div>
+
+<div class="info">
+<div class="l">💡 操作提示</div>
+点击"播放"观看运动全过程，或切换匀速通过速度对比两种方案。动画中的车辆位置按实际比例缩放。
+</div>
+
+<div class="note">—— 优桥物理 · 启明教学资源 ——</div>
+</div>
+
+<script>
+const V0=30, A=1, D=10;
+let vPass=4, playing=false, done=false;
+let simT=0;
+let td, tc, ta, sd, sc, sa, totDist, totTime;
+let plan1=null, plan2=null;
+
+function calc(v){
+  td=(V0-v)/A; sd=(V0+v)/2*td;
+  sc=D; tc=D/v;
+  ta=td; sa=sd;
+  totDist=sd+sc+sa; totTime=td+tc+ta;
+}
+function state(t){
+  if(t<0) return {p:'wait',v:V0,x:0,ph:'等待开始'};
+  if(t<td){let v=V0-A*t; return {p:'d',v,x:V0*t-0.5*A*t*t,ph:'匀减速'};}
+  if(t<td+tc){let dt=t-td; return {p:'c',v:vPass,x:sd+vPass*dt,ph:'匀速通过'};}
+  if(t<totTime){let dt=t-td-tc,v=vPass+A*dt; return {p:'a',v,x:sd+sc+vPass*dt+0.5*A*dt*dt,ph:'匀加速'};}
+  return {p:'e',v:V0,x:totDist,ph:'恢复正常行驶 ✓'};
+}
+
+// p5
+new p5(function(p){
+  let carScreenX=-200;
+
+  p.setup=function(){
+    let c=p.createCanvas(880,260);c.parent('p5cvs');
+    calc(vPass);
+  };
+
+  p.draw=function(){
+    p.background(11,11,20);
+    let ry=185;
+
+    // road
+    p.fill(30,30,42);p.noStroke();p.rect(0,ry-10,p.width,50);
+    p.stroke(60,60,80);p.strokeWeight(2);
+    for(let i=-40;i<p.width+40;i+=30)
+      p.line(i+((p.millis()/100*state(simT).v*0.3)%30),ry+7,i+15+((p.millis()/100*state(simT).v*0.3)%30),ry+7);
+    p.stroke(80,80,100);p.strokeWeight(2);
+    p.line(0,ry-10,p.width,ry-10);p.line(0,ry+25,p.width,ry+25);
+
+    // ETC
+    let gx=p.width/2;
+    p.fill(30,30,50);p.stroke(60,60,90);p.strokeWeight(1.5);
+    p.rect(gx-18,ry-75,36,65,4);
+    p.fill(212,163,115);p.noStroke();p.textSize(9);p.textAlign(p.CENTER);
+    p.text('ETC',gx,ry-55);p.textSize(7);p.fill(140,140,170);p.text('电子收费',gx,ry-42);
+    p.fill(40,40,60);p.rect(gx-2,ry-10,4,10);
+    p.stroke(255,200,50,60);p.strokeWeight(1);p.strokeDasharray([5,5]);
+    p.line(gx,ry+25,gx,ry+50);
+    p.fill(255,200,50,80);p.noStroke();p.textSize(8);p.text('中心线',gx,ry+45);
+
+    // d=10m mark
+    let mx=gx-40;
+    p.stroke(244,162,97,60);p.strokeWeight(1);p.strokeDasharray([3,3]);
+    p.line(mx,ry+25,mx,ry+45);
+    p.fill(244,162,97,80);p.noStroke();p.textSize(7);p.text('d=10m',mx,ry+40);
+
+    p.fill(70,70,90);p.textSize(7);
+    p.text('← 减速区',gx-95,ry-14);p.text('加速区 →',gx+50,ry-14);
+    p.fill(244,162,97,100);p.text('≡匀速区≡',gx-10,ry-14);
+
+    // car
+    if(playing&&!done){
+      simT+=p.deltaTime/1000*30;
+      if(simT>=totTime){simT=totTime;done=true;playing=false;
+        document.getElementById('playBtn').textContent='⟳ 重播';}
+    }
+    let st=state(simT), cx, cy=ry-10;
+    let startX=gx-220, endX=gx+220, sc=(endX-startX)/totDist;
+    cx=startX+st.x*sc;
+
+    p.push();p.translate(cx,cy);
+    p.fill(0,0,0,40);p.noStroke();p.ellipse(0,14,44,8);
+    p.fill(200,180,160);p.stroke(160,140,120);p.strokeWeight(1.2);p.rect(-20,-10,40,16,3);
+    p.fill(180,160,140);p.rect(-12,-16,24,8,3);
+    p.fill(100,160,200,150);p.noStroke();p.rect(-8,-14,8,5,1);p.rect(2,-14,6,5,1);
+    p.fill(30,30,30);p.noStroke();p.ellipse(-12,6,8,8);p.ellipse(12,6,8,8);
+    p.fill(244,162,97);p.textSize(10);p.textAlign(p.CENTER);p.text(Math.round(st.v)+' m/s',0,-22);
+    p.pop();
+
+    // HUD
+    p.fill(140,140,170);p.textSize(11);p.textAlign(p.LEFT);
+    let pc;switch(st.p){case'd':pc=p.color(224,96,80);break;case'c':pc=p.color(244,162,97);break;case'a':case'e':pc=p.color(122,184,120);break;default:pc=p.color(100,100,140);}
+    p.fill(pc);p.noStroke();p.circle(6,18,8);
+    p.fill(140,140,170);p.text(st.ph,14,24);
+    p.text('t='+simT.toFixed(1)+'s',170,24);
+    p.text('x='+st.x.toFixed(0)+'m',300,24);
+
+    // speedometer
+    let sx=p.width-55,sy=32;
+    p.fill(20,20,35);p.stroke(60,60,80);p.strokeWeight(1.5);p.circle(sx,sy,50);
+    p.noStroke();p.fill(244,162,97);p.textSize(13);p.textAlign(p.CENTER);p.text(Math.round(st.v),sx,sy+5);
+    p.fill(100,100,130);p.textSize(7);p.text('m/s',sx,sy+16);
+    let aa=p.map(st.v,0,V0,-p.PI*0.8,p.PI*0.8);
+    p.noFill();p.stroke(244,162,97,80);p.strokeWeight(2);p.arc(sx,sy,38,38,-p.PI*0.8,-p.PI*0.8+aa);
+
+    // update HTML
+    document.getElementById('dSpd').innerHTML=st.v.toFixed(1)+' <span class="u">m/s</span>';
+    document.getElementById('dDist').innerHTML=st.x.toFixed(0)+' <span class="u">m</span>';
+    document.getElementById('dTim').innerHTML=simT.toFixed(1)+' <span class="u">s</span>';
+    document.getElementById('dPh').textContent=st.ph;
+
+    let dw=td/totTime*100,cw=tc/totTime*100,aw=ta/totTime*100;
+    document.getElementById('phD').style.width=dw+'%';document.getElementById('phD').textContent='减速 '+td.toFixed(0)+'s';
+    document.getElementById('phC').style.width=cw+'%';document.getElementById('phC').textContent='匀速 '+tc.toFixed(1)+'s';
+    document.getElementById('phA').style.width=aw+'%';document.getElementById('phA').textContent='加速 '+ta.toFixed(0)+'s';
+
+    document.getElementById('totD').innerHTML=totDist.toFixed(0)+' <span class="u">m</span>';
+    document.getElementById('totT').innerHTML=totTime.toFixed(1)+' <span class="u">s</span>';
+  };
+});
+
+function togPlay(){
+  if(done){rst();return;}
+  playing=!playing;
+  document.getElementById('playBtn').textContent=playing?'⏸ 暂停':'▶ 播放';
+}
+function rst(){
+  playing=false;done=false;simT=0;
+  document.getElementById('playBtn').textContent='▶ 播放';
+}
+function setV(n){
+  vPass=n===1?4:10;calc(vPass);
+  document.getElementById('spd1').className=vPass===4?'on':'';
+  document.getElementById('spd2').className=vPass===10?'on':'';
+  // calc both plans
+  calc(4);plan1={td,sd,tc,sc,ta,sa,totDist,totTime};
+  calc(10);plan2={td,sd,tc,sc,ta,sa,totDist,totTime};
+  calc(vPass);rst();updCalc();
+  if(vPass===10&&plan1){
+    let sv=plan1.totTime-plan2.totTime;
+    document.getElementById('savLbl').textContent='比v=4方案';
+    document.getElementById('savVal').innerHTML=sv.toFixed(1)+' <span class="u">s</span>';
+    document.getElementById('savVal').style.color='#7ab878';
+  }else{
+    document.getElementById('savLbl').textContent='切换v=10查看';
+    document.getElementById('savVal').innerHTML='—';
+  }
+}
+function updCalc(){
+  let p=vPass===4?plan1:plan2;
+  let h='<div class="r"><span class="n">减速段：</span>t₁='+td.toFixed(0)+'s &nbsp; s₁='+sd.toFixed(0)+'m</div>';
+  h+='<div class="r"><span class="n">匀速段：</span>s₂='+D+'m &nbsp; t₂='+tc.toFixed(1)+'s</div>';
+  h+='<div class="r"><span class="n">加速段：</span>t₃=t₁='+ta.toFixed(0)+'s &nbsp; s₃=s₁='+sa.toFixed(0)+'m</div>';
+  h+='<div class="r" style="color:#d4a373;font-weight:600;margin-top:4px">总位移 s='+sd.toFixed(0)+'+'+D+'+'+sa.toFixed(0)+' = <span class="a">'+totDist.toFixed(0)+'m</span></div>';
+  h+='<div class="r" style="color:#d4a373;font-weight:600">总时间 t='+td.toFixed(0)+'+'+tc.toFixed(1)+'+'+ta.toFixed(0)+' = <span class="a">'+totTime.toFixed(1)+'s</span></div>';
+  if(plan1&&plan2){
+    let sv=plan1.totTime-plan2.totTime;
+    h+='<div class="r" style="color:#7ab878;font-weight:600;margin-top:4px">⏱ 提速后节省时间：Δt = '+plan1.totTime.toFixed(1)+'−'+plan2.totTime.toFixed(1)+' = <span class="a">'+sv.toFixed(1)+'s</span></div>';
+  }
+  document.getElementById('calcHtml').innerHTML=h;
+}
+// init
+calc(4);plan1={td,sd,tc,sc,ta,sa,totDist,totTime};
+calc(10);plan2={td,sd,tc,sc,ta,sa,totDist,totTime};
+calc(4);updCalc();
+</script>
+
+</body>
+</html>
