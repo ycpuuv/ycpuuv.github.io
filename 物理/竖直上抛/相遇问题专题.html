@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>竖直上抛 · 相遇问题专题 | 高考一轮复习</title>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+    <style>
+        :root {
+            --blue: #1565c0;
+            --blue-light: #e3f2fd;
+            --blue-bg: #bbdefb;
+            --red: #c62828;
+            --red-light: #ffebee;
+            --green: #2e7d32;
+            --green-light: #e8f5e9;
+            --orange: #e65100;
+            --orange-light: #fff3e0;
+            --purple: #6a1b9a;
+            --purple-light: #f3e5f5;
+            --bg: #f5f5f5;
+            --card: #fff;
+            --text: #212121;
+            --text2: #616161;
+            --border: #e0e0e0;
+            --radius: 10px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, "Noto Sans SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.85;
+            font-size: 17px;
+        }
+
+        /* 顶部 */
+        .header {
+            background: linear-gradient(135deg, #1565c0 0%, #42a5f5 100%);
+            color: #fff;
+            padding: 36px 20px 28px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2em; font-weight: 800; letter-spacing: 2px; }
+        .header .sub { font-size: 1em; opacity: .88; margin-top: 6px; }
+        .header .bar {
+            margin-top: 14px;
+            display: flex; justify-content: center; gap: 28px;
+            font-size: .92em; opacity: .82;
+        }
+
+        .wrap { max-width: 880px; margin: 0 auto; padding: 24px 18px 50px; }
+
+        /* 通用卡片 */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 1px 4px rgba(0,0,0,.1);
+            margin: 18px 0;
+            overflow: hidden;
+        }
+
+        /* 方法大节标题 */
+        .sec-h {
+            font-size: 1.45em; font-weight: 700;
+            color: var(--blue);
+            margin: 36px 0 16px;
+            padding-bottom: 8px;
+            border-bottom: 3px solid var(--blue);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .sec-h .num {
+            background: var(--blue); color: #fff;
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .7em; font-weight: 700; flex-shrink: 0;
+        }
+
+        /* 方法卡片 */
+        .method-card {
+            border-left: 4px solid var(--blue);
+            padding: 20px 24px;
+            margin: 14px 0;
+            background: var(--blue-light);
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+        .method-card.red { border-color: var(--red); background: var(--red-light); }
+        .method-card.green { border-color: var(--green); background: var(--green-light); }
+        .method-card.purple { border-color: var(--purple); background: var(--purple-light); }
+        .method-card h3 {
+            font-size: 1.1em; margin-bottom: 8px;
+        }
+        .method-card h3.blue { color: var(--blue); }
+        .method-card h3.red { color: var(--red); }
+        .method-card h3.green { color: var(--green); }
+        .method-card h3.purple { color: var(--purple); }
+
+        /* 公式框 */
+        .fbox {
+            background: #fffde7;
+            border: 1px solid #ffe082;
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin: 12px 0;
+            text-align: center;
+            font-size: 1.02em;
+        }
+
+        /* 题目 */
+        .prob-head {
+            padding: 14px 20px;
+            display: flex; align-items: center; gap: 10px;
+            background: #fafafa;
+            border-bottom: 1px solid var(--border);
+        }
+        .prob-num {
+            background: var(--blue); color: #fff;
+            width: 34px; height: 34px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: .92em; flex-shrink: 0;
+        }
+        .prob-num.hard { background: var(--red); }
+        .prob-num.mid { background: #f9a825; }
+        .tag {
+            font-size: .78em; padding: 1px 10px; border-radius: 10px; font-weight: 500;
+        }
+        .tag-b { background: #e3f2fd; color: #1565c0; }
+        .tag-y { background: #fff8e1; color: #e65100; }
+        .tag-r { background: #ffebee; color: #c62828; }
+
+        .prob-body { padding: 18px 20px; }
+        .prob-body p { margin: 6px 0; }
+
+        /* 多解标签 */
+        .sol-tabs {
+            display: flex; gap: 0; margin: 0 20px;
+            border-bottom: 2px solid var(--border);
+        }
+        .sol-tab {
+            padding: 8px 18px;
+            font-size: .92em; font-weight: 600;
+            cursor: pointer;
+            border: none; background: none;
+            color: var(--text2);
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all .2s;
+        }
+        .sol-tab:hover { color: var(--blue); }
+        .sol-tab.active {
+            color: var(--blue);
+            border-bottom-color: var(--blue);
+            background: var(--blue-light);
+        }
+
+        /* 答案按钮 */
+        .sol-btn {
+            display: block;
+            width: calc(100% - 40px);
+            margin: 0 20px 16px;
+            padding: 11px;
+            background: var(--blue-light);
+            color: var(--blue);
+            border: 2px dashed var(--blue);
+            border-radius: 8px;
+            font-size: .97em; font-weight: 600;
+            cursor: pointer;
+            transition: all .25s;
+            text-align: center;
+        }
+        .sol-btn:hover { background: var(--blue); color: #fff; border-style: solid; }
+        .sol-btn.open { background: var(--green-light); color: var(--green); border-color: var(--green); border-style: solid; }
+
+        /* 解答区 */
+        .sol {
+            max-height: 0; overflow: hidden;
+            transition: max-height .5s ease;
+            background: var(--green-light);
+            border-top: 1px solid #c8e6c9;
+        }
+        .sol.show { max-height: 5000px; padding: 18px 20px; }
+        .sol h4 { color: var(--green); margin-bottom: 8px; font-size: 1em; }
+        .sol .step {
+            margin: 8px 0; padding: 10px 14px;
+            background: #fff; border-radius: 8px;
+            border-left: 3px solid #66bb6a;
+        }
+        .sol .ans {
+            background: #fff9c4; padding: 10px 16px;
+            border-radius: 8px; margin: 8px 0;
+            font-weight: 600; border: 1px solid #ffe082;
+        }
+        .sol .note {
+            color: var(--text2); font-size: .93em;
+            margin-top: 6px; font-style: italic;
+        }
+
+        /* 多解面板 */
+        .sol-panel { display: none; }
+        .sol-panel.active { display: block; }
+
+        /* 提示 */
+        .tip {
+            padding: 14px 18px; margin: 12px 0;
+            border-radius: 0 8px 8px 0;
+            font-size: .95em;
+        }
+        .tip.warn { background: #fff3e0; border-left: 4px solid #ff9800; }
+        .tip.warn strong { color: #e65100; }
+        .tip.key { background: #e8f5e9; border-left: 4px solid #4caf50; }
+        .tip.key strong { color: #2e7d32; }
+        .tip.imp { background: #e3f2fd; border-left: 4px solid #1976d2; }
+        .tip.imp strong { color: #1565c0; }
+
+        /* 对比框 */
+        .vs-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        .vs-box > div {
+            background: #fff;
+            border-radius: 8px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+        }
+        .vs-box .label {
+            font-size: .82em; font-weight: 700;
+            color: #fff; background: var(--blue);
+            display: inline-block; padding: 1px 10px;
+            border-radius: 4px; margin-bottom: 6px;
+        }
+        .vs-box .label.r { background: var(--red); }
+
+        /* 总结表格 */
+        .stab {
+            width: 100%; border-collapse: collapse;
+            background: var(--card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,.1);
+            margin: 14px 0;
+        }
+        .stab th {
+            background: var(--blue); color: #fff;
+            padding: 10px 14px; text-align: left;
+            font-weight: 600; font-size: .95em;
+        }
+        .stab td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: .95em;
+        }
+        .stab tr:last-child td { border-bottom: none; }
+        .stab tr:nth-child(even) { background: #f8f9fa; }
+
+        /* 控制栏 */
+        .ctrl {
+            display: flex; gap: 8px; justify-content: flex-end;
+            margin: 10px 0 4px;
+        }
+        .ctrl button {
+            padding: 7px 16px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--card);
+            color: var(--text2);
+            font-size: .88em;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .ctrl button:hover {
+            background: var(--blue); color: #fff; border-color: var(--blue);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px 16px;
+            color: var(--text2);
+            font-size: .85em;
+            border-top: 1px solid var(--border);
+            margin-top: 36px;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 1.4em; }
+            .wrap { padding: 14px 10px 36px; }
+            .prob-body { padding: 14px; }
+            .sol.show { padding: 14px; }
+            .vs-box { grid-template-columns: 1fr; }
+            .header .bar { flex-direction: column; gap: 4px; }
+        }
+        @media print {
+            .sol { max-height: none !important; padding: 14px !important; }
+            .sol-btn, .ctrl, .sol-tabs { display: none !important; }
+            .sol-panel { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>竖直上抛运动 · 相遇问题专题</h1>
+    <div class="sub">高考一轮复习 | 运动学核心题型</div>
+    <div class="bar">
+        <span>⏱ 1课时（45分钟）</span>
+        <span>📝 精选8题</span>
+        <span>🎯 三大方法 · 一题多解</span>
+    </div>
+</div>
+
+<div class="wrap">
+
+    <!-- ==================== 方法论 ==================== -->
+    <div class="sec-h"><div class="num">方</div> 相遇问题三大方法</div>
+
+    <!-- 方法1：位置法 -->
+    <div class="method-card">
+        <h3 class="blue">方法一 · 位置法（核心方法）</h3>
+        <p><strong>本质：</strong>相遇 = 同一时刻处于<strong>同一位置</strong>。不是比较位移大小，而是比较<strong>位置坐标</strong>是否相等。</p>
+        <p><strong>操作：</strong>以同一参考点、同一正方向建立坐标系，写出两物体的<strong>位置函数</strong> $x_1(t)$ 和 $x_2(t)$，令 $x_1(t) = x_2(t)$ 求解。</p>
+        <div class="fbox">
+            相遇条件：$x_1(t) = x_2(t)$<br>
+            即 $x_{01} + v_{01}t + \frac{1}{2}a_1 t^2 = x_{02} + v_{02}t + \frac{1}{2}a_2 t^2$
+        </div>
+        <div class="tip key">
+            <strong>💡 为什么叫"位置法"而非"位移法"？</strong><br>
+            位移是相对于各自起点的偏移量。当两物体<strong>起点不同时</strong>，位移相等 ≠ 相遇。必须统一参考系，比较<strong>位置坐标</strong>。只有同地出发时，位移法才等价于位置法。
+        </div>
+    </div>
+
+    <!-- 方法2：零点法 -->
+    <div class="method-card red">
+        <h3 class="red">方法二 · 零点法（高度差函数分析）</h3>
+        <p><strong>本质：</strong>定义高度差函数 $\Delta x(t) = x_1(t) - x_2(t)$，相遇即 $\Delta x(t) = 0$，即求高度差函数的<strong>零点</strong>。</p>
+        <div class="fbox">
+            $\Delta x(t) = (x_{01} - x_{02}) + (v_{01} - v_{02})t + \frac{1}{2}(a_1 - a_2)t^2$
+        </div>
+        <div class="tip warn">
+            <strong>⚠️ 零点的含义：</strong>"零点"是使 $\Delta x(t) = 0$ 的 $t$ 值，即函数图像与 $t$ 轴的交点。<strong>不是求导</strong>，而是解方程 $\Delta x = 0$。<br><br>
+            <strong>⚠️ 重要结论：</strong>当 $a_1 = a_2$ 时，$\Delta x(t)$ 退化为<strong>一次函数</strong>（直线），最多只有一个零点 → <strong>最多相遇一次</strong>。只有 $a_1 \neq a_2$ 时才是二次函数，才可能有两个零点（相遇两次）。
+        </div>
+    </div>
+
+    <!-- 方法3：相对速度法 -->
+    <div class="method-card green">
+        <h3 class="green">方法三 · 相对运动法（进阶方法）</h3>
+        <p><strong>本质：</strong>以其中一个物体为参考系，分析另一个物体的<strong>相对运动</strong>。相遇条件变为：相对位移等于初始间距。</p>
+        <div class="fbox">
+            选 B 为参考系：<br>
+            相对初速度 $v_{rel} = v_{A0} - v_{B0}$<br>
+            相对加速度 $a_{rel} = a_A - a_B$<br>
+            相遇条件：$v_{rel}\,t + \tfrac{1}{2}a_{rel}\,t^2 = x_{A0} - x_{B0}$
+        </div>
+        <div class="tip key">
+            <strong>💡 相对运动法的优势：</strong><br>
+            ① 当 $a_A = a_B$ 时，$a_{rel} = 0$，问题变为<strong>匀速直线运动</strong>，非常简洁！<br>
+            ② 可直接用"追及时间 = 间距 ÷ 相对速度"快速求解。<br>
+            ③ 判断能否相遇只需看 $v_{rel}$ 的方向是否指向靠近。
+        </div>
+    </div>
+
+    <!-- 方法对比 -->
+    <div class="vs-box">
+        <div>
+            <span class="label">位置法</span>
+            <p style="font-size:.92em">通用性强，适合所有情况<br>缺点：起点不同时方程较复杂</p>
+        </div>
+        <div>
+            <span class="label r">相对运动法</span>
+            <p style="font-size:.92em">加速度相同时极为简洁<br>缺点：加速度不同时需谨慎</p>
+        </div>
+    </div>
+
+    <!-- ==================== 公式速查 ==================== -->
+    <div class="fbox">
+        <strong>竖直上抛公式速查</strong><br>
+        $x = v_0 t - \frac{1}{2}gt^2$ &nbsp;|&nbsp;
+        $v = v_0 - gt$ &nbsp;|&nbsp;
+        $v^2 = v_0^2 - 2gx$ &nbsp;|&nbsp;
+        上升时间 $T = \dfrac{v_0}{g}$ &nbsp;|&nbsp;
+        最大高度 $H = \dfrac{v_0^2}{2g}$
+    </div>
+
+    <div class="ctrl">
+        <button onclick="toggleAll(true)">📖 展开全部答案</button>
+        <button onclick="toggleAll(false)">📕 收起全部答案</button>
+    </div>
+
+    <!-- ==================== 题目部分 ==================== -->
+    <div class="sec-h"><div class="num">练</div> 精选例题（一题多解 · 逐层深入）</div>
+
+    <!-- ====== 题1 ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num">1</div>
+            <strong>一上一下 · 相遇求时间</strong>
+            <span class="tag tag-b">基础</span>
+        </div>
+        <div class="prob-body">
+            <p>A 从地面以 $v_0 = 30\,\text{m/s}$ 竖直上抛，<strong>同时</strong> B 从 $H = 40\,\text{m}$ 高处自由下落。取 $g = 10\,\text{m/s}^2$。</p>
+            <p>求：相遇时间和相遇位置。</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <h4>解法一 · 位置法</h4>
+            <div class="step">
+                以地面为原点，向上为正：<br>
+                $x_A = 30t - 5t^2$ &nbsp;&nbsp; $x_B = 40 - 5t^2$
+            </div>
+            <div class="step">
+                令 $x_A = x_B$：$30t - 5t^2 = 40 - 5t^2$<br>
+                $30t = 40 \implies t = \dfrac{4}{3}\,\text{s}$
+            </div>
+            <div class="step">
+                $x = 40 - 5 \times \dfrac{16}{9} = \dfrac{280}{9} \approx 31.1\,\text{m}$
+            </div>
+
+            <h4 style="margin-top:16px">解法二 · 相对运动法</h4>
+            <div class="step">
+                选 B 为参考系（$a_A = a_B = -g$，故 $a_{rel} = 0$）：<br>
+                相对初速度 $v_{rel} = v_{A0} - v_{B0} = 30 - 0 = 30\,\text{m/s}$<br>
+                初始间距 $\Delta x_0 = x_{B0} - x_{A0} = 40\,\text{m}$（B 在 A 上方）
+            </div>
+            <div class="step">
+                A 相对 B 做<strong>匀速运动</strong>，追及时间：<br>
+                $t = \dfrac{\Delta x_0}{v_{rel}} = \dfrac{40}{30} = \dfrac{4}{3}\,\text{s}$
+            </div>
+            <div class="ans">
+                相遇时间 $t = \dfrac{4}{3}\,\text{s}$，高度约 $31.1\,\text{m}$
+            </div>
+            <div class="note">💡 相对运动法：加速度相同 → 相对加速度为零 → 变为匀速追及，极其简洁！</div>
+        </div>
+    </div>
+
+    <!-- ====== 题2 ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num">2</div>
+            <strong>不同高度同向上抛 · 相遇分析</strong>
+            <span class="tag tag-b">基础</span>
+        </div>
+        <div class="prob-body">
+            <p>A 从地面以 $20\,\text{m/s}$ 竖直上抛，同时 B 从 $H = 60\,\text{m}$ 的楼顶以 $10\,\text{m/s}$ 竖直上抛。</p>
+            <p>（1）经多长时间相遇？（2）相遇时 A 的速度？</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <h4>解法一 · 位置法</h4>
+            <div class="step">
+                $x_A = 20t - 5t^2$，$x_B = 60 + 10t - 5t^2$<br>
+                $x_A = x_B$：$20t = 60 + 10t \implies t = 6\,\text{s}$
+            </div>
+
+            <h4 style="margin-top:14px">解法二 · 相对运动法</h4>
+            <div class="step">
+                $v_{rel} = 20 - 10 = 10\,\text{m/s}$，$\Delta x_0 = 60\,\text{m}$<br>
+                $a_{rel} = 0$（加速度相同）<br>
+                $t = 60 / 10 = 6\,\text{s}$
+            </div>
+
+            <div class="ans">
+                （1）$t = 6\,\text{s}$ &nbsp;&nbsp;（2）$v_A = 20 - 60 = -40\,\text{m/s}$，大小 $40\,\text{m/s}$，<strong>方向向下</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 题3 ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num mid">3</div>
+            <strong>同地同向上抛 · 能否相遇</strong>
+            <span class="tag tag-y">中等</span>
+        </div>
+        <div class="prob-body">
+            <p>A 以 $v_A = 30\,\text{m/s}$ 竖直上抛，同时 B 以 $v_B = 40\,\text{m/s}$ 从<strong>同地</strong>竖直上抛。</p>
+            <p>上升过程、下落过程能否相遇？用三种方法分析。</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <h4>解法一 · 位置法</h4>
+            <div class="step">
+                $x_A = 30t - 5t^2$，$x_B = 40t - 5t^2$<br>
+                $x_A = x_B$：$30t = 40t \implies t = 0$<br>
+                除出发时刻外<strong>无解</strong>。
+            </div>
+
+            <h4 style="margin-top:14px">解法二 · 零点法</h4>
+            <div class="step">
+                $\Delta x = x_B - x_A = 10t$<br>
+                这是一个<strong>关于 $t$ 的一次函数</strong>（斜率为正），<br>
+                仅在 $t = 0$ 时为零，$t > 0$ 时恒 $> 0$。
+            </div>
+
+            <h4 style="margin-top:14px">解法三 · 相对运动法</h4>
+            <div class="step">
+                $v_{rel} = v_B - v_A = 10\,\text{m/s}$（B 相对 A 向上）<br>
+                $a_{rel} = 0$<br>
+                B 相对 A 以 $10\,\text{m/s}$ <strong>匀速远离</strong>，间距越来越大，永远追不上。
+            </div>
+
+            <div class="ans">
+                上升、下落过程<strong>均不会相遇</strong>。B 始终在 A 上方，且间距匀速增大。
+            </div>
+            <div class="tip warn">
+                <strong>⚠️ 高考易错：</strong>直觉"快的会追上慢的"是错的！加速度相同 → 相对速度恒定 → 间距线性变化，快者永远领先。
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 题4 ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num mid">4</div>
+            <strong>先后上抛 · 追及问题</strong>
+            <span class="tag tag-y">中等</span>
+        </div>
+        <div class="prob-body">
+            <p>A 以 $v_A = 30\,\text{m/s}$ 竖直上抛，<strong>1秒后</strong> B 从同地以 $v_B = 40\,\text{m/s}$ 竖直上抛。</p>
+            <p>（1）B 经多长时间追上 A？（2）相遇高度？</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <h4>解法一 · 位置法</h4>
+            <div class="step">
+                设 B 抛出后 $t$ 秒相遇，A 已运动 $(t+1)$ 秒：<br>
+                $x_A = 30(t+1) - 5(t+1)^2 = 30t + 30 - 5t^2 - 10t - 5 = 20t + 25 - 5t^2$<br>
+                $x_B = 40t - 5t^2$<br>
+                令相等：$20t + 25 = 40t \implies t = 1.25\,\text{s}$
+            </div>
+
+            <h4 style="margin-top:14px">解法二 · 相对运动法</h4>
+            <div class="step">
+                B 抛出时，A 已运动 1 秒，A 的位置和速度：<br>
+                $x_{A0} = 30 \times 1 - 5 \times 1 = 25\,\text{m}$<br>
+                $v_{A} = 30 - 10 = 20\,\text{m/s}$
+            </div>
+            <div class="step">
+                以 A 为参考系：<br>
+                $v_{rel} = v_B - v_A = 40 - 20 = 20\,\text{m/s}$<br>
+                $a_{rel} = 0$<br>
+                追及时间 $t = 25 / 20 = 1.25\,\text{s}$
+            </div>
+
+            <div class="ans">
+                （1）$t = 1.25\,\text{s}$ &nbsp;&nbsp;（2）$x = 40 \times 1.25 - 5 \times 1.5625 = 42.2\,\text{m}$
+            </div>
+            <div class="note">💡 相对运动法：先算出 B 抛出时 A 的位置和速度，再用匀速追及。</div>
+        </div>
+    </div>
+
+    <!-- ====== 题5 ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num mid">5</div>
+            <strong>一上一下 · 临界条件</strong>
+            <span class="tag tag-y">中等</span>
+        </div>
+        <div class="prob-body">
+            <p>A 从地面以 $v_0$ 竖直上抛，同时 B 从 $H = 80\,\text{m}$ 处自由下落。</p>
+            <p>为使两者在 A <strong>上升阶段</strong>相遇，$v_0$ 应满足什么条件？</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <h4>解法 · 位置法 + 临界分析</h4>
+            <div class="step">
+                $x_A = v_0 t - 5t^2$，$x_B = 80 - 5t^2$<br>
+                相遇：$v_0 t = 80 \implies t = \dfrac{80}{v_0}$
+            </div>
+            <div class="step">
+                A 上升阶段要求 $t \leq \dfrac{v_0}{g} = \dfrac{v_0}{10}$
+            </div>
+            <div class="step">
+                $\dfrac{80}{v_0} \leq \dfrac{v_0}{10} \implies v_0^2 \geq 800$
+            </div>
+            <div class="ans">
+                $v_0 \geq 20\sqrt{2} \approx 28.3\,\text{m/s}$
+            </div>
+            <div class="note">💡 临界值：$v_0 = 20\sqrt{2}$ 时，A 恰在最高点与 B 相遇。</div>
+        </div>
+    </div>
+
+    <!-- ====== 题6（核心多解题） ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num hard">6</div>
+            <strong>先后上抛 · 最高点相遇（一题三解）</strong>
+            <span class="tag tag-r">重点</span>
+        </div>
+        <div class="prob-body">
+            <p>A 从地面以 $v_A = 40\,\text{m/s}$ 竖直上抛。当 A 到达<strong>最高点</strong>时，从同地以 $v_B = 20\,\text{m/s}$ 竖直上抛 B。</p>
+            <p>（1）B 抛出后多久 A、B 等高？</p>
+            <p>（2）等高时 B 的运动状态？</p>
+            <p>（3）之后是否再次等高？</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <div class="sol-tabs">
+                <button class="sol-tab active" onclick="switchTab(this, 'p1a')">位置法</button>
+                <button class="sol-tab" onclick="switchTab(this, 'p1b')">零点法</button>
+                <button class="sol-tab" onclick="switchTab(this, 'p1c')">相对运动法</button>
+            </div>
+
+            <!-- 位置法 -->
+            <div class="sol-panel active" id="p1a">
+                <div class="step">
+                    A 到最高点时间 $= 40/10 = 4\,\text{s}$，最高点高度 $= 80\,\text{m}$
+                </div>
+                <div class="step">
+                    B 抛出后 $t$ 秒：<br>
+                    $x_A = 80 - 5t^2$（A 从最高点自由下落）<br>
+                    $x_B = 20t - 5t^2$
+                </div>
+                <div class="step">
+                    $x_A = x_B$：$80 - 5t^2 = 20t - 5t^2$<br>
+                    $20t = 80 \implies t = 4\,\text{s}$
+                </div>
+                <div class="step">
+                    $v_B = 20 - 40 = -20\,\text{m/s}$，B 在<strong>下降</strong>。<br>
+                    高度 $= 80 - 80 = 0$，即<strong>在地面相遇</strong>！
+                </div>
+            </div>
+
+            <!-- 零点法 -->
+            <div class="sol-panel" id="p1b">
+                <div class="step">
+                    高度差 $\Delta x = x_A - x_B = (80 - 5t^2) - (20t - 5t^2) = 80 - 20t$
+                </div>
+                <div class="step">
+                    这是<strong>一次函数</strong>（$a_A = a_B$，二次项抵消），<br>
+                    令 $\Delta x = 0$：$80 - 20t = 0 \implies t = 4\,\text{s}$
+                </div>
+                <div class="step">
+                    $t < 4$ 时 $\Delta x > 0$（A 在上），$t > 4$ 时 $\Delta x < 0$（B 在上）。<br>
+                    一次函数只有一个零点 → <strong>只能相遇一次</strong>。
+                </div>
+            </div>
+
+            <!-- 相对运动法 -->
+            <div class="sol-panel" id="p1c">
+                <div class="step">
+                    B 抛出时：A 在 $80\,\text{m}$ 高处，速度为 $0$（最高点）。<br>
+                    B 以 $20\,\text{m/s}$ 向上。
+                </div>
+                <div class="step">
+                    以 A 为参考系：<br>
+                    $v_{rel} = v_B - v_A = 20 - 0 = 20\,\text{m/s}$（B 相对 A 向上）<br>
+                    $a_{rel} = 0$<br>
+                    初始间距 $= 80\,\text{m}$（B 在 A 下方）
+                </div>
+                <div class="step">
+                    B 相对 A 以 $20\,\text{m/s}$ 匀速向上运动：<br>
+                    $t = 80 / 20 = 4\,\text{s}$
+                </div>
+            </div>
+
+            <div class="ans">
+                （1）$t = 4\,\text{s}$ &nbsp;（2）B 在下降 &nbsp;（3）在地面相遇，之后<strong>不会再次等高</strong>
+            </div>
+            <div class="tip imp">
+                <strong>🔑 三种方法对比：</strong><br>
+                位置法 —— 通用，但需列两个方程<br>
+                零点法 —— 直接看出一次函数，判断只相遇一次<br>
+                相对运动法 —— "最高点处 A 静止"，变为 B 追 A 的匀速问题，最直观
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 题7（综合） ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num hard">7</div>
+            <strong>上抛与下抛相遇（一题多解）</strong>
+            <span class="tag tag-r">重点</span>
+        </div>
+        <div class="prob-body">
+            <p>A 从地面以 $30\,\text{m/s}$ 竖直上抛，同时 B 从 $H = 45\,\text{m}$ 处以 $10\,\text{m/s}$ <strong>竖直向下</strong>抛出。</p>
+            <p>（1）求相遇时间和位置。</p>
+            <p>（2）相遇时两球速度。</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <div class="sol-tabs">
+                <button class="sol-tab active" onclick="switchTab(this, 'p2a')">位置法</button>
+                <button class="sol-tab" onclick="switchTab(this, 'p2b')">相对运动法</button>
+            </div>
+
+            <div class="sol-panel active" id="p2a">
+                <div class="step">
+                    $x_A = 30t - 5t^2$<br>
+                    $x_B = 45 - 10t - 5t^2$
+                </div>
+                <div class="step">
+                    $x_A = x_B$：$30t - 5t^2 = 45 - 10t - 5t^2$<br>
+                    $40t = 45 \implies t = 1.125\,\text{s}$
+                </div>
+                <div class="step">
+                    $x = 30 \times 1.125 - 5 \times 1.125^2 = 33.75 - 6.33 = 27.4\,\text{m}$
+                </div>
+            </div>
+
+            <div class="sol-panel" id="p2b">
+                <div class="step">
+                    $v_{rel} = v_A - v_B = 30 - (-10) = 40\,\text{m/s}$（A 相对 B 向上）<br>
+                    $a_{rel} = 0$<br>
+                    初始间距 $= 45\,\text{m}$（B 在 A 上方）
+                </div>
+                <div class="step">
+                    $t = 45 / 40 = 1.125\,\text{s}$
+                </div>
+                <div class="note">💡 注意 B 的初速度为 $-10\,\text{m/s}$（向下），相对速度是 $30 - (-10) = 40$。</div>
+            </div>
+
+            <div class="ans">
+                （1）$t = 1.125\,\text{s}$，高度 $27.4\,\text{m}$<br>
+                （2）$v_A = 30 - 11.25 = 18.75\,\text{m/s}$（向上）<br>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$v_B = -10 - 11.25 = -21.25\,\text{m/s}$（向下）
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== 题8（高考真题改编） ====== -->
+    <div class="card">
+        <div class="prob-head">
+            <div class="prob-num hard">8</div>
+            <strong>多球问题 · 最多同时在空中的球</strong>
+            <span class="tag tag-r">高考改编</span>
+        </div>
+        <div class="prob-body">
+            <p>每隔 $1\,\text{s}$ 从地面以 $v_0 = 30\,\text{m/s}$ 竖直上抛一个小球（$g = 10\,\text{m/s}^2$）。</p>
+            <p>（1）第3个球抛出时，第1个球的位置和速度？</p>
+            <p>（2）第几个球抛出时，第1个球恰好到达最高点？</p>
+            <p>（3）在空中最多有几个球同时存在？</p>
+        </div>
+        <button class="sol-btn" onclick="toggleSol(this)">💡 点击查看解答</button>
+        <div class="sol">
+            <div class="step">
+                每个球在空中的时间 $T = \dfrac{2 \times 30}{10} = 6\,\text{s}$<br>
+                到最高点时间 $t_m = 3\,\text{s}$
+            </div>
+            <div class="step">
+                <strong>（1）</strong>第3球抛出时 $t = 2\,\text{s}$：<br>
+                $x_1 = 30 \times 2 - 5 \times 4 = 40\,\text{m}$<br>
+                $v_1 = 30 - 20 = 10\,\text{m/s}$（向上）
+            </div>
+            <div class="step">
+                <strong>（2）</strong>$t = 3\,\text{s}$ 时第1球在最高点，已抛出第 <strong>4</strong> 个球（$t=0,1,2,3$）。
+            </div>
+            <div class="step">
+                <strong>（3）</strong>第1球在空中的时间窗口为 $[0, 6]$。在时刻 $t$，第 $n$ 个球在空中需 $t \geq n-1$ 且 $t < n-1+6$，即 $n-1 \leq t < n+5$。
+            </div>
+            <div class="step">
+                取 $t = 5\,\text{s}$：球1~6均在空中（球1还有1秒落地，球6刚过1秒），共 <strong>6 个</strong>。<br>
+                取 $t = 5.9\,\text{s}$：球1即将落地，球1~6仍在空中。<br>
+                取 $t = 6\,\text{s}$：球1落地，球2~7在空中，仍为 6 个。<br>
+                无法达到 7 个（球1落地时球7刚好抛出，但球1已不在空中）。
+            </div>
+            <div class="ans">
+                （1）位移 $40\,\text{m}$，速度 $10\,\text{m/s}$ 向上<br>
+                （2）第 <strong>4</strong> 个球 &nbsp;&nbsp;（3）最多 <strong>6</strong> 个球
+            </div>
+            <div class="tip key">
+                <strong>💡 规律：</strong>每隔 $\Delta t$ 抛一个球，每个球在空中 $T$ 秒，最多同时存在的球数 $= \left\lfloor \dfrac{T}{\Delta t} \right\rfloor = \left\lfloor \dfrac{6}{1} \right\rfloor = 6$ 个。
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 方法总结 ==================== -->
+    <div class="sec-h"><div class="num">结</div> 方法总结</div>
+
+    <table class="stab">
+        <tr>
+            <th>方法</th>
+            <th>核心思想</th>
+            <th>适用场景</th>
+            <th>注意事项</th>
+        </tr>
+        <tr>
+            <td><strong>位置法</strong></td>
+            <td>同一时刻位置坐标相等</td>
+            <td>所有相遇问题（通用）</td>
+            <td>必须统一参考点和正方向</td>
+        </tr>
+        <tr>
+            <td><strong>零点法</strong></td>
+            <td>高度差函数 $\Delta x(t) = 0$</td>
+            <td>判断相遇次数、定性分析</td>
+            <td>$a$ 相同 → 一次函数 → 最多1次</td>
+        </tr>
+        <tr>
+            <td><strong>相对运动法</strong></td>
+            <td>以一物体为参考系分析</td>
+            <td>加速度相同时首选</td>
+            <td>$a_{rel}=0$ 时变为匀速追及</td>
+        </tr>
+    </table>
+
+    <div class="method-card">
+        <h3 class="blue">🎯 高考要点速记</h3>
+        <p><strong>1.</strong> 加速度相同的两物体，高度差为<strong>一次函数</strong>，最多相遇一次。</p>
+        <p><strong>2.</strong> 同地同向同时上抛（初速不同）→ <strong>永远不会相遇</strong>（除起点）。</p>
+        <p><strong>3.</strong> 加速度相同 → 相对加速度为零 → 问题变为<strong>匀速追及</strong>。</p>
+        <p><strong>4.</strong> 相遇后必须检验：两物体是否都在运动中（未落地）。</p>
+        <p><strong>5.</strong> "位置法"才是本质——位移相等只在同地出发时等价于位置相等。</p>
+    </div>
+
+    <div class="footer">
+        竖直上抛 · 相遇问题专题 | 高考一轮复习 | 点击按钮查看答案 | 打印时自动展开
+    </div>
+</div>
+
+<script>
+    // 切换解答展开/收起
+    function toggleSol(btn) {
+        const sol = btn.nextElementSibling;
+        const isOpen = sol.classList.contains('show');
+        sol.classList.toggle('show');
+        btn.classList.toggle('open');
+        btn.textContent = isOpen ? '💡 点击查看解答' : '📖 点击收起解答';
+    }
+
+    // 切换多解标签
+    function switchTab(tab, panelId) {
+        const tabs = tab.parentElement;
+        const sol = tabs.parentElement;
+        // 切换标签高亮
+        tabs.querySelectorAll('.sol-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        // 切换面板
+        sol.querySelectorAll('.sol-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(panelId).classList.add('active');
+    }
+
+    // 全部展开/收起
+    function toggleAll(open) {
+        document.querySelectorAll('.sol').forEach(s => {
+            open ? s.classList.add('show') : s.classList.remove('show');
+        });
+        document.querySelectorAll('.sol-btn').forEach(b => {
+            b.classList.toggle('open', open);
+            b.textContent = open ? '📖 点击收起解答' : '💡 点击查看解答';
+        });
+    }
+</script>
+
+</body>
+</html>
