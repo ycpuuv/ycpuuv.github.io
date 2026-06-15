@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>追击相遇问题 · 一题四法精讲</title>
+<style>
+  :root {
+    --blue: #2563eb; --blue-light: #dbeafe; --blue-dark: #1e40af;
+    --red: #ef4444; --red-light: #fee2e2;
+    --green: #10b981; --green-light: #d1fae5;
+    --amber: #f59e0b; --amber-light: #fef3c7;
+    --purple: #7c3aed; --purple-light: #ede9fe;
+    --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb;
+    --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:"Microsoft YaHei","PingFang SC",sans-serif; background:var(--gray-50); color:var(--gray-800); line-height:1.8; }
+  .container { max-width:900px; margin:0 auto; padding:16px; }
+
+  /* Header */
+  .header { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:32px 0; text-align:center; border-radius:0 0 20px 20px; margin-bottom:24px; }
+  .header h1 { font-size:1.8em; letter-spacing:2px; margin-bottom:4px; }
+  .header p { opacity:.85; font-size:1em; }
+
+  /* Section card */
+  .card { background:#fff; border-radius:14px; padding:28px; margin-bottom:20px; box-shadow:0 1px 4px rgba(0,0,0,.06); border:1px solid var(--gray-200); }
+  .card-title { font-size:1.25em; color:var(--blue); border-left:4px solid var(--blue); padding-left:14px; margin-bottom:16px; font-weight:700; }
+  .sub-title { font-size:1.08em; color:var(--gray-700); font-weight:700; margin:18px 0 10px; padding-left:10px; border-left:3px solid var(--amber); }
+
+  /* Problem box */
+  .problem-box { background:linear-gradient(135deg,var(--blue-light),#eff6ff); border:2px solid var(--blue); border-radius:14px; padding:24px 28px; margin-bottom:20px; }
+  .problem-box .tag { display:inline-block; background:var(--blue); color:#fff; padding:2px 14px; border-radius:20px; font-size:.85em; font-weight:700; margin-bottom:10px; }
+  .problem-box p { font-size:1.05em; }
+
+  /* Info boxes */
+  .key-point { background:var(--blue-light); border-left:4px solid var(--blue); padding:14px 18px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .key-point strong { color:var(--blue-dark); }
+  .tip-box { background:var(--green-light); border-left:4px solid var(--green); padding:14px 18px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .tip-box strong { color:#065f46; }
+  .warn-box { background:var(--red-light); border-left:4px solid var(--red); padding:14px 18px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .warn-box strong { color:var(--red); }
+  .amber-box { background:var(--amber-light); border-left:4px solid var(--amber); padding:14px 18px; border-radius:0 10px 10px 0; margin:14px 0; }
+  .amber-box strong { color:#92400e; }
+
+  /* Method tabs */
+  .method-tabs { display:flex; gap:3px; background:var(--gray-200); border-radius:12px; padding:4px; margin-bottom:20px; flex-wrap:wrap; }
+  .method-btn { flex:1; min-width:120px; padding:12px 10px; border:none; background:transparent; cursor:pointer; font-size:.95em; font-weight:600; color:var(--gray-600); border-radius:10px; transition:all .25s; text-align:center; }
+  .method-btn.active { background:#fff; color:var(--blue); box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .method-panel { display:none; }
+  .method-panel.active { display:block; }
+  .method-tag { display:inline-block; padding:2px 12px; border-radius:16px; font-size:.82em; font-weight:700; margin-bottom:8px; }
+
+  /* Animation area */
+  .anim-wrapper { position:relative; background:#fff; border-radius:14px; border:1px solid var(--gray-200); overflow:hidden; margin-bottom:16px; }
+  canvas { display:block; width:100%; }
+  .anim-controls { display:flex; align-items:center; justify-content:center; gap:12px; padding:12px; background:var(--gray-100); border-top:1px solid var(--gray-200); flex-wrap:wrap; }
+  .anim-controls button { padding:8px 20px; border:none; border-radius:8px; cursor:pointer; font-size:.9em; font-weight:600; transition:all .2s; }
+  .btn-play { background:var(--blue); color:#fff; }
+  .btn-play:hover { background:var(--blue-dark); }
+  .btn-reset { background:var(--gray-200); color:var(--gray-700); }
+  .btn-reset:hover { background:#d1d5db; }
+  .speed-label { font-size:.85em; color:var(--gray-600); font-weight:600; }
+
+  /* Data display */
+  .data-row { display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .data-item { flex:1; min-width:100px; background:var(--gray-50); border:1px solid var(--gray-200); border-radius:10px; padding:10px 14px; text-align:center; }
+  .data-item .label { font-size:.78em; color:var(--gray-600); margin-bottom:2px; }
+  .data-item .value { font-size:1.3em; font-weight:700; }
+
+  /* Step list */
+  .step { display:flex; gap:12px; margin:12px 0; align-items:flex-start; }
+  .step-num { min-width:28px; height:28px; background:var(--blue); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.82em; font-weight:700; margin-top:2px; }
+  .step-body { flex:1; }
+  .formula { font-family:"Times New Roman",serif; font-style:italic; background:var(--gray-100); padding:2px 8px; border-radius:4px; font-size:1.05em; }
+
+  /* Variant problems */
+  .variant-card { background:#fff; border:2px solid var(--gray-200); border-radius:14px; padding:22px 26px; margin-bottom:16px; transition:border-color .2s; }
+  .variant-card:hover { border-color:var(--blue); }
+  .variant-num { display:inline-block; background:var(--purple); color:#fff; width:30px; height:30px; text-align:center; line-height:30px; border-radius:50%; font-weight:700; margin-right:8px; }
+  .diff-tag { display:inline-block; padding:1px 10px; border-radius:12px; font-size:.8em; font-weight:600; margin-left:6px; }
+  .diff-easy { background:var(--green-light); color:#065f46; }
+  .diff-medium { background:var(--amber-light); color:#92400e; }
+  .diff-hard { background:var(--red-light); color:#991b1b; }
+
+  /* Answer toggle */
+  .ans-btn { display:inline-block; background:var(--blue); color:#fff; border:none; padding:8px 22px; border-radius:8px; cursor:pointer; font-size:.88em; margin-top:10px; transition:background .2s; }
+  .ans-btn:hover { background:var(--blue-dark); }
+  .ans-body { display:none; background:var(--green-light); border-radius:10px; padding:16px 20px; margin-top:10px; border-left:4px solid var(--green); }
+  .ans-body.show { display:block; }
+
+  /* Summary */
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:14px 0; }
+  .summary-item { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:10px; padding:14px 16px; }
+  .summary-item .s-title { font-weight:700; color:var(--blue); font-size:.95em; margin-bottom:4px; }
+  .summary-item .s-desc { font-size:.88em; color:var(--gray-600); }
+
+  /* Comparison table */
+  .compare-table { width:100%; border-collapse:collapse; margin:14px 0; font-size:.9em; }
+  .compare-table th { background:var(--blue); color:#fff; padding:10px 8px; text-align:left; }
+  .compare-table td { padding:9px 8px; border-bottom:1px solid var(--gray-200); }
+  .compare-table tr:nth-child(even) { background:var(--gray-50); }
+  .compare-table td:first-child { font-weight:700; color:var(--blue-dark); white-space:nowrap; }
+
+  /* Method guide */
+  .method-guide { background:var(--gray-50); border:1px solid var(--gray-200); border-radius:10px; padding:18px 22px; margin-top:16px; }
+  .method-guide .mg-title { font-weight:700; color:var(--blue); margin-bottom:12px; font-size:1.05em; }
+  .mg-item { display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px dashed var(--gray-200); }
+  .mg-item:last-child { border-bottom:none; }
+  .mg-scenario { font-weight:600; color:var(--gray-700); }
+  .mg-arrow { color:var(--blue); font-weight:bold; flex-shrink:0; }
+  .mg-method { color:var(--blue); font-weight:700; }
+  .mg-warn { color:var(--red); }
+
+  /* Time slider */
+  .time-slider-wrap { padding:8px 16px 12px; background:var(--gray-100); display:flex; align-items:center; gap:10px; }
+  .time-slider-wrap label { font-size:.85em; color:var(--gray-600); font-weight:600; white-space:nowrap; }
+  .time-slider-wrap input[type=range] { flex:1; accent-color:var(--blue); cursor:pointer; }
+
+  .indent { padding-left:20px; }
+  .mt8 { margin-top:8px; }
+  .mt12 { margin-top:12px; }
+  .text-center { text-align:center; }
+
+  @media(max-width:640px) {
+    .container { padding:8px; }
+    .card { padding:18px 14px; }
+    .header h1 { font-size:1.3em; }
+    .method-btn { font-size:.82em; padding:10px 6px; min-width:80px; }
+    .summary-grid { grid-template-columns:1fr; }
+    .data-item .value { font-size:1.1em; }
+  }
+  @media print {
+    .method-panel { display:block !important; page-break-before:always; }
+    .anim-controls,.ans-btn { display:none; }
+    .ans-body { display:block !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>追击相遇问题 · 一题四法精讲</h1>
+  <p>一道经典题，四种解法，彻底搞透追及问题</p>
+</div>
+
+<div class="container">
+
+<!-- ==================== 母题 ==================== -->
+<div class="problem-box">
+  <span class="tag">经典母题</span>
+  <p>一辆超速车以 <strong>v₀ = 20 m/s</strong> 的速度匀速行驶，经过一辆静止的警车时，警车立即以 <strong>a = 2 m/s²</strong> 的加速度匀加速追赶。求：</p>
+  <p class="indent mt8">（1）警车何时追上超速车？追上处距出发点多远？</p>
+  <p class="indent">（2）追上之前，两车之间的最大距离是多少？</p>
+</div>
+
+<!-- ==================== 动态模拟 ==================== -->
+<div class="card">
+  <div class="card-title">动态过程模拟</div>
+  <p style="font-size:.92em;color:var(--gray-600);margin-bottom:12px;">点击"播放"观察追及全过程，注意观察两车距离变化与速度关系。</p>
+
+  <div class="data-row">
+    <div class="data-item"><div class="label">时间 t (s)</div><div class="value" id="dTime">0.0</div></div>
+    <div class="data-item"><div class="label">超车位移 (m)</div><div class="value" id="dX1" style="color:var(--red)">0</div></div>
+    <div class="data-item"><div class="label">警车位移 (m)</div><div class="value" id="dX2" style="color:var(--blue)">0</div></div>
+    <div class="data-item"><div class="label">间距 Δx (m)</div><div class="value" id="dDist" style="color:var(--amber)">0</div></div>
+    <div class="data-item"><div class="label">警车速度 (m/s)</div><div class="value" id="dV2" style="color:var(--blue)">0</div></div>
+  </div>
+
+  <div class="anim-wrapper">
+    <canvas id="roadCanvas" height="260"></canvas>
+    <div class="anim-controls">
+      <button class="btn-play" id="btnPlay" onclick="togglePlay()">▶ 播放</button>
+      <button class="btn-reset" onclick="resetAnim()">↺ 重置</button>
+      <span class="speed-label">速度：</span>
+      <button class="btn-reset" onclick="setSpeed(0.5)">0.5x</button>
+      <button class="btn-reset" onclick="setSpeed(1)" style="background:var(--blue-light);color:var(--blue)">1x</button>
+      <button class="btn-reset" onclick="setSpeed(2)">2x</button>
+    </div>
+    <div class="time-slider-wrap">
+      <label>时间拖动：</label>
+      <input type="range" id="timeSlider" min="0" max="25" step="0.1" value="0">
+      <span id="sliderVal" class="speed-label">0.0s</span>
+    </div>
+  </div>
+
+  <!-- v-t graph canvas -->
+  <div class="sub-title">实时 v-t 图像</div>
+  <div class="anim-wrapper" style="margin-top:8px;">
+    <canvas id="vtCanvas" height="240"></canvas>
+  </div>
+
+  <!-- Δx(t) distance graph canvas -->
+  <div class="sub-title">实时 Δx(t) 间距图像</div>
+  <div class="anim-wrapper" style="margin-top:8px;">
+    <canvas id="distCanvas" height="200"></canvas>
+  </div>
+
+  <div class="tip-box" id="insightBox" style="display:none;">
+    <strong>观察发现：</strong><span id="insightText"></span>
+  </div>
+</div>
+
+<!-- ==================== 四法串讲 ==================== -->
+<div class="card">
+  <div class="card-title">四法串讲 · 一题多解</div>
+  <p style="font-size:.92em;color:var(--gray-600);margin-bottom:14px;">同母题，四种方法逐一突破，体会不同思路的优劣。</p>
+
+  <div class="method-tabs">
+    <button class="method-btn active" onclick="switchMethod(0)">方法一<br>公式法</button>
+    <button class="method-btn" onclick="switchMethod(1)">方法二<br>图像法</button>
+    <button class="method-btn" onclick="switchMethod(2)">方法三<br>判别式法</button>
+    <button class="method-btn" onclick="switchMethod(3)">方法四<br>相对运动法</button>
+  </div>
+
+  <!-- ===== 方法一：公式法 ===== -->
+  <div class="method-panel active" id="m0">
+    <span class="method-tag" style="background:var(--blue-light);color:var(--blue-dark);">方法一：公式法（位移相等列方程）</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：追上时两车位移相等，直接列运动学方程求解。</p>
+
+    <div class="sub-title">第（1）问：何时追上？</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>写出两车位移表达式</strong><br>超车位移：<span class="formula">x₁ = v₀t = 20t</span><br>警车位移：<span class="formula">x₂ = ½at² = ½ × 2 × t² = t²</span></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>列追及条件：位移相等</strong><br><span class="formula">x₁ = x₂ → 20t = t²</span></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>解方程</strong><br><span class="formula">t² − 20t = 0 → t(t − 20) = 0</span><br>t = 0（出发时刻，舍去）或 <strong>t = 20 s</strong></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>求追上位置</strong><br><span class="formula">x = 20 × 20 = 400 m</span><br><strong>警车在 20s 后、距出发点 400m 处追上超速车。</strong></div></div>
+
+    <div class="sub-title">第（2）问：最大距离</div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>写出间距表达式</strong><br><span class="formula">Δx = x₁ − x₂ = 20t − t²</span></div></div>
+    <div class="step"><div class="step-num">6</div><div class="step-body"><strong>求极值：间距最大时，两车速度相等</strong><br>为什么？当警车速度 < 超速车速度时，间距在增大；当警车速度 > 超速车速度时，间距在缩小。所以<strong>速度相等是间距取最大值的临界条件</strong>。<br><span class="formula">v₂ = at = 2t = 20 → t = 10 s</span></div></div>
+    <div class="step"><div class="step-num">7</div><div class="step-body"><strong>代入求最大距离</strong><br><span class="formula">Δx_max = 20×10 − 10² = 200 − 100 = <strong>100 m</strong></span></div></div>
+
+    <div class="key-point">
+      <strong>公式法小结：</strong>直接列位移方程，思路清晰直观。追及问题中"位移相等"是列方程的核心依据。求最大距离时，"速度相等"是极值条件。
+    </div>
+  </div>
+
+  <!-- ===== 方法二：图像法 ===== -->
+  <div class="method-panel" id="m1">
+    <span class="method-tag" style="background:var(--green-light);color:#065f46;">方法二：v-t 图像法</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：画出两车的 v-t 图像，利用"面积差 = 间距"来分析。</p>
+
+    <div class="sub-title">画出 v-t 图像</div>
+    <div style="text-align:center;margin:14px 0;">
+      <svg width="400" height="280" viewBox="0 0 400 280" style="max-width:100%;">
+        <defs>
+          <marker id="arw" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#333"/></marker>
+        </defs>
+        <!-- axes -->
+        <line x1="60" y1="230" x2="380" y2="230" stroke="#333" stroke-width="1.5" marker-end="url(#arw)"/>
+        <line x1="60" y1="230" x2="60" y2="20" stroke="#333" stroke-width="1.5" marker-end="url(#arw)"/>
+        <text x="382" y="235" font-size="14" fill="#333">t/s</text>
+        <text x="15" y="18" font-size="14" fill="#333">v/(m·s⁻¹)</text>
+        <!-- grid -->
+        <line x1="60" y1="130" x2="370" y2="130" stroke="#eee" stroke-width=".5"/>
+        <text x="40" y="135" font-size="11" fill="#999">20</text>
+        <line x1="160" y1="20" x2="160" y2="230" stroke="#eee" stroke-width=".5"/>
+        <text x="155" y="248" font-size="11" fill="#999">10</text>
+        <line x1="260" y1="20" x2="260" y2="230" stroke="#eee" stroke-width=".5"/>
+        <text x="255" y="248" font-size="11" fill="#999">20</text>
+        <!-- 超速车 v=20 水平线 -->
+        <line x1="60" y1="130" x2="360" y2="130" stroke="#ef4444" stroke-width="2.5"/>
+        <text x="330" y="122" font-size="13" fill="#ef4444" font-weight="bold">超速车 v₁=20</text>
+        <!-- 警车 v=2t 斜线 -->
+        <line x1="60" y1="230" x2="360" y2="30" stroke="#2563eb" stroke-width="2.5"/>
+        <text x="310" y="55" font-size="13" fill="#2563eb" font-weight="bold">警车 v₂=2t</text>
+        <!-- 交点 -->
+        <circle cx="160" cy="130" r="5" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+        <text x="165" y="118" font-size="12" fill="#f59e0b" font-weight="bold">t=10s 速度相等</text>
+        <!-- 面积标注：三角形 (0~10s 间距区域) -->
+        <polygon points="60,130 160,130 160,230" fill="#f59e0b" opacity=".15" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="105" y="195" font-size="12" fill="#b45309" font-weight="bold">S₁ (间距增大)</text>
+        <!-- 面积标注：三角形 (10~20s 间距缩小区域) -->
+        <polygon points="160,130 260,130 260,30" fill="#2563eb" opacity=".12" stroke="#2563eb" stroke-width="1.5"/>
+        <text x="195" y="100" font-size="12" fill="#1e40af" font-weight="bold">S₂ (间距缩小)</text>
+        <!-- 追上时刻 -->
+        <line x1="260" y1="20" x2="260" y2="230" stroke="#7c3aed" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="262" y="248" font-size="12" fill="#7c3aed" font-weight="bold">t=20s 追上</text>
+      </svg>
+    </div>
+
+    <div class="sub-title">分析过程</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>画 v-t 图</strong>：超速车 v₁=20（水平线），警车 v₂=2t（过原点斜线）</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>找交点</strong>：v₁ = v₂ → 20 = 2t → <strong>t = 10s</strong>（速度相等时刻）</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>面积分析间距</strong><br>0~10s：超速车面积 > 警车面积（S₁ 区域），间距增大<br>10~20s：警车面积 > 超速车面积（S₂ 区域），间距缩小</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>最大距离 = S₁ 面积</strong><br><span class="formula">Δx_max = ½ × 10 × 20 = <strong>100 m</strong></span></div></div>
+    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>追上条件：两面积相等（S₁ = S₂）</strong><br>由几何关系：S₁ = ½ × 10 × 20 = 100<br>S₂ = ½ × (t追−10) × (2t追−20)<br>令 S₁ = S₂，解得 <strong>t追 = 20s</strong></div></div>
+
+    <div class="tip-box">
+      <strong>图像法小结：</strong>v-t 图最直观！面积差就是两车间距。交点（速度相等）对应间距最大；两块面积相等时对应追上。看图就能"看到"整个追及过程。
+    </div>
+  </div>
+
+  <!-- ===== 方法三：判别式法 ===== -->
+  <div class="method-panel" id="m2">
+    <span class="method-tag" style="background:var(--amber-light);color:#92400e;">方法三：判别式法（Δ 判断能否追上）</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：将追及条件转化为二次方程，用判别式 Δ 判断解的情况。</p>
+
+    <div class="sub-title">建立间距方程</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>写出间距关于时间的函数</strong><br><span class="formula">Δx(t) = x₁ − x₂ = 20t − t² = −t² + 20t</span></div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>追上时 Δx = 0，列方程</strong><br><span class="formula">−t² + 20t = 0 → t² − 20t = 0</span></div></div>
+
+    <div class="sub-title">用判别式分析</div>
+    <div class="step"><div class="step-num">3</div><div class="step-body">
+      对于一般追及问题，设间距为 d，则追及条件为：<br>
+      <span class="formula">−t² + 20t = d → t² − 20t + d = 0</span><br><br>
+      判别式：<span class="formula">Δ = 400 − 4d</span>
+      <table style="width:100%;margin-top:10px;font-size:.92em;">
+        <tr style="background:var(--blue-light);"><th style="padding:8px;">Δ 的值</th><th style="padding:8px;">方程解</th><th style="padding:8px;">物理含义</th></tr>
+        <tr><td style="padding:8px;">Δ > 0（d < 100）</td><td style="padding:8px;">两个正根</td><td style="padding:8px;">能追上（且有两次"相遇"，但第二次是反超）</td></tr>
+        <tr style="background:var(--amber-light);"><td style="padding:8px;"><strong>Δ = 0（d = 100）</strong></td><td style="padding:8px;">唯一解</td><td style="padding:8px;"><strong>恰好追上（最近距离 = 0，即"恰好不相撞"的临界）</strong></td></tr>
+        <tr><td style="padding:8px;">Δ < 0（d > 100）</td><td style="padding:8px;">无实数解</td><td style="padding:8px;">追不上（最小距离 = d − 100）</td></tr>
+      </table>
+    </div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>本题中 d = 0（同时同地出发）</strong><br>Δ = 400 > 0，有解 → 能追上。<br>最大间距对应 Δ = 0 时的 d 值：<strong>d_max = 100 m</strong></div></div>
+
+    <div class="amber-box">
+      <strong>判别式法小结：</strong>特别适合判断"能否追上"以及"最近/最远距离"的问题。Δ=0 是"恰好追上"的临界条件，在刹车追及、安全距离等问题中非常实用。
+    </div>
+  </div>
+
+  <!-- ===== 方法四：相对运动法 ===== -->
+  <div class="method-panel" id="m3">
+    <span class="method-tag" style="background:var(--purple-light);color:#5b21b6;">方法四：相对运动法（变换参考系）</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：以超速车为参考系，将两体问题简化为单体问题。</p>
+
+    <div class="sub-title">转换参考系</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>以超速车为参考系</strong><br>在超速车看来，警车的运动是：<br>
+      <table style="width:100%;margin-top:8px;font-size:.92em;">
+        <tr style="background:var(--purple-light);"><th style="padding:8px;">物理量</th><th style="padding:8px;">地面参考系</th><th style="padding:8px;">超速车参考系</th></tr>
+        <tr><td style="padding:8px;">初速度</td><td style="padding:8px;">v₂₀ = 0</td><td style="padding:8px;"><strong>v'₂₀ = 0 − 20 = −20 m/s</strong>（向后）</td></tr>
+        <tr><td style="padding:8px;">加速度</td><td style="padding:8px;">a₂ = 2 m/s²</td><td style="padding:8px;"><strong>a'₂ = 2 m/s²</strong>（不变）</td></tr>
+        <tr><td style="padding:8px;">初始距离</td><td style="padding:8px;">d₀ = 0</td><td style="padding:8px;"><strong>d'₀ = 0</strong></td></tr>
+      </table>
+    </div></div>
+
+    <div class="sub-title">在超速车参考系中分析</div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>相对位移表达式</strong><br><span class="formula">x' = v'₂₀ · t + ½a'₂ · t² = −20t + t²</span><br>x' < 0 表示警车在超速车后面，x' = 0 表示追上。</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>求最大距离（相对速度为零时）</strong><br><span class="formula">v' = −20 + 2t = 0 → t = 10 s</span><br>此时 <span class="formula">x' = −20×10 + 100 = −100 m</span><br>即警车落后 <strong>100 m</strong>（最大距离）。</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>求追上时刻</strong><br><span class="formula">x' = 0 → −20t + t² = 0 → t(t−20) = 0</span><br><strong>t = 20 s</strong>（与公式法一致）</div></div>
+
+    <div class="tip-box">
+      <strong>相对运动法小结：</strong>变换参考系后，两体问题变成"一个物体做匀变速运动追赶一个静止目标"，问题大大简化。特别适合处理两车都在变速运动的复杂情形。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 第二母题 · 匀减速追匀速 ==================== -->
+<div class="card">
+  <div class="card-title">第二母题 · 匀减速追匀速 · 一题四法</div>
+
+  <div class="problem-box">
+    <span class="tag">第二母题</span>
+    <p>乙车以 <strong>v₂ = 40m/s</strong> 在甲车后方 <strong>d = 50m</strong> 处同向行驶，甲车匀速 <strong>v₁ = 30m/s</strong>。乙车开始以 <strong>a = 4m/s²</strong> 匀减速刹车。问：乙车能否追上甲车？若追不上，最近距离是多少？</p>
+  </div>
+
+  <div class="method-tabs">
+    <button class="method-btn active" onclick="switchMethod2(0)">方法一<br>公式法</button>
+    <button class="method-btn" onclick="switchMethod2(1)">方法二<br>图像法</button>
+    <button class="method-btn" onclick="switchMethod2(2)">方法三<br>判别式法</button>
+    <button class="method-btn" onclick="switchMethod2(3)">方法四<br>相对运动法</button>
+  </div>
+
+  <!-- ===== 方法一：公式法 ===== -->
+  <div class="method-panel active" id="m4">
+    <span class="method-tag" style="background:var(--blue-light);color:var(--blue-dark);">方法一：公式法（位移相等列方程）</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：追上时乙车位移 = 甲车位移 + 初始间距，直接列方程求解。</p>
+
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>写出两车位移表达式</strong><br>甲车位移：<span class="formula">x₁ = 30t</span>（从乙车开始刹车计时）<br>乙车位移：<span class="formula">x₂ = 40t − ½×4×t² = 40t − 2t²</span><br>初始间距：<span class="formula">d = 50m</span></div></div>
+
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>列追及条件</strong><br>追上时：<span class="formula">x₂ = x₁ + d</span><br><span class="formula">40t − 2t² = 30t + 50</span><br>整理：<span class="formula">2t² − 10t + 50 = 0 → t² − 5t + 25 = 0</span></div></div>
+
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>求解方程</strong><br><span class="formula">Δ = 25 − 100 = −75 &lt; 0</span><br><strong style="color:var(--red);">无实数解 → 追不上！</strong></div></div>
+
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>求最近距离（速度相等时距离最近）</strong><br>速度相等：<span class="formula">v₂ = v₁ → 40 − 4t = 30 → t = 2.5s</span><br>代入间距公式：<br><span class="formula">Δx<sub>min</sub> = x₁ + d − x₂ = 30(2.5) + 50 − (40×2.5 − 2×2.5²)</span><br><span class="formula">= 75 + 50 − (100 − 12.5) = 125 − 87.5 = <strong>37.5 m</strong></span></div></div>
+
+    <div class="step"><div class="step-num">5</div><div class="step-body"><strong>验证刹车时间</strong><br><span class="formula">t<sub>stop</sub> = 40/4 = 10s &gt; 2.5s ✓</span>（乙车还没停，计算有效）</div></div>
+
+    <div class="key-point">
+      <strong>公式法要点：</strong>当判别式 Δ&lt;0 时追不上，此时求最近距离的方法是令速度相等。
+    </div>
+  </div>
+
+  <!-- ===== 方法二：图像法 ===== -->
+  <div class="method-panel" id="m5">
+    <span class="method-tag" style="background:var(--green-light);color:#065f46;">方法二：v-t 图像法</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：画出两车的 v-t 图像，利用"面积差 = 间距变化量"来分析。</p>
+
+    <div class="sub-title">画出 v-t 图像</div>
+    <div style="text-align:center;margin:14px 0;">
+      <svg width="440" height="310" viewBox="0 0 440 310" style="max-width:100%;">
+        <defs>
+          <marker id="arw2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="#333"/></marker>
+        </defs>
+        <!-- axes -->
+        <line x1="60" y1="260" x2="410" y2="260" stroke="#333" stroke-width="1.5" marker-end="url(#arw2)"/>
+        <line x1="60" y1="260" x2="60" y2="20" stroke="#333" stroke-width="1.5" marker-end="url(#arw2)"/>
+        <text x="412" y="265" font-size="14" fill="#333">t/s</text>
+        <text x="15" y="18" font-size="14" fill="#333">v/(m·s⁻¹)</text>
+        <!-- grid lines -->
+        <line x1="60" y1="185" x2="400" y2="185" stroke="#eee" stroke-width=".5"/>
+        <text x="30" y="190" font-size="11" fill="#999">30</text>
+        <line x1="60" y1="110" x2="400" y2="110" stroke="#eee" stroke-width=".5"/>
+        <text x="30" y="115" font-size="11" fill="#999">40</text>
+        <line x1="135" y1="20" x2="135" y2="260" stroke="#eee" stroke-width=".5"/>
+        <text x="127" y="278" font-size="11" fill="#999">2.5</text>
+        <line x1="210" y1="20" x2="210" y2="260" stroke="#eee" stroke-width=".5"/>
+        <text x="207" y="278" font-size="11" fill="#999">5</text>
+        <line x1="360" y1="20" x2="360" y2="260" stroke="#eee" stroke-width=".5"/>
+        <text x="352" y="278" font-size="11" fill="#999">10</text>
+        <!-- 甲: v=30 horizontal line (red) -->
+        <line x1="60" y1="185" x2="390" y2="185" stroke="#ef4444" stroke-width="2.5"/>
+        <text x="350" y="177" font-size="13" fill="#ef4444" font-weight="bold">甲 v₁=30</text>
+        <!-- 乙: v=40-4t descending line (blue) from (60,110) to (360,260) -->
+        <line x1="60" y1="110" x2="360" y2="260" stroke="#2563eb" stroke-width="2.5"/>
+        <text x="240" y="170" font-size="13" fill="#2563eb" font-weight="bold">乙 v₂=40−4t</text>
+        <!-- Shaded area: trapezoid from t=0 to t=2.5 between the two lines -->
+        <polygon points="60,110 135,185 135,185 60,185" fill="#f59e0b" opacity=".2" stroke="#f59e0b" stroke-width="1.5"/>
+        <text x="78" y="175" font-size="12" fill="#b45309" font-weight="bold">S=12.5m</text>
+        <!-- Intersection point -->
+        <circle cx="135" cy="185" r="5" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+        <text x="140" y="200" font-size="12" fill="#f59e0b" font-weight="bold">t=2.5s (v相等)</text>
+        <!-- 乙 stops at t=10 -->
+        <line x1="360" y1="20" x2="360" y2="260" stroke="#7c3aed" stroke-width="1" stroke-dasharray="5,3"/>
+        <text x="338" y="295" font-size="12" fill="#7c3aed" font-weight="bold">t=10s 乙停止</text>
+      </svg>
+    </div>
+
+    <div class="sub-title">分析过程</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>画 v-t 图</strong>：甲 v₁=30（水平线），乙 v₂=40−4t（下降直线）</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>找交点</strong>：v₁=v₂ → <strong>t=2.5s</strong>（速度相等时刻）</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>面积差 = 间距变化量</strong><br>0~2.5s 内乙比甲多走的距离 = 三角形面积<br><span class="formula">S = ½ × 2.5 × (40−30) = ½ × 2.5 × 10 = 12.5m</span></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>判断能否追上</strong><br>初始间距 50m，只缩小了 12.5m → 最近距离 = 50 − 12.5 = <strong>37.5m</strong><br><strong style="color:var(--red);">追不上！</strong></div></div>
+
+    <div class="tip-box">
+      <strong>图像法小结：</strong>图像法一目了然！面积差&lt;初始间距 → 追不上。面积差=初始间距 → 恰好追上。面积差&gt;初始间距 → 能追上。
+    </div>
+  </div>
+
+  <!-- ===== 方法三：判别式法 ===== -->
+  <div class="method-panel" id="m6">
+    <span class="method-tag" style="background:var(--amber-light);color:#92400e;">方法三：判别式法（Δ 判断能否追上）</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：写出间距函数，用判别式 Δ 判断方程是否有解。</p>
+
+    <div class="sub-title">建立间距函数</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>写出间距关于时间的函数</strong><br><span class="formula">Δx(t) = (x₁+d) − x₂ = 30t+50 − (40t−2t²) = 2t² − 10t + 50</span><br>这是开口向上的抛物线（系数 2&gt;0）。</div></div>
+
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>令 Δx = 0，判断能否追上</strong><br><span class="formula">2t² − 10t + 50 = 0 → t² − 5t + 25 = 0</span><br><span class="formula">Δ = 25 − 100 = −75 &lt; 0 → <strong>无解，追不上</strong></span></div></div>
+
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>求最小间距（代入顶点公式）</strong><br>最小值在 <span class="formula">t = −b/(2a) = 10/(2×2) = 5/2 = 2.5s</span> 处<br><span class="formula">Δx<sub>min</sub> = 2(2.5)² − 10(2.5) + 50 = 12.5 − 25 + 50 = <strong>37.5m</strong></span></div></div>
+
+    <div class="sub-title">判别式分析总表</div>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Δ 的值</th>
+          <th>含义</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Δ &gt; 0</td>
+          <td>能追上（两个解 = 两次相遇）</td>
+        </tr>
+        <tr style="background:var(--amber-light);">
+          <td><strong>Δ = 0</strong></td>
+          <td><strong>恰好追上（临界，一次相遇）</strong></td>
+        </tr>
+        <tr>
+          <td>Δ &lt; 0</td>
+          <td>追不上（最小距离 = 代入顶点公式）</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="amber-box">
+      <strong>判别式法小结：</strong>判别式法最适合判断"能否追上"。本题 Δ&lt;0，直接得出追不上的结论。
+    </div>
+  </div>
+
+  <!-- ===== 方法四：相对运动法 ===== -->
+  <div class="method-panel" id="m7">
+    <span class="method-tag" style="background:var(--purple-light);color:#5b21b6;">方法四：相对运动法（变换参考系）</span>
+    <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">核心思想：以甲车为参考系，将两体问题简化为单体匀减速运动。</p>
+
+    <div class="sub-title">转换参考系</div>
+    <div class="step"><div class="step-num">1</div><div class="step-body"><strong>以甲车为参考系，乙车的相对运动</strong>
+      <table style="width:100%;margin-top:8px;font-size:.92em;">
+        <tr style="background:var(--purple-light);"><th style="padding:8px;">物理量</th><th style="padding:8px;">数值</th></tr>
+        <tr><td style="padding:8px;">相对初速度</td><td style="padding:8px;"><strong>v'₀ = 40 − 30 = 10 m/s</strong>（向前）</td></tr>
+        <tr><td style="padding:8px;">相对加速度</td><td style="padding:8px;"><strong>a' = −4 − 0 = −4 m/s²</strong></td></tr>
+        <tr><td style="padding:8px;">初始距离</td><td style="padding:8px;">乙落后 <strong>50m</strong></td></tr>
+      </table>
+    </div></div>
+
+    <div class="sub-title">相对运动分析</div>
+    <div class="step"><div class="step-num">2</div><div class="step-body"><strong>相对位移表达式</strong><br><span class="formula">x' = 10t − 2t²</span></div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-body"><strong>追上条件</strong><br><span class="formula">x' = 50 → 2t² − 10t + 50 = 0 → Δ &lt; 0 → 追不上！</span></div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-body"><strong>最大相对位移（最接近时）</strong><br><span class="formula">v' = 0 → 10 − 4t = 0 → t = 2.5s</span><br><span class="formula">x'<sub>max</sub> = 10(2.5) − 2(2.5)² = 25 − 12.5 = 12.5m &lt; 50m → 追不上</span><br>最近距离 = 50 − 12.5 = <strong>37.5m</strong></div></div>
+
+    <div class="tip-box">
+      <strong>相对运动法小结：</strong>相对运动法把追及问题变成单体匀减速运动，只需要分析一个物体的运动，思路最简洁。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 专题 · 判断相遇几次 ==================== -->
+<div class="card">
+  <div class="card-title">专题 · 判断相遇几次</div>
+  <p style="font-size:.92em;color:var(--gray-600);margin-bottom:16px;">高考常考"两物体相遇几次"的问题。核心方法有两种：<strong>方程法</strong>和<strong>图像法</strong>。</p>
+
+  <div class="sub-title">方法一 — 方程法（数解的个数）</div>
+  <div class="step"><div class="step-num">1</div><div class="step-body"><strong>列位移方程</strong>：令两物体位移相等（考虑初始间距），得到关于 t 的方程。</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><strong>化简为标准二次方程</strong>：<span class="formula">at² + bt + c = 0</span></div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><strong>计算判别式</strong>：<span class="formula">Δ = b² − 4ac</span></div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body"><strong>数正实数解的个数</strong>：
+    <table class="compare-table" style="margin-top:8px;">
+      <thead><tr><th>判别式</th><th>解的情况</th><th>相遇次数</th></tr></thead>
+      <tbody>
+        <tr><td>Δ &gt; 0 且两根为正</td><td>两个正实数根</td><td>相遇 <strong>2</strong> 次</td></tr>
+        <tr style="background:var(--amber-light);"><td><strong>Δ = 0</strong></td><td>唯一解</td><td>相遇 <strong>1</strong> 次（恰好追上）</td></tr>
+        <tr><td>Δ &lt; 0</td><td>无实数解</td><td>相遇 <strong>0</strong> 次（追不上）</td></tr>
+      </tbody>
+    </table>
+  </div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-body"><strong>验证</strong>：解出的时间是否在物理有效范围内（是否超过刹车时间？）</div></div>
+
+  <div class="sub-title">方法二 — x-t 图像法（数交点个数）</div>
+  <div class="step"><div class="step-num">1</div><div class="step-body">在同一坐标系中画出两物体的 <strong>x-t 图</strong>。</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">数两条曲线的<strong>交点个数</strong> = 相遇次数。</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">交点的<strong>横坐标</strong> = 相遇时刻，<strong>纵坐标</strong> = 相遇位置。</div></div>
+
+  <div class="sub-title">方法三 — 间距函数法</div>
+  <div class="step"><div class="step-num">1</div><div class="step-body">写出间距函数：<span class="formula">Δx(t) = |x₁(t) − x₂(t)|</span></div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body">令 <span class="formula">Δx(t) = 0</span>，数解的个数。</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body">或者画出 Δx(t) 的图像，看它与 t 轴交几次。</div></div>
+
+  <div class="sub-title">练习 · 判断相遇几次</div>
+
+  <!-- Problem 7 -->
+  <div class="variant-card">
+    <p><span class="variant-num">7</span><span class="diff-tag diff-easy">相遇 0 次</span></p>
+    <p class="mt8"><strong>匀减速追匀速 — 追不上</strong></p>
+    <p>甲匀速 v₁=10m/s，乙在甲后方 60m 处以 v₂=20m/s、a=−2m/s² 匀减速追赶。乙车最多能追上甲车吗？相遇几次？</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>列方程：</strong></p>
+      <p class="mt8">x₁ = 10t，x₂ = 20t − t²，d = 60</p>
+      <p>追上条件：<span class="formula">20t − t² = 10t + 60 → t² − 10t + 60 = 0</span></p>
+      <p class="mt8"><span class="formula">Δ = 100 − 240 = −140 &lt; 0</span></p>
+      <p style="font-size:1.05em;"><strong style="color:var(--red);">相遇 0 次（追不上）</strong></p>
+      <p class="mt8"><strong>验证刹车时间：</strong>t<sub>stop</sub> = 20/2 = 10s（即使不停也追不上）</p>
+      <p class="mt8"><strong>最近距离：</strong>t = 5s 时，<br>Δx = 10(5)+60−(20×5−25) = 50+60−75 = <strong>35m</strong></p>
+    </div>
+  </div>
+
+  <!-- Problem 8 -->
+  <div class="variant-card">
+    <p><span class="variant-num">8</span><span class="diff-tag diff-medium">相遇 1 次 — 恰好追上</span></p>
+    <p class="mt8"><strong>匀减速追匀速 — 临界条件</strong></p>
+    <p>甲匀速 v₁=10m/s，乙在甲后方 d 处以 v₂=20m/s、a=−2m/s² 匀减速追赶。要使乙恰好追上甲，d 应为多少？</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>列方程：</strong></p>
+      <p class="mt8">追上条件：<span class="formula">20t − t² = 10t + d → t² − 10t + d = 0</span></p>
+      <p class="mt8"><strong>恰好追上 → Δ = 0</strong><br><span class="formula">100 − 4d = 0 → <strong>d = 25m</strong></span></p>
+      <p class="mt8">此时 <span class="formula">t = 10/2 = 5s</span></p>
+      <p class="mt8"><strong>验证刹车：</strong>t<sub>stop</sub> = 10s &gt; 5s ✓</p>
+      <p style="font-size:1.05em;"><strong>d = 25m 时恰好追上 1 次。</strong></p>
+    </div>
+  </div>
+
+  <!-- Problem 9 -->
+  <div class="variant-card">
+    <p><span class="variant-num">9</span><span class="diff-tag diff-hard">相遇 2 次</span></p>
+    <p class="mt8"><strong>匀减速追匀速 — 两次相遇</strong></p>
+    <p>甲匀速 v₁=8m/s，乙在甲后方 10m 处以 v₂=16m/s、a=−2m/s² 匀减速追赶。两车相遇几次？分别在什么时刻？</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>列方程：</strong></p>
+      <p class="mt8">追上条件：<span class="formula">16t − t² = 8t + 10 → t² − 8t + 10 = 0</span></p>
+      <p class="mt8"><span class="formula">Δ = 64 − 40 = 24 &gt; 0 → <strong>两个正根 → 相遇 2 次！</strong></span></p>
+      <p class="mt8">t₁ = (8−√24)/2 = 4−√6 ≈ <strong>1.55s</strong>（第一次追上，乙超过甲）</p>
+      <p>t₂ = (8+√24)/2 = 4+√6 ≈ <strong>6.45s</strong>（第二次相遇，甲反超乙）</p>
+      <p class="mt8"><strong>验证刹车：</strong>t<sub>stop</sub> = 16/2 = 8s &gt; 6.45s ✓</p>
+      <p class="mt8"><strong>物理过程：</strong>乙先超过甲（第1次相遇），之后乙减速变慢，甲又追上乙（第2次相遇）。</p>
+    </div>
+  </div>
+
+  <div class="key-point">
+    <strong>核心结论：</strong>相遇次数 = 方程正实数解的个数。Δ&gt;0 两次，Δ=0 一次，Δ&lt;0 零次。但一定要验证刹车时间！如果解出的 t 超过刹车时间，那个解无效。
+  </div>
+
+  <div class="warn-box">
+    <strong>特别注意：</strong>第二次相遇（甲反超乙）在物理上是真实的——乙虽然先超过了甲，但因为一直在减速，最终被匀速的甲又追了回来。
+  </div>
+</div>
+
+<!-- ==================== 核心总结 ==================== -->
+<div class="card">
+  <div class="card-title">核心规律总结</div>
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="s-title">追上条件</div>
+      <div class="s-desc">两车位移相等（同一时刻到达同一位置）</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-title">间距最大</div>
+      <div class="s-desc">两车速度相等时，间距取极值</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-title">能否追上</div>
+      <div class="s-desc">列方程看判别式：Δ≥0 能追上，Δ<0 追不上</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-title">选方法</div>
+      <div class="s-desc">定量计算→公式法；直观分析→图像法；判断能否追→判别式；两体都变速→相对运动</div>
+    </div>
+  </div>
+  <div class="warn-box">
+    <strong>特别注意：</strong>如果是减速物体追匀速物体，一定要先判断减速物体是否会先停下来（刹车问题），不能直接套公式！
+  </div>
+</div>
+
+<!-- ==================== 四法对比表 + 方法选择指南 ==================== -->
+<div class="card">
+  <div class="card-title">四法对比表</div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>方法</th>
+        <th>核心思路</th>
+        <th>适用场景</th>
+        <th>优势</th>
+        <th>劣势</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>公式法</td>
+        <td>位移相等列方程</td>
+        <td>通用定量计算</td>
+        <td>思路直接</td>
+        <td>计算量大</td>
+      </tr>
+      <tr>
+        <td>图像法</td>
+        <td>v-t 面积分析</td>
+        <td>直观分析过程</td>
+        <td>最直观</td>
+        <td>需画图能力</td>
+      </tr>
+      <tr>
+        <td>判别式法</td>
+        <td>Δ 判断能否追上</td>
+        <td>判断能否追及 / 最值</td>
+        <td>一步到位</td>
+        <td>只适用于二次关系</td>
+      </tr>
+      <tr>
+        <td>相对运动法</td>
+        <td>变换参考系</td>
+        <td>两体都变速运动</td>
+        <td>化繁为简</td>
+        <td>需理解参考系</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="method-guide">
+    <div class="mg-title">方法选择指南</div>
+    <div class="mg-item">
+      <span class="mg-scenario">求追上时间 / 位置</span>
+      <span class="mg-arrow">→</span>
+      <span class="mg-method">公式法</span>
+    </div>
+    <div class="mg-item">
+      <span class="mg-scenario">分析过程 / 最大距离</span>
+      <span class="mg-arrow">→</span>
+      <span class="mg-method">图像法</span>
+    </div>
+    <div class="mg-item">
+      <span class="mg-scenario">判断能否追上</span>
+      <span class="mg-arrow">→</span>
+      <span class="mg-method">判别式法</span>
+    </div>
+    <div class="mg-item">
+      <span class="mg-scenario">两车都变速运动</span>
+      <span class="mg-arrow">→</span>
+      <span class="mg-method">相对运动法</span>
+    </div>
+    <div class="mg-item">
+      <span class="mg-scenario mg-warn">涉及刹车</span>
+      <span class="mg-arrow">→</span>
+      <span class="mg-method mg-warn">先算停车时间，再选方法</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 变式训练 ==================== -->
+<div class="card">
+  <div class="card-title">变式训练 · 做一题通一类</div>
+  <p style="font-size:.92em;color:var(--gray-600);margin-bottom:16px;">在母题基础上变化条件，训练灵活运用四种方法的能力。</p>
+
+  <!-- 变式1 -->
+  <div class="variant-card">
+    <p><span class="variant-num">1</span><span class="diff-tag diff-easy">基础变式</span></p>
+    <p class="mt8"><strong>变化条件：警车晚出发 3s</strong></p>
+    <p>超速车仍以 v₀=20m/s 匀速行驶，经过警车时警车不启动，<strong>3s 后</strong>警车才以 a=2m/s² 匀加速追赶。求：</p>
+    <p class="indent">（1）警车出发后多久追上超速车？</p>
+    <p class="indent">（2）追上前两车的最大距离。</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>分析：</strong>超速车多走了 3s，设警车出发后时间为 t。</p>
+      <p class="mt8">超车位移：x₁ = 20(t+3) = 20t + 60</p>
+      <p>警车位移：x₂ = ½ × 2 × t² = t²</p>
+      <p class="mt8"><strong>（1）追上条件：</strong>x₁ = x₂</p>
+      <p>t² = 20t + 60 → t² − 20t − 60 = 0</p>
+      <p>Δ = 400 + 240 = 640 → t = (20+√640)/2 = 10 + 4√10 ≈ <strong>22.6 s</strong></p>
+      <p class="mt8"><strong>（2）最大距离：</strong>速度相等时间距最大</p>
+      <p>v₂ = 2t = 20 → t = 10s（警车出发后 10s）</p>
+      <p>Δx = 20(10+3) − 10² = 260 − 100 = <strong>160 m</strong></p>
+      <p class="mt8">比母题多了 60m（正好是超速车 3s 的位移），体会时间差对结果的影响。</p>
+    </div>
+  </div>
+
+  <!-- 变式2 -->
+  <div class="variant-card">
+    <p><span class="variant-num">2</span><span class="diff-tag diff-medium">进阶变式</span></p>
+    <p class="mt8"><strong>变化条件：刹车追及（注意先停）</strong></p>
+    <p>甲车以 v₁=20m/s 匀速行驶，乙车在甲车前方 d=48m 处以 v₂=24m/s 同向匀速行驶。某时刻乙车开始以 a=2m/s² 匀减速刹车。问：</p>
+    <p class="indent">（1）甲车能否追上乙车？</p>
+    <p class="indent">（2）若追不上，最近距离是多少？</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>关键：先判断乙车刹车到停止的时间</strong></p>
+      <p>t_stop = v₂/a = 24/2 = <strong>12s</strong></p>
+      <p class="mt8"><strong>用判别式法：</strong>设从刹车开始经过时间 t 后甲追上乙：</p>
+      <p>甲位移：x₁ = 20t</p>
+      <p>乙位移：x₂ = 24t − t²（t ≤ 12s 时有效）</p>
+      <p>追及条件：x₁ = x₂ + 48</p>
+      <p>20t = 24t − t² + 48 → t² − 4t − 48 = 0</p>
+      <p>Δ = 16 + 192 = 208 → t = (4+√208)/2 ≈ 9.2s < 12s</p>
+      <p class="mt8"><strong>（1）能追上</strong>，在乙车停下前就追上了，t ≈ <strong>9.2s</strong></p>
+      <p class="mt8"><strong>（2）此问不适用</strong>（因为能追上，最近距离为 0）。</p>
+      <p class="mt8" style="color:var(--red);"><strong>易错提醒：</strong>如果算出 t > 12s，则乙车已经停下来了，不能再用 x₂=24t−t² 计算，而应该用乙车的停止位置 x₂=24²/(2×2)=144m 来重新判断。</p>
+    </div>
+  </div>
+
+  <!-- 变式3 -->
+  <div class="variant-card">
+    <p><span class="variant-num">3</span><span class="diff-tag diff-hard">挑战变式</span></p>
+    <p class="mt8"><strong>变化条件：双车追及（两车都变速）</strong></p>
+    <p>甲车从静止开始以 a₁=3m/s² 匀加速启动，同时乙车在甲车前方 75m 处以 v₂=15m/s、a₂=−1m/s² 做匀减速运动（两车同向行驶）。求：</p>
+    <p class="indent">（1）甲车出发后多久追上乙车？</p>
+    <p class="indent">（2）追上前两车的最大距离。</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>用相对运动法最简洁！</strong></p>
+      <p class="mt8">以乙车为参考系，甲车的相对运动：</p>
+      <p>相对初速度：v'₀ = 0 − 15 = −15 m/s（甲相对乙向后）</p>
+      <p>相对加速度：a' = 3 − (−1) = 4 m/s²</p>
+      <p>初始相对位置：甲落后 75m</p>
+      <p class="mt8"><strong>（1）追上条件：</strong>相对位移 = 75m</p>
+      <p>x' = v'₀·t + ½a'·t² = −15t + 2t² = 75</p>
+      <p>2t² − 15t − 75 = 0</p>
+      <p>Δ = 225 + 600 = 825 → t = (15+√825)/4 ≈ <strong>10.9 s</strong></p>
+      <p>需验证乙车此时是否已停：t_stop = 15/1 = 15s > 10.9s ✓</p>
+      <p class="mt8"><strong>（2）最大距离：</strong>相对速度为零时</p>
+      <p>v' = −15 + 4t = 0 → t = 3.75s</p>
+      <p>此时相对位移 x' = −15×3.75 + 2×3.75² = −56.25 + 28.125 = −28.125m</p>
+      <p>实际距离 = 75 + 28.125 = <strong>103.125 m</strong></p>
+      <p class="mt8"><strong>方法对比：</strong>两车都在变速运动时，相对运动法优势明显——只需要分析一个物体的运动，避免了复杂的联立方程。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 追及模型全分类 ==================== -->
+<div class="card">
+  <div class="card-title">追及模型全分类</div>
+  <p style="font-size:.92em;color:var(--gray-600);margin-bottom:16px;">系统梳理六大追及模型，掌握每种模型的特征与解题要点，做到以不变应万变。</p>
+
+  <!-- Part 1: 六大追及模型分类表 -->
+  <div class="sub-title">六大追及模型分类</div>
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>模型</th>
+        <th>前车运动</th>
+        <th>后车运动</th>
+        <th>能否追上</th>
+        <th>关键特征</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>① 匀加速追匀速</td>
+        <td>匀速 v₀</td>
+        <td>匀加速 a</td>
+        <td>一定能追上</td>
+        <td>速度相等时间距最大</td>
+      </tr>
+      <tr>
+        <td>② 匀速追匀减速</td>
+        <td>匀减速 a</td>
+        <td>匀速 v₀</td>
+        <td>一定能追上</td>
+        <td>前车先停则用停止位置算</td>
+      </tr>
+      <tr>
+        <td>③ 匀减速追匀速</td>
+        <td>匀速 v₀</td>
+        <td>匀减速 a</td>
+        <td>不一定追上</td>
+        <td>Δ&lt;0追不上，Δ=0恰好追上</td>
+      </tr>
+      <tr>
+        <td>④ 匀加速追匀减速</td>
+        <td>匀减速</td>
+        <td>匀加速</td>
+        <td>一定能追上</td>
+        <td>两车都在变，相对运动法最简</td>
+      </tr>
+      <tr>
+        <td>⑤ 匀减速追匀加速</td>
+        <td>匀加速</td>
+        <td>匀减速</td>
+        <td>不一定追上</td>
+        <td>后车先停需特别注意</td>
+      </tr>
+      <tr>
+        <td>⑥ 匀速追匀速</td>
+        <td>匀速 v₁</td>
+        <td>匀速 v₂</td>
+        <td>v₂&gt;v₁ 能追上</td>
+        <td>最简单，直接 Δv·t = Δx₀</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="key-point">
+    <strong>记忆口诀：</strong>"加速追匀速，一定能追上；减速追匀速，未必追得上；匀速追减速，前车可能先停下。"判断能否追上的核心是看<strong>后车速度能否大于前车速度</strong>。
+  </div>
+
+  <!-- Part 2: 通用解题六步法 -->
+  <div class="sub-title">通用解题六步法</div>
+  <p style="font-size:.9em;color:var(--gray-600);margin-bottom:10px;">无论哪种模型，按以下六步走，思路清晰不遗漏。</p>
+
+  <div class="step"><div class="step-num">1</div><div class="step-body"><strong>画过程</strong> —— 画出运动示意图，标注初速度、加速度方向。运动过程一目了然。</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-body"><strong>判类型</strong> —— 判断属于六种模型中的哪一种。不同模型决定不同的解题策略。</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-body"><strong>找条件</strong> —— 追上条件（位移相等）或极值条件（速度相等）。这是列方程的依据。</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-body"><strong>查刹车</strong> —— 减速物体先算停车时间 <span class="formula">t<sub>stop</sub> = v/a</span>，判断是否在停车前追上。<strong style="color:var(--red);">这是最容易丢分的一步！</strong></div></div>
+  <div class="step"><div class="step-num">5</div><div class="step-body"><strong>列方程</strong> —— 根据条件列位移方程（可配合判别式 Δ）。选择合适的解法（公式法、图像法、判别式法、相对运动法）。</div></div>
+  <div class="step"><div class="step-num">6</div><div class="step-body"><strong>验结果</strong> —— 验证时间是否合理（正值？是否超过停车时间？）。排除不合理解。</div></div>
+
+  <div class="amber-box">
+    <strong>特别提醒：</strong>第④步"查刹车"是高考高频陷阱。凡是涉及减速运动的问题，<strong>必须先算停车时间</strong>，再判断追上发生在停车前还是停车后，两种情况的方程完全不同。
+  </div>
+
+  <!-- Part 3: 三道补充练习 -->
+  <div class="sub-title">补充练习 · 覆盖更多模型</div>
+  <p style="font-size:.92em;color:var(--gray-600);margin-bottom:16px;">以下三道题分别对应模型②③⑥及相遇问题，用六步法逐一突破。</p>
+
+  <!-- Problem 4 -->
+  <div class="variant-card">
+    <p><span class="variant-num">4</span><span class="diff-tag diff-medium">模型② 匀速追匀减速</span></p>
+    <p class="mt8"><strong>匀速追匀减速 —— 刹车陷阱典型</strong></p>
+    <p>甲车以 v₁=10m/s 匀速行驶，前方乙车以 v₂=20m/s 同向行驶并开始以 a=4m/s² 刹车。初始间距 d=20m。问甲车能否追上乙车？若能，何时追上？</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>第一步：查刹车 —— 先算乙车停车时间</strong></p>
+      <p class="mt8">t<sub>stop</sub> = v₂/a = 20/4 = <strong>5s</strong></p>
+      <p>乙车停车位置：x₂ = v₂²/(2a) = 20²/(2×4) = <strong>50m</strong></p>
+      <p class="mt8"><strong>第二步：列方程（假设 t ≤ 5s 时追上）</strong></p>
+      <p>甲位移：x₁ = 10t</p>
+      <p>乙位移：x₂ = 20t − ½×4×t² = 20t − 2t²</p>
+      <p>追及条件：x₁ = x₂ + d → 10t = 20t − 2t² + 20</p>
+      <p>整理：2t² − 10t − 20 = 0</p>
+      <p>Δ = 100 + 160 = 260 &gt; 0</p>
+      <p>t = (10+√260)/4 ≈ <strong>6.6s</strong></p>
+      <p class="mt8"><strong style="color:var(--red);">第三步：验结果 —— 发现陷阱！</strong></p>
+      <p>t ≈ 6.6s &gt; t<sub>stop</sub> = 5s → <strong>乙车已经停下！</strong>不能再用运动学公式。</p>
+      <p class="mt8"><strong>第四步：改用停止位置重新计算</strong></p>
+      <p>乙车已停在 x₂ = 50m 处，甲车需要走过的距离：</p>
+      <p>10t = 50 + 20 = 70 → <strong>t = 7s</strong> ✓（&gt; 5s，确认乙车已停）</p>
+      <p class="mt8" style="font-size:1.05em;"><strong>答案：能追上，t = 7s（此时乙车已停）。</strong></p>
+      <p class="mt8" style="color:var(--red);"><strong>易错提醒：</strong>本题的陷阱在于直接用公式算出 t≈6.6s 就结束了，没有验证乙车是否已停。记住：凡是有减速的一方，<strong>必须先算停车时间</strong>！</p>
+    </div>
+  </div>
+
+  <!-- Problem 5 -->
+  <div class="variant-card">
+    <p><span class="variant-num">5</span><span class="diff-tag diff-hard">模型③ 匀减速追匀速（追不上）</span></p>
+    <p class="mt8"><strong>匀减速追匀速 —— 判别式法判断追不上</strong></p>
+    <p>甲车以 v₁=24m/s 匀速行驶，乙车在甲车后方 d=40m 处以 v₂=30m/s、a=−2m/s² 做匀减速追赶。问乙车能否追上甲车？若追不上，最近距离是多少？</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>第一步：判类型 —— 模型③，匀减速追匀速，不一定追上。</strong></p>
+      <p class="mt8"><strong>第二步：用判别式法列间距方程</strong></p>
+      <p>甲位移：x₁ = 24t</p>
+      <p>乙位移：x₂ = 30t − t²</p>
+      <p>间距：Δx = x₁ + d − x₂ = 24t + 40 − (30t − t²) = t² − 6t + 40</p>
+      <p class="mt8"><strong>第三步：追上条件 Δx = 0</strong></p>
+      <p>t² − 6t + 40 = 0</p>
+      <p>Δ = 36 − 160 = <strong>−124 &lt; 0</strong></p>
+      <p class="mt8" style="font-size:1.05em;"><strong style="color:var(--red);">追不上！</strong>方程无实数解。</p>
+      <p class="mt8"><strong>第四步：求最近距离（速度相等时）</strong></p>
+      <p>速度相等：v₂ = v₁ → 30 − 2t = 24 → <strong>t = 3s</strong></p>
+      <p>代入间距公式：Δx<sub>min</sub> = 3² − 6×3 + 40 = 9 − 18 + 40 = <strong>31m</strong></p>
+      <p class="mt8"><strong>第五步：验结果</strong></p>
+      <p>乙车停车时间 t<sub>stop</sub> = 30/2 = 15s &gt; 3s ✓（速度相等时乙车还在运动）</p>
+      <p class="mt8" style="font-size:1.05em;"><strong>答案：追不上。最近距离为 31m（此时两车速度相等，均为 24m/s）。</strong></p>
+      <p class="mt8">判别式法在此类"判断能否追上"的问题中一步到位，非常高效。</p>
+    </div>
+  </div>
+
+  <!-- Problem 6 -->
+  <div class="variant-card">
+    <p><span class="variant-num">6</span><span class="diff-tag diff-easy">相遇问题（双向奔赴）</span></p>
+    <p class="mt8"><strong>相向运动 —— 相遇问题</strong></p>
+    <p>甲乙两车相距 d=100m，甲车以 v₁=15m/s 向乙车方向匀速行驶，乙车同时以 v₂=10m/s 向甲车方向匀速行驶。求：</p>
+    <p class="indent">（1）两车何时相遇？</p>
+    <p class="indent">（2）若乙车做匀加速 a=2m/s²（初速度仍为 10m/s），何时相遇？</p>
+
+    <button class="ans-btn" onclick="toggleAns(this)">查看解析</button>
+    <div class="ans-body">
+      <p><strong>关键：相向运动时，位移之和等于初始间距。</strong></p>
+      <p class="mt8"><strong>（1）两车匀速相向运动</strong></p>
+      <p>相遇条件：x₁ + x₂ = d</p>
+      <p>15t + 10t = 100</p>
+      <p>25t = 100 → <strong>t = 4s</strong></p>
+      <p class="mt8"><strong>（2）乙车改为匀加速</strong></p>
+      <p>甲位移：x₁ = 15t</p>
+      <p>乙位移：x₂ = 10t + ½×2×t² = 10t + t²</p>
+      <p>相遇条件：x₁ + x₂ = d</p>
+      <p>15t + 10t + t² = 100</p>
+      <p>t² + 25t − 100 = 0</p>
+      <p>Δ = 625 + 400 = 1025</p>
+      <p>t = (−25 + √1025)/2 ≈ (−25 + 32.02)/2 ≈ <strong>3.5s</strong></p>
+      <p class="mt8" style="font-size:1.05em;"><strong>答案：（1）t = 4s；（2）t ≈ 3.5s（乙车加速后相遇更快）。</strong></p>
+      <p class="mt8"><strong>对比追及与相遇：</strong>追及问题（同向）用位移之差等于初始间距；相遇问题（相向）用位移之和等于初始间距。本质都是"同一时刻到达同一位置"。</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 追及问题全景图 ==================== -->
+<div class="card">
+  <div class="card-title">高三一轮复习 · 追及问题全景图</div>
+  <p style="font-size:.92em;color:var(--gray-600);margin-bottom:16px;">用一张知识全景图，把追及相遇问题的完整体系串起来。</p>
+
+  <div style="background:var(--gray-50);border:1px solid var(--gray-200);border-radius:12px;padding:24px 28px;margin:14px 0;font-family:'Courier New','Microsoft YaHei',monospace;font-size:.92em;line-height:2.2;overflow-x:auto;">
+    <div style="font-weight:700;color:var(--blue);font-size:1.1em;font-family:'Microsoft YaHei',sans-serif;margin-bottom:8px;">追及相遇问题</div>
+    <div class="indent" style="border-left:3px solid var(--blue);margin-left:8px;padding-left:16px;">
+      <div style="color:var(--gray-700);font-weight:700;">├── 追及问题（同向运动）</div>
+      <div class="indent" style="border-left:2px solid var(--green);margin-left:12px;padding-left:14px;">
+        <div style="color:#065f46;">├── <strong>后车能追上</strong>（模型 ①②④⑥）</div>
+        <div class="indent" style="margin-left:20px;padding-left:10px;color:var(--gray-600);">└── 关键：求追上时间和位置</div>
+        <div style="color:#991b1b;margin-top:4px;">├── <strong>后车追不上</strong>（模型 ③⑤）</div>
+        <div class="indent" style="margin-left:20px;padding-left:10px;color:var(--gray-600);">└── 关键：求最近距离（速度相等时取极值）</div>
+        <div style="color:var(--red);margin-top:4px;font-weight:700;">└── <strong>刹车陷阱</strong></div>
+        <div class="indent" style="margin-left:20px;padding-left:10px;color:var(--gray-600);">└── 先算停车时间 t<sub>stop</sub> = v/a，再判断追上发生在停车前还是后</div>
+      </div>
+      <div style="color:var(--purple);font-weight:700;margin-top:8px;">└── 相遇问题（相向运动）</div>
+      <div class="indent" style="border-left:2px solid var(--purple);margin-left:12px;padding-left:14px;">
+        <div style="color:#5b21b6;">└── <strong>位移之和 = 初始间距</strong>（x₁ + x₂ = d）</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="s-title">追及（同向）核心等式</div>
+      <div class="s-desc">x<sub>后</sub> = x<sub>前</sub> + d₀（位移之差等于初始间距）</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-title">相遇（相向）核心等式</div>
+      <div class="s-desc">x₁ + x₂ = d₀（位移之和等于初始间距）</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-title">极值条件（万能钥匙）</div>
+      <div class="s-desc">速度相等时，间距取极值（最大或最小）</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-title">刹车检查（必做步骤）</div>
+      <div class="s-desc">凡有减速运动，先算 t<sub>stop</sub> = v/a，再列方程</div>
+    </div>
+  </div>
+
+  <div class="key-point" style="margin-top:18px;font-size:1.02em;">
+    <strong>追及相遇的本质就一句话：</strong>同一时刻、同一位置。无论什么模型，列位移方程、找等量关系，就是解题的核心。<strong>速度相等是极值的万能钥匙。</strong>
+  </div>
+</div>
+
+</div><!-- end container -->
+
+<script>
+// ===== Tab / Method switching (card-scoped) =====
+function switchMethod(idx) {
+  var card = document.getElementById('m0').closest('.card');
+  card.querySelectorAll('.method-btn').forEach(function(b, i) { b.classList.toggle('active', i === idx); });
+  card.querySelectorAll('.method-panel').forEach(function(p, i) { p.classList.toggle('active', i === idx); });
+}
+function switchMethod2(idx) {
+  var card = document.getElementById('m4').closest('.card');
+  card.querySelectorAll('.method-btn').forEach(function(b, i) { b.classList.toggle('active', i === idx); });
+  card.querySelectorAll('.method-panel').forEach(function(p, i) { p.classList.toggle('active', i === idx); });
+}
+
+// ===== Answer toggle =====
+function toggleAns(btn) {
+  const body = btn.nextElementSibling;
+  body.classList.toggle('show');
+  btn.textContent = body.classList.contains('show') ? '收起解析' : '查看解析';
+}
+
+// ===== Animation Engine =====
+const roadCvs = document.getElementById('roadCanvas');
+const roadCtx = roadCvs.getContext('2d');
+const vtCvs = document.getElementById('vtCanvas');
+const vtCtx = vtCvs.getContext('2d');
+const distCvs = document.getElementById('distCanvas');
+const distCtx = distCvs.getContext('2d');
+
+let playing = false;
+let animTime = 0;       // simulation time in seconds
+let speedMul = 1;
+let animId = null;
+let lastTs = null;
+const TOTAL = 25;       // total sim seconds
+const v0 = 20, a = 2;   // physics params
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  for (const cvs of [roadCvs, vtCvs, distCvs]) {
+    const rect = cvs.getBoundingClientRect();
+    cvs.width = rect.width * dpr;
+    cvs.height = rect.height * dpr;
+    cvs.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+}
+window.addEventListener('resize', () => { resizeCanvas(); draw(); });
+
+function togglePlay() {
+  playing = !playing;
+  document.getElementById('btnPlay').textContent = playing ? '⏸ 暂停' : '▶ 播放';
+  if (playing) { lastTs = performance.now(); animId = requestAnimationFrame(loop); }
+  else if (animId) cancelAnimationFrame(animId);
+}
+function resetAnim() {
+  playing = false;
+  animTime = 0;
+  document.getElementById('btnPlay').textContent = '▶ 播放';
+  if (animId) cancelAnimationFrame(animId);
+  draw();
+}
+function setSpeed(s) { speedMul = s; }
+
+function loop(ts) {
+  if (!playing) return;
+  const dt = (ts - lastTs) / 1000 * speedMul;
+  lastTs = ts;
+  animTime += dt;
+  if (animTime > TOTAL) { animTime = TOTAL; playing = false; document.getElementById('btnPlay').textContent = '▶ 播放'; }
+  draw();
+  if (playing) animId = requestAnimationFrame(loop);
+}
+
+function draw() {
+  drawRoad();
+  drawVT();
+  drawDist();
+  updateData();
+  updateInsight();
+  document.getElementById('timeSlider').value = animTime;
+  document.getElementById('sliderVal').textContent = animTime.toFixed(1) + 's';
+}
+
+function drawRoad() {
+  const W = roadCvs.getBoundingClientRect().width;
+  const H = roadCvs.getBoundingClientRect().height;
+  const ctx = roadCtx;
+  ctx.clearRect(0, 0, W, H);
+
+  const t = animTime;
+  const x1 = v0 * t;                    // 超速车位移
+  const x2 = 0.5 * a * t * t;          // 警车位移
+  const maxX = Math.max(v0 * TOTAL, 0.5 * a * TOTAL * TOTAL) * 1.1;
+  const scale = (W - 80) / maxX;
+
+  // Road
+  const roadY1 = H * 0.35;
+  const roadY2 = H * 0.65;
+
+  // Road background
+  ctx.fillStyle = '#f3f4f6';
+  ctx.fillRect(20, roadY1 - 30, W - 40, 80);
+  ctx.fillRect(20, roadY2 - 30, W - 40, 80);
+
+  // Road lines
+  ctx.strokeStyle = '#d1d5db';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([12, 8]);
+  ctx.beginPath(); ctx.moveTo(20, roadY1 + 10); ctx.lineTo(W - 20, roadY1 + 10); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(20, roadY2 + 10); ctx.lineTo(W - 20, roadY2 + 10); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Labels
+  ctx.font = 'bold 13px "Microsoft YaHei"';
+  ctx.fillStyle = '#ef4444'; ctx.fillText('超速车道', 30, roadY1 - 18);
+  ctx.fillStyle = '#2563eb'; ctx.fillText('警车车道', 30, roadY2 - 18);
+
+  // Start line
+  ctx.strokeStyle = '#9ca3af'; ctx.lineWidth = 1;
+  ctx.setLineDash([4, 3]);
+  const startX = 40;
+  ctx.beginPath(); ctx.moveTo(startX, roadY1 - 30); ctx.lineTo(startX, roadY2 + 50); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#6b7280'; ctx.font = '11px "Microsoft YaHei"';
+  ctx.fillText('出发点', startX - 8, roadY2 + 62);
+
+  // 超速车 (red car)
+  const car1X = startX + x1 * scale;
+  drawCar(ctx, car1X, roadY1, '#ef4444', '#dc2626', '超速车');
+
+  // 警车 (blue car)
+  const car2X = startX + x2 * scale;
+  drawCar(ctx, car2X, roadY2, '#2563eb', '#1d4ed8', '警车');
+
+  // Distance indicator
+  const dist = Math.abs(x1 - x2);
+  if (dist > 1 && t > 0.5) {
+    const minX = Math.min(car1X, car2X);
+    const maxXc = Math.max(car1X, car2X);
+    const midY = (roadY1 + roadY2) / 2 + 10;
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath(); ctx.moveTo(minX + 20, midY); ctx.lineTo(maxXc + 20, midY); ctx.stroke();
+    ctx.setLineDash([]);
+    // Arrow heads
+    ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 12px "Microsoft YaHei"';
+    ctx.fillText('Δx=' + dist.toFixed(1) + 'm', (minX + maxXc) / 2 - 20, midY - 8);
+  }
+
+  // Time indicator
+  ctx.fillStyle = '#374151'; ctx.font = 'bold 14px "Microsoft YaHei"';
+  ctx.fillText('t = ' + t.toFixed(1) + ' s', W - 100, 24);
+
+  // Speed equality marker
+  if (t >= 9.5 && t <= 10.5) {
+    ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 14px "Microsoft YaHei"';
+    ctx.fillText('⚡ 速度相等！间距最大', W / 2 - 80, H - 8);
+  }
+  // Catch-up marker
+  if (t >= 19.5 && t <= 20.5) {
+    ctx.fillStyle = '#7c3aed'; ctx.font = 'bold 14px "Microsoft YaHei"';
+    ctx.fillText('🎯 追上！', W / 2 - 30, H - 8);
+  }
+}
+
+function drawCar(ctx, x, y, color, darkColor, label) {
+  const w = 40, h = 22, r = 5;
+  const cx = Math.min(Math.max(x + 20, 25), roadCvs.getBoundingClientRect().width - 30);
+  const bx = cx - w/2, by = y - h/2;
+  // Car body with manual rounded corners
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(bx + r, by);
+  ctx.lineTo(bx + w - r, by);
+  ctx.arc(bx + w - r, by + r, r, -Math.PI/2, 0);
+  ctx.lineTo(bx + w, by + h - r);
+  ctx.arc(bx + w - r, by + h - r, r, 0, Math.PI/2);
+  ctx.lineTo(bx + r, by + h);
+  ctx.arc(bx + r, by + h - r, r, Math.PI/2, Math.PI);
+  ctx.lineTo(bx, by + r);
+  ctx.arc(bx + r, by + r, r, Math.PI, Math.PI * 1.5);
+  ctx.closePath();
+  ctx.fill();
+  // Windshield
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.fillRect(cx + w/2 - 10, y - h/2 + 3, 7, h - 6);
+  // Wheels
+  ctx.fillStyle = '#1f2937';
+  ctx.beginPath(); ctx.arc(cx - 10, y + h/2 + 1, 4, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx + 10, y + h/2 + 1, 4, 0, Math.PI*2); ctx.fill();
+  // Label
+  ctx.fillStyle = darkColor; ctx.font = 'bold 11px "Microsoft YaHei"';
+  ctx.textAlign = 'center';
+  ctx.fillText(label, cx, y - h/2 - 5);
+  ctx.textAlign = 'start';
+}
+
+function drawVT() {
+  const W = vtCvs.getBoundingClientRect().width;
+  const H = vtCvs.getBoundingClientRect().height;
+  const ctx = vtCtx;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { l: 55, r: 20, t: 20, b: 40 };
+  const gW = W - pad.l - pad.r;
+  const gH = H - pad.t - pad.b;
+
+  const tMax = TOTAL;
+  const vMax = v0 * 1.3;
+  const sx = gW / tMax;
+  const sy = gH / vMax;
+
+  // Grid
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5;
+  for (let ti = 5; ti <= tMax; ti += 5) {
+    const x = pad.l + ti * sx;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + gH); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px "Microsoft YaHei"';
+    ctx.fillText(ti + '', x - 4, pad.t + gH + 16);
+  }
+  for (let vi = 10; vi <= vMax; vi += 10) {
+    const y = pad.t + gH - vi * sy;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px "Microsoft YaHei"';
+    ctx.fillText(vi + '', pad.l - 25, y + 4);
+  }
+
+  // Axes
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + gH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t + gH); ctx.lineTo(pad.l + gW, pad.t + gH); ctx.stroke();
+  ctx.fillStyle = '#333'; ctx.font = '13px "Microsoft YaHei"';
+  ctx.fillText('t/s', pad.l + gW + 4, pad.t + gH + 5);
+  ctx.fillText('v/(m·s⁻¹)', pad.l - 50, pad.t + 10);
+
+  const t = animTime;
+
+  // 超速车 line (full: always v=20)
+  ctx.strokeStyle = 'rgba(239,68,68,0.3)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t + gH - v0 * sy);
+  ctx.lineTo(pad.l + tMax * sx, pad.t + gH - v0 * sy);
+  ctx.stroke();
+  // Animated portion
+  ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t + gH - v0 * sy);
+  ctx.lineTo(pad.l + Math.min(t, tMax) * sx, pad.t + gH - v0 * sy);
+  ctx.stroke();
+
+  // 警车 line (full: v=2t, up to tMax)
+  ctx.strokeStyle = 'rgba(37,99,235,0.3)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t + gH);
+  ctx.lineTo(pad.l + tMax * sx, pad.t + gH - a * tMax * sy);
+  ctx.stroke();
+  // Animated portion
+  ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.moveTo(pad.l, pad.t + gH);
+  ctx.lineTo(pad.l + Math.min(t, tMax) * sx, pad.t + gH - Math.min(a * t, vMax) * sy);
+  ctx.stroke();
+
+  // Current time marker
+  if (t > 0) {
+    const cx = pad.l + t * sx;
+    ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+    ctx.beginPath(); ctx.moveTo(cx, pad.t); ctx.lineTo(cx, pad.t + gH); ctx.stroke();
+    ctx.setLineDash([]);
+    // Dots
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath(); ctx.arc(cx, pad.t + gH - v0 * sy, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2563eb';
+    ctx.beginPath(); ctx.arc(cx, pad.t + gH - Math.min(a*t, vMax) * sy, 4, 0, Math.PI*2); ctx.fill();
+  }
+
+  // Intersection marker
+  if (t >= 10) {
+    const ix = pad.l + 10 * sx;
+    const iy = pad.t + gH - v0 * sy;
+    ctx.fillStyle = '#f59e0b';
+    ctx.beginPath(); ctx.arc(ix, iy, 6, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#f59e0b'; ctx.font = 'bold 12px "Microsoft YaHei"';
+    ctx.fillText('v相等(t=10s)', ix + 8, iy - 8);
+  }
+
+  // Shaded area (distance between cars) when t > 0
+  if (t > 0.5) {
+    const tDraw = Math.min(t, tMax);
+    ctx.fillStyle = 'rgba(245,158,11,0.12)';
+    ctx.beginPath();
+    ctx.moveTo(pad.l, pad.t + gH - v0 * sy);
+    // Top edge: v1 line
+    ctx.lineTo(pad.l + tDraw * sx, pad.t + gH - v0 * sy);
+    // Down to v2 line at current t
+    ctx.lineTo(pad.l + tDraw * sx, pad.t + gH - Math.min(a * tDraw, vMax) * sy);
+    // Bottom edge: v2 line back to origin
+    ctx.lineTo(pad.l, pad.t + gH);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Legend
+  ctx.fillStyle = '#ef4444'; ctx.font = 'bold 12px "Microsoft YaHei"';
+  ctx.fillRect(pad.l + gW - 130, pad.t + 5, 14, 3);
+  ctx.fillText('超速车', pad.l + gW - 112, pad.t + 12);
+  ctx.fillStyle = '#2563eb';
+  ctx.fillRect(pad.l + gW - 130, pad.t + 22, 14, 3);
+  ctx.fillText('警车', pad.l + gW - 112, pad.t + 29);
+}
+
+function updateData() {
+  const t = animTime;
+  document.getElementById('dTime').textContent = t.toFixed(1);
+  document.getElementById('dX1').textContent = (v0 * t).toFixed(1);
+  document.getElementById('dX2').textContent = (0.5 * a * t * t).toFixed(1);
+  document.getElementById('dDist').textContent = Math.abs(v0 * t - 0.5 * a * t * t).toFixed(1);
+  document.getElementById('dV2').textContent = (a * t).toFixed(1);
+}
+
+function updateInsight() {
+  const t = animTime;
+  const box = document.getElementById('insightBox');
+  const txt = document.getElementById('insightText');
+  if (t < 0.5) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  if (t < 10) {
+    txt.textContent = '警车速度 < 超速车速度，间距正在增大…';
+  } else if (t < 10.5) {
+    txt.textContent = '此刻两车速度相等（v₂=20m/s），间距达到最大值 100m！';
+  } else if (t < 20) {
+    txt.textContent = '警车速度 > 超速车速度，间距正在缩小…';
+  } else if (t < 20.5) {
+    txt.textContent = '追上！两车位移相等，间距为零。追及过程结束。';
+  } else {
+    txt.textContent = '警车已超过超速车，之后距离会越来越大。';
+  }
+}
+
+function drawDist() {
+  const W = distCvs.getBoundingClientRect().width;
+  const H = distCvs.getBoundingClientRect().height;
+  const ctx = distCtx;
+  ctx.clearRect(0, 0, W, H);
+
+  const pad = { l: 55, r: 20, t: 20, b: 40 };
+  const gW = W - pad.l - pad.r;
+  const gH = H - pad.t - pad.b;
+
+  const tMax = TOTAL; // 25
+  const dMax = 120;
+  const sx = gW / tMax;
+  const sy = gH / dMax;
+
+  // Grid
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 0.5;
+  for (let ti = 5; ti <= tMax; ti += 5) {
+    const x = pad.l + ti * sx;
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + gH); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px "Microsoft YaHei"';
+    ctx.fillText(ti + '', x - 4, pad.t + gH + 16);
+  }
+  for (let di = 20; di <= dMax; di += 20) {
+    const y = pad.t + gH - di * sy;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + gW, y); ctx.stroke();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px "Microsoft YaHei"';
+    ctx.fillText(di + '', pad.l - 25, y + 4);
+  }
+
+  // Axes
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + gH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t + gH); ctx.lineTo(pad.l + gW, pad.t + gH); ctx.stroke();
+  ctx.fillStyle = '#333'; ctx.font = '13px "Microsoft YaHei"';
+  ctx.fillText('t/s', pad.l + gW + 4, pad.t + gH + 5);
+  ctx.fillText('Δx/m', pad.l - 48, pad.t + 10);
+
+  const t = animTime;
+
+  // Full parabola (faded) Δx(t) = 20t - t²
+  ctx.strokeStyle = 'rgba(124,58,237,0.2)'; ctx.lineWidth = 2;
+  ctx.beginPath();
+  for (let ti = 0; ti <= tMax; ti += 0.2) {
+    const d = 20 * ti - ti * ti;
+    const px = pad.l + ti * sx;
+    const py = pad.t + gH - Math.max(d, 0) * sy;
+    if (ti === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Animated portion of the curve
+  if (t > 0) {
+    const tDraw = Math.min(t, tMax);
+    ctx.strokeStyle = '#7c3aed'; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    for (let ti = 0; ti <= tDraw; ti += 0.1) {
+      const d = 20 * ti - ti * ti;
+      const px = pad.l + ti * sx;
+      const py = pad.t + gH - Math.max(d, 0) * sy;
+      if (ti === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    // Ensure we draw to exact current point
+    const dNow = 20 * tDraw - tDraw * tDraw;
+    ctx.lineTo(pad.l + tDraw * sx, pad.t + gH - Math.max(dNow, 0) * sy);
+    ctx.stroke();
+
+    // Current time marker vertical line
+    const cx = pad.l + t * sx;
+    ctx.strokeStyle = '#6b7280'; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, pad.t); ctx.lineTo(cx, pad.t + gH); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Current point dot
+    const dCurrent = 20 * tDraw - tDraw * tDraw;
+    ctx.fillStyle = '#7c3aed';
+    ctx.beginPath(); ctx.arc(cx, pad.t + gH - Math.max(dCurrent, 0) * sy, 5, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // Peak marker (t=10, Δx=100) - always visible
+  const peakX = pad.l + 10 * sx;
+  const peakY = pad.t + gH - 100 * sy;
+  ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]);
+  ctx.beginPath(); ctx.moveTo(peakX, peakY); ctx.lineTo(peakX, pad.t + gH); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(pad.l, peakY); ctx.lineTo(peakX, peakY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#f59e0b';
+  ctx.beginPath(); ctx.arc(peakX, peakY, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#b45309'; ctx.font = 'bold 12px "Microsoft YaHei"';
+  ctx.fillText('峰值(10s, 100m)', peakX + 8, peakY - 8);
+
+  // Catch-up marker (t=20, Δx=0) - always visible
+  const catchX = pad.l + 20 * sx;
+  ctx.fillStyle = '#10b981';
+  ctx.beginPath(); ctx.arc(catchX, pad.t + gH, 6, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#065f46'; ctx.font = 'bold 12px "Microsoft YaHei"';
+  ctx.fillText('追上(t=20s, Δx=0)', catchX + 8, pad.t + gH - 8);
+
+  // Formula label
+  ctx.fillStyle = '#7c3aed'; ctx.font = '12px "Microsoft YaHei"';
+  ctx.fillText('Δx(t) = 20t − t²', pad.l + gW - 130, pad.t + 14);
+}
+
+// Slider event listener
+document.getElementById('timeSlider').addEventListener('input', function() {
+  if (playing) {
+    playing = false;
+    document.getElementById('btnPlay').textContent = '▶ 播放';
+    if (animId) cancelAnimationFrame(animId);
+  }
+  animTime = parseFloat(this.value);
+  draw();
+});
+
+// closest polyfill
+if (!Element.prototype.closest) {
+  Element.prototype.closest = function(s) {
+    var el = this;
+    do { if (el.matches(s)) return el; el = el.parentElement || el.parentNode; } while (el !== null && el.nodeType === 1);
+    return null;
+  };
+}
+
+// roundRect polyfill
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r) {
+    this.moveTo(x+r,y); this.lineTo(x+w-r,y); this.quadraticCurveTo(x+w,y,x+w,y+r);
+    this.lineTo(x+w,y+h-r); this.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    this.lineTo(x+r,y+h); this.quadraticCurveTo(x,y+h,x,y+h-r);
+    this.lineTo(x,y+r); this.quadraticCurveTo(x,y,x+r,y);
+  };
+}
+
+// Init
+resizeCanvas();
+draw();
+</script>
+</body>
+</html>
