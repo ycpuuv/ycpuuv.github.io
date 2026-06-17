@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>追车碰撞动态分析</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0f172a;--card:#1e293b;--border:#334155;
+  --blue:#38bdf8;--orange:#fb923c;--green:#4ade80;
+  --red:#f87171;--yellow:#fbbf24;--text:#f1f5f9;--muted:#94a3b8;
+}
+body{font-family:"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ─── HEADER ─── */
+header{text-align:center;padding:18px 0 10px;
+  background:linear-gradient(135deg,#1e293b,#0f172a);
+  border-bottom:1px solid var(--border);}
+header h1{font-size:1.6rem;background:linear-gradient(90deg,var(--blue),var(--orange));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+header p{font-size:.82rem;color:var(--muted);margin-top:4px;}
+
+/* ─── LAYOUT ─── */
+.wrap{max-width:1280px;margin:0 auto;padding:16px 12px;
+  display:grid;grid-template-columns:260px 1fr;gap:14px;}
+
+/* ─── PARAM PANEL ─── */
+.param-panel{background:var(--card);border-radius:14px;padding:16px;
+  border:1px solid var(--border);height:fit-content;position:sticky;top:12px;}
+.param-panel h2{font-size:.95rem;color:var(--yellow);margin-bottom:14px;
+  display:flex;align-items:center;gap:6px;}
+.param-group{margin-bottom:12px;}
+.param-group label{font-size:.78rem;color:var(--muted);display:flex;
+  justify-content:space-between;margin-bottom:4px;}
+.param-group label span{color:var(--blue);font-weight:700;font-size:.85rem;}
+input[type=range]{width:100%;accent-color:var(--blue);height:6px;cursor:pointer;}
+.divider{border:none;border-top:1px solid var(--border);margin:12px 0;}
+.btn-row{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.btn{flex:1;min-width:80px;padding:9px 6px;border:none;border-radius:9px;
+  font-size:.82rem;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-play{background:linear-gradient(135deg,#38bdf8,#0ea5e9);color:#fff;}
+.btn-pause{background:linear-gradient(135deg,#fb923c,#f97316);color:#fff;}
+.btn-reset{background:linear-gradient(135deg,#4ade80,#22c55e);color:#1a1a1a;}
+.btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+
+/* status badge */
+.status-badge{text-align:center;margin-top:12px;padding:8px 12px;
+  border-radius:10px;font-weight:700;font-size:.85rem;transition:all .3s;}
+.s-running{background:rgba(56,189,248,.15);color:var(--blue);border:1px solid var(--blue);}
+.s-crash{background:rgba(248,113,113,.2);color:var(--red);border:1px solid var(--red);}
+.s-safe{background:rgba(74,222,128,.15);color:var(--green);border:1px solid var(--green);}
+
+/* result box */
+.result-box{margin-top:12px;background:rgba(0,0,0,.3);border-radius:10px;
+  padding:10px 12px;font-size:.78rem;line-height:1.8;color:var(--muted);}
+.result-box b{color:var(--text);}
+
+/* ─── RIGHT COLUMN ─── */
+.right-col{display:flex;flex-direction:column;gap:14px;}
+
+/* road section */
+.road-section{background:var(--card);border-radius:14px;padding:14px;
+  border:1px solid var(--border);}
+.road-section h2{font-size:.9rem;color:var(--blue);margin-bottom:10px;}
+canvas{border-radius:10px;display:block;}
+
+/* charts row */
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.chart-card{background:var(--card);border-radius:14px;padding:14px;
+  border:1px solid var(--border);}
+.chart-card h2{font-size:.88rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+
+/* legend */
+.legend{display:flex;gap:14px;font-size:.75rem;margin-top:6px;}
+.legend-item{display:flex;align-items:center;gap:5px;}
+.dot{width:10px;height:10px;border-radius:50%;}
+
+/* time display */
+.time-bar{background:rgba(0,0,0,.3);border-radius:8px;padding:6px 14px;
+  font-size:.8rem;color:var(--muted);display:flex;gap:18px;margin-top:8px;}
+.time-bar span b{color:var(--text);}
+
+/* responsive */
+@media(max-width:900px){
+  .wrap{grid-template-columns:1fr;}
+  .charts-row{grid-template-columns:1fr;}
+  .param-panel{position:static;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🚗 追车碰撞动态分析</h1>
+  <p>v-t 图 · x-t 图 · 实际运动 — 所有参数可调节</p>
+</header>
+
+<div class="wrap">
+  <!-- ═══ 左侧参数面板 ═══ -->
+  <div class="param-panel">
+    <h2>⚙️ 参数设置</h2>
+
+    <div class="param-group">
+      <label>前车初速度 v<sub>A</sub> (m/s) <span id="lbVA">16</span></label>
+      <input type="range" id="sVA" min="0" max="40" step="1" value="16" oninput="updateParam()">
+    </div>
+    <div class="param-group">
+      <label>后车初速度 v<sub>B</sub> (m/s) <span id="lbVB">18</span></label>
+      <input type="range" id="sVB" min="0" max="40" step="1" value="18" oninput="updateParam()">
+    </div>
+    <div class="param-group">
+      <label>初始间距 L (m) <span id="lbL">20</span></label>
+      <input type="range" id="sL" min="5" max="100" step="1" value="20" oninput="updateParam()">
+    </div>
+
+    <hr class="divider">
+
+    <div class="param-group">
+      <label>前车加速度 a<sub>A</sub> (m/s²) <span style="font-size:.7rem;color:#94a3b8"> +加速 / −减速</span> <span id="lbAA">-4</span></label>
+      <input type="range" id="sAA" min="-10" max="15" step="0.5" value="-4" oninput="updateParam()">
+    </div>
+    <div class="param-group">
+      <label>后车加速度 a<sub>B</sub> (m/s²) <span style="font-size:.7rem;color:#94a3b8"> +加速 / −减速</span> <span id="lbAB">-6</span></label>
+      <input type="range" id="sAB" min="-15" max="15" step="0.5" value="-6" oninput="updateParam()">
+    </div>
+    <div class="param-group">
+      <label>后车反应时间 t₀ (s) <span id="lbT0">0.5</span></label>
+      <input type="range" id="sT0" min="0" max="2" step="0.1" value="0.5" oninput="updateParam()">
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-play" id="btnPlay" onclick="togglePlay()">▶ 播放</button>
+      <button class="btn btn-reset" onclick="resetAnim()">↺ 重置</button>
+    </div>
+
+    <div id="statusBadge" class="status-badge s-running">⏸ 就绪</div>
+
+    <div class="result-box" id="resultBox">
+      <b>计算结果</b><br>
+      <span id="resultText">点击播放开始演示</span>
+    </div>
+  </div>
+
+  <!-- ═══ 右侧内容区 ═══ -->
+  <div class="right-col">
+
+    <!-- 路面动画 -->
+    <div class="road-section">
+      <h2>🛣️ 实际运动（俯视路面）</h2>
+      <canvas id="roadCanvas" width="900" height="140"></canvas>
+      <div class="time-bar">
+        <span>时间: <b id="tDisplay">0.00</b> s</span>
+        <span>前车速度: <b id="vADisplay">--</b> m/s</span>
+        <span>后车速度: <b id="vBDisplay">--</b> m/s</span>
+        <span>间距: <b id="gapDisplay">--</b> m</span>
+      </div>
+    </div>
+
+    <!-- 图像行 -->
+    <div class="charts-row">
+      <!-- v-t 图 -->
+      <div class="chart-card">
+        <h2>📈 v-t 图像</h2>
+        <div class="legend">
+          <div class="legend-item"><div class="dot" style="background:#fb923c"></div>前车 A</div>
+          <div class="legend-item"><div class="dot" style="background:#38bdf8"></div>后车 B</div>
+          <div class="legend-item"><div class="dot" style="background:#a78bfa"></div>当前时刻</div>
+        </div>
+        <canvas id="vtCanvas" width="440" height="280"></canvas>
+      </div>
+
+      <!-- x-t 图 -->
+      <div class="chart-card">
+        <h2>📉 x-t 图像（位移）</h2>
+        <div class="legend">
+          <div class="legend-item"><div class="dot" style="background:#fb923c"></div>前车 A</div>
+          <div class="legend-item"><div class="dot" style="background:#38bdf8"></div>后车 B</div>
+          <div class="legend-item"><div class="dot" style="background:#a78bfa"></div>当前时刻</div>
+        </div>
+        <canvas id="xtCanvas" width="440" height="280"></canvas>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  PARAMETERS
+// ═══════════════════════════════════════════
+let P = { vA:16, vB:18, L:20, aA:-4, aB:-6, t0:0.5 };
+
+function updateParam(){
+  P.vA = +sVA.value; lbVA.textContent = P.vA;
+  P.vB = +sVB.value; lbVB.textContent = P.vB;
+  P.L  = +sL.value;  lbL.textContent  = P.L;
+  P.aA = +sAA.value; lbAA.textContent = P.aA;
+  P.aB = +sAB.value; lbAB.textContent = P.aB;
+  P.t0 = +sT0.value; lbT0.textContent = P.t0.toFixed(1);
+  resetAnim();
+}
+
+// ═══════════════════════════════════════════
+//  PHYSICS ENGINE
+// ═══════════════════════════════════════════
+// Phase 0: [0, t0]  B匀速, A开始刹车
+// Phase 1: [t0, tA_stop] B开始刹车, A继续刹车
+// Phase 2: after A停止/B停止
+
+// Signed acceleration for both cars: + = accelerate, − = decelerate/brake
+function xA(t){
+  if(P.aA >= 0){
+    // accelerating or constant, never stops
+    return P.vA*t + 0.5*P.aA*t*t;
+  }
+  const tStop = -P.vA / P.aA; // aA < 0, so tStop > 0
+  if(t <= tStop) return P.vA*t + 0.5*P.aA*t*t;
+  else           return P.vA*tStop + 0.5*P.aA*tStop*tStop;
+}
+function vAf(t){
+  if(P.aA >= 0) return P.vA + P.aA*t;
+  const tStop = -P.vA / P.aA;
+  return t <= tStop ? P.vA + P.aA*t : 0;
+}
+
+function xB(t){
+  // B: signed aB: + = accelerate, − = decelerate
+  if(t <= P.t0) return P.vB * t;
+  const dt = t - P.t0;
+  if(P.aB < 0){
+    const tStop = -P.vB / P.aB; // aB < 0, tStop > 0
+    if(dt <= tStop) return P.vB*P.t0 + P.vB*dt + 0.5*P.aB*dt*dt;
+    else{
+      const d = P.vB*tStop + 0.5*P.aB*tStop*tStop;
+      return P.vB*P.t0 + d;
+    }
+  } else {
+    // accelerating or constant, no stop
+    return P.vB*P.t0 + P.vB*dt + 0.5*P.aB*dt*dt;
+  }
+}
+function vBf(t){
+  if(t <= P.t0) return P.vB;
+  const dt = t - P.t0;
+  if(P.aB < 0){
+    const tStop = -P.vB / P.aB;
+    return dt <= tStop ? P.vB + P.aB*dt : 0;
+  } else {
+    return P.vB + P.aB*dt;
+  }
+}
+
+// gap = L + xA - xB  (positive means B hasn't caught A yet; A is ahead)
+function gap(t){ return P.L + xA(t) - xB(t); }
+
+// Find crash time (gap = 0)
+function findCrash(){
+  const tAStop = P.aA < 0 ? -P.vA/P.aA : Infinity;
+  const tBStop = P.aB < 0 ? P.t0 + -P.vB/P.aB : Infinity;
+  const tMax = Math.max(
+    isFinite(tAStop) ? tAStop : 8,
+    isFinite(tBStop) ? tBStop : 8
+  ) + 2;
+  const steps = 10000;
+  const dt = tMax / steps;
+  for(let i=0;i<steps;i++){
+    const t = i*dt;
+    if(gap(t) <= 0) return t;
+  }
+  return null;
+}
+
+// Find min gap time (B vel == A vel, both cars signed acceleration)
+function findMinGapTime(){
+  // vA + aA*t = vB + aB*(t-t0)
+  // (aA - aB)*t = vB - vA - aB*t0
+  const denom = P.aA - P.aB;
+  if(denom === 0) return null;
+  const t = (P.vB - P.vA - P.aB*P.t0) / denom;
+  if(t < P.t0) return null;
+  // check both still moving
+  if(P.aA < 0 && t > -P.vA/P.aA) return null; // A stopped
+  if(P.aB < 0 && t > P.t0 + -P.vB/P.aB) return null; // B stopped
+  return t;
+}
+
+// ═══════════════════════════════════════════
+//  ANIMATION STATE
+// ═══════════════════════════════════════════
+let animT = 0;
+let playing = false;
+let rafId = null;
+let lastTs = null;
+let crashT = null;
+let tTotal = 0;
+const SPEED = 1.5; // playback speed multiplier
+
+function initSim(){
+  crashT = findCrash();
+  const tAStop = P.aA < 0 ? (-P.vA / P.aA) : Infinity;
+  const tBStop = P.aB < 0 ? (P.t0 + -P.vB / P.aB) : Infinity;
+  const tEnd = crashT != null ? crashT : Math.min(tAStop, tBStop);
+  tTotal = (isFinite(tEnd) ? tEnd : 8) + 1;
+}
+
+function resetAnim(){
+  playing = false;
+  if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  lastTs = null;
+  animT = 0;
+  initSim();
+  btnPlay.textContent = '▶ 播放';
+  statusBadge.className = 'status-badge s-running';
+  statusBadge.textContent = '⏸ 就绪';
+  computeResult();
+  drawAll(0);
+}
+
+function togglePlay(){
+  if(playing){
+    playing = false;
+    btnPlay.textContent = '▶ 播放';
+    if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+  } else {
+    if(animT >= tTotal - 0.05) animT = 0;
+    playing = true;
+    btnPlay.textContent = '⏸ 暂停';
+    lastTs = null;
+    rafId = requestAnimationFrame(loop);
+  }
+}
+
+function loop(ts){
+  if(!lastTs) lastTs = ts;
+  const dt = (ts - lastTs) / 1000 * SPEED;
+  lastTs = ts;
+  animT = Math.min(animT + dt, tTotal);
+  drawAll(animT);
+  updateHUD(animT);
+  if(animT >= tTotal){
+    playing = false;
+    btnPlay.textContent = '▶ 播放';
+  } else {
+    rafId = requestAnimationFrame(loop);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  HUD UPDATES
+// ═══════════════════════════════════════════
+function updateHUD(t){
+  tDisplay.textContent  = t.toFixed(2);
+  vADisplay.textContent = vAf(t).toFixed(1);
+  vBDisplay.textContent = vBf(t).toFixed(1);
+  const g = gap(t);
+  gapDisplay.textContent = g > 0 ? g.toFixed(1) : '已碰撞';
+
+  if(crashT !== null && t >= crashT){
+    statusBadge.className = 'status-badge s-crash';
+    statusBadge.textContent = `💥 碰撞！t = ${crashT.toFixed(2)} s`;
+  } else if(t > 0.1){
+    statusBadge.className = 'status-badge s-running';
+    statusBadge.textContent = `🟢 运动中 (间距 ${Math.max(0,g).toFixed(1)} m)`;
+  }
+}
+
+function computeResult(){
+  initSim();
+  const tMinGap = findMinGapTime();
+  let html = '';
+
+  // Phase boundary
+  const tAStop = P.aA < 0 ? (-P.vA / P.aA) : null;
+  const tBStop = P.aB < 0 ? (P.t0 + -P.vB / P.aB) : null;
+
+  // Distance at t0 + 0
+  const dAtT0 = gap(P.t0);
+  html += `<b>① B刚开始刹车时（t = ${P.t0.toFixed(1)} s）:</b><br>`;
+  html += `&nbsp;&nbsp;间距 = ${dAtT0.toFixed(2)} m<br>`;
+  html += `&nbsp;&nbsp;v<sub>A</sub> = ${vAf(P.t0).toFixed(2)} m/s，v<sub>B</sub> = ${P.vB} m/s<br><br>`;
+
+  if(tMinGap !== null){
+    const minG = gap(tMinGap);
+    html += `<b>② 速度相等（最近距离）时 t = ${tMinGap.toFixed(2)} s:</b><br>`;
+    html += `&nbsp;&nbsp;最近间距 = ${minG.toFixed(2)} m<br>`;
+    html += `&nbsp;&nbsp;${minG < 0 ? '<span style="color:#f87171">间距为负，已追尾</span>' : '<span style="color:#4ade80">未发生碰撞</span>'}<br><br>`;
+  }
+
+  if(crashT !== null){
+    html += `<b>③ 碰撞时刻 t = ${crashT.toFixed(2)} s</b><br>`;
+    html += `&nbsp;&nbsp;<span style="color:#f87171">⚠️ 发生追尾事故</span>`;
+  } else {
+    html += `<b>③ 结论: <span style="color:#4ade80">不发生碰撞</span></b><br>`;
+    html += `&nbsp;&nbsp;最小间距 ≥ 0，安全。`;
+  }
+
+  resultText.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════
+//  DRAWING
+// ═══════════════════════════════════════════
+function drawAll(t){
+  drawRoad(t);
+  drawVT(t);
+  drawXT(t);
+}
+
+// ─── Road Canvas ─────────────────────────
+function drawRoad(t){
+  const cv = document.getElementById('roadCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  // road background
+  ctx.fillStyle = '#1a2035';
+  ctx.fillRect(0,0,W,H);
+
+  // road surface
+  ctx.fillStyle = '#374151';
+  ctx.beginPath();
+  ctx.roundRect(10,40,W-20,60,8);
+  ctx.fill();
+
+  // dashes
+  ctx.strokeStyle='#9ca3af';ctx.lineWidth=2;ctx.setLineDash([20,20]);
+  ctx.beginPath();ctx.moveTo(10,70);ctx.lineTo(W-10,70);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // axis label
+  ctx.fillStyle='#94a3b8';ctx.font='11px Microsoft YaHei';
+  ctx.fillText('← 运动方向',W-120,H-8);
+
+  // Scale: show 0 to some reference distance
+  // Map positions to screen
+  const scale = computeRoadScale(t);
+  const origin = scale.origin; // screen x for reference position 0
+
+  // Draw cars
+  drawCar(ctx, origin, xB(t) * scale.px, 55, '#38bdf8', 'B (后车)', vBf(t).toFixed(1));
+  drawCar(ctx, origin, (P.L + xA(t)) * scale.px, 55, '#fb923c', 'A (前车)', vAf(t).toFixed(1));
+
+  // Gap arrow
+  const xBscreen = origin + xB(t) * scale.px;
+  const xAscreen = origin + (P.L + xA(t)) * scale.px;
+  if(xAscreen - xBscreen > 30){
+    ctx.strokeStyle='#fbbf24';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+    ctx.beginPath();
+    ctx.moveTo(xBscreen+22,70);ctx.lineTo(xAscreen-22,70);ctx.stroke();
+    ctx.setLineDash([]);
+    const midX = (xBscreen + xAscreen)/2;
+    ctx.fillStyle='#fbbf24';ctx.font='bold 11px Microsoft YaHei';ctx.textAlign='center';
+    ctx.fillText(`Δx=${gap(t).toFixed(1)}m`, midX, 36);
+  }
+}
+
+function computeRoadScale(t){
+  const cv = document.getElementById('roadCanvas');
+  const W = cv.width;
+  // Total distance range: 0 to max position
+  const maxPos = P.L + Math.max(xA(tTotal), xB(tTotal)) * 1.1 + 20;
+  const px = (W - 60) / maxPos; // pixels per meter
+  return { origin: 30, px };
+}
+
+function drawCar(ctx, origin, xPx, y, color, label, spd){
+  const cx = origin + xPx;
+  // Car body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(cx-20, y-12, 40, 22, 5);
+  ctx.fill();
+  // Windshield
+  ctx.fillStyle='rgba(0,0,0,.4)';
+  ctx.fillRect(cx-6,y-9,12,8);
+  // wheels
+  ctx.fillStyle='#1f2937';
+  [[cx-14,y+10],[cx+14,y+10]].forEach(([wx,wy])=>{
+    ctx.beginPath();ctx.arc(wx,wy,6,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=color;ctx.lineWidth=2;ctx.stroke();
+  });
+  // label
+  ctx.fillStyle=color;ctx.font='bold 12px Microsoft YaHei';ctx.textAlign='center';
+  ctx.fillText(label, cx, y-18);
+  ctx.font='10px Microsoft YaHei';ctx.fillStyle='#e2e8f0';
+  ctx.fillText(spd+' m/s', cx, y+32);
+}
+
+// ─── v-t Canvas ──────────────────────────
+function drawVT(t){
+  const cv = document.getElementById('vtCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  const PAD = {l:50,r:20,t:20,b:40};
+  const pw = W-PAD.l-PAD.r, ph = H-PAD.t-PAD.b;
+
+  let vMax = Math.max(P.vA, P.vB);
+  if(P.aA >= 0) vMax = Math.max(vMax, P.vA + P.aA*tTotal);
+  if(P.aB >= 0 && tTotal > P.t0) vMax = Math.max(vMax, P.vB + P.aB*(tTotal - P.t0));
+  vMax *= 1.15;
+  const tMax = tTotal;
+
+  function sx(tt){ return PAD.l + tt/tMax*pw; }
+  function sy(v){  return PAD.t + (1-v/vMax)*ph; }
+
+  drawAxes(ctx, PAD, pw, ph, W, H, tMax, 0, vMax, 't (s)', 'v (m/s)');
+
+  // A line (signed aA: - = braking, + = accelerating)
+  const tAStop = P.aA < 0 ? (-P.vA/P.aA) : tMax+1;
+  ctx.strokeStyle='#fb923c';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(sx(0),sy(P.vA));
+  ctx.lineTo(sx(Math.min(tAStop,tMax)), sy(vAf(Math.min(tAStop,tMax))));
+  if(tAStop < tMax) ctx.lineTo(sx(tMax), sy(0));
+  else {
+    // accelerating: line continues upward
+    const vEnd = vAf(tMax);
+    ctx.lineTo(sx(tMax), sy(Math.min(vEnd, vMax)));
+  }
+  ctx.stroke();
+
+  // B line: horizontal then slope (signed aB)
+  ctx.strokeStyle='#38bdf8';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(sx(0),sy(P.vB));
+  ctx.lineTo(sx(P.t0),sy(P.vB));
+  if(P.aB < 0){
+    const tBStop = P.t0 + -P.vB/P.aB;
+    ctx.lineTo(sx(Math.min(tBStop,tMax)), sy(vBf(Math.min(tBStop,tMax))));
+    if(tBStop < tMax) ctx.lineTo(sx(tMax), sy(0));
+  } else {
+    // accelerating: line continues upward
+    const vEnd = vBf(tMax);
+    ctx.lineTo(sx(tMax), sy(Math.min(vEnd, vMax)));
+  }
+  ctx.stroke();
+
+  // Reaction time shading
+  ctx.fillStyle='rgba(251,191,36,.06)';
+  ctx.fillRect(sx(0),PAD.t,sx(P.t0)-sx(0),ph);
+  ctx.strokeStyle='rgba(251,191,36,.4)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(sx(P.t0),PAD.t);ctx.lineTo(sx(P.t0),PAD.t+ph);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24';ctx.font='10px';ctx.textAlign='center';
+  ctx.fillText('t₀',sx(P.t0),PAD.t+ph+28);
+
+  // current time line
+  drawTimeLine(ctx, sx(t), PAD.t, ph);
+
+  // Current velocity dots
+  if(t <= tMax){
+    drawDot(ctx, sx(t), sy(vAf(t)), '#fb923c');
+    drawDot(ctx, sx(t), sy(vBf(t)), '#38bdf8');
+  }
+
+  // Equal velocity annotation
+  const tmg = findMinGapTime();
+  if(tmg !== null && tmg <= tMax){
+    ctx.strokeStyle='rgba(167,139,250,.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(sx(tmg),PAD.t);ctx.lineTo(sx(tmg),PAD.t+ph);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#a78bfa';ctx.font='10px';ctx.textAlign='center';
+    ctx.fillText('v相等',sx(tmg),PAD.t-5);
+  }
+}
+
+// ─── x-t Canvas ──────────────────────────
+function drawXT(t){
+  const cv = document.getElementById('xtCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  ctx.clearRect(0,0,W,H);
+
+  const PAD = {l:54,r:20,t:20,b:40};
+  const pw = W-PAD.l-PAD.r, ph = H-PAD.t-PAD.b;
+
+  const tMax = tTotal;
+  const xMax = Math.max(P.L + xA(tMax), xB(tMax)) * 1.1;
+
+  function sx(tt){ return PAD.l + tt/tMax*pw; }
+  function sy(x){  return PAD.t + (1-x/xMax)*ph; }
+
+  drawAxes(ctx, PAD, pw, ph, W, H, tMax, 0, xMax, 't (s)', 'x (m)');
+
+  // A curve (starts at x = L)
+  ctx.strokeStyle='#fb923c';ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const tt = i/200*tMax;
+    const xx = P.L + xA(tt);
+    if(i===0) ctx.moveTo(sx(tt),sy(xx));
+    else ctx.lineTo(sx(tt),sy(xx));
+  }
+  ctx.stroke();
+
+  // B curve (starts at x = 0)
+  ctx.strokeStyle='#38bdf8';ctx.lineWidth=2.5;
+  ctx.beginPath();
+  for(let i=0;i<=200;i++){
+    const tt = i/200*tMax;
+    const xx = xB(tt);
+    if(i===0) ctx.moveTo(sx(tt),sy(xx));
+    else ctx.lineTo(sx(tt),sy(xx));
+  }
+  ctx.stroke();
+
+  // Gap annotation at t=0
+  ctx.strokeStyle='rgba(251,191,36,.6)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+  ctx.beginPath();ctx.moveTo(sx(0),sy(0));ctx.lineTo(sx(0),sy(P.L));ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#fbbf24';ctx.font='bold 10px';ctx.textAlign='left';
+  ctx.fillText(`L=${P.L}m`,sx(0)+4,sy(P.L/2));
+
+  // reaction time
+  ctx.fillStyle='rgba(251,191,36,.06)';
+  ctx.fillRect(sx(0),PAD.t,sx(P.t0)-sx(0),ph);
+
+  // crash line
+  if(crashT !== null && crashT <= tMax){
+    ctx.strokeStyle='rgba(248,113,113,.7)';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);
+    ctx.beginPath();ctx.moveTo(sx(crashT),PAD.t);ctx.lineTo(sx(crashT),PAD.t+ph);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#f87171';ctx.font='bold 10px';ctx.textAlign='center';
+    ctx.fillText('💥碰撞',sx(crashT),PAD.t-4);
+  }
+
+  // current time line
+  drawTimeLine(ctx, sx(t), PAD.t, ph);
+
+  // Current position dots
+  if(t <= tMax){
+    drawDot(ctx, sx(t), sy(P.L+xA(t)), '#fb923c');
+    drawDot(ctx, sx(t), sy(xB(t)),     '#38bdf8');
+  }
+}
+
+// ─── Axis helper ─────────────────────────
+function drawAxes(ctx, PAD, pw, ph, W, H, xMax, yMin, yMax, xLabel, yLabel){
+  ctx.strokeStyle='#475569';ctx.lineWidth=1.5;
+  // axes
+  ctx.beginPath();
+  ctx.moveTo(PAD.l, PAD.t);
+  ctx.lineTo(PAD.l, PAD.t+ph);
+  ctx.lineTo(PAD.l+pw, PAD.t+ph);
+  ctx.stroke();
+  // grid + ticks
+  ctx.strokeStyle='rgba(71,85,105,.4)';ctx.lineWidth=1;
+  const xTicks = 6, yTicks = 5;
+  ctx.fillStyle='#94a3b8';ctx.font='10px Microsoft YaHei';
+  for(let i=0;i<=xTicks;i++){
+    const xx = PAD.l + i/xTicks*pw;
+    ctx.beginPath();ctx.moveTo(xx,PAD.t+ph);ctx.lineTo(xx,PAD.t);ctx.stroke();
+    ctx.textAlign='center';
+    ctx.fillText((i/xTicks*xMax).toFixed(1), xx, PAD.t+ph+14);
+  }
+  for(let i=0;i<=yTicks;i++){
+    const yy = PAD.t + i/yTicks*ph;
+    const val = yMax - i/yTicks*(yMax-yMin);
+    ctx.beginPath();ctx.moveTo(PAD.l,yy);ctx.lineTo(PAD.l+pw,yy);ctx.stroke();
+    ctx.textAlign='right';
+    ctx.fillText(val.toFixed(0), PAD.l-4, yy+4);
+  }
+  // labels
+  ctx.fillStyle='#e2e8f0';ctx.font='bold 12px Microsoft YaHei';
+  ctx.textAlign='center';ctx.fillText(xLabel, PAD.l+pw/2, H-4);
+  ctx.save();ctx.translate(13, PAD.t+ph/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText(yLabel,0,0);ctx.restore();
+}
+
+function drawTimeLine(ctx, x, top, height){
+  ctx.strokeStyle='rgba(167,139,250,.8)';ctx.lineWidth=2;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(x,top);ctx.lineTo(x,top+height);ctx.stroke();
+  ctx.setLineDash([]);
+}
+function drawDot(ctx, x, y, color){
+  ctx.fillStyle=color;
+  ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+initSim();
+computeResult();
+drawAll(0);
+
+// Responsive canvas resize
+function resizeCanvases(){
+  const road = document.getElementById('roadCanvas');
+  const parent = road.parentElement;
+  const w = parent.clientWidth - 28;
+  if(w > 0){ road.width = w; }
+  const vtC = document.getElementById('vtCanvas');
+  const xtC = document.getElementById('xtCanvas');
+  const cw = (vtC.parentElement.clientWidth - 28);
+  if(cw > 200){ vtC.width = cw; xtC.width = cw; }
+  drawAll(animT);
+}
+window.addEventListener('resize', resizeCanvases);
+setTimeout(resizeCanvases, 100);
+</script>
+</body>
+</html>
