@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>追及相遇问题 · 匀减速被追及</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d1117;
+  color: #e0e0e0;
+  font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+  min-height: 100vh;
+}
+#app {
+  max-width: 1000px;
+  width: 100%;
+  background: #161b22;
+  border-radius: 16px;
+  padding: 24px 28px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+h1 {
+  font-size: 22px;
+  margin-bottom: 4px;
+  color: #f0f0f0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+h1 small {
+  font-size: 14px;
+  font-weight: normal;
+  color: #8b949e;
+}
+.subtitle {
+  font-size: 13px;
+  color: #8b949e;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #21262d;
+  padding-bottom: 10px;
+}
+.canvas-wrap {
+  background: #0d1117;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+canvas {
+  display: block;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 960 / 700;
+}
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  padding: 12px 16px;
+  background: #0d1117;
+  border-radius: 10px;
+  border: 1px solid #21262d;
+}
+.ctrl-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.ctrl-group label {
+  font-size: 13px;
+  color: #c9d1d9;
+  min-width: 85px;
+  white-space: nowrap;
+}
+.ctrl-group .val {
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 52px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+input[type=range] {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #30363d;
+  border-radius: 2px;
+  outline: none;
+  min-width: 60px;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #58a6ff;
+  cursor: pointer;
+  border: 2px solid #0d1117;
+  box-shadow: 0 0 0 1px #58a6ff;
+}
+input[type=range]::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #58a6ff; cursor: pointer; border: 2px solid #0d1117;
+}
+.ctrl-btns {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+  justify-content: center;
+  margin-top: 4px;
+}
+.btn {
+  padding: 6px 18px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  background: #21262d;
+  color: #c9d1d9;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn:hover { background: #30363d; color: #f0f0f0; }
+.btn.active { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+.btn.active:hover { background: #388bfd; }
+.btn.sec { background: transparent; color: #8b949e; }
+.btn.sec:hover { color: #c9d1d9; background: #21262d; }
+.speed-label {
+  font-size: 12px;
+  color: #8b949e;
+  min-width: 50px;
+  text-align: center;
+}
+@media (max-width: 640px) {
+  #app { padding: 12px; }
+  h1 { font-size: 17px; flex-wrap: wrap; }
+  h1 small { font-size: 12px; }
+  .controls { grid-template-columns: 1fr; gap: 6px; }
+  .ctrl-group label { min-width: 70px; font-size: 12px; }
+  .ctrl-group .val { min-width: 42px; font-size: 13px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>🏃 追及相遇问题 <small>被追者匀减速</small></h1>
+  <div class="subtitle">📍 先判断停止时间 t<sub>停</sub>，再分析相遇情况</div>
+  <div class="canvas-wrap" id="p5-container"></div>
+  <div class="controls" id="controls"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+<script>
+/* ============================================================
+   追及相遇问题 · 被追者匀减速交互课件
+   ============================================================ */
+
+// ─── 物理参数 ────────────────────────────────────────────
+let v_A = 8;       // 追者A的速度 (m/s, 匀速)
+let v_B0 = 10;     // 被追者B的初速度 (m/s)
+let a_B = -1;      // 被追者B的加速度 (m/s², 负值=减速)
+let x0 = 40;       // 初始距离 (m), B在A前方x0处
+
+let t_stop = 0;    // B停止时间
+let xB_stop = 0;   // B停止位置
+let xA_at_stop = 0;// A在t_stop时的位置
+
+// ─── 动画状态 ────────────────────────────────────────────
+let t = 0;         // 当前时间
+let playing = false;
+let speed = 1.0;
+let speedIdx = 1;  // 0:0.5x  1:1x  2:2x  3:4x
+const speedOpts = [0.5, 1, 2, 4];
+const colorA = '#ff6b6b';
+const colorB = '#4dabf7';
+const colorMeet = '#51cf66';
+const colorStop = '#ffd43b';
+
+// ─── 轨迹数据 ────────────────────────────────────────────
+let hist = [];     // [{t, xA, xB}]
+let meetings = []; // [{t, x}]
+
+// ─── 布局常量 ────────────────────────────────────────────
+let W = 960, H = 700;
+const MARGIN = { top: 36, bottom: 56, left: 60, right: 30 };
+
+// ─── 物理计算 ────────────────────────────────────────────
+function calcStopTime() {
+  return (a_B >= 0) ? Infinity : -v_B0 / a_B;
+}
+function posA(tv) { return v_A * tv; }  // A start at 0
+function posB(tv) {
+  if (tv <= t_stop) return x0 + v_B0 * tv + 0.5 * a_B * tv * tv;
+  return x0 + v_B0 * t_stop + 0.5 * a_B * t_stop * t_stop;
+}
+function velB(tv) {
+  if (tv <= t_stop) return v_B0 + a_B * tv;
+  return 0;
+}
+// A停止时间（A是匀速，不停）
+function canCatchAfterStop() {
+  // A追赶停止的B
+  if (xA_at_stop >= xB_stop) return { can: false, reason: 'stop_before' };
+  if (v_A <= 0) return { can: false, reason: 'too_slow' };
+  const t_needed = xB_stop / v_A;
+  if (t_needed < 300) return { can: true, t_meet: t_needed };
+  return { can: false, reason: 'too_far' };
+}
+
+// ─── 相遇分析 ────────────────────────────────────────────
+function analyzeMeetings() {
+  t_stop = calcStopTime();
+  xB_stop = posB(t_stop);
+  xA_at_stop = posA(t_stop);
+  meetings = [];
+
+  // 在 [0, t_stop] 内解 x_A(t) = x_B(t)
+  // v_A*t = x0 + v_B0*t + 0.5*a_B*t²
+  // 0.5*a_B*t² + (v_B0 - v_A)*t + x0 = 0
+  const a2 = 0.5 * a_B;
+  const b2 = v_B0 - v_A;
+  const c2 = x0;
+
+  // 检验是否有解在 [0, t_stop] 内
+  if (Math.abs(a2) < 1e-9) {
+    // 线性情况
+    if (Math.abs(b2) < 1e-9) {
+      // 平行
+      if (c2 <= 0) { meetings.push({ t: 0, x: 0, phase: 'start' }); }
+    } else {
+      const t1 = -c2 / b2;
+      if (t1 >= 0 && t1 <= t_stop) {
+        meetings.push({ t: t1, x: posA(t1), phase: 'moving' });
+      }
+    }
+  } else {
+    const disc = b2 * b2 - 4 * a2 * c2;
+    if (disc >= 0) {
+      const sqrtD = Math.sqrt(disc);
+      const t1 = (-b2 - sqrtD) / (2 * a2);
+      const t2 = (-b2 + sqrtD) / (2 * a2);
+      [t1, t2].forEach(tv => {
+        if (tv >= 0 && tv <= t_stop) {
+          const already = meetings.some(m => Math.abs(m.t - tv) < 0.01);
+          if (!already) meetings.push({ t: tv, x: posA(tv), phase: 'moving' });
+        }
+      });
+    }
+  }
+
+  // 检查B停止后的追赶
+  if (meetings.length === 0 || (meetings.length > 0 && meetings[meetings.length-1].t < t_stop - 0.001)) {
+    if (xA_at_stop < xB_stop - 0.001) {
+      const catchResult = canCatchAfterStop();
+      if (catchResult.can) {
+        meetings.push({ t: catchResult.t_meet, x: xB_stop, phase: 'after_stop' });
+      }
+    }
+  }
+
+  meetings.sort((a, b) => a.t - b.t);
+}
+
+// ─── 重新计算 ────────────────────────────────────────────
+function recalc() {
+  analyzeMeetings();
+  // 重置历史
+  hist = [];
+  const steps = 300;
+  const tMax = Math.max(t_stop + 10, 20);
+  for (let i = 0; i <= steps; i++) {
+    const tv = (i / steps) * tMax;
+    hist.push({ t: tv, xA: posA(tv), xB: posB(tv) });
+  }
+  // 限制当前时间
+  if (t > tMax) t = 0;
+}
+
+// ─── p5.js Sketch ──────────────────────────────────────
+function setup() {
+  const container = document.getElementById('p5-container');
+  const cw = container.clientWidth || 940;
+  const ratio = H / W;
+  const canvas = createCanvas(cw, Math.round(cw * ratio)).parent(container);
+  W = width; H = height;
+  pixelDensity(1);
+
+  // 重建controls
+  buildControls();
+
+  recalc();
+  frameRate(30);
+}
+
+function buildControls() {
+  const el = document.getElementById('controls');
+  el.innerHTML = `
+    <div class="ctrl-group">
+      <label style="color:${colorA}">追者A速度</label>
+      <input type="range" id="sl-vA" min="1" max="16" step="0.5" value="${v_A}">
+      <span class="val" id="vA-val">${v_A.toFixed(1)}</span>
+    </div>
+    <div class="ctrl-group">
+      <label style="color:${colorB}">B初速度</label>
+      <input type="range" id="sl-vB0" min="2" max="18" step="0.5" value="${v_B0}">
+      <span class="val" id="vB0-val">${v_B0.toFixed(1)}</span>
+    </div>
+    <div class="ctrl-group">
+      <label style="color:${colorB}">B加速度</label>
+      <input type="range" id="sl-aB" min="-3.0" max="-0.2" step="0.1" value="${a_B}">
+      <span class="val" id="aB-val">${a_B.toFixed(1)}</span>
+    </div>
+    <div class="ctrl-group">
+      <label style="color:#8b949e">初始距离</label>
+      <input type="range" id="sl-x0" min="5" max="120" step="1" value="${x0}">
+      <span class="val" id="x0-val">${x0}</span>
+    </div>
+    <div class="ctrl-btns">
+      <button class="btn ${playing?'active':''}" id="btn-play">${playing?'⏸ 暂停':'▶ 播放'}</button>
+      <button class="btn sec" id="btn-reset">↺ 重置</button>
+      <button class="btn sec" id="btn-speed">速度: ×${speedOpts[speedIdx].toFixed(1)}</button>
+    </div>
+  `;
+
+  document.getElementById('sl-vA').oninput = function() {
+    v_A = parseFloat(this.value);
+    document.getElementById('vA-val').textContent = v_A.toFixed(1);
+    t = 0; recalc();
+  };
+  document.getElementById('sl-vB0').oninput = function() {
+    v_B0 = parseFloat(this.value);
+    document.getElementById('vB0-val').textContent = v_B0.toFixed(1);
+    t = 0; recalc();
+  };
+  document.getElementById('sl-aB').oninput = function() {
+    a_B = parseFloat(this.value);
+    document.getElementById('aB-val').textContent = a_B.toFixed(1);
+    t = 0; recalc();
+  };
+  document.getElementById('sl-x0').oninput = function() {
+    x0 = parseFloat(this.value);
+    document.getElementById('x0-val').textContent = x0;
+    t = 0; recalc();
+  };
+  document.getElementById('btn-play').onclick = function() {
+    playing = !playing;
+    this.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+    this.classList.toggle('active');
+  };
+  document.getElementById('btn-reset').onclick = function() {
+    t = 0; playing = false;
+    document.getElementById('btn-play').textContent = '▶ 播放';
+    document.getElementById('btn-play').classList.remove('active');
+  };
+  document.getElementById('btn-speed').onclick = function() {
+    speedIdx = (speedIdx + 1) % speedOpts.length;
+    speed = speedOpts[speedIdx];
+    this.textContent = '速度: ×' + speed.toFixed(1);
+  };
+}
+
+function draw() {
+  background('#0d1117');
+
+  // ─── 更新动画 ─────────────────────────────────────
+  if (playing) {
+    const dt = deltaTime / 1000 * speed;
+    t += dt;
+    const tMax = Math.max(t_stop + 10, 20);
+    if (t > tMax) { t = tMax; playing = false; }
+  }
+
+  // ─── 物理量 ──────────────────────────────────────
+  const xA = posA(t);
+  const xB = posB(t);
+  const vB = velB(t);
+
+  const tMax = Math.max(t_stop + 10, 20);
+  const xMax = Math.max(posA(tMax), posB(t_stop)) * 1.15;
+  const effectiveXMax = Math.max(xMax, 120);
+
+  // ─── 区域划分 ─────────────────────────────────────
+  const trkY1 = 0;
+  const trkY2 = 110;
+  const infoY = 110;
+  const infoH = 30;
+  const graphY = infoY + infoH + 8;
+  const graphH = height - graphY - 8;
+
+  // ===== 1. 轨道视图 =====
+  {
+    const ty = 55;
+    const pad = 50;
+    const tw = width - pad * 2;
+
+    // 轨道线
+    stroke('#30363d');
+    strokeWeight(2);
+    line(pad, ty, pad + tw, ty);
+
+    // 刻度标记
+    const numTicks = 8;
+    for (let i = 0; i <= numTicks; i++) {
+      const frac = i / numTicks;
+      const px = pad + frac * tw;
+      const val = (frac * effectiveXMax).toFixed(0);
+      stroke('#21262d');
+      strokeWeight(1);
+      line(px, ty - 5, px, ty + 5);
+      noStroke();
+      fill('#8b949e');
+      textSize(10);
+      textAlign(CENTER, TOP);
+      text(val + 'm', px, ty + 8);
+    }
+
+    // 当前位置标记
+    const toX = (xv) => pad + (xv / effectiveXMax) * tw;
+
+    // B停止位置（虚线）
+    if (xB_stop > 0 && xB_stop < effectiveXMax) {
+      const sx = toX(xB_stop);
+      stroke(colorStop);
+      strokeWeight(1);
+      drawingContext.setLineDash([4, 4]);
+      line(sx, ty - 30, sx, ty + 30);
+      drawingContext.setLineDash([]);
+      noStroke();
+      fill(colorStop);
+      textSize(10);
+      textAlign(CENTER, BOTTOM);
+      text('停止位', sx, ty - 32);
+    }
+
+    // B
+    const bx = constrain(toX(xB), pad - 5, pad + tw + 5);
+    fill(colorB);
+    noStroke();
+    circle(bx, ty, 20);
+    fill('#fff');
+    textSize(10);
+    textAlign(CENTER, CENTER);
+    text('B', bx, ty);
+
+    // A
+    const ax = constrain(toX(xA), pad - 5, pad + tw + 5);
+    fill(colorA);
+    noStroke();
+    circle(ax, ty, 20);
+    fill('#fff');
+    textSize(10);
+    textAlign(CENTER, CENTER);
+    text('A', ax, ty);
+
+    // 速度标签
+    textSize(11);
+    textAlign(LEFT, BOTTOM);
+    noStroke();
+    fill(colorA);
+    text('A: v=' + v_A.toFixed(1) + ' m/s', pad, ty - 36);
+    fill(colorB);
+    text('B: v=' + vB.toFixed(1) + ' m/s' + (t > t_stop ? ' (已停)' : ''), pad + 140, ty - 36);
+
+    // 时间显示
+    fill('#ffd43b');
+    textAlign(RIGHT, BOTTOM);
+    textSize(14);
+    text('t = ' + t.toFixed(1) + 's', width - pad, ty - 36);
+  }
+
+  // ===== 2. 信息栏 =====
+  {
+    const iy = infoY + 16;
+    textSize(12);
+    noStroke();
+    fill('#8b949e');
+    textAlign(LEFT, CENTER);
+    text('B停止时间: ' + (t_stop < Infinity ? t_stop.toFixed(2) + 's' : '永不停止'), padL(), iy);
+    text('B停止位置: ' + xB_stop.toFixed(1) + 'm', padL() + 170, iy);
+    fill('#c9d1d9');
+    const meetInfo = meetings.length === 0 ? '❌ 不相遇' :
+      '✅ 相遇' + meetings.length + '次' + (meetings.length > 0 ? '  (t=' + meetings.map(m => m.t.toFixed(2) + 's').join(', ') + ')' : '');
+    text(meetInfo, padL() + 340, iy);
+  }
+
+  // ===== 3. 位置-时间图 =====
+  drawGraph(graphY, graphH, effectiveXMax, tMax);
+
+  // ===== 4. 解题步骤（在图中覆盖显示） =====
+  drawAnalysis(graphY, graphH);
+}
+
+function padL() { return MARGIN.left; }
+
+function drawGraph(graphY, graphH, xMax, tMax) {
+  const gLeft = padL();
+  const gRight = width - MARGIN.right;
+  const gTop = graphY + 8;
+  const gBot = graphY + graphH - 8;
+  const gW = gRight - gLeft;
+  const gH = gBot - gTop;
+
+  // 背景
+  noStroke();
+  fill('#111820');
+  rect(gLeft, gTop, gW, gH);
+
+  // 网格
+  stroke('#1c2330');
+  strokeWeight(1);
+  const nx = 6, ny = 5;
+  for (let i = 0; i <= nx; i++) {
+    const x = gLeft + (i / nx) * gW;
+    line(x, gTop, x, gBot);
+  }
+  for (let i = 0; i <= ny; i++) {
+    const y = gTop + (i / ny) * gH;
+    line(gLeft, y, gRight, y);
+  }
+
+  const toGX = (tv) => gLeft + (tv / tMax) * gW;
+  const toGY = (xv) => gBot - (xv / xMax) * gH;
+
+  // 轴标签
+  fill('#8b949e');
+  noStroke();
+  textSize(10);
+
+  // X轴: 时间
+  for (let i = 0; i <= nx; i++) {
+    const tv = (i / nx) * tMax;
+    const px = toGX(tv);
+    textAlign(CENTER, TOP);
+    text(tv.toFixed(1) + 's', px, gBot + 2);
+  }
+  textAlign(RIGHT, TOP);
+  text('t/s', gRight, gBot + 2);
+
+  // Y轴: 位置
+  for (let i = 0; i <= ny; i++) {
+    const xv = (i / ny) * xMax;
+    const py = toGY(xv);
+    textAlign(RIGHT, CENTER);
+    text(xv.toFixed(0), gLeft - 6, py);
+  }
+  textAlign(LEFT, CENTER);
+  fill('#8b949e');
+  textSize(10);
+  text('x/m', gLeft - 4, gTop - 2);
+
+  // ─── B轨迹 ──────────────────────────────────────
+  noFill();
+  stroke(colorB);
+  strokeWeight(2.5);
+  beginShape();
+  for (const p of hist) {
+    if (p.t > tMax) break;
+    const bx = toGX(p.t);
+    const by = toGY(p.xB);
+    vertex(bx, by);
+  }
+  endShape();
+
+  // B停止后（水平线）
+  const stopGX = toGX(t_stop);
+  const stopGY = toGY(xB_stop);
+  if (t_stop < tMax && isFinite(t_stop)) {
+    stroke(colorB);
+    strokeWeight(2.5);
+    drawingContext.setLineDash([3, 3]);
+    line(stopGX, stopGY, toGX(tMax), stopGY);
+    drawingContext.setLineDash([]);
+  }
+
+  // ─── A轨迹 ──────────────────────────────────────
+  stroke(colorA);
+  strokeWeight(2.5);
+  beginShape();
+  for (const p of hist) {
+    if (p.t > tMax) break;
+    const ax = toGX(p.t);
+    const ay = toGY(p.xA);
+    vertex(ax, ay);
+  }
+  endShape();
+
+  // ─── t_stop 竖线 ──────────────────────────────
+  if (isFinite(t_stop) && t_stop <= tMax) {
+    const sx = toGX(t_stop);
+    stroke(colorStop);
+    strokeWeight(1.5);
+    drawingContext.setLineDash([5, 4]);
+    line(sx, gTop, sx, gBot);
+    drawingContext.setLineDash([]);
+    fill(colorStop);
+    noStroke();
+    textSize(10);
+    textAlign(CENTER, BOTTOM);
+    text('t停=' + t_stop.toFixed(1) + 's', sx, gTop - 2);
+  }
+
+  // ─── 相遇点 ──────────────────────────────────────
+  for (const m of meetings) {
+    if (m.t <= tMax) {
+      const mx = toGX(m.t);
+      const my = toGY(m.x);
+      fill(colorMeet);
+      noStroke();
+      circle(mx, my, 10);
+      fill(colorMeet);
+      textSize(10);
+      textAlign(CENTER, BOTTOM);
+      text('相遇 t=' + m.t.toFixed(2) + 's', mx, my - 8);
+    }
+  }
+
+  // ─── 当前时间指示线 ──────────────────────────────
+  if (t > 0 && t <= tMax) {
+    const cx = toGX(t);
+    stroke('#ffffff44');
+    strokeWeight(1);
+    drawingContext.setLineDash([2, 3]);
+    line(cx, gTop, cx, gBot);
+    drawingContext.setLineDash([]);
+
+    // 当前位置点
+    const curAy = toGY(posA(t));
+    const curBy = toGY(posB(t));
+    fill(colorA); noStroke(); circle(toGX(t), curAy, 6);
+    fill(colorB); noStroke(); circle(toGX(t), curBy, 6);
+  }
+
+  // 图例
+  textSize(11);
+  noStroke();
+  fill(colorA);
+  textAlign(LEFT, BOTTOM);
+  text('— ' + 'A (追者)', gLeft + 8, gBot - 8);
+  fill(colorB);
+  text('— ' + 'B (被追者)', gLeft + 100, gBot - 8);
+  fill(colorStop);
+  text('- - t停', gLeft + 210, gBot - 8);
+}
+
+function drawAnalysis(graphY, graphH) {
+  const ax = width - MARGIN.right - 10;
+  const ay = graphY + 10;
+  const boxW = Math.min(230, width * 0.24);
+  const boxH = 80;
+  const bx = ax - boxW;
+
+  // 半透明背景
+  noStroke();
+  fill('#0d1117dd');
+  rect(bx, ay, boxW, boxH, 6);
+
+  textSize(11);
+  const lx = bx + 8;
+  let ly = ay + 14;
+  const lh = 15;
+
+  fill('#ffd43b');
+  textAlign(LEFT, TOP);
+  text('📋 解题步骤', lx, ly); ly += lh;
+
+  fill('#c9d1d9');
+  textSize(10);
+  text('① t停 = v₀/|a| = ' + (v_B0 / Math.abs(a_B)).toFixed(2) + 's', lx, ly); ly += lh;
+  text('② x_B(t停) = ' + xB_stop.toFixed(1) + 'm', lx, ly); ly += lh;
+  text('③ x_A(t停) = ' + xA_at_stop.toFixed(1) + 'm', lx, ly); ly += lh;
+
+  if (meetings.length === 0) {
+    fill('#ff6b6b');
+    text('④ ❌ 不相遇', lx, ly);
+  } else {
+    fill('#51cf66');
+    text('④ ✅ 相遇' + meetings.length + '次', lx, ly); ly += lh;
+    if (meetings.length > 0) {
+      fill('#8b949e');
+      textSize(9);
+      const phases = meetings.map(m => m.phase === 'moving' ? 'B运动时' : 'B停止后');
+      text('   ' + meetings.map((m, i) => 't' + (i+1) + '=' + m.t.toFixed(2) + 's(' + phases[i] + ')').join(' '), lx, ly);
+    }
+  }
+}
+
+function windowResized() {
+  const container = document.getElementById('p5-container');
+  const cw = container.clientWidth || 940;
+  const ratio = 700 / 960;
+  resizeCanvas(cw, Math.round(cw * ratio));
+  W = width; H = height;
+}
+
+// 导出给 HTML controls 用
+window.recalc = recalc;
+</script>
+</body>
+</html>
