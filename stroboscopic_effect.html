@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>频闪效应物理模拟器</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", SimHei, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .header {
+            background: #16213e;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #0f3460;
+        }
+        h1 { font-size: 24px; color: #e94560; }
+        .scene-tabs {
+            display: flex;
+            gap: 10px;
+        }
+        .tab {
+            padding: 8px 20px;
+            background: #0f3460;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .tab:hover { background: #e94560; }
+        .tab.active { background: #e94560; }
+        .main {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a1a;
+        }
+        canvas {
+            background: black;
+            border: 2px solid #0f3460;
+            border-radius: 10px;
+        }
+        .panel {
+            width: 350px;
+            background: #16213e;
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 2px solid #0f3460;
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #0f3460;
+            border-radius: 8px;
+        }
+        .section h3 {
+            color: #e94560;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        .slider-group {
+            margin-bottom: 15px;
+        }
+        .slider-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #a0a0a0;
+            font-size: 14px;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            background: #1a1a2e;
+            border-radius: 4px;
+            outline: none;
+        }
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #e94560;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .value {
+            text-align: right;
+            color: #00d4ff;
+            font-size: 14px;
+            margin-top: 3px;
+        }
+        .preset-btns {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .preset {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            color: white;
+        }
+        .preset.green { background: #2ecc71; }
+        .preset.yellow { background: #f39c12; }
+        .preset.red { background: #e74c3c; }
+        .preset:hover { transform: scale(1.05); opacity: 0.9; }
+        .formula {
+            font-family: "Courier New", monospace;
+            color: #00d4ff;
+            font-size: 14px;
+            line-height: 1.8;
+        }
+        .explain {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #a0d0ff;
+        }
+        .visual-explain {
+            font-size: 18px;
+            color: #ffcc00;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .controls {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+        .close-btn {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .close-btn:hover { background: #c0392b; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>频闪效应物理模拟器</h1>
+        <div class="scene-tabs">
+            <button class="tab active" onclick="switchScene(0)">水滴频闪</button>
+            <button class="tab" onclick="switchScene(1)">车轮频闪</button>
+            <button class="tab" onclick="switchScene(2)">冲日现象</button>
+            <button class="tab" onclick="switchScene(3)">圆盘频闪</button>
+        </div>
+        <button class="close-btn" onclick="window.close()">X</button>
+    </div>
+    <div class="main">
+        <div class="canvas-area">
+            <canvas id="canvas" width="500" height="450"></canvas>
+        </div>
+        <div class="panel">
+            <div class="section">
+                <h3>参数调节</h3>
+                <div id="sliders"></div>
+            </div>
+            <div class="section">
+                <h3>快速切换</h3>
+                <div class="preset-btns" id="presets"></div>
+            </div>
+            <div class="section">
+                <h3>物理公式</h3>
+                <div class="formula" id="formula"></div>
+            </div>
+            <div class="section">
+                <h3>形象解释</h3>
+                <div class="visual-explain" id="visual"></div>
+                <div class="explain" id="explain"></div>
+            </div>
+            <div class="controls">空格暂停 | R重置</div>
+        </div>
+    </div>
+
+    <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let currentScene = 0;
+    let paused = false;
+    let t = 0;
+
+    // 场景定义
+    const scenes = [
+        // 水滴频闪
+        {
+            name: '水滴频闪',
+            params: {
+                f_drop: { val: 5, min: 1, max: 15, step: 0.5, label: '水滴频率 Hz' },
+                f_strobe: { val: 3, min: 1, max: 15, step: 0.5, label: '频闪频率 Hz' },
+                v_drop: { val: 250, min: 50, max: 400, step: 10, label: '水滴速度' }
+            },
+            presets: [
+                { name: '水滴上流', color: 'green', params: { f_drop: 5, f_strobe: 3 } },
+                { name: '水滴静止', color: 'yellow', params: { f_drop: 5, f_strobe: 5 } },
+                { name: '水滴下流', color: 'red', params: { f_drop: 3, f_strobe: 5 } }
+            ],
+            drops: [],
+            lastStrobe: 0,
+            strobeDrops: [],
+            update(dt) {
+                const p = this.params;
+                this.t += dt;
+                // 真实水滴
+                const Td = 1 / p.f_drop.val;
+                if (this.t - this.lastDrop >= Td) {
+                    this.lastDrop = this.t;
+                    this.drops.push({ x: 250, y: 60 });
+                }
+                this.drops = this.drops.filter(d => {
+                    d.y += p.v_drop.val * dt;
+                    return d.y < 420;
+                });
+                // 频闪采样
+                const Ts = 1 / p.f_strobe.val;
+                if (this.t - this.lastStrobe >= Ts) {
+                    this.lastStrobe = this.t;
+                    this.strobeDrops = this.drops.map(d => ({...d}));
+                }
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 500, 450);
+                // 水龙头
+                ctx.fillStyle = '#555';
+                ctx.fillRect(220, 20, 60, 30);
+                ctx.fillRect(240, 50, 20, 25);
+                // 频闪水滴
+                this.strobeDrops.forEach(d => {
+                    ctx.beginPath();
+                    ctx.arc(d.x, d.y, 10, 0, Math.PI * 2);
+                    ctx.fillStyle = '#00d4ff';
+                    ctx.fill();
+                    ctx.strokeStyle = '#80e0ff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+                // 容器
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(190, 420, 120, 30);
+                // 频闪灯
+                const flash = this.t - this.lastStrobe < 0.08;
+                ctx.beginPath();
+                ctx.arc(430, 50, 20, 0, Math.PI * 2);
+                ctx.fillStyle = flash ? '#ffff00' : '#333';
+                ctx.fill();
+                if (flash) {
+                    ctx.strokeStyle = '#ffff80';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+            },
+            explain() {
+                const fr = Math.abs(this.params.f_drop.val - this.params.f_strobe.val);
+                let vis, why;
+                if (fr < 0.3) {
+                    vis = '水滴停在空中！频闪与水滴完全同步';
+                    why = '频闪频率 = 水滴频率，每次照亮同一位置';
+                } else if (this.params.f_strobe.val < this.params.f_drop.val) {
+                    vis = `水滴向上飞！频闪每秒少闪 ${fr.toFixed(0)} 次`;
+                    why = `频闪(${this.params.f_strobe.val}Hz)比水滴(${this.params.f_drop.val}Hz)慢，每次闪光时水滴已走完一圈`;
+                } else {
+                    vis = `水滴加速下落！频闪每秒多闪 ${fr.toFixed(0)} 次`;
+                    why = `频闪(${this.params.f_strobe.val}Hz)比水滴(${this.params.f_drop.val}Hz)快`;
+                }
+                const formulas = [
+                    `f_rel = |${this.params.f_drop.val} - ${this.params.f_strobe.val}| = ${fr.toFixed(1)} Hz`,
+                    `频率比 = ${(this.params.f_drop.val / this.params.f_strobe.val).toFixed(2)}`
+                ];
+                return { vis, why, formulas };
+            },
+            t: 0, lastDrop: 0
+        },
+        // 车轮频闪
+        {
+            name: '车轮频闪',
+            params: {
+                omega: { val: 10, min: 1, max: 20, step: 0.5, label: '角速度 rad/s' },
+                f_strobe: { val: 12.73, min: 1, max: 20, step: 0.1, label: '频闪频率 Hz' },
+                n: { val: 8, min: 2, max: 16, step: 1, label: '辐条数' }
+            },
+            presets: [
+                { name: '车轮反转', color: 'green', params: { f_strobe: 8 } },
+                { name: '车轮静止', color: 'yellow', params: { f_strobe: 12.73 } },
+                { name: '车轮正转', color: 'red', params: { f_strobe: 16 } }
+            ],
+            displayAngle: 0,
+            lastStrobe: 0,
+            update(dt) {
+                this.t += dt;
+                const Ts = 1 / this.params.f_strobe.val;
+                if (this.t - this.lastStrobe >= Ts) {
+                    this.lastStrobe = this.t;
+                    this.displayAngle = (this.params.omega.val * this.t) % (Math.PI * 2);
+                }
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 500, 450);
+                const cx = 250, cy = 220, r = 150;
+                // 外圈
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                // 辐条
+                const n = this.params.n.val;
+                for (let i = 0; i < n; i++) {
+                    const a = this.displayAngle + i * Math.PI * 2 / n;
+                    const ex = cx + r * Math.cos(a);
+                    const ey = cy + r * Math.sin(a);
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(ex, ey);
+                    if (i === 0) {
+                        ctx.strokeStyle = '#ff4444';
+                        ctx.lineWidth = 5;
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.arc(ex, ey, 8, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ff4444';
+                        ctx.fill();
+                    } else {
+                        ctx.strokeStyle = '#aaa';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    }
+                }
+                // 中心
+                ctx.beginPath();
+                ctx.arc(cx, cy, 12, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+                // 频闪灯
+                const flash = this.t - this.lastStrobe < 0.08;
+                ctx.beginPath();
+                ctx.arc(430, 50, 20, 0, Math.PI * 2);
+                ctx.fillStyle = flash ? '#ffff00' : '#333';
+                ctx.fill();
+                // 参数
+                const fc = n * this.params.omega.val / (Math.PI * 2);
+                ctx.fillStyle = '#00d4ff';
+                ctx.font = '14px SimHei';
+                ctx.fillText(`临界频率=${fc.toFixed(1)}Hz  频闪=${this.params.f_strobe.val}Hz`, 150, 420);
+            },
+            explain() {
+                const fc = this.params.n.val * this.params.omega.val / (Math.PI * 2);
+                const fr = Math.abs(fc - this.params.f_strobe.val);
+                let vis, why;
+                if (fr < 0.5) {
+                    vis = '车轮静止！红色辐条始终在同一位置';
+                    why = `频闪频率(${this.params.f_strobe.val}Hz) = 临界频率(${fc.toFixed(1)}Hz)`;
+                } else if (this.params.f_strobe.val < fc) {
+                    vis = '车轮倒转！红色辐条每次往回跳';
+                    why = `频闪(${this.params.f_strobe.val}Hz) < 临界(${fc.toFixed(1)}Hz)`;
+                } else {
+                    vis = '车轮正转！红色辐条每次往前跳';
+                    why = `频闪(${this.params.f_strobe.val}Hz) > 临界(${fc.toFixed(1)}Hz)`;
+                }
+                const formulas = [
+                    `f_critical = ${this.params.n.val}×${this.params.omega.val}/(2π) = ${fc.toFixed(2)} Hz`,
+                    `f_rel = |${fc.toFixed(2)} - ${this.params.f_strobe.val}| = ${fr.toFixed(2)} Hz`
+                ];
+                return { vis, why, formulas };
+            },
+            t: 0
+        },
+        // 冲日现象
+        {
+            name: '冲日现象',
+            params: {
+                TP: { val: 687, min: 400, max: 12000, step: 100, label: '外行星周期(天)' },
+                speed: { val: 2, min: 0.5, max: 5, step: 0.5, label: '时间缩放' }
+            },
+            presets: [
+                { name: '火星冲日', color: 'green', params: { TP: 687 } },
+                { name: '木星冲日', color: 'yellow', params: { TP: 4333 } },
+                { name: '土星冲日', color: 'red', params: { TP: 10759 } }
+            ],
+            earthTrail: [],
+            planetTrail: [],
+            update(dt) {
+                this.t += dt * this.params.speed.val;
+                const TE = 365, TP = this.params.TP.val;
+                const we = Math.PI * 2 / TE, wp = Math.PI * 2 / TP;
+                const te = we * this.t, tp = wp * this.t;
+                const cx = 250, cy = 220;
+                this.earthTrail.push({ x: cx + 140 * Math.cos(te), y: cy + 140 * Math.sin(te) });
+                this.planetTrail.push({ x: cx + 200 * Math.cos(tp), y: cy + 200 * Math.sin(tp) });
+                if (this.earthTrail.length > 200) this.earthTrail.shift();
+                if (this.planetTrail.length > 200) this.planetTrail.shift();
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 500, 450);
+                const cx = 250, cy = 220;
+                const TE = 365, TP = this.params.TP.val;
+                const we = Math.PI * 2 / TE, wp = Math.PI * 2 / TP;
+                const te = we * this.t, tp = wp * this.t;
+                // 轨道
+                ctx.beginPath();
+                ctx.arc(cx, cy, 140, 0, Math.PI * 2);
+                ctx.strokeStyle = '#1a3a5a';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.arc(cx, cy, 200, 0, Math.PI * 2);
+                ctx.stroke();
+                // 轨迹
+                if (this.earthTrail.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.earthTrail[0].x, this.earthTrail[0].y);
+                    this.earthTrail.forEach(p => ctx.lineTo(p.x, p.y));
+                    ctx.strokeStyle = '#003366';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                if (this.planetTrail.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.planetTrail[0].x, this.planetTrail[0].y);
+                    this.planetTrail.forEach(p => ctx.lineTo(p.x, p.y));
+                    ctx.strokeStyle = '#660000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+                // 太阳
+                ctx.beginPath();
+                ctx.arc(cx, cy, 25, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffff00';
+                ctx.fill();
+                // 地球
+                const ex = cx + 140 * Math.cos(te), ey = cy + 140 * Math.sin(te);
+                ctx.beginPath();
+                ctx.arc(ex, ey, 14, 0, Math.PI * 2);
+                ctx.fillStyle = '#4488ff';
+                ctx.fill();
+                // 外行星
+                const px = cx + 200 * Math.cos(tp), py = cy + 200 * Math.sin(tp);
+                ctx.beginPath();
+                ctx.arc(px, py, 12, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff4444';
+                ctx.fill();
+                // 连线
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(ex, ey);
+                ctx.lineTo(px, py);
+                ctx.strokeStyle = '#555500';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // 标签
+                ctx.fillStyle = '#ffff00';
+                ctx.font = '14px SimHei';
+                ctx.fillText('太阳', cx - 15, cy + 35);
+                ctx.fillStyle = '#4488ff';
+                ctx.fillText('地球', ex - 15, ey + 20);
+                ctx.fillStyle = '#ff4444';
+                ctx.fillText('外行星', px - 20, py + 18);
+            },
+            explain() {
+                const TE = 365, TP = this.params.TP.val;
+                const Ts = 1 / (1/TE - 1/TP);
+                const vis = `外行星每 ${Ts.toFixed(0)} 天绕天空一圈（约 ${(Ts/365).toFixed(1)} 年）`;
+                const why = '地球公转更快，从地球看外行星就像慢车在后退';
+                const formulas = [
+                    `T_syn = 1/(1/${TE}-1/${TP.toFixed(0)}) = ${Ts.toFixed(0)} 天`,
+                    `ω_rel = 2π/${Ts.toFixed(0)} = ${(Math.PI*2/Ts).toFixed(4)} rad/天`
+                ];
+                return { vis, why, formulas };
+            },
+            t: 0
+        },
+        // 圆盘频闪
+        {
+            name: '圆盘频闪',
+            params: {
+                omega: { val: 6, min: 0.5, max: 15, step: 0.5, label: '角速度 rad/s' },
+                f_strobe: { val: 0.955, min: 0.1, max: 15, step: 0.05, label: '频闪频率 Hz' },
+                n: { val: 4, min: 1, max: 8, step: 1, label: '标记点数' }
+            },
+            presets: [
+                { name: '圆盘反转', color: 'green', params: { f_strobe: 0.3 } },
+                { name: '圆盘静止', color: 'yellow', params: { f_strobe: 0.955 } },
+                { name: '圆盘正转', color: 'red', params: { f_strobe: 2.0 } }
+            ],
+            displayAngle: 0,
+            lastStrobe: 0,
+            trail: [],
+            update(dt) {
+                this.t += dt;
+                const Ts = 1 / this.params.f_strobe.val;
+                if (this.t - this.lastStrobe >= Ts) {
+                    this.lastStrobe = this.t;
+                    this.displayAngle = (this.params.omega.val * this.t) % (Math.PI * 2);
+                    const r = 150;
+                    const cx = 250, cy = 220;
+                    this.trail.push({
+                        x: cx + r * Math.cos(this.displayAngle),
+                        y: cy + r * Math.sin(this.displayAngle)
+                    });
+                    if (this.trail.length > 60) this.trail.shift();
+                }
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 500, 450);
+                const cx = 250, cy = 220, r = 150;
+                // 圆盘
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+                // 刻度
+                for (let i = 0; i < 36; i++) {
+                    const a = i * 10 * Math.PI / 180;
+                    ctx.beginPath();
+                    ctx.moveTo(cx + (r-8) * Math.cos(a), cy + (r-8) * Math.sin(a));
+                    ctx.lineTo(cx + r * Math.cos(a), cy + r * Math.sin(a));
+                    ctx.strokeStyle = '#444';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+                // 轨迹
+                if (this.trail.length > 1) {
+                    for (let i = 1; i < this.trail.length; i++) {
+                        const alpha = i / this.trail.length;
+                        ctx.beginPath();
+                        ctx.moveTo(this.trail[i-1].x, this.trail[i-1].y);
+                        ctx.lineTo(this.trail[i].x, this.trail[i].y);
+                        ctx.strokeStyle = `rgba(0, ${Math.floor(150*alpha+50)}, 0, ${alpha})`;
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    }
+                }
+                // 标记点
+                const n = this.params.n.val;
+                for (let i = 0; i < n; i++) {
+                    const a = this.displayAngle + i * Math.PI * 2 / n;
+                    const x = cx + r * Math.cos(a);
+                    const y = cy + r * Math.sin(a);
+                    if (i === 0) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, 14, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ff3333';
+                        ctx.fill();
+                        ctx.strokeStyle = '#ffcccc';
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    } else {
+                        ctx.beginPath();
+                        ctx.arc(x, y, 10, 0, Math.PI * 2);
+                        ctx.fillStyle = '#cc6666';
+                        ctx.fill();
+                    }
+                }
+                // 中心
+                ctx.beginPath();
+                ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+                ctx.fillStyle = 'red';
+                ctx.fill();
+                // 频闪灯
+                const flash = this.t - this.lastStrobe < 0.08;
+                ctx.beginPath();
+                ctx.arc(430, 50, 20, 0, Math.PI * 2);
+                ctx.fillStyle = flash ? '#ffff00' : '#333';
+                ctx.fill();
+                // 参数
+                const fd = this.params.omega.val / (Math.PI * 2);
+                ctx.fillStyle = '#00d4ff';
+                ctx.font = '14px SimHei';
+                ctx.fillText(`圆盘频率=${fd.toFixed(2)}Hz  频闪=${this.params.f_strobe.val}Hz`, 130, 420);
+            },
+            explain() {
+                const fd = this.params.omega.val / (Math.PI * 2);
+                const fr = Math.abs(fd - this.params.f_strobe.val);
+                let vis, why;
+                if (fr < 0.15) {
+                    vis = '标记点静止！红色点始终在同一位置';
+                    why = `频闪频率(${this.params.f_strobe.val}Hz) ≈ 圆盘频率(${fd.toFixed(2)}Hz)`;
+                } else if (this.params.f_strobe.val < fd) {
+                    vis = '标记点倒转！红色点每次往回跳';
+                    why = `频闪(${this.params.f_strobe.val}Hz) < 圆盘(${fd.toFixed(2)}Hz)`;
+                } else {
+                    vis = '标记点正转！红色点每次往前跳';
+                    why = `频闪(${this.params.f_strobe.val}Hz) > 圆盘(${fd.toFixed(2)}Hz)`;
+                }
+                const formulas = [
+                    `f_disk = ${this.params.omega.val}/(2π) = ${fd.toFixed(2)} Hz`,
+                    `f_rel = |${fd.toFixed(2)} - ${this.params.f_strobe.val}| = ${fr.toFixed(2)} Hz`
+                ];
+                return { vis, why, formulas };
+            },
+            t: 0
+        }
+    ];
+
+    let scene = scenes[0];
+
+    function switchScene(idx) {
+        currentScene = idx;
+        scene = scenes[idx];
+        scene.t = 0;
+        scene.lastStrobe = 0;
+        if (scene.trail) scene.trail = [];
+        if (scene.earthTrail) scene.earthTrail = [];
+        if (scene.planetTrail) scene.planetTrail = [];
+        if (scene.drops) scene.drops = [];
+        if (scene.strobeDrops) scene.strobeDrops = [];
+        document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+        updatePanel();
+    }
+
+    function updatePanel() {
+        // 滑块
+        let slidersHtml = '';
+        for (const [key, p] of Object.entries(scene.params)) {
+            slidersHtml += `
+                <div class="slider-group">
+                    <label>${p.label}</label>
+                    <input type="range" min="${p.min}" max="${p.max}" step="${p.step}"
+                           value="${p.val}" oninput="updateParam('${key}', this.value)">
+                    <div class="value">${p.val}</div>
+                </div>`;
+        }
+        document.getElementById('sliders').innerHTML = slidersHtml;
+
+        // 预设按钮
+        let presetsHtml = '';
+        scene.presets.forEach((p, i) => {
+            presetsHtml += `<button class="preset ${p.color}" onclick="applyPreset(${i})">${p.name}</button>`;
+        });
+        document.getElementById('presets').innerHTML = presetsHtml;
+
+        updateExplain();
+    }
+
+    function updateParam(key, val) {
+        scene.params[key].val = parseFloat(val);
+        updatePanel();
+    }
+
+    function applyPreset(idx) {
+        const preset = scene.presets[idx];
+        for (const [k, v] of Object.entries(preset.params)) {
+            scene.params[k].val = v;
+        }
+        scene.t = 0;
+        scene.lastStrobe = 0;
+        if (scene.trail) scene.trail = [];
+        if (scene.drops) scene.drops = [];
+        if (scene.strobeDrops) scene.strobeDrops = [];
+        updatePanel();
+    }
+
+    function updateExplain() {
+        const { vis, why, formulas } = scene.explain();
+        document.getElementById('visual').textContent = vis;
+        document.getElementById('explain').textContent = why;
+        document.getElementById('formula').innerHTML = formulas.map(f => f + '<br>').join('');
+    }
+
+    // 键盘控制
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') paused = !paused;
+        if (e.code === 'KeyR') { scene.t = 0; scene.lastStrobe = 0; }
+    });
+
+    // 动画循环
+    let lastTime = performance.now();
+    function animate(time) {
+        const dt = Math.min((time - lastTime) / 1000, 0.05);
+        lastTime = time;
+
+        if (!paused) scene.update(dt);
+        scene.draw();
+        updateExplain();
+
+        requestAnimationFrame(animate);
+    }
+
+    switchScene(0);
+    requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
