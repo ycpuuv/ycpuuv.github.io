@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>高中物理复习：雷达测速与多普勒效应</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "Microsoft YaHei", SimHei, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .header {
+            background: #16213e;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #0f3460;
+        }
+        h1 { font-size: 22px; color: #e94560; }
+        .scene-tabs {
+            display: flex;
+            gap: 8px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: #0f3460;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 15px;
+            transition: all 0.3s;
+        }
+        .tab:hover { background: #e94560; }
+        .tab.active { background: #e94560; }
+        .main {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a1a;
+        }
+        canvas {
+            background: black;
+            border: 2px solid #0f3460;
+            border-radius: 10px;
+        }
+        .panel {
+            width: 400px;
+            background: #16213e;
+            padding: 15px;
+            overflow-y: auto;
+            border-left: 2px solid #0f3460;
+        }
+        .section {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #0f3460;
+            border-radius: 8px;
+        }
+        .section h3 {
+            color: #e94560;
+            margin-bottom: 8px;
+            font-size: 15px;
+        }
+        .formula {
+            font-family: "Courier New", monospace;
+            color: #00d4ff;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .explain {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #a0d0ff;
+        }
+        .preset-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .preset {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+            color: white;
+        }
+        .preset.green { background: #2ecc71; }
+        .preset.yellow { background: #f39c12; }
+        .preset.red { background: #e74c3c; }
+        .preset.blue { background: #3498db; }
+        .preset:hover { transform: scale(1.05); }
+        .close-btn {
+            background: #e74c3c;
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .close-btn:hover { background: #c0392b; }
+        .q-btns {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        .q-btn {
+            padding: 5px 10px;
+            background: #3498db;
+            border: none;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .q-btn.active { background: #e94560; }
+        .answer-btn {
+            padding: 8px 20px;
+            background: #2ecc71;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .answer-btn:hover { background: #27ae60; }
+        .answer {
+            background: #1a3a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #a0ffa0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>高中物理复习：雷达测速与多普勒效应</h1>
+        <div class="scene-tabs">
+            <button class="tab active" onclick="switchScene(0)">多普勒效应</button>
+            <button class="tab" onclick="switchScene(1)">雷达测速</button>
+            <button class="tab" onclick="switchScene(2)">超声波测速</button>
+            <button class="tab" onclick="switchScene(3)">激光测速</button>
+            <button class="tab" onclick="switchScene(4)">高考真题</button>
+        </div>
+        <button class="close-btn" onclick="window.close()">X</button>
+    </div>
+    <div class="main">
+        <div class="canvas-area">
+            <canvas id="canvas" width="550" height="450"></canvas>
+        </div>
+        <div class="panel">
+            <div class="section" id="preset-section">
+                <h3>预设场景</h3>
+                <div class="preset-btns" id="presets"></div>
+            </div>
+            <div class="section">
+                <h3>公式推导</h3>
+                <div class="formula" id="formula"></div>
+            </div>
+            <div class="section">
+                <h3>原理说明</h3>
+                <div class="explain" id="explain"></div>
+            </div>
+            <div class="section" id="exam-section" style="display:none;">
+                <h3>高考真题</h3>
+                <div id="exam-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let currentScene = 0;
+    let t = 0;
+
+    // 场景定义
+    const scenes = [
+        // 多普勒效应基础
+        {
+            name: '多普勒效应',
+            vs: 50, vo: 0, f0: 5, vWave: 200,
+            sourceX: 100, waves: [], lastEmit: 0,
+            presets: [
+                { name: '源运动', color: 'green', vs: 50, vo: 0 },
+                { name: '观察者运动', color: 'yellow', vs: 0, vo: 50 },
+                { name: '都运动', color: 'red', vs: 50, vo: 50 },
+                { name: '源远离', color: 'blue', vs: -50, vo: 0 }
+            ],
+            setPreset(idx) {
+                const p = this.presets[idx];
+                this.vs = p.vs; this.vo = p.vo;
+                this.t = 0; this.waves = []; this.sourceX = 100;
+            },
+            update(dt) {
+                this.t += dt;
+                this.sourceX += this.vs * dt;
+                if (this.sourceX > 480) this.sourceX = 60;
+                if (this.sourceX < 60) this.sourceX = 480;
+                const Te = 1 / this.f0;
+                if (this.t - this.lastEmit >= Te) {
+                    this.lastEmit = this.t;
+                    this.waves.push({ x: this.sourceX, y: 220, r: 0 });
+                }
+                this.waves = this.waves.filter(w => {
+                    w.r += this.vWave * dt;
+                    return w.r < 400;
+                });
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 550, 450);
+                this.waves.forEach(w => {
+                    const alpha = Math.max(0, 1 - w.r / 400);
+                    ctx.beginPath();
+                    ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(100, 100, 255, ${alpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+                // 源
+                ctx.beginPath();
+                ctx.arc(this.sourceX, 220, 15, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff4444';
+                ctx.fill();
+                ctx.fillStyle = '#ff4444';
+                ctx.font = '14px SimHei';
+                ctx.fillText('波源', this.sourceX - 15, 245);
+                // 观察者
+                ctx.fillStyle = '#4488ff';
+                ctx.fillRect(430, 208, 24, 24);
+                ctx.fillStyle = '#4488ff';
+                ctx.fillText('观察者', 420, 245);
+                // 参数
+                const fRec = this.f0 * (this.vWave + this.vo) / (this.vWave - this.vs);
+                ctx.fillStyle = 'white';
+                ctx.font = '16px SimHei';
+                ctx.fillText(`波源频率: ${this.f0} Hz`, 20, 30);
+                ctx.fillText(`波速: ${this.vWave} px/s`, 20, 55);
+                ctx.fillText(`波源速度: ${this.vs} px/s`, 20, 80);
+                ctx.fillText(`观察者速度: ${this.vo} px/s`, 20, 105);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillText(`接收频率: ${fRec.toFixed(2)} Hz`, 20, 130);
+                ctx.fillText(`频率变化: ${(fRec - this.f0).toFixed(2)} Hz`, 20, 155);
+            },
+            getFormula() {
+                return [
+                    '多普勒效应公式：',
+                    "f' = f₀ × (v + v_o) / (v - v_s)",
+                    '',
+                    'f₀ = 波源频率',
+                    'v = 波在介质中的速度',
+                    'v_o = 观察者速度（靠近为正）',
+                    'v_s = 波源速度（靠近为正）'
+                ];
+            },
+            getExplain() {
+                return '当波源与观察者有相对运动时，观察者接收到的频率会发生变化。波源靠近时频率升高，远离时频率降低。';
+            }
+        },
+        // 雷达测速
+        {
+            name: '雷达测速',
+            carSpeed: 30, f0: 35, c: 3e8,
+            carX: 100, waves: [], lastEmit: 0,
+            presets: [
+                { name: '108km/h', color: 'green', speed: 30 },
+                { name: '72km/h', color: 'yellow', speed: 20 },
+                { name: '144km/h', color: 'red', speed: 40 }
+            ],
+            setPreset(idx) {
+                this.carSpeed = this.presets[idx].speed;
+                this.t = 0; this.carX = 100; this.waves = [];
+            },
+            update(dt) {
+                this.t += dt;
+                this.carX += this.carSpeed * 2 * dt;
+                if (this.carX > 480) this.carX = 80;
+                if (this.t - this.lastEmit >= 0.1) {
+                    this.lastEmit = this.t;
+                    this.waves.push({ x: 400, y: 200, r: 0, stage: 'sent' });
+                }
+                this.waves = this.waves.filter(w => {
+                    w.r += 250 * dt;
+                    return w.r < 500;
+                });
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 550, 450);
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, 320);
+                ctx.lineTo(550, 320);
+                ctx.stroke();
+                // 雷达站
+                ctx.fillStyle = '#444';
+                ctx.fillRect(380, 250, 40, 70);
+                ctx.beginPath();
+                ctx.moveTo(400, 240);
+                ctx.lineTo(380, 260);
+                ctx.lineTo(420, 260);
+                ctx.fillStyle = '#666';
+                ctx.fill();
+                ctx.fillStyle = '#00d4ff';
+                ctx.font = '14px SimHei';
+                ctx.fillText('雷达站', 375, 335);
+                // 波
+                this.waves.forEach(w => {
+                    const alpha = Math.max(0, 1 - w.r / 500);
+                    ctx.beginPath();
+                    ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = `rgba(0, 0, ${Math.floor(200*alpha)}, ${alpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+                // 汽车
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(this.carX - 25, 280, 50, 20);
+                ctx.fillRect(this.carX - 15, 265, 30, 15);
+                ctx.beginPath();
+                ctx.arc(this.carX - 15, 300, 6, 0, Math.PI * 2);
+                ctx.arc(this.carX + 15, 300, 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.fillStyle = '#ff4444';
+                ctx.fillText('汽车', this.carX - 15, 315);
+                // 计算
+                const deltaF = 2 * this.f0 * this.carSpeed / this.c;
+                ctx.fillStyle = 'white';
+                ctx.font = '16px SimHei';
+                ctx.fillText(`发射频率: f₀ = ${this.f0} GHz`, 20, 30);
+                ctx.fillText(`车速: v = ${this.carSpeed} m/s = ${this.carSpeed * 3.6} km/h`, 20, 55);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillText(`频移: Δf = 2f₀v/c = ${deltaF.toFixed(2)} Hz`, 20, 80);
+                ctx.fillText('公式: Δf = 2f₀v/c  →  v = Δfc/(2f₀)', 20, 105);
+            },
+            getFormula() {
+                return [
+                    '雷达测速公式推导：',
+                    '',
+                    '第一步：汽车作为观察者接收',
+                    "f₁ = f₀ × (c + v) / c",
+                    '',
+                    '第二步：汽车作为波源反射',
+                    "f₂ = f₁ × c / (c - v)",
+                    '',
+                    "综合：f₂ = f₀ × (c + v) / (c - v)",
+                    '',
+                    "频移：Δf = f₂ - f₀ ≈ 2f₀v/c",
+                    "速度：v = Δf × c / (2f₀)"
+                ];
+            },
+            getExplain() {
+                return '雷达测速利用电磁波的多普勒效应。雷达发射电磁波，遇到运动车辆后反射，由于车辆运动，反射波频率发生改变，通过测量频移即可计算车速。公式：Δf = 2f₀v/c，其中c为光速。';
+            }
+        },
+        // 超声波测速
+        {
+            name: '超声波测速',
+            carSpeed: 20, f0: 40000, vSound: 340,
+            carX: 200, waves: [], lastEmit: 0,
+            presets: [
+                { name: '72km/h', color: 'green', speed: 20 },
+                { name: '108km/h', color: 'yellow', speed: 30 },
+                { name: '36km/h', color: 'red', speed: 10 }
+            ],
+            setPreset(idx) {
+                this.carSpeed = this.presets[idx].speed;
+                this.t = 0; this.carX = 200; this.waves = [];
+            },
+            update(dt) {
+                this.t += dt;
+                this.carX -= this.carSpeed * 2 * dt;
+                if (this.carX < 80) this.carX = 450;
+                if (this.t - this.lastEmit >= 0.15) {
+                    this.lastEmit = this.t;
+                    this.waves.push({ x: 350, y: 180, r: 0, stage: 'sent' });
+                }
+                this.waves = this.waves.filter(w => {
+                    w.r += this.vSound * dt * 0.8;
+                    return w.r < 400;
+                });
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 550, 450);
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, 280);
+                ctx.lineTo(550, 280);
+                ctx.stroke();
+                // 探头
+                ctx.fillStyle = '#444';
+                ctx.fillRect(335, 160, 30, 40);
+                ctx.beginPath();
+                ctx.moveTo(350, 150);
+                ctx.lineTo(340, 165);
+                ctx.lineTo(360, 165);
+                ctx.fillStyle = '#00d4ff';
+                ctx.fill();
+                ctx.fillStyle = '#00d4ff';
+                ctx.font = '14px SimHei';
+                ctx.fillText('探头', 335, 210);
+                // 波
+                this.waves.forEach(w => {
+                    const alpha = Math.max(0, 1 - w.r / 400);
+                    ctx.beginPath();
+                    ctx.arc(w.x, w.y, w.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = w.stage === 'sent' ?
+                        `rgba(0, 0, ${Math.floor(200*alpha)}, ${alpha})` :
+                        `rgba(${Math.floor(200*alpha)}, 0, 0, ${alpha})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                });
+                // 汽车
+                ctx.fillStyle = '#ff4444';
+                ctx.fillRect(this.carX - 25, 250, 50, 20);
+                ctx.fillRect(this.carX - 15, 235, 30, 15);
+                ctx.beginPath();
+                ctx.arc(this.carX - 15, 270, 6, 0, Math.PI * 2);
+                ctx.arc(this.carX + 15, 270, 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.fillStyle = '#ff4444';
+                ctx.fillText('汽车', this.carX - 15, 285);
+                // 计算
+                const fRec = this.f0 * this.vSound / (this.vSound + this.carSpeed);
+                const deltaF = this.f0 - fRec;
+                ctx.fillStyle = 'white';
+                ctx.font = '16px SimHei';
+                ctx.fillText(`发射频率: f₀ = ${this.f0/1000} kHz`, 20, 30);
+                ctx.fillText(`声速: v = ${this.vSound} m/s`, 20, 55);
+                ctx.fillText(`车速: ${this.carSpeed} m/s = ${this.carSpeed*3.6} km/h`, 20, 80);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillText(`接收频率: f' = ${fRec.toFixed(0)} Hz`, 20, 105);
+                ctx.fillText(`频移: Δf = ${deltaF.toFixed(0)} Hz`, 20, 130);
+                ctx.fillText("公式: f' = f₀×v/(v+v车)", 20, 155);
+            },
+            getFormula() {
+                return [
+                    '超声波测速公式：',
+                    '',
+                    '汽车远离探头时：',
+                    "f' = f₀ × v / (v + v车)",
+                    '',
+                    '汽车靠近探头时：',
+                    "f' = f₀ × v / (v - v车)",
+                    '',
+                    "频移：Δf = |f₀ - f'|",
+                    "速度：v车 = Δf × v / f₀",
+                    '',
+                    '注意：超声波测速常用于测车辆远离速度'
+                ];
+            },
+            getExplain() {
+                return '超声波测速利用声波的多普勒效应。探头发射超声波，遇到运动物体后反射，通过测量反射波的频率变化来计算物体速度。常用于停车场、倒车雷达等场景。';
+            }
+        },
+        // 激光测速
+        {
+            name: '激光测速',
+            carSpeed: 25, f0: 5e14, c: 3e8,
+            carX: 100, lasers: [], lastEmit: 0,
+            presets: [
+                { name: '90km/h', color: 'green', speed: 25 },
+                { name: '126km/h', color: 'yellow', speed: 35 },
+                { name: '54km/h', color: 'red', speed: 15 }
+            ],
+            setPreset(idx) {
+                this.carSpeed = this.presets[idx].speed;
+                this.t = 0; this.carX = 100; this.lasers = [];
+            },
+            update(dt) {
+                this.t += dt;
+                this.carX += this.carSpeed * 3 * dt;
+                if (this.carX > 480) this.carX = 80;
+                if (this.t - this.lastEmit >= 0.08) {
+                    this.lastEmit = this.t;
+                    this.lasers.push({ sx: 450, ex: this.carX, phase: 0 });
+                }
+                this.lasers = this.lasers.filter(l => {
+                    l.phase += dt * 5;
+                    return l.phase < 2;
+                });
+            },
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 550, 450);
+                ctx.strokeStyle = '#555';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(0, 300);
+                ctx.lineTo(550, 300);
+                ctx.stroke();
+                // 测速仪
+                ctx.fillStyle = '#444';
+                ctx.fillRect(435, 230, 30, 50);
+                ctx.beginPath();
+                ctx.arc(450, 245, 8, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff0000';
+                ctx.fill();
+                ctx.fillStyle = '#00d4ff';
+                ctx.font = '14px SimHei';
+                ctx.fillText('激光测速仪', 425, 290);
+                // 激光束
+                this.lasers.forEach(l => {
+                    if (l.phase < 1) {
+                        const alpha = Math.max(0, 1 - l.phase);
+                        ctx.beginPath();
+                        ctx.moveTo(l.sx, 245);
+                        ctx.lineTo(l.ex, 265);
+                        ctx.strokeStyle = `rgba(0, ${Math.floor(255*alpha)}, 0, ${alpha})`;
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    } else {
+                        const alpha = Math.max(0, 2 - l.phase);
+                        ctx.beginPath();
+                        ctx.moveTo(l.ex, 265);
+                        ctx.lineTo(l.sx, 245);
+                        ctx.strokeStyle = `rgba(${Math.floor(255*alpha)}, 0, 0, ${alpha})`;
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    }
+                });
+                // 汽车
+                ctx.fillStyle = '#4488ff';
+                ctx.fillRect(this.carX - 25, 270, 50, 20);
+                ctx.fillRect(this.carX - 15, 255, 30, 15);
+                ctx.beginPath();
+                ctx.arc(this.carX - 15, 290, 6, 0, Math.PI * 2);
+                ctx.arc(this.carX + 15, 290, 6, 0, Math.PI * 2);
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.fillStyle = '#4488ff';
+                ctx.fillText('汽车', this.carX - 15, 305);
+                // 计算
+                const deltaF = 2 * this.f0 * this.carSpeed / this.c;
+                ctx.fillStyle = 'white';
+                ctx.font = '16px SimHei';
+                ctx.fillText('激光频率: f₀ = 5×10¹⁴ Hz', 20, 30);
+                ctx.fillText('光速: c = 3×10⁸ m/s', 20, 55);
+                ctx.fillText(`车速: v = ${this.carSpeed} m/s = ${this.carSpeed*3.6} km/h`, 20, 80);
+                ctx.fillStyle = '#ffff00';
+                ctx.fillText(`频移: Δf = 2f₀v/c ≈ ${deltaF.toFixed(0)} Hz`, 20, 105);
+                ctx.fillText('公式: Δf = 2f₀v/c (与雷达测速相同)', 20, 130);
+            },
+            getFormula() {
+                return [
+                    '激光测速公式：',
+                    '',
+                    '与雷达测速原理相同，使用光的多普勒效应',
+                    '',
+                    '频移：Δf = 2f₀v/c',
+                    '速度：v = Δf × c / (2f₀)',
+                    '',
+                    '特点：',
+                    '- 激光频率高，频移大，精度高',
+                    '- 方向性好，可精确瞄准',
+                    '- 用于交通测速、运动测速等'
+                ];
+            },
+            getExplain() {
+                return '激光测速与雷达测速原理相同，都利用电磁波的多普勒效应。激光频率更高，因此频移更大，测量精度更高。常用于交通执法、运动比赛测速等。';
+            }
+        },
+        // 高考真题
+        {
+            name: '高考真题',
+            currentQ: 0,
+            showAnswer: false,
+            questions: [
+                {
+                    title: '2019年全国卷I 第34题',
+                    question: '一简谐横波沿x轴正方向传播，在t=0时刻的波形如图所示。已知介质中质点P的振动周期为0.2s，则该波的传播速度为________m/s，质点P在0.9s内通过的路程为________cm。',
+                    answer: '解：由图可知波长λ=4m\n周期T=0.2s\n波速v=λ/T=4/0.2=20 m/s\n\n0.9s = 4.5T\n每个周期通过路程=4A=4×5=20cm\n总路程=4×20+0.5×20=90 cm'
+                },
+                {
+                    title: '2020年全国卷II 第34题',
+                    question: '一频率为f₀的声源沿直线向静止的接收器匀速运动，速度为v，声波在空气中的传播速度为V（V>v）。接收器接收到的声波频率为________。\n\nA. f₀×V/(V-v)    B. f₀×V/(V+v)\nC. f₀×(V-v)/V    D. f₀×(V+v)/V',
+                    answer: '解：声源靠近静止观察者\n根据多普勒效应公式：\nf\' = f₀ × V / (V - v_s)\n其中v_s = v（声源速度）\n\n答案：A'
+                },
+                {
+                    title: '2021年全国卷I 第34题',
+                    question: '雷达是利用电磁波探测目标的电子设备。雷达发射频率为f₀的电磁波，遇到迎面驶来的汽车后反射，测得反射波频率为f\'（f\'>f₀）。已知电磁波传播速度为c，则汽车的速度为________。',
+                    answer: '解：雷达测速利用两次多普勒效应\n\n第一步：汽车作为观察者接收\nf₁ = f₀ × (c + v) / c\n\n第二步：汽车作为波源反射\nf\' = f₁ × c / (c - v)\n\n综合：f\' = f₀ × (c + v) / (c - v)\n化简：v = (f\' - f₀) × c / (f\' + f₀)\n当Δf << f₀时：v ≈ Δf × c / (2f₀)'
+                },
+                {
+                    title: '2022年全国卷II 第34题',
+                    question: '一超声波测速仪发出频率为f₀=40kHz的超声波，以340m/s的速度传播。一辆汽车以20m/s的速度远离测速仪，则测速仪接收到的反射波频率为________kHz。',
+                    answer: '解：汽车远离测速仪\n\n第一步：汽车接收超声波\nf₁ = f₀ × v / (v + v车)\n= 40000 × 340 / (340 + 20)\n= 37778 Hz\n\n第二步：汽车反射超声波\nf₂ = f₁ × v / (v + v车)\n= 37778 × 340 / (340 + 20)\n= 35648 Hz ≈ 35.6 kHz'
+                },
+                {
+                    title: '2023年新课标卷 第34题',
+                    question: '如图所示，S为振源，M为接收器，S、M均固定不动。振源S发出频率为f₀的声波，一反射面以速度v向右匀速运动，声波在空气中的速度为V。则接收器M接收到的反射波频率为________。',
+                    answer: '解：反射面相当于运动的观察者和波源\n\n第一步：反射面作为观察者接收\nf₁ = f₀ × V / (V - v)\n（反射面靠近波源，频率升高）\n\n第二步：反射面作为波源反射\nf₂ = f₁ × V / (V - v)\n（反射面靠近接收器，频率再升高）\n\n综合：f₂ = f₀ × [V/(V-v)]²'
+                }
+            ],
+            presets: [
+                { name: '第1题', color: 'green' },
+                { name: '第2题', color: 'yellow' },
+                { name: '第3题', color: 'red' },
+                { name: '第4题', color: 'blue' },
+                { name: '第5题', color: 'green' }
+            ],
+            setPreset(idx) {
+                this.currentQ = idx;
+                this.showAnswer = false;
+            },
+            update(dt) {},
+            draw() {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, 550, 450);
+                const q = this.questions[this.currentQ];
+                ctx.fillStyle = '#ffff00';
+                ctx.font = '20px SimHei';
+                ctx.fillText(`第 ${this.currentQ + 1} 题：${q.title}`, 20, 35);
+                ctx.fillStyle = 'white';
+                ctx.font = '15px SimHei';
+                const lines = q.question.split('\n');
+                let y = 70;
+                lines.forEach(line => {
+                    ctx.fillText(line, 30, y);
+                    y += 22;
+                });
+                if (this.showAnswer) {
+                    ctx.fillStyle = '#00ff88';
+                    ctx.font = '16px SimHei';
+                    ctx.fillText('解析：', 30, y + 20);
+                    y += 45;
+                    const ansLines = q.answer.split('\n');
+                    ansLines.forEach(line => {
+                        ctx.fillStyle = '#a0ffa0';
+                        ctx.fillText(line, 40, y);
+                        y += 20;
+                    });
+                }
+            },
+            getFormula() {
+                const q = this.questions[this.currentQ];
+                return this.showAnswer ? q.answer.split('\n') : ['点击"显示答案"查看解析'];
+            },
+            getExplain() {
+                return '高考真题精选，涵盖多普勒效应、波的传播等知识点。点击题目按钮切换题目。';
+            }
+        }
+    ];
+
+    let scene = scenes[0];
+
+    function switchScene(idx) {
+        currentScene = idx;
+        scene = scenes[idx];
+        scene.t = 0;
+        document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+
+        // 更新预设按钮
+        let presetsHtml = '';
+        scene.presets.forEach((p, i) => {
+            presetsHtml += `<button class="preset ${p.color}" onclick="applyPreset(${i})">${p.name}</button>`;
+        });
+        document.getElementById('presets').innerHTML = presetsHtml;
+
+        // 高考真题特殊处理
+        const examSection = document.getElementById('exam-section');
+        if (idx === 4) {
+            examSection.style.display = 'block';
+            updateExamContent();
+        } else {
+            examSection.style.display = 'none';
+        }
+
+        updateContent();
+    }
+
+    function applyPreset(idx) {
+        scene.setPreset(idx);
+        if (currentScene === 4) updateExamContent();
+        updateContent();
+    }
+
+    function updateExamContent() {
+        if (currentScene !== 4) return;
+        const q = scene.questions[scene.currentQ];
+        let html = `<div style="margin-bottom:10px;">${q.question.replace(/\n/g, '<br>')}</div>`;
+        html += `<button class="answer-btn" onclick="toggleAnswer()">${scene.showAnswer ? '隐藏答案' : '显示答案'}</button>`;
+        if (scene.showAnswer) {
+            html += `<div class="answer">${q.answer.replace(/\n/g, '<br>')}</div>`;
+        }
+        document.getElementById('exam-content').innerHTML = html;
+    }
+
+    function toggleAnswer() {
+        scene.showAnswer = !scene.showAnswer;
+        updateExamContent();
+    }
+
+    function updateContent() {
+        document.getElementById('formula').innerHTML = scene.getFormula().map(f => f + '<br>').join('');
+        document.getElementById('explain').textContent = scene.getExplain();
+    }
+
+    // 动画循环
+    let lastTime = performance.now();
+    function animate(time) {
+        const dt = Math.min((time - lastTime) / 1000, 0.05);
+        lastTime = time;
+        scene.update(dt);
+        scene.draw();
+        requestAnimationFrame(animate);
+    }
+
+    switchScene(0);
+    requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
