@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>竖直平面圆周运动 · 高中物理 - PhySenLab</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#E8F4FD 0%,#F8FBFF 50%,#E1EEF7 100%);min-height:100vh;overflow:hidden;}
+        .simulation-container{position:relative;width:100vw;height:100vh;}
+        #canvas-container{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:flex;justify-content:center;align-items:center;}
+        #mainCanvas{background:white;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,0.08);cursor:grab;}
+        #mainCanvas:active{cursor:grabbing;}
+
+        .panel{background:rgba(255,255,255,0.95);backdrop-filter:blur(10px);border:1px solid #E1EEF7;border-radius:14px;box-shadow:0 4px 20px rgba(74,144,226,0.12);padding:18px 22px;z-index:10;position:absolute;}
+
+        .info-panel{top:18px;left:18px;max-width:260px;}
+        .info-panel h1{font-size:1.1rem;color:#2C3E50;margin-bottom:8px;display:flex;align-items:center;gap:8px;}
+        .formula-box{background:linear-gradient(135deg,#E8F4FD,#F8FBFF);padding:9px 12px;border-radius:8px;border-left:4px solid #4A90E2;margin-bottom:8px;}
+        .formula{font-size:.92rem;color:#000;font-family:'Times New Roman',serif;font-style:italic;}
+        .info-text{font-size:.8rem;color:#5A6C7D;line-height:1.6;}
+        .g-note{background:#FFF3E0;border-left:3px solid #F39C12;padding:5px 8px;margin-top:8px;border-radius:6px;font-size:0.75rem;color:#E67E22;font-weight:600;}
+
+        .physics-panel{top:360px;left:18px;width:250px;}
+        .physics-panel h3{font-size:.95rem;color:#2C3E50;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #E1EEF7;display:flex;align-items:center;gap:6px;}
+        .param-row{display:flex;justify-content:space-between;margin-bottom:7px;font-size:.8rem;color:#5A6C7D;}
+        .param-value{font-family:Consolas,monospace;font-weight:600;color:#4A90E2;}
+        .param-value.warn{color:#e74c3c;}
+        .param-value.ok{color:#27ae60;}
+
+        .controls-panel{top:18px;right:18px;width:310px;max-height:calc(100vh - 36px);overflow-y:auto;}
+        .controls-panel h3{font-size:1.05rem;color:#2C3E50;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #E1EEF7;display:flex;align-items:center;gap:8px;}
+        .section-label{font-size:.75rem;color:#8B9DC3;margin:14px 0 6px;font-weight:600;letter-spacing:.5px;}
+
+        .slider-group{margin-bottom:14px;padding:12px;background:#F8FBFF;border-radius:10px;border:1px solid #E1EEF7;}
+        .slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.88rem;}
+        .slider-label .label-text{display:flex;align-items:center;gap:6px;font-weight:600;color:#2C3E50;}
+        .input-wrap{display:flex;align-items:center;gap:4px;}
+        .value-input{width:60px;padding:3px 6px;border:1px solid #E1EEF7;border-radius:8px;font-family:monospace;font-size:.82rem;font-weight:600;color:#4A90E2;text-align:center;outline:none;background:white;}
+        .value-input:focus{border-color:#4A90E2;box-shadow:0 0 0 2px rgba(74,144,226,.12);}
+        .value-unit{font-size:.75rem;color:#8B9DC3;font-weight:600;}
+        input[type=range]{width:100%;height:6px;border-radius:3px;background:#E1EEF7;outline:none;-webkit-appearance:none;cursor:pointer;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#6BB6FF);border:3px solid white;box-shadow:0 2px 8px rgba(74,144,226,.4);cursor:pointer;}
+
+        select{width:100%;padding:10px 14px;border:1px solid #E1EEF7;border-radius:10px;font-size:.9rem;background:white;color:#2C3E50;cursor:pointer;outline:none;font-weight:500;}
+        select:focus{border-color:#4A90E2;box-shadow:0 0 0 3px rgba(74,144,226,.12);}
+
+        .toggle-group{display:flex;flex-direction:column;gap:6px;}
+        .toggle-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:#F8FBFF;border:1px solid #E1EEF7;font-size:.82rem;color:#2C3E50;}
+        .toggle-switch{position:relative;width:40px;height:22px;background:#ccc;border-radius:11px;cursor:pointer;transition:.3s;flex-shrink:0;}
+        .toggle-switch.active{background:linear-gradient(135deg,#4A90E2,#6BB6FF);}
+        .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:white;box-shadow:0 1px 3px rgba(0,0,0,.15);transition:.3s;}
+        .toggle-switch.active::after{left:20px;}
+
+        .chart-wrap{margin-top:10px;}
+        .chart-wrap canvas{width:100%;border-radius:10px;border:1px solid #E1EEF7;background:#fafcff;}
+
+        .status-bar{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:white;padding:12px 32px;border-radius:28px;font-weight:700;font-size:1rem;z-index:30;pointer-events:none;display:none;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+
+        .bottom-bar{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);z-index:30;display:flex;gap:12px;background:rgba(255,255,255,.92);backdrop-filter:blur(12px);padding:8px 22px;border-radius:50px;border:1px solid #E1EEF7;box-shadow:0 4px 20px rgba(74,144,226,.15);}
+        .btn{padding:10px 22px;border:none;border-radius:24px;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .3s;}
+        .btn-primary{background:linear-gradient(135deg,#4A90E2,#6BB6FF);color:white;}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(74,144,226,.3);}
+        .btn-success{background:linear-gradient(135deg,#27ae60,#2ecc71);color:white;}
+        .btn-success:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(39,174,96,.3);}
+        .btn-secondary{background:#f0f0f0;color:#5A6C7D;}
+        .btn-secondary:hover{background:#e0e0e0;}
+
+        .back-btn{position:absolute;bottom:24px;left:18px;background:white;color:#4A90E2;padding:10px 20px;border-radius:25px;text-decoration:none;font-weight:600;border:2px solid #4A90E2;box-shadow:0 2px 10px rgba(74,144,226,.2);transition:all .3s;z-index:10;font-size:.85rem;}
+        .back-btn:hover{background:#4A90E2;color:white;}
+    </style>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"><canvas id="mainCanvas"></canvas></div>
+
+    <div class="info-panel panel">
+        <h1><span class="icon">🔄</span> 竖直平面圆周运动</h1>
+        <div class="formula-box">
+            <div class="formula">N = mv²/r - mg sinθ</div>
+            <div class="formula" style="font-size:.82rem;margin-top:4px;">v² = v₀² - 2gr(1+sinθ)</div>
+        </div>
+        <p class="info-text">
+            小球从<strong>最低点</strong>出发，速度随高度变化。<br>
+            绳球/环球: v₀ ≥ √(5gr) 完成整圈<br>
+            杆球/管球: v₀ ≥ 2√(gr) 过最高点<br>
+            速度不够时回摆或脱离掉落。
+        </p>
+        <!-- 新增g提示 -->
+        <div class="g-note">
+            ⚡ 重力加速度 g = 10 m/s² 
+        </div>
+    </div>
+
+    <div class="physics-panel panel">
+        <h3>📊 实时参数</h3>
+        <div class="param-row"><span>角度 θ:</span><span id="pTheta" class="param-value">270.0°</span></div>
+        <div class="param-row"><span>高度 h:</span><span id="pHeight" class="param-value">0.00 m</span></div>
+        <div class="param-row"><span>当前速度 v:</span><span id="pV" class="param-value">0.00 m/s</span></div>
+        <div class="param-row"><span>向心加速度:</span><span id="pAc" class="param-value">0.00 m/s²</span></div>
+        <div style="border-top:1px solid #E1EEF7;margin:6px 0;"></div>
+        <div class="param-row"><span>重力 G:</span><span id="gravityValue" class="param-value" style="color:#e74c3c;">10.00 N</span></div>
+        <div class="param-row"><span>约束力 N:</span><span id="pN" class="param-value">-</span></div>
+        <div class="param-row"><span>方向:</span><span id="pNDir" class="param-value">-</span></div>
+        <div style="border-top:1px solid #E1EEF7;margin:6px 0;"></div>
+        <div class="param-row"><span>过顶 2√(gr):</span><span id="pVc1" class="param-value">-</span></div>
+        <div class="param-row"><span>整圈 √(5gr):</span><span id="pVc2" class="param-value">-</span></div>
+        <div class="param-row"><span>状态:</span><span id="pState" class="param-value ok">等待</span></div>
+    </div>
+
+    <div class="controls-panel panel">
+        <h3>🔧 参数控制</h3>
+
+        <div class="section-label">物理模型</div>
+        <select id="modelSelect">
+            <option value="rope">🪢 绳球模型</option>
+            <option value="ring">⭕ 环球模型</option>
+            <option value="rod">📏 杆球模型</option>
+            <option value="tube">🔲 管球模型</option>
+        </select>
+
+        <div class="section-label">运动参数</div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span class="label-text">🚀 初速度 v₀</span>
+                <div class="input-wrap"><input type="number" id="vInput" class="value-input" value="5.0" min="0.5" max="20" step="0.1"><span class="value-unit">m/s</span></div>
+            </div>
+            <input type="range" id="vSlider" min="0.5" max="20" step="0.1" value="5">
+        </div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span class="label-text">📏 半径 r</span>
+                <div class="input-wrap"><input type="number" id="rInput" class="value-input" value="2.0" min="0.3" max="5" step="0.1"><span class="value-unit">m</span></div>
+            </div>
+            <input type="range" id="rSlider" min="0.3" max="5" step="0.1" value="2">
+        </div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span class="label-text">🎯 最高点速度 v<sub>top</sub></span>
+                <div class="input-wrap"><input type="number" id="vtInput" class="value-input" value="0.0" min="0" max="20" step="0.1"><span class="value-unit">m/s</span></div>
+            </div>
+            <input type="range" id="vtSlider" min="0" max="20" step="0.1" value="0">
+        </div>
+        <div class="btn-group" style="margin-top:2px;margin-bottom:0;">
+            <button class="btn btn-success" id="startBtn">▶ 开始运动</button>
+            <button class="btn btn-secondary" id="resetBtn" style="margin-left:20px;">🔄 重置</button>
+        </div>
+        <div style="text-align:center;margin-top:12px;margin-bottom:10px;">
+            <button class="btn btn-primary" id="topBtn" style="flex:none;padding:10px 18px;">🎯 最高点</button>
+        </div>
+
+        <div class="section-label">显示选项</div>
+        <div class="toggle-group">
+            <div class="toggle-item"><span>🔴 重力箭头</span><div class="toggle-switch active" data-target="gravity"></div></div>
+            <div class="toggle-item"><span>🔵 约束力箭头</span><div class="toggle-switch active" data-target="normal"></div></div>
+            <div class="toggle-item"><span>🟢 速度箭头</span><div class="toggle-switch active" data-target="velocity"></div></div>
+            <div class="toggle-item"><span>📐 重力分解</span><div class="toggle-switch" data-target="decompose"></div></div>
+            <div class="toggle-item"><span>🏷️ 数值标签</span><div class="toggle-switch active" data-target="labels"></div></div>
+            <div class="toggle-item"><span>〰️ 掉落轨迹</span><div class="toggle-switch active" data-target="trail"></div></div>
+        </div>
+
+        <div class="section-label">N - θ 关系图</div>
+        <div class="chart-wrap"><canvas id="chartCanvas" width="520" height="260"></canvas></div>
+    </div>
+
+    <div id="statusBar" class="status-bar"></div>
+
+    
+</div>
+
+<script>
+// ==================== 常量 ====================
+const GG = 10.0;      // 重力加速度 g = 10 m/s² (根据用户要求修改)
+const MM = 1.0;       // 小球质量 1kg
+const BALL_R_PX = 13; // 小球绘制半径(px)
+
+// ==================== 参数 ====================
+let model='rope', v0=5, r=2;
+let stopAtTop=false;
+let showGravity=true,showNormal=true,showVelocity=true,showDecompose=false,showLabels=true,showTrail=true;
+
+// ==================== 状态 ====================
+let state='waiting';
+let theta,omega;
+let fallX,fallY,fallVx,fallVy;
+let fallTrail=[];
+let zoomLevel=1;
+
+function resetSim(){
+    state='waiting'; theta=-Math.PI/2; omega=v0/r; fallTrail=[]; stopAtTop=false;
+    const btn=document.getElementById('startBtn');
+    btn.textContent='▶ 开始运动'; btn.className='btn btn-success'; btn.disabled=false;
+    const tb=document.getElementById('topBtn');
+    tb.textContent='🎯 最高点'; tb.className='btn btn-primary'; tb.disabled=false;
+    document.getElementById('statusBar').style.display='none';
+    updateGravityDisplay(); // 更新重力显示
+}
+resetSim();
+syncVtFromV0();
+
+// 更新重力显示数值
+function updateGravityDisplay() {
+    const gravitySpan = document.getElementById('gravityValue');
+    if(gravitySpan) gravitySpan.textContent = (MM * GG).toFixed(2) + ' N';
+}
+
+// ==================== Canvas ====================
+const canvas=document.getElementById('mainCanvas');
+const ctx=canvas.getContext('2d');
+let cW,cH,cx,cy,baseScale;
+function getScale(){return baseScale*zoomLevel;}
+
+function resize(){
+    const W=innerWidth,H=innerHeight;
+    cW=canvas.width=Math.min(W*0.52,H*0.88,780);
+    cH=canvas.height=Math.min(H*0.88,cW*1.05,760);
+    cx=cW*0.5; cy=cH*0.44;
+    baseScale=Math.min(cW,cH)*0.1;
+}
+resize();
+window.addEventListener('resize',resize);
+
+// 滚轮缩放
+canvas.addEventListener('wheel',e=>{
+    e.preventDefault();
+    const d=e.deltaY>0?0.92:1.08;
+    zoomLevel=Math.max(0.3,Math.min(3,zoomLevel*d));
+},{passive:false});
+
+// ==================== 物理 ====================
+function vSqAt(th){return v0*v0-2*GG*r*(1+Math.sin(th));}
+function calcN(th,vSq){return MM*vSq/r-MM*GG*Math.sin(th);}
+
+// ==================== 绘制工具 ====================
+function drawArrow(x0,y0,x1,y1,color,lw){
+    const dx=x1-x0,dy=y1-y0,len=Math.sqrt(dx*dx+dy*dy);
+    if(len<2)return;
+    const hl=Math.min(9,len*.3),ang=Math.atan2(dy,dx);
+    ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw||2;ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x1,y1);
+    ctx.lineTo(x1-hl*Math.cos(ang-.38),y1-hl*Math.sin(ang-.38));
+    ctx.lineTo(x1-hl*Math.cos(ang+.38),y1-hl*Math.sin(ang+.38));
+    ctx.closePath();ctx.fill();ctx.restore();
+}
+function drawLabel(x,y,text,color,al){
+    if(!showLabels)return;
+    ctx.save();ctx.font='bold 11px "PingFang SC",sans-serif';ctx.textAlign=al||'left';ctx.textBaseline='middle';
+    const tw=ctx.measureText(text).width,lx=al==='right'?x-tw-8:al==='center'?x-tw/2-4:x;
+    ctx.fillStyle='rgba(255,255,255,0.88)';ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(lx-2,y-9,tw+10,18,4);else ctx.rect(lx-2,y-9,tw+10,18);
+    ctx.fill();ctx.strokeStyle='rgba(0,0,0,0.06)';ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle=color;ctx.fillText(text,al==='right'?x:al==='center'?x:x+3,y);ctx.restore();
+}
+function toC(px,py){const s=getScale();return[cx+px*s,cy-py*s];}
+
+// ==================== 绳子 ====================
+function drawRope(fx,fy,tx,ty,tension){
+    const mx=(fx+tx)/2,my=(fy+ty)/2;
+    const sag=Math.max(2,22/(Math.abs(tension)+0.3));
+    const cpX=mx,cpY=my+sag;
+    ctx.save();
+    ctx.strokeStyle='rgba(180,150,60,0.25)';ctx.lineWidth=7;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(fx,fy);ctx.quadraticCurveTo(cpX,cpY,tx,ty);ctx.stroke();
+    ctx.strokeStyle='#d4a832';ctx.lineWidth=3.5;
+    ctx.beginPath();ctx.moveTo(fx,fy);ctx.quadraticCurveTo(cpX,cpY,tx,ty);ctx.stroke();
+    ctx.strokeStyle='rgba(255,230,120,0.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(fx,fy);ctx.quadraticCurveTo(cpX,cpY-1.5,tx,ty);ctx.stroke();
+    if(tension<0&&model==='rope'){
+        ctx.setLineDash([6,5]);ctx.strokeStyle='rgba(231,76,60,0.5)';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.moveTo(fx,fy);ctx.quadraticCurveTo(cpX,cpY+8,tx,ty);ctx.stroke();ctx.setLineDash([]);
+    }
+    ctx.restore();
+}
+
+// ==================== 主绘制 ====================
+function draw(){
+    const sc=getScale();
+// 画布背景改为半透明淡蓝色
+ctx.clearRect(0, 0, cW, cH);
+ctx.fillStyle = 'rgba(214, 234, 248, 0.6)';   // 透明度0.6，数值越小越透明
+ctx.fillRect(0, 0, cW, cH);
+
+    // 网格 (适配淡蓝背景，用更淡的线条)
+    ctx.strokeStyle='rgba(74,144,226,0.12)';ctx.lineWidth=1;
+    const gs=sc;
+    for(let x=cx%gs;x<cW;x+=gs){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cH);ctx.stroke();}
+    for(let y=cy%gs;y<cH;y+=gs){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cW,y);ctx.stroke();}
+
+    const rPx=r*sc;
+    const ballR=BALL_R_PX; // 小球像素半径
+
+    // 十字参考线
+    ctx.strokeStyle='rgba(74,144,226,0.2)';ctx.setLineDash([6,5]);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(cx-rPx-30,cy);ctx.lineTo(cx+rPx+30,cy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(cx,cy-rPx-30);ctx.lineTo(cx,cy+rPx+30);ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ---- 模型视觉 ----
+    if(model==='ring'){
+        const ringInner=rPx+ballR;
+        const ringThick=10;
+        ctx.strokeStyle='rgba(100,120,150,0.5)';ctx.lineWidth=ringThick;
+        ctx.beginPath();ctx.arc(cx,cy,ringInner+ringThick/2,0,Math.PI*2);ctx.stroke();
+        ctx.strokeStyle='rgba(200,210,230,0.4)';ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.arc(cx,cy,ringInner,0,Math.PI*2);ctx.stroke();
+    } else if(model==='tube'){
+        const tw=ballR*2;
+        ctx.fillStyle='rgba(74,144,226,0.08)';
+        ctx.beginPath();ctx.arc(cx,cy,rPx+tw/2,0,Math.PI*2);
+        ctx.arc(cx,cy,rPx-tw/2,0,Math.PI*2,true);ctx.fill();
+        ctx.strokeStyle='rgba(80,100,130,0.45)';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(cx,cy,rPx-tw/2,0,Math.PI*2);ctx.stroke();
+        ctx.beginPath();ctx.arc(cx,cy,rPx+tw/2,0,Math.PI*2);ctx.stroke();
+    } else {
+        ctx.strokeStyle='rgba(74,144,226,0.2)';ctx.lineWidth=1.5;ctx.setLineDash([6,5]);
+        ctx.beginPath();ctx.arc(cx,cy,rPx,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+    }
+
+    // 圆心
+    ctx.fillStyle='#9aaec0';ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fill();
+    if(model==='rod'||model==='rope'){ctx.strokeStyle='#6f8faa';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);ctx.stroke();}
+
+    // 位置标注
+    ctx.fillStyle='rgba(60,80,100,0.6)';ctx.font='11px sans-serif';ctx.textAlign='center';
+    ctx.fillText('最高点',cx,cy-rPx-16);
+    ctx.fillText('最低点',cx,cy+rPx+22);
+    ctx.textAlign='left';
+
+    // ---- 小球位置 ----
+    let ballCX,ballCY,curV=0,curN=0;
+
+    if(state==='circular'||state==='waiting'||state==='paused_c'){
+        const vSq=Math.max(0,vSqAt(theta));
+        curV=Math.sqrt(vSq)*(omega>=0?1:-1);
+        curN=calcN(theta,vSq);
+        ballCX=cx+rPx*Math.cos(theta);
+        ballCY=cy-rPx*Math.sin(theta);
+
+        // 连接
+        if(model==='rope') drawRope(cx,cy,ballCX,ballCY,curN);
+        else if(model==='rod'){
+            const grad=ctx.createLinearGradient(cx,cy,ballCX,ballCY);
+            grad.addColorStop(0,'#5c6e82');grad.addColorStop(.5,'#8b9aad');grad.addColorStop(1,'#5c6e82');
+            ctx.save();ctx.strokeStyle=grad;ctx.lineWidth=6;ctx.lineCap='round';
+            ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ballCX,ballCY);ctx.stroke();
+            ctx.strokeStyle='rgba(255,255,255,0.3)';ctx.lineWidth=2;
+            ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(ballCX,ballCY);ctx.stroke();ctx.restore();
+        }
+
+        // 力箭头
+        const fS=sc*0.09;
+        const toCx=cx-ballCX,toCy=cy-ballCY;
+        const dist=Math.sqrt(toCx*toCx+toCy*toCy)||1;
+        const rnx=toCx/dist,rny=toCy/dist;
+        const tnx=-rny,tny=rnx;
+
+        if(showDecompose && state!=='waiting'){
+            const Gr=MM*GG*Math.sin(theta),Gt=MM*GG*Math.cos(theta);
+            if(Math.abs(Gr)>0.05)drawArrow(ballCX,ballCY,ballCX+rnx*Gr*fS,ballCY+rny*Gr*fS,'rgba(155,89,182,0.55)',1.8);
+            if(Math.abs(Gt)>0.05)drawArrow(ballCX,ballCY,ballCX-tnx*Gt*fS,ballCY-tny*Gt*fS,'rgba(155,89,182,0.4)',1.8);
+        }
+        if(showGravity){
+            const gL=MM*GG*fS;
+            drawArrow(ballCX,ballCY,ballCX,ballCY+gL,'#e74c3c',2.5);
+            drawLabel(ballCX+14,ballCY+gL*0.55,'G='+(MM*GG).toFixed(1)+'N','#e74c3c');
+        }
+        if(showNormal&&Math.abs(curN)>0.05&&state!=='waiting'){
+            const nL=curN*fS;
+            const nCol=curN>=0?'#000000':'#d35400';
+            drawArrow(ballCX,ballCY,ballCX+rnx*nL,ballCY+rny*nL,nCol,2.5);
+            const dir=curN>=0?'→心':'←外';
+            drawLabel(ballCX+rnx*nL+(rnx>0?12:-70),ballCY+rny*nL-10,'N='+Math.abs(curN).toFixed(1)+'N '+dir,nCol);
+        }
+        if(showVelocity&&state!=='waiting'){
+            const vAbs=Math.abs(curV),vDir=omega>=0?1:-1,vL=vAbs*fS*1.5;
+            if(vAbs>0.1){
+                drawArrow(ballCX,ballCY,ballCX+tnx*vL*vDir,ballCY+tny*vL*vDir,'#1e7a4c',2);
+                drawLabel(ballCX+tnx*vL*vDir+8,ballCY+tny*vL*vDir,'v='+vAbs.toFixed(1)+'m/s','#1e7a4c');
+            }
+        }
+    } else {
+        // falling / paused_f / stopped
+        const[bx,by]=toC(fallX,fallY);
+        ballCX=bx;ballCY=by;
+
+        if(showTrail&&fallTrail.length>1){
+            ctx.strokeStyle='rgba(200,70,30,0.4)';ctx.lineWidth=1.8;ctx.setLineDash([4,3]);
+            ctx.beginPath();
+            fallTrail.forEach((p,i)=>{const[px,py]=toC(p[0],p[1]);i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);});
+            ctx.stroke();ctx.setLineDash([]);
+        }
+        if(showGravity&&state!=='stopped'){
+            const gL=MM*GG*sc*0.09;
+            drawArrow(ballCX,ballCY,ballCX,ballCY+gL,'#e74c3c',2.5);
+        }
+        if(showVelocity&&state!=='stopped'){
+            const spd=Math.sqrt(fallVx*fallVx+fallVy*fallVy);
+            if(spd>0.1){const fS=sc*0.09*0.5;drawArrow(ballCX,ballCY,ballCX+fallVx*fS,ballCY-fallVy*fS,'#1e7a4c',2);}
+        }
+    }
+
+   // 【修改2】小球改为橙色风格 (明亮橙红渐变)
+    ctx.save();
+    const bg = ctx.createRadialGradient(ballCX-3, ballCY-3, 3, ballCX, ballCY, ballR);
+    bg.addColorStop(0, '#FFD966');   // 亮橙黄高光
+    bg.addColorStop(1, '#E65100');   // 深橙红边缘
+    ctx.shadowColor='rgba(0,0,0,0.35)';ctx.shadowBlur=12;ctx.fillStyle=bg;
+    ctx.beginPath();ctx.arc(ballCX,ballCY,ballR,0,Math.PI*2);ctx.fill();
+    ctx.shadowBlur=0;ctx.strokeStyle='#BF3F00';ctx.lineWidth=1.8;  // 深橙色描边
+    ctx.beginPath();ctx.arc(ballCX,ballCY,ballR,0,Math.PI*2);ctx.stroke();
+    // 加一点暖色高光
+    ctx.beginPath();ctx.arc(ballCX-3,ballCY-3,4,0,Math.PI*2);ctx.fillStyle='rgba(255,220,150,0.4)';ctx.fill();
+    ctx.restore();
+
+    // 提示
+    if(state==='waiting'){
+        ctx.save();ctx.fillStyle='rgba(44,62,80,0.55)';ctx.font='bold 15px "PingFang SC",sans-serif';ctx.textAlign='center';
+        ctx.fillText('点击「开始运动」',cx,cH-28);ctx.textAlign='left';ctx.restore();
+    }
+
+    const sb=document.getElementById('statusBar');
+    if(state==='falling'||state==='paused_f'){sb.style.display='block';sb.style.background='rgba(230,126,34,0.9)';sb.textContent='⚠️ 约束力失效，小球脱离轨道！';}
+    else if(state==='stopped'){sb.style.display='block';sb.style.background='rgba(44,62,80,0.85)';sb.textContent='小球已停止，点击「重置」重新开始';}
+    else sb.style.display='none';
+}
+
+// ==================== N-θ 图表 ====================
+function drawChart(){
+    const c=document.getElementById('chartCanvas'),ct=c.getContext('2d');
+    const W=c.width,H=c.height,p={top:24,right:12,bottom:28,left:46};
+    const pw=W-p.left-p.right,ph=H-p.top-p.bottom;
+    ct.clearRect(0,0,W,H);ct.fillStyle='#fafcff';ct.fillRect(0,0,W,H);
+
+    let nMin=999,nMax=-999;
+    for(let d=0;d<=360;d++){const th=d*Math.PI/180,vSq=v0*v0-2*GG*r*(1+Math.sin(th));if(vSq<0)continue;const n=MM*vSq/r-MM*GG*Math.sin(th);if(n<nMin)nMin=n;if(n>nMax)nMax=n;}
+    if(nMin>nMax){nMin=-10;nMax=30;}nMin=Math.min(nMin,-1)-1;nMax+=2;
+    const toX=d=>p.left+(d/360)*pw,toY=n=>p.top+(1-(n-nMin)/(nMax-nMin))*ph;
+
+    ct.strokeStyle='rgba(74,144,226,0.06)';ct.lineWidth=.5;
+    for(let d=0;d<=360;d+=45){const x=toX(d);ct.beginPath();ct.moveTo(x,p.top);ct.lineTo(x,p.top+ph);ct.stroke();}
+
+    if(nMin<0&&nMax>0){ct.strokeStyle='rgba(231,76,60,0.25)';ct.lineWidth=1;ct.setLineDash([4,3]);const y0=toY(0);ct.beginPath();ct.moveTo(p.left,y0);ct.lineTo(p.left+pw,y0);ct.stroke();ct.setLineDash([]);ct.fillStyle='rgba(231,76,60,0.5)';ct.font='10px sans-serif';ct.fillText('N=0',p.left+2,y0-4);}
+
+    ct.fillStyle='rgba(0,0,0,0.04)';ct.beginPath();let s2=false;
+    for(let d=0;d<=360;d++){const th=d*Math.PI/180,vSq=v0*v0-2*GG*r*(1+Math.sin(th));if(vSq<0){if(!s2){ct.moveTo(toX(d),p.top);s2=true;}ct.lineTo(toX(d),p.top+ph);}}
+    if(s2)ct.fill();
+
+    ct.strokeStyle='#4A90E2';ct.lineWidth=2;ct.beginPath();let f=true;
+    for(let d=0;d<=360;d++){const th=d*Math.PI/180,vSq=v0*v0-2*GG*r*(1+Math.sin(th));if(vSq<0){f=true;continue;}const n=MM*vSq/r-MM*GG*Math.sin(th),x=toX(d),y=toY(n);f?ct.moveTo(x,y):ct.lineTo(x,y);f=false;}
+    ct.stroke();
+
+    if(state==='circular'||state==='paused_c'){const cd=((theta*180/Math.PI)%360+360)%360,vSq=Math.max(0,vSqAt(theta)),cn=calcN(theta,vSq),mx=toX(cd),my=toY(cn);ct.beginPath();ct.arc(mx,my,5,0,Math.PI*2);ct.fillStyle='#e74c3c';ct.fill();ct.strokeStyle='#fff';ct.lineWidth=1.5;ct.stroke();}
+
+    ct.fillStyle='rgba(90,108,125,0.5)';ct.font='10px Consolas';ct.textAlign='center';
+    for(let d=0;d<=360;d+=90)ct.fillText(d+'°',toX(d),p.top+ph+14);
+    ct.textAlign='right';const ns=Math.max(1,Math.round((nMax-nMin)/5));
+    for(let n=Math.ceil(nMin);n<=nMax;n+=ns)ct.fillText(n.toFixed(0),p.left-4,toY(n)+4);
+    ct.fillStyle='#2C3E50';ct.font='bold 11px sans-serif';ct.textAlign='center';
+    const names={rope:'绳球',ring:'环球',rod:'杆球',tube:'管球'};
+    ct.fillText('约束力 N(θ) - '+names[model],W/2,14);
+}
+
+// ==================== 面板更新 ====================
+function updatePanel(){
+    document.getElementById('pVc1').textContent=(2*Math.sqrt(GG*r)).toFixed(2)+' m/s';
+    document.getElementById('pVc2').textContent=Math.sqrt(5*GG*r).toFixed(2)+' m/s';
+    // 实时更新重力显示 (保证一致性)
+    updateGravityDisplay();
+
+    if(state==='circular'||state==='waiting'||state==='paused_c'){
+        const deg=((theta*180/Math.PI)%360+360)%360,h=r*(1+Math.sin(theta));
+        const vSq=Math.max(0,vSqAt(theta)),spd=Math.sqrt(vSq),N=calcN(theta,vSq),ac=vSq/r;
+        document.getElementById('pTheta').textContent=deg.toFixed(1)+'°';
+        document.getElementById('pHeight').textContent=h.toFixed(2)+' m';
+        document.getElementById('pV').textContent=spd.toFixed(2)+' m/s';
+        document.getElementById('pAc').textContent=ac.toFixed(1)+' m/s²';
+        const pN=document.getElementById('pN'),pD=document.getElementById('pNDir');
+        if(state==='waiting'){pN.textContent='-';pN.className='param-value';pD.textContent='-';pD.className='param-value';}
+        else{pN.textContent=N.toFixed(2)+' N';pN.className='param-value'+(N<0?' warn':'');
+            if(Math.abs(N)<0.01){pD.textContent='≈ 0';pD.className='param-value';}
+            else if(N>0){pD.textContent='→圆心（拉力）';pD.className='param-value ok';}
+            else{pD.textContent='←离心（推力）';pD.className='param-value warn';}}
+    } else {
+        const spd=Math.sqrt(fallVx*fallVx+fallVy*fallVy);
+        document.getElementById('pV').textContent=spd.toFixed(2)+' m/s';
+        document.getElementById('pN').textContent='-';document.getElementById('pN').className='param-value';
+        document.getElementById('pNDir').textContent='已脱离';document.getElementById('pNDir').className='param-value warn';
+    }
+    const pS=document.getElementById('pState');
+    if(state==='waiting'){pS.textContent='等待开始';pS.className='param-value';}
+    else if(state==='circular'||state==='paused_c'){pS.textContent='圆周运动';pS.className='param-value ok';}
+    else if(state==='falling'||state==='paused_f'){pS.textContent='抛体运动';pS.className='param-value warn';}
+    else{pS.textContent='已停止';pS.className='param-value';}
+}
+
+// ==================== UI ====================
+function syncVtFromV0(){
+    const vtSq=v0*v0-4*GG*r;
+    const vt=vtSq>0?Math.sqrt(vtSq):0;
+    document.getElementById('vtSlider').value=vt;
+    document.getElementById('vtInput').value=vt.toFixed(1);
+}
+function setV(val){v0=Math.max(0.5,Math.min(20,+val||0.5));document.getElementById('vSlider').value=v0;document.getElementById('vInput').value=v0.toFixed(1);syncVtFromV0();resetSim();}
+function setR(val){r=Math.max(0.3,Math.min(5,+val||0.3));document.getElementById('rSlider').value=r;document.getElementById('rInput').value=r.toFixed(1);syncVtFromV0();resetSim();}
+function setVTop(val){const vt=Math.max(0,Math.min(20,+val||0));document.getElementById('vtSlider').value=vt;document.getElementById('vtInput').value=vt.toFixed(1);v0=Math.sqrt(vt*vt+4*GG*r);document.getElementById('vSlider').value=Math.min(20,v0);document.getElementById('vInput').value=v0.toFixed(1);resetSim();}
+
+document.getElementById('modelSelect').addEventListener('change',e=>{model=e.target.value;resetSim();});
+document.getElementById('vSlider').addEventListener('input',e=>setV(e.target.value));
+document.getElementById('vInput').addEventListener('change',e=>setV(e.target.value));
+document.getElementById('rSlider').addEventListener('input',e=>setR(e.target.value));
+document.getElementById('rInput').addEventListener('change',e=>setR(e.target.value));
+document.getElementById('vtSlider').addEventListener('input',e=>setVTop(e.target.value));
+document.getElementById('vtInput').addEventListener('change',e=>setVTop(e.target.value));
+
+document.getElementById('startBtn').addEventListener('click',function(){
+    if(state==='waiting'){state='circular';this.textContent='⏸ 暂停';this.className='btn btn-primary';}
+    else if(state==='circular'){state='paused_c';this.textContent='▶ 继续';this.className='btn btn-success';}
+    else if(state==='paused_c'){state='circular';this.textContent='⏸ 暂停';this.className='btn btn-primary';}
+    else if(state==='falling'){state='paused_f';this.textContent='▶ 继续';this.className='btn btn-success';}
+    else if(state==='paused_f'){state='falling';this.textContent='⏸ 暂停';this.className='btn btn-primary';}
+});
+document.getElementById('resetBtn').addEventListener('click',resetSim);
+
+document.getElementById('topBtn').addEventListener('click',function(){
+    if(state!=='circular'&&state!=='paused_c'){
+        showTip('请先点击「开始运动」');return;
+    }
+    if(v0*v0<4*GG*r){
+        showTip('⚠️ 速度不足，无法到达最高点！(需 v₀ ≥ '+( 2*Math.sqrt(GG*r)).toFixed(1)+' m/s)');return;
+    }
+    if(state==='paused_c') { state='circular'; document.getElementById('startBtn').textContent='⏸ 暂停'; document.getElementById('startBtn').className='btn btn-primary'; }
+    stopAtTop=true;
+    this.textContent='🎯 等待到达…';this.className='btn btn-secondary';this.disabled=true;
+});
+
+function showTip(msg){
+    const sb=document.getElementById('statusBar');
+    sb.style.display='block';sb.style.background='rgba(44,62,80,0.85)';sb.textContent=msg;
+    clearTimeout(sb._tid);sb._tid=setTimeout(()=>{if(state!=='falling'&&state!=='stopped')sb.style.display='none';},2500);
+}
+
+document.querySelectorAll('.toggle-switch').forEach(sw=>{
+    sw.addEventListener('click',()=>{sw.classList.toggle('active');const on=sw.classList.contains('active'),t=sw.dataset.target;
+        if(t==='gravity')showGravity=on;if(t==='normal')showNormal=on;if(t==='velocity')showVelocity=on;
+        if(t==='decompose')showDecompose=on;if(t==='labels')showLabels=on;if(t==='trail')showTrail=on;
+        if(t==='stopTop')stopAtTop=on;});
+});
+
+// ==================== 物理 ====================
+function physicsStep(dt){
+    if(state==='circular'){
+        const sub=4,sd=dt/sub;
+        for(let s=0;s<sub;s++){
+            const alpha=-GG*Math.cos(theta)/r;
+            omega+=alpha*sd;
+            const prevTh=theta;
+            theta+=omega*sd;
+
+            if(stopAtTop&&omega>0){
+                const HP=Math.PI/2,P2=Math.PI*2;
+                const nxt=HP+(Math.floor((prevTh-HP)/P2)+1)*P2;
+                if(theta>=nxt){
+                    theta=nxt;
+                    const vtSq=Math.max(0,v0*v0-4*GG*r);
+                    omega=Math.sqrt(vtSq)/r;
+                    stopAtTop=false;
+                    state='paused_c';
+                    const btn=document.getElementById('startBtn');btn.textContent='▶ 继续';btn.className='btn btn-success';
+                    const tb=document.getElementById('topBtn');tb.textContent='🎯 最高点';tb.className='btn btn-primary';tb.disabled=false;
+                    return;
+                }
+            }
+
+            const vSq=omega*omega*r*r,N=MM*vSq/r-MM*GG*Math.sin(theta);
+            if((model==='rope'||model==='ring')&&N<0){
+                fallX=r*Math.cos(theta);fallY=r*Math.sin(theta);
+                const vT=omega*r;fallVx=-vT*Math.sin(theta);fallVy=vT*Math.cos(theta);
+                fallTrail=[[fallX,fallY]];state='falling';
+                document.getElementById('startBtn').textContent='⏸ 暂停';document.getElementById('startBtn').className='btn btn-primary';
+                return;
+            }
+        }
+    } else if(state==='falling'){
+        const sub=4,sd=dt/sub;
+        for(let s=0;s<sub;s++){
+            fallVy-=GG*sd;fallX+=fallVx*sd;fallY+=fallVy*sd;
+            if(s%2===0)fallTrail.push([fallX,fallY]);
+            if(fallY<=-r){
+                fallY=-r;state='stopped';
+                const btn=document.getElementById('startBtn');btn.textContent='已停止';btn.className='btn btn-secondary';btn.disabled=true;
+                return;
+            }
+        }
+    }
+}
+
+// ==================== 动画 ====================
+let lastTime=null;
+function animate(ts){
+    requestAnimationFrame(animate);
+    if(lastTime===null)lastTime=ts;
+    const dt=Math.min((ts-lastTime)/1000,0.04);lastTime=ts;
+    if(state==='circular'||state==='falling')physicsStep(dt);
+    draw();updatePanel();
+    if(Math.round(ts)%2===0)drawChart();
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

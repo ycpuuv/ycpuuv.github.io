@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>光的衍射 - PhySenLab</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js">
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 左侧面板区域 */
+        .left-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 300px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+        }
+
+        /* 信息面板 */
+        .info-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid #E1EEF7;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            padding: 18px 22px;
+        }
+
+        .info-panel h1 {
+            font-size: 1.15rem;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .formula-box {
+            background: linear-gradient(135deg, #E8F4FD, #F8FBFF);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 10px;
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        .info-text {
+            font-size: 0.8rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+        }
+
+        /* 信息按钮 - Times New Roman斜体i */
+        .info-btn-container {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 100;
+        }
+
+        .info-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 2px solid white;
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            font-style: italic;
+            font-family: 'Times New Roman', Times, serif;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.3);
+            transition: all 0.2s;
+        }
+
+        .info-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+        }
+
+        /* 作者信息弹窗 */
+        .author-tooltip {
+            position: absolute;
+            top: 44px;
+            right: 0;
+            width: 300px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border: 1px solid #E1EEF7;
+            padding: 18px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .info-btn-container:hover .author-tooltip {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .author-tooltip::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            right: 14px;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid white;
+        }
+
+        .author-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4A90E2;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E1EEF7;
+        }
+
+        .author-content {
+            font-size: 0.85rem;
+            color: #5A6C7D;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        .author-qr-section {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+        }
+
+        .author-qr {
+            text-align: center;
+        }
+
+        .author-qr img {
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            border: 2px solid #E1EEF7;
+            object-fit: cover;
+        }
+
+        .author-qr-label {
+            font-size: 0.72rem;
+            color: #5A6C7D;
+            margin-top: 5px;
+            font-weight: 500;
+        }
+
+        /* 衍射图样卡片 - 放在左侧 */
+        .pattern-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            border: 1px solid #E1EEF7;
+            padding: 14px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+        }
+
+        .pattern-header {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2C3E50;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        #pattern-canvas {
+            width: 100%;
+            height: 100px;
+            background: #0a0e1c;
+            border-radius: 8px;
+            display: block;
+            margin-bottom: 10px;
+            border: 2px solid #4A90E2;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 140px;
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 8px;
+            border: 1px solid #E1EEF7;
+            margin-bottom: 10px;
+        }
+
+        canvas#intensityChart {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(74, 144, 226, 0.3);
+        }
+
+        /* 右侧控制区 */
+        .controls-area {
+            position: absolute;
+            top: 20px;
+            right: 70px;
+            width: 280px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .control-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            border: 1px solid #E1EEF7;
+            padding: 16px 18px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+        }
+
+        .control-card h3 {
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 2px solid #E1EEF7;
+            padding-bottom: 8px;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        /* 模式切换 */
+        .mode-switch {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 14px;
+            background: #E1EEF7;
+            border-radius: 40px;
+            padding: 3px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            text-align: center;
+            padding: 7px 0;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            transition: 0.2s;
+            background: transparent;
+            color: #5A6C7D;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .slider-group {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #F8FBFF;
+            border-radius: 10px;
+            border: 1px solid #E1EEF7;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        .value-badge {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 24px;
+            font-family: monospace;
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+        }
+
+        /* 底部实时数据 - 居中 */
+        .data-panel {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            border: 1px solid #E1EEF7;
+            padding: 14px 24px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            z-index: 20;
+            display: flex;
+            gap: 32px;
+        }
+
+        .data-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+
+        .data-label {
+            color: #5A6C7D;
+        }
+
+        .data-value {
+            font-family: monospace;
+            font-weight: 700;
+            color: #4A90E2;
+            background: #F8FBFF;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            position: absolute;
+            bottom: 24px;
+            left: 20px;
+            background: white;
+            color: #4A90E2;
+            padding: 10px 18px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.2);
+            transition: all 0.3s;
+            z-index: 30;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.7rem;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #e2e8f0;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        /* 滚动条 */
+        .left-panel::-webkit-scrollbar,
+        .controls-area::-webkit-scrollbar {
+            width: 4px;
+        }
+        .left-panel::-webkit-scrollbar-track,
+        .controls-area::-webkit-scrollbar-track {
+            background: #E1EEF7;
+            border-radius: 4px;
+        }
+        .left-panel::-webkit-scrollbar-thumb,
+        .controls-area::-webkit-scrollbar-thumb {
+            background: #4A90E2;
+            border-radius: 4px;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-container"></div>
+
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <!-- 信息面板 -->
+            <div class="info-panel">
+                <h1><span>🔦</span> 光的衍射</h1>
+                <div class="formula-box">
+                    <div>I = I₀ (sinβ/β)² &nbsp; β = πa sinθ/λ</div>
+                </div>
+                <p class="info-text">
+                    光波通过狭缝或绕过障碍物时发生弯曲，形成明暗相间的衍射图样。调节波长和缝宽观察条纹变化。
+                </p>
+            </div>
+
+            <!-- 衍射图样和光强分布 -->
+            <div class="pattern-card">
+                <div class="pattern-header">
+                    <span>🔬 衍射图样 &amp; 光强分布</span>
+                    <button class="btn-save" id="saveBtn">💾 保存图像</button>
+                </div>
+                <canvas id="pattern-canvas" width="300" height="100"></canvas>
+                <div class="chart-container">
+                    <canvas id="intensityChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 信息按钮与作者信息 -->
+        <div class="info-btn-container">
+            <button class="info-btn" title="作者信息">i</button>
+            <div class="author-tooltip">
+                <div class="author-title">👥 关于作者</div>
+                <div class="author-content">
+                    本作品由 <strong>厦门中学张丽敏老师</strong> 创作<br>
+                    <strong>南师大附校吴家盛</strong> 修改完善
+                </div>
+                <div class="author-qr-section">
+                    <div class="author-qr">
+                        <img src="minxing-physics.jpg" alt="张丽敏老师公众号" onerror="this.style.display='none'">
+                        <div class="author-qr-label">张丽敏老师</div>
+                    </div>
+                    <div class="author-qr">
+                        <img src="wujiasheng.jpg" alt="吴家盛老师公众号" onerror="this.style.display='none'">
+                        <div class="author-qr-label">吴家盛老师</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧控制区 -->
+        <div class="controls-area">
+            <!-- 实验模式 -->
+            <div class="control-card">
+                <h3>🎚️ 实验模式</h3>
+                <div class="mode-switch">
+                    <div class="mode-btn active" data-type="single">单缝</div>
+                    <div class="mode-btn" data-type="double">双缝</div>
+                    <div class="mode-btn" data-type="multi">多缝</div>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>🌈 波长 λ (nm)</span>
+                        <span id="lambdaValue" class="value-badge">550</span>
+                    </div>
+                    <input type="range" id="lambdaSlider" min="380" max="780" value="550" step="1">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>📏 缝宽 a (μm)</span>
+                        <span id="aValue" class="value-badge">100</span>
+                    </div>
+                    <input type="range" id="aSlider" min="10" max="1000" value="100" step="1">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>🔢 缝数 N</span>
+                        <span id="nValue" class="value-badge">1</span>
+                    </div>
+                    <input type="range" id="nSlider" min="1" max="5" value="1" step="1">
+                </div>
+
+                <div class="slider-group" id="dGroup" style="display: none;">
+                    <div class="slider-label">
+                        <span>↔️ 缝间距 d (μm)</span>
+                        <span id="dValue" class="value-badge">200</span>
+                    </div>
+                    <input type="range" id="dSlider" min="50" max="1000" value="200" step="1">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>📐 屏幕距离 L (cm)</span>
+                        <span id="lValue" class="value-badge">50</span>
+                    </div>
+                    <input type="range" id="lSlider" min="10" max="200" value="50" step="1">
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="resetBtn">🔄 重置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部实时数据 -->
+        <div class="data-panel">
+            <div class="data-item">
+                <span class="data-label">中央明纹宽度:</span>
+                <span class="data-value" id="centralWidth">-- mm</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">第一极小位置:</span>
+                <span class="data-value" id="firstMinPos">-- mm</span>
+            </div>
+            <div class="data-item">
+                <span class="data-label">d / λ :</span>
+                <span class="data-value" id="dLambdaRatio">--</span>
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <button class="back-btn" onclick="window.location.href='../index.html'">← 返回实验列表</button>
+
+        <div class="hint-text">🖱️ 鼠标拖拽旋转视角 | 滚轮缩放</div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ---------- 状态 ----------
+        const state = {
+            lambda: 550,
+            a: 100,
+            N: 1,
+            d: 200,
+            L: 50,
+            type: 'single',
+            wavelengthColor: '#00ff00',
+            rgb: { r: 0, g: 255, b: 0 }
+        };
+
+        const SAMPLE_POINTS = 280;
+        let intensityData = [];
+        let positionMM = [];
+        let chart = null;
+
+        // ---------- Three.js 场景 ----------
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a1428);
+        scene.fog = new THREE.FogExp2(0x0a1428, 0.008);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(2, 4, 18);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.target.set(0, 0.5, 0);
+
+        // 灯光
+        const ambientLight = new THREE.AmbientLight(0x404060, 0.8);
+        scene.add(ambientLight);
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(2, 5, 5);
+        scene.add(mainLight);
+
+        // 变量
+        let laserCylinder, laserBeam, slitBoardGroup, screenMesh, screenTextureCanvas;
+
+        // ---------- 工具函数 ----------
+        function wavelengthToRGB(wavelength) {
+            let r, g, b;
+            if (wavelength >= 380 && wavelength < 440) {
+                r = -(wavelength - 440) / (440 - 380);
+                g = 0;
+                b = 1;
+            } else if (wavelength < 490) {
+                r = 0;
+                g = (wavelength - 440) / (490 - 440);
+                b = 1;
+            } else if (wavelength < 510) {
+                r = 0;
+                g = 1;
+                b = -(wavelength - 510) / (510 - 490);
+            } else if (wavelength < 580) {
+                r = (wavelength - 510) / (580 - 510);
+                g = 1;
+                b = 0;
+            } else if (wavelength < 645) {
+                r = 1;
+                g = -(wavelength - 645) / (645 - 580);
+                b = 0;
+            } else {
+                r = 1;
+                g = 0;
+                b = 0;
+            }
+            return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+        }
+
+        function computeIntensity(x_mm) {
+            const lambda_m = state.lambda * 1e-9;
+            const a_m = state.a * 1e-6;
+            const L_m = state.L * 0.01;
+            const theta = Math.atan(x_mm * 1e-3 / L_m);
+            const beta = (Math.PI * a_m / lambda_m) * Math.sin(theta);
+
+            let I = 1.0;
+            if (Math.abs(beta) > 1e-12) I = Math.pow(Math.sin(beta) / beta, 2);
+
+            if (state.N > 1) {
+                const d_m = state.d * 1e-6;
+                const delta = (Math.PI * d_m / lambda_m) * Math.sin(theta);
+                let interf = 1.0;
+                if (Math.abs(Math.sin(delta)) > 1e-12) {
+                    interf = Math.pow(Math.sin(state.N * delta) / Math.sin(delta), 2) / (state.N * state.N);
+                }
+                I *= interf;
+            }
+            return Math.max(0, I);
+        }
+
+        // ---------- 核心计算 ----------
+        function recomputeAll() {
+            const xMin = -20,
+                xMax = 20;
+            positionMM = [];
+            intensityData = [];
+
+            for (let i = 0; i < SAMPLE_POINTS; i++) {
+                const x = xMin + (i / (SAMPLE_POINTS - 1)) * (xMax - xMin);
+                positionMM.push(x);
+                intensityData.push(computeIntensity(x));
+            }
+
+            // 找第一极小值（从右侧找第一个 < 0.01 的点）
+            let firstMin = null;
+            for (let i = 1; i < intensityData.length; i++) {
+                if (intensityData[i] < 0.01 && intensityData[i - 1] > 0.01) {
+                    firstMin = positionMM[i];
+                    break;
+                }
+            }
+            // 如果没找到，尝试从左侧找
+            if (firstMin === null) {
+                for (let i = intensityData.length - 2; i >= 0; i--) {
+                    if (intensityData[i] < 0.01 && intensityData[i + 1] > 0.01) {
+                        firstMin = -positionMM[i];
+                        break;
+                    }
+                }
+            }
+
+            const centralEl = document.getElementById('centralWidth');
+            const firstEl = document.getElementById('firstMinPos');
+            if (firstMin !== null && firstMin > 0) {
+                centralEl.innerText = (2 * firstMin).toFixed(3) + ' mm';
+                firstEl.innerText = firstMin.toFixed(3) + ' mm';
+            } else {
+                centralEl.innerText = '-- mm';
+                firstEl.innerText = '-- mm';
+            }
+            document.getElementById('dLambdaRatio').innerText = (state.d / state.lambda).toFixed(2);
+
+            drawPattern();
+            updateChart();
+            updateScene();
+        }
+
+        // ---------- 绘制衍射图样 ----------
+        function drawPattern() {
+            const canvas = document.getElementById('pattern-canvas');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width,
+                h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+            const { r, g, b } = state.rgb;
+
+            for (let i = 0; i < w; i++) {
+                const x_mm = -20 + (i / w) * 40;
+                const I = computeIntensity(x_mm);
+                const rr = Math.floor(r * I);
+                const gg = Math.floor(g * I);
+                const bb = Math.floor(b * I);
+                ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+                ctx.fillRect(i, 0, 1, h);
+            }
+        }
+
+        // ---------- Chart.js 初始化与更新 ----------
+        function initChart() {
+            // 先生成初始数据，避免 chart 创建时无数据
+            const xMin = -20,
+                xMax = 20;
+            positionMM = [];
+            intensityData = [];
+            for (let i = 0; i < SAMPLE_POINTS; i++) {
+                const x = xMin + (i / (SAMPLE_POINTS - 1)) * (xMax - xMin);
+                positionMM.push(x);
+                intensityData.push(computeIntensity(x));
+            }
+
+            const ctx = document.getElementById('intensityChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: positionMM,
+                    datasets: [{
+                        label: '相对光强',
+                        data: intensityData,
+                        borderColor: state.wavelengthColor,
+                        backgroundColor: 'rgba(74, 144, 226, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 0,
+                        pointHoverRadius: 4,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: {
+                            display: true,
+                            ticks: { font: { size: 10 }, maxTicksLimit: 5 },
+                            grid: { color: '#E1EEF7' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            max: 1.05,
+                            ticks: { font: { size: 10 } },
+                            grid: { color: '#E1EEF7' }
+                        }
+                    }
+                }
+            });
+
+            // 创建后立即用当前数据刷新
+            updateChart();
+        }
+
+        function updateChart() {
+            if (!chart) return;
+            chart.data.labels = positionMM;
+            chart.data.datasets[0].data = intensityData;
+            chart.data.datasets[0].borderColor = state.wavelengthColor;
+            chart.update();
+        }
+
+        // ---------- 3D 场景纹理 ----------
+        function createScreenTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext('2d');
+
+            ctx.fillStyle = '#0a0e1c';
+            ctx.fillRect(0, 0, 1024, 1024);
+
+            const { r, g, b } = state.rgb;
+            for (let px = 0; px < 1024; px++) {
+                const x_mm = -20 + (px / 1024) * 40;
+                const I = computeIntensity(x_mm);
+                const rr = Math.floor(r * I);
+                const gg = Math.floor(g * I);
+                const bb = Math.floor(b * I);
+                ctx.fillStyle = `rgb(${rr},${gg},${bb})`;
+                ctx.globalAlpha = Math.min(I * 0.95 + 0.05, 1);
+                ctx.fillRect(px, 0, 1, 1024);
+            }
+            ctx.globalAlpha = 1;
+            return canvas;
+        }
+
+        // ---------- 3D 场景构建 ----------
+        function initScene() {
+            // 激光器
+            const geo = new THREE.CylinderGeometry(0.6, 0.6, 1.2, 16);
+            const mat = new THREE.MeshStandardMaterial({
+                color: state.wavelengthColor,
+                emissive: state.wavelengthColor,
+                emissiveIntensity: 0.6
+            });
+            laserCylinder = new THREE.Mesh(geo, mat);
+            laserCylinder.position.set(-5, 0.5, 0);
+            laserCylinder.rotation.z = Math.PI / 2;
+            scene.add(laserCylinder);
+
+            // 缝板组
+            slitBoardGroup = new THREE.Group();
+            scene.add(slitBoardGroup);
+
+            // 屏幕
+            const screenTexture = new THREE.CanvasTexture(createScreenTexture());
+            const screenMat = new THREE.MeshStandardMaterial({
+                map: screenTexture,
+                side: THREE.DoubleSide
+            });
+            screenMesh = new THREE.Mesh(new THREE.BoxGeometry(0.2, 5, 8), screenMat);
+            screenMesh.position.set(5, 0.5, 0);
+            scene.add(screenMesh);
+
+            updateScene();
+        }
+
+        function updateScene() {
+            const rgb = wavelengthToRGB(state.lambda);
+            state.rgb = rgb;
+            state.wavelengthColor = `rgb(${rgb.r},${rgb.g},${rgb.b})`;
+
+            if (laserCylinder) {
+                laserCylinder.material.color.set(state.wavelengthColor);
+                laserCylinder.material.emissive.set(state.wavelengthColor);
+            }
+
+            // 更新激光束
+            if (laserBeam) scene.remove(laserBeam);
+            const beamLen = 10 + state.L * 0.05;
+            const beamGeo = new THREE.CylinderGeometry(0.08, 0.08, beamLen, 8);
+            const beamMat = new THREE.MeshPhongMaterial({
+                color: state.wavelengthColor,
+                transparent: true,
+                opacity: 0.3
+            });
+            laserBeam = new THREE.Mesh(beamGeo, beamMat);
+            laserBeam.position.set(-5 + beamLen / 2, 0.5, 0);
+            laserBeam.rotation.z = Math.PI / 2;
+            scene.add(laserBeam);
+
+            // 更新缝板
+            while (slitBoardGroup.children.length) slitBoardGroup.remove(slitBoardGroup.children[0]);
+            const boardMat = new THREE.MeshStandardMaterial({ color: 0x2a2a3c });
+            const board = new THREE.Mesh(new THREE.BoxGeometry(0.4, 3, 4.5), boardMat);
+            board.position.set(0, 0.5, 0);
+            slitBoardGroup.add(board);
+
+            const slitWidthVis = Math.min(0.5, state.a * 1e-6 * 300);
+            const spacingVis = state.d * 1e-6 * 300;
+            for (let i = 0; i < state.N; i++) {
+                const zPos = (i - (state.N - 1) / 2) * spacingVis;
+                const slitLight = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.45, 0.9, Math.max(0.02, slitWidthVis)),
+                    new THREE.MeshPhongMaterial({
+                        color: state.wavelengthColor,
+                        transparent: true,
+                        opacity: 0.5,
+                        emissive: state.wavelengthColor
+                    })
+                );
+                slitLight.position.set(0, 0.5, zPos);
+                slitBoardGroup.add(slitLight);
+            }
+
+            // 更新屏幕纹理
+            if (screenMesh) {
+                const newTexture = new THREE.CanvasTexture(createScreenTexture());
+                screenMesh.material.map = newTexture;
+                screenMesh.material.needsUpdate = true;
+            }
+        }
+
+        // ---------- UI 事件绑定 ----------
+        // 模式切换
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                state.type = btn.dataset.type;
+                if (state.type === 'single') {
+                    state.N = 1;
+                    document.getElementById('nSlider').value = 1;
+                } else if (state.type === 'double') {
+                    state.N = 2;
+                    document.getElementById('nSlider').value = 2;
+                } else {
+                    // multi: 如果当前 N < 2，设为 3
+                    if (state.N < 2) {
+                        state.N = 3;
+                        document.getElementById('nSlider').value = 3;
+                    }
+                }
+                document.getElementById('nValue').textContent = state.N;
+                document.getElementById('dGroup').style.display = state.N > 1 ? 'block' : 'none';
+                recomputeAll();
+            });
+        });
+
+        // 滑块
+        document.getElementById('lambdaSlider').addEventListener('input', (e) => {
+            state.lambda = parseInt(e.target.value);
+            document.getElementById('lambdaValue').textContent = state.lambda;
+            recomputeAll();
+        });
+
+        document.getElementById('aSlider').addEventListener('input', (e) => {
+            state.a = parseInt(e.target.value);
+            document.getElementById('aValue').textContent = state.a;
+            recomputeAll();
+        });
+
+        document.getElementById('nSlider').addEventListener('input', (e) => {
+            state.N = parseInt(e.target.value);
+            document.getElementById('nValue').textContent = state.N;
+            document.getElementById('dGroup').style.display = state.N > 1 ? 'block' : 'none';
+            recomputeAll();
+        });
+
+        document.getElementById('dSlider').addEventListener('input', (e) => {
+            state.d = parseInt(e.target.value);
+            document.getElementById('dValue').textContent = state.d;
+            recomputeAll();
+        });
+
+        document.getElementById('lSlider').addEventListener('input', (e) => {
+            state.L = parseInt(e.target.value);
+            document.getElementById('lValue').textContent = state.L;
+            recomputeAll();
+        });
+
+        // 重置
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            state.lambda = 550;
+            state.a = 100;
+            state.N = 1;
+            state.d = 200;
+            state.L = 50;
+            state.type = 'single';
+
+            document.getElementById('lambdaSlider').value = 550;
+            document.getElementById('aSlider').value = 100;
+            document.getElementById('nSlider').value = 1;
+            document.getElementById('dSlider').value = 200;
+            document.getElementById('lSlider').value = 50;
+            document.getElementById('lambdaValue').textContent = 550;
+            document.getElementById('aValue').textContent = 100;
+            document.getElementById('nValue').textContent = 1;
+            document.getElementById('dValue').textContent = 200;
+            document.getElementById('lValue').textContent = 50;
+
+            // 切换模式按钮状态
+            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('[data-type="single"]').classList.add('active');
+            document.getElementById('dGroup').style.display = 'none';
+
+            recomputeAll();
+        });
+
+        // 保存图像
+        document.getElementById('saveBtn').addEventListener('click', () => {
+            const link = document.createElement('a');
+            link.download = '衍射图样.png';
+            link.href = document.getElementById('pattern-canvas').toDataURL();
+            link.click();
+        });
+
+        // ---------- 窗口自适应 ----------
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ---------- 启动 ----------
+        initScene();
+        initChart();
+        recomputeAll();
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+    </body>
+</html>

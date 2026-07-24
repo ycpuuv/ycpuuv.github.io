@@ -1,0 +1,1012 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>力的合成演示 - PhySenLab仿真实验</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #forceCanvas {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            cursor: grab;
+        }
+        
+        #forceCanvas:active {
+            cursor: grabbing;
+        }
+        
+        /* 返回按钮 - 左下角 */
+        .back-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            color: #4A90E2;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.2);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        /* 信息面板 - 左上角 */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 18px 22px;
+            border-radius: 12px;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+            z-index: 10;
+            max-width: 320px;
+        }
+        
+        .info-panel h1 {
+            font-size: 1.15rem;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-panel h1 .icon { font-size: 1.3rem; }
+        
+        .formula-box {
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 100%);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 8px;
+        }
+        
+        .formula {
+            font-size: 1.1rem;
+            color: #000000;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        
+        .formula sub {
+            font-size: 0.7em;
+        }
+        
+        .info-text {
+            font-size: 0.85rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+        }
+        
+        /* 右侧控制面板 */
+        .controls-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 22px;
+            border-radius: 16px;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+            width: 320px;
+            z-index: 10;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .controls-panel h3 {
+            font-size: 1.05rem;
+            color: #2C3E50;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #E1EEF7;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .slider-group {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #F8FBFF;
+            border-radius: 10px;
+            border: 1px solid #E1EEF7;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .slider-label .label-text {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+        
+        .value-badge {
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        
+        /* 结果显示 */
+        .result-box {
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 100%);
+            padding: 14px;
+            border-radius: 10px;
+            border-left: 4px solid #4A90E2;
+            margin: 16px 0;
+        }
+        
+        .result-box h4 {
+            font-size: 0.85rem;
+            color: #5A6C7D;
+            margin-bottom: 8px;
+        }
+        
+        .result-value-large {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4A90E2;
+            font-family: monospace;
+        }
+        
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.85rem;
+        }
+        
+        /* 按钮组 */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 60px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #5A6C7D;
+        }
+        
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #f1c40f 100%);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #ec7063 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+        
+        /* 图例 - 左侧中间 */
+        .legend-panel {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+            z-index: 10;
+            font-size: 0.85rem;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            color: #5A6C7D;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        
+        /* 动画信息 */
+        .anim-info {
+            display: none;
+            background: #E8F4FD;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-size: 0.85rem;
+        }
+        
+        .anim-info.active {
+            display: block;
+        }
+        
+        .anim-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+        }
+        
+        /* 数据表格 */
+        .data-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #E1EEF7;
+        }
+        
+        .data-table-container {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 6px 8px;
+            text-align: center;
+            border-bottom: 1px solid #E1EEF7;
+        }
+        
+        .data-table th {
+            background: #E8F4FD;
+            color: #2C3E50;
+            font-weight: 600;
+        }
+        
+        .delete-btn {
+            padding: 2px 8px;
+            background: #ffebee;
+            color: #e74c3c;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.7rem;
+        }
+        
+        .delete-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .empty-row {
+            color: #8B9DC3;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        /* 提示文字 */
+        .hint-text {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #8B9DC3;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.9);
+            padding: 6px 15px;
+            border-radius: 20px;
+            z-index: 10;
+        }
+        
+        /* 缩放控制 */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .zoom-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid #E1EEF7;
+            background: white;
+            color: #4A90E2;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .zoom-btn:hover {
+            background: #4A90E2;
+            color: white;
+            border-color: #4A90E2;
+        }
+        
+        @media (max-width: 900px) {
+            .controls-panel { 
+                width: 280px; 
+                right: 10px; 
+                top: 10px;
+                max-height: calc(100vh - 20px);
+            }
+            .info-panel { 
+                left: 10px; 
+                top: 10px;
+                max-width: 250px;
+            }
+            .legend-panel { 
+                display: none; 
+            }
+            .back-btn { 
+                bottom: 10px; 
+                left: 10px; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-container">
+            <canvas id="forceCanvas" width="1000" height="750"></canvas>
+        </div>
+        
+        <!-- 信息面板 - 左上角 -->
+        <div class="info-panel">
+            <h1><span class="icon">⚙️</span>力的合成演示</h1>
+            <div class="formula-box">
+                <div class="formula">
+                    F = √(F<sub>1</sub>² + F<sub>2</sub>² + 2F<sub>1</sub>F<sub>2</sub>cosθ)
+                </div>
+            </div>
+            <p class="info-text">
+                通过平行四边形法则探究两个分力与合力的关系。调节两个分力的大小和夹角，观察合力的变化规律。
+            </p>
+        </div>
+        
+        <!-- 返回按钮 - 左下角 -->
+        
+        
+        <!-- 图例 - 左侧中间 -->
+        <div class="legend-panel">
+            <div class="legend-item"><div class="legend-color" style="background:#E74C3C;"></div>分力 F₁</div>
+            <div class="legend-item"><div class="legend-color" style="background:#3498DB;"></div>分力 F₂</div>
+            <div class="legend-item"><div class="legend-color" style="background:#27ae60;"></div>合力 F</div>
+            <div class="legend-item"><div class="legend-color" style="background:#f39c12;"></div>平行四边形</div>
+        </div>
+        
+        <!-- 右侧控制面板 -->
+        <div class="controls-panel">
+            <h3>🔧 实验参数</h3>
+            
+            <!-- F1滑块 -->
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span class="label-text" style="color: #E74C3C;">🔴 力 F₁</span>
+                    <span id="f1Value" class="value-badge">50 N</span>
+                </div>
+                <input type="range" id="f1Slider" min="10" max="150" value="50" step="1">
+            </div>
+            
+            <!-- F2滑块 -->
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span class="label-text" style="color: #3498DB;">🔵 力 F₂</span>
+                    <span id="f2Value" class="value-badge">50 N</span>
+                </div>
+                <input type="range" id="f2Slider" min="10" max="150" value="50" step="1">
+            </div>
+            
+            <!-- 角度滑块 -->
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span class="label-text" style="color: #9B59B6;">🔄 夹角 θ</span>
+                    <span id="angleValue" class="value-badge">60°</span>
+                </div>
+                <input type="range" id="angleSlider" min="0" max="180" value="60" step="1">
+            </div>
+            
+            <!-- 合力结果 -->
+            <div class="result-box">
+                <h4>合力 F</h4>
+                <div class="result-value-large" id="resultantValue">87 N</div>
+                <div class="result-row">
+                    <span>方向:</span>
+                    <span id="resultantAngle" style="font-weight: 600; color: #4A90E2;">30°</span>
+                </div>
+            </div>
+            
+            <!-- 动画控制 -->
+            <div class="btn-group">
+                <button class="btn btn-success" id="playBtn">▶ 播放</button>
+                <button class="btn btn-warning" id="pauseBtn">⏸ 暂停</button>
+                <button class="btn btn-primary" id="continueBtn">⏵ 继续</button>
+                <button class="btn btn-danger" id="stopBtn">⏹ 停止</button>
+            </div>
+            
+            <!-- 动画信息显示 -->
+            <div class="anim-info" id="animInfo">
+                <div class="anim-info-row">
+                    <span>当前夹角:</span>
+                    <span id="animAngle" style="font-weight: 600;">60°</span>
+                </div>
+                <div class="anim-info-row">
+                    <span>当前合力:</span>
+                    <span id="animResultant" style="font-weight: 600; color: #4A90E2;">87 N</span>
+                </div>
+            </div>
+            
+            <!-- 数据记录 -->
+            <div class="data-section">
+                <h3 style="font-size: 0.95rem; margin-bottom: 10px;">📋 数据记录</h3>
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>F₁</th>
+                                <th>F₂</th>
+                                <th>θ</th>
+                                <th>F</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <tr><td colspan="5" class="empty-row">暂无数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" id="recordBtn">📝 记录</button>
+                    <button class="btn btn-secondary" id="clearBtn">🗑️ 清空</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 缩放控制 -->
+        <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut">−</button>
+            <button class="zoom-btn" id="zoomReset">⟲</button>
+            <button class="zoom-btn" id="zoomIn">+</button>
+        </div>
+        
+        <div class="hint-text">🖱️ 拖拽平移 · 滚轮缩放</div>
+    </div>
+
+    <script>
+        // ===== 获取元素 =====
+        const canvas = document.getElementById('forceCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 滑块
+        const f1Slider = document.getElementById('f1Slider');
+        const f2Slider = document.getElementById('f2Slider');
+        const angleSlider = document.getElementById('angleSlider');
+        
+        // 数值显示
+        const f1Value = document.getElementById('f1Value');
+        const f2Value = document.getElementById('f2Value');
+        const angleValue = document.getElementById('angleValue');
+        const resultantValue = document.getElementById('resultantValue');
+        const resultantAngle = document.getElementById('resultantAngle');
+        
+        // 动画信息
+        const animInfo = document.getElementById('animInfo');
+        const animAngle = document.getElementById('animAngle');
+        const animResultant = document.getElementById('animResultant');
+        
+        // 按钮
+        const playBtn = document.getElementById('playBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const continueBtn = document.getElementById('continueBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const recordBtn = document.getElementById('recordBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const zoomIn = document.getElementById('zoomIn');
+        const zoomOut = document.getElementById('zoomOut');
+        const zoomReset = document.getElementById('zoomReset');
+        
+        // 数据表
+        const dataTableBody = document.getElementById('dataTableBody');
+        
+        // ===== 状态变量 =====
+        let f1 = 50;
+        let f2 = 50;
+        let angle = 60;
+        let scale = 1;
+        let offsetX = 0;
+        let offsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let dataRecords = [];
+        let recordId = 1;
+        
+        // 动画变量
+        let animationId = null;
+        let isAnimating = false;
+        let isPaused = false;
+        let animDirection = 1;
+        
+        // ===== 计算合力 =====
+        function calculateResultant() {
+            const angleRad = angle * Math.PI / 180;
+            const rx = f1 + f2 * Math.cos(angleRad);
+            const ry = f2 * Math.sin(angleRad);
+            const magnitude = Math.sqrt(rx * rx + ry * ry);
+            const direction = Math.atan2(ry, rx) * 180 / Math.PI;
+            return { magnitude, direction, rx, ry };
+        }
+        
+        // ===== 绘制函数 =====
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.save();
+            ctx.translate(canvas.width/2 + offsetX, canvas.height/2 + offsetY);
+            ctx.scale(scale, scale);
+            
+            const centerX = 0;
+            const centerY = 0;
+            const pixelScale = 2; // 缩放比例
+            
+            // 绘制网格
+            drawGrid();
+            
+            // 计算力的坐标
+            const angleRad = angle * Math.PI / 180;
+            const f1x = f1 * pixelScale;
+            const f1y = 0;
+            const f2x = f2 * pixelScale * Math.cos(angleRad);
+            const f2y = -f2 * pixelScale * Math.sin(angleRad);
+            const result = calculateResultant();
+            const rx = result.rx * pixelScale;
+            const ry = -result.ry * pixelScale;
+            
+            // 绘制平行四边形（虚线）
+            ctx.beginPath();
+            ctx.strokeStyle = '#f39c12';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 4]);
+            ctx.moveTo(centerX, centerY);
+            ctx.lineTo(f1x, f1y);
+            ctx.lineTo(f1x + f2x, f1y + f2y);
+            ctx.lineTo(f2x, f2y);
+            ctx.closePath();
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // 绘制分力F1（红色）
+            drawArrow(centerX, centerY, f1x, f1y, '#E74C3C', 'F₁', f1);
+            
+            // 绘制分力F2（蓝色）
+            drawArrow(centerX, centerY, f2x, f2y, '#3498DB', 'F₂', f2);
+            
+            // 绘制合力（绿色）
+            drawArrow(centerX, centerY, rx, ry, '#27ae60', 'F', result.magnitude.toFixed(0));
+            
+            // 绘制夹角弧线
+            if (angle > 5) {
+                ctx.beginPath();
+                ctx.strokeStyle = '#9B59B6';
+                ctx.lineWidth = 2;
+                const arcRadius = 30;
+                ctx.arc(centerX, centerY, arcRadius, -angleRad, 0);
+                ctx.stroke();
+                
+                // 角度标签
+                ctx.fillStyle = '#9B59B6';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                const labelX = Math.cos(-angleRad/2) * (arcRadius + 20);
+                const labelY = Math.sin(-angleRad/2) * (arcRadius + 20);
+                ctx.fillText(angle + '°', labelX, labelY);
+            }
+            
+            // 绘制坐标轴
+            drawAxes();
+            
+            ctx.restore();
+        }
+        
+        // 绘制网格
+        function drawGrid() {
+            ctx.strokeStyle = '#E1EEF7';
+            ctx.lineWidth = 1;
+            const gridSize = 50;
+            const numGrids = 20;
+            
+            for (let i = -numGrids; i <= numGrids; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * gridSize, -numGrids * gridSize);
+                ctx.lineTo(i * gridSize, numGrids * gridSize);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(-numGrids * gridSize, i * gridSize);
+                ctx.lineTo(numGrids * gridSize, i * gridSize);
+                ctx.stroke();
+            }
+        }
+        
+        // 绘制坐标轴
+        function drawAxes() {
+            ctx.strokeStyle = '#4A90E2';
+            ctx.lineWidth = 2;
+            
+            // X轴
+            ctx.beginPath();
+            ctx.moveTo(-450, 0);
+            ctx.lineTo(450, 0);
+            ctx.stroke();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(0, 350);
+            ctx.lineTo(0, -350);
+            ctx.stroke();
+            
+            // 箭头
+            drawArrowHead(450, 0, 0, '#4A90E2');
+            drawArrowHead(0, -350, -Math.PI/2, '#4A90E2');
+            
+            // 标签
+            ctx.fillStyle = '#4A90E2';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('X', 430, 20);
+            ctx.fillText('Y', -20, -330);
+        }
+        
+        // 绘制箭头
+        function drawArrow(fromX, fromY, toX, toY, color, label, value) {
+            const headLength = 12;
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            
+            // 线
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 4;
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+            
+            // 箭头
+            drawArrowHead(toX, toY, angle, color);
+            
+            // 标签
+            ctx.fillStyle = color;
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2;
+            ctx.fillText(label, midX - 15, midY - 10);
+            ctx.font = '12px Arial';
+            ctx.fillText(value + 'N', midX - 15, midY + 8);
+        }
+        
+        // 绘制箭头头部
+        function drawArrowHead(x, y, angle, color) {
+            const headLength = 12;
+            ctx.beginPath();
+            ctx.fillStyle = color;
+            ctx.moveTo(x, y);
+            ctx.lineTo(
+                x - headLength * Math.cos(angle - Math.PI/6),
+                y - headLength * Math.sin(angle - Math.PI/6)
+            );
+            ctx.lineTo(
+                x - headLength * Math.cos(angle + Math.PI/6),
+                y - headLength * Math.sin(angle + Math.PI/6)
+            );
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        // ===== 更新显示 =====
+        function updateDisplay() {
+            const result = calculateResultant();
+            f1Value.textContent = f1 + ' N';
+            f2Value.textContent = f2 + ' N';
+            angleValue.textContent = angle + '°';
+            // 保留两位有效数字（显示为整数，因为数值较大）
+            resultantValue.textContent = result.magnitude.toFixed(0) + ' N';
+            resultantAngle.textContent = result.direction.toFixed(0) + '°';
+            
+            if (isAnimating) {
+                animAngle.textContent = angle + '°';
+                animResultant.textContent = result.magnitude.toFixed(0) + ' N';
+            }
+            
+            draw();
+        }
+        
+        // ===== 事件监听 =====
+        f1Slider.addEventListener('input', (e) => {
+            f1 = parseInt(e.target.value);
+            updateDisplay();
+        });
+        
+        f2Slider.addEventListener('input', (e) => {
+            f2 = parseInt(e.target.value);
+            updateDisplay();
+        });
+        
+        angleSlider.addEventListener('input', (e) => {
+            angle = parseInt(e.target.value);
+            updateDisplay();
+        });
+        
+        // 缩放控制
+        zoomIn.addEventListener('click', () => {
+            scale = Math.min(scale * 1.2, 3);
+            draw();
+        });
+        
+        zoomOut.addEventListener('click', () => {
+            scale = Math.max(scale / 1.2, 0.3);
+            draw();
+        });
+        
+        zoomReset.addEventListener('click', () => {
+            scale = 1;
+            offsetX = 0;
+            offsetY = 0;
+            draw();
+        });
+        
+        // 拖拽功能
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            offsetX += dx;
+            offsetY += dy;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+            draw();
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        // 滚轮缩放
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            if (e.deltaY > 0) {
+                scale = Math.max(scale / 1.1, 0.3);
+            } else {
+                scale = Math.min(scale * 1.1, 3);
+            }
+            draw();
+        });
+        
+        // ===== 动画控制 =====
+        function startAnimation() {
+            if (isAnimating) return;
+            isAnimating = true;
+            isPaused = false;
+            angle = 0;
+            angleSlider.value = 0;
+            animInfo.classList.add('active');
+            animDirection = 1;
+            animate();
+        }
+        
+        function animate() {
+            if (!isAnimating || isPaused) return;
+            
+            angle += animDirection;
+            if (angle >= 180) {
+                angle = 180;
+                animDirection = -1;
+            } else if (angle <= 0) {
+                angle = 0;
+                animDirection = 1;
+            }
+            
+            angleSlider.value = angle;
+            updateDisplay();
+            
+            animationId = requestAnimationFrame(() => {
+                setTimeout(animate, 30);
+            });
+        }
+        
+        function pauseAnimation() {
+            isPaused = true;
+        }
+        
+        function continueAnimation() {
+            if (isAnimating && isPaused) {
+                isPaused = false;
+                animate();
+            }
+        }
+        
+        function stopAnimation() {
+            isAnimating = false;
+            isPaused = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            animInfo.classList.remove('active');
+            angle = 60;
+            angleSlider.value = 60;
+            updateDisplay();
+        }
+        
+        playBtn.addEventListener('click', startAnimation);
+        pauseBtn.addEventListener('click', pauseAnimation);
+        continueBtn.addEventListener('click', continueAnimation);
+        stopBtn.addEventListener('click', stopAnimation);
+        
+        // ===== 数据记录 =====
+        function recordData() {
+            const result = calculateResultant();
+            const record = {
+                id: recordId++,
+                f1: f1,
+                f2: f2,
+                angle: angle,
+                resultant: result.magnitude
+            };
+            dataRecords.push(record);
+            updateTable();
+        }
+        
+        function updateTable() {
+            if (dataRecords.length === 0) {
+                dataTableBody.innerHTML = '<tr><td colspan="5" class="empty-row">暂无数据</td></tr>';
+                return;
+            }
+            
+            dataTableBody.innerHTML = dataRecords.map(r => `
+                <tr>
+                    <td>${r.f1}</td>
+                    <td>${r.f2}</td>
+                    <td>${r.angle}°</td>
+                    <td style="font-weight:600;color:#27ae60;">${r.resultant.toFixed(0)}</td>
+                    <td><button class="delete-btn" onclick="deleteRecord(${r.id})">删除</button></td>
+                </tr>
+            `).join('');
+        }
+        
+        window.deleteRecord = function(id) {
+            dataRecords = dataRecords.filter(r => r.id !== id);
+            updateTable();
+        };
+        
+        recordBtn.addEventListener('click', recordData);
+        clearBtn.addEventListener('click', () => {
+            dataRecords = [];
+            updateTable();
+        });
+        
+        // 初始化
+        updateDisplay();
+    </script>
+    </body>
+</html>

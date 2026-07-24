@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>α粒子散射实验 -3D</title>
+    <style>
+        /* ===== 现代化UI样式 ===== */
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --bg-color: #F8FBFF;
+            --card-bg: rgba(255, 255, 255, 0.88);
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.2);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 玻璃面板 */
+        .glass-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 22px;
+            transition: var(--transition);
+            z-index: 10;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* 左侧信息面板 */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            max-width: 300px;
+            z-index: 20;
+        }
+        .info-panel h1 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-dark);
+        }
+        .formula-box {
+            background: var(--primary-light);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+        }
+        .formula {
+            font-size: 0.9rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        .info-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* 右侧控制区域 */
+        .controls-area {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        /* 显微镜卡片 */
+        .microscope-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            text-align: center;
+        }
+        .microscope-header {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 1rem;
+        }
+        #microscope-canvas {
+            width: 100%;
+            background: #1a2a1f;
+            border-radius: 50%;
+            border: 3px solid #b87333;
+            box-shadow: 0 0 0 2px rgba(255,215,0,0.3);
+            aspect-ratio: 1/1;
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        .microscope-status {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #ffaa66;
+            font-weight: 500;
+        }
+        .microscope-hint {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 6px;
+        }
+
+        /* 控制卡片 */
+        .control-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            padding: 16px;
+        }
+        .control-card h3 {
+            font-size: 1rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+        .slider-group {
+            margin-bottom: 18px;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+        .value-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0 8px;
+        }
+        .btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 4px 12px rgba(74,144,226,0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(74,144,226,0.4);
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--text-secondary);
+        }
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* 图例面板 - 左侧中间 */
+        .legend-panel {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 180px;
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            font-size: 0.75rem;
+            z-index: 20;
+            pointer-events: none;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            color: var(--text-secondary);
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        .legend-color.screen {
+            background: #88aaff;
+            border-radius: 4px;
+        }
+        .legend-color.gold {
+            background: #ffaa33;
+        }
+        .legend-color.source {
+            background: #222222;
+            border: 1px solid #aaa;
+        }
+        .legend-color.particle {
+            background: #ffaa77;
+        }
+
+        /* 返回按钮 - 左下角 */
+        .back-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            color: var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            z-index: 30;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            color: var(--text-light);
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+            z-index: 20;
+        }
+
+        @media (max-width: 700px) {
+            .controls-area { width: 260px; }
+            .info-panel { max-width: 240px; }
+            .legend-panel { width: 150px; }
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"></div>
+
+    <!-- 左侧信息面板 -->
+    <div class="info-panel glass-panel">
+        <h1>⚛️ α粒子散射实验 -3D</h1>
+        <div class="formula-box">
+            <div class="formula">α粒子 → Au原子核=库仑散射</div>
+        </div>
+        <p class="info-text">
+            阿尔法粒子从左侧源盒发出，撞击金箔原子核后发生随机散射（模拟库仑斥力），击中环形观测屏。<br>
+            🖱️ <strong>点击环形墙任意位置</strong>放置显微镜，观察该方向散射粒子（亮点持续约10秒）。
+        </p>
+    </div>
+
+    <!-- 右侧区域 -->
+    <div class="controls-area">
+        <!-- 显微镜卡片 -->
+        <div class="microscope-card">
+            <div class="microscope-header">
+                🔬 显微镜观测 (点击环形墙放置)
+            </div>
+            <canvas id="microscope-canvas" width="200" height="200"></canvas>
+            <div class="microscope-status" id="microscope-angle">未放置显微镜</div>
+            <div class="microscope-hint">✨ 闪烁亮点为散射粒子，停留约10秒后消失</div>
+        </div>
+
+        <!-- 控制卡片 -->
+        <div class="control-card">
+            <h3>🎚️ 实验调控</h3>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>⚡ 粒子出射速度</span>
+                    <span id="speedValue" class="value-badge">4.80</span>
+                </div>
+                <input type="range" id="speedSlider" min="2.0" max="8.0" step="0.05" value="4.8">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>📈 粒子发射速率 (间隔 / 秒)</span>
+                    <span id="rateValue" class="value-badge">0.55 s</span>
+                </div>
+                <input type="range" id="rateSlider" min="0.2" max="1.2" step="0.02" value="0.55">
+                <div style="font-size:0.7rem; margin-top:4px;">数值越小，发射越密集</div>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="resetBtn">🔄 重置实验</button>
+                <button class="btn btn-secondary" id="clearParticlesBtn">🧹 清除粒子</button>
+            </div>
+            <div class="info-text" style="font-size:0.7rem; margin-top:8px;">
+                💡 粒子击中金箔产生散射→ 随机散射角 → 环形墙记录
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 图例面板 - 左侧中间 -->
+    <div class="legend-panel">
+        <div style="font-weight:600; margin-bottom:8px;">📖 图例</div>
+        <div class="legend-item"><div class="legend-color" style="background: #ffaa77;"></div> α粒子轨迹</div>
+        <div class="legend-item"><div class="legend-color gold"></div> 金箔 </div>
+        <div class="legend-item"><div class="legend-color source"></div> 粒子源 (黑盒+金孔)</div>
+        <div class="legend-item"><div class="legend-color screen"></div> 环形观测屏</div>
+        <div class="legend-item"><div class="legend-color" style="background: #ff8866;"></div> 散射击中点</div>
+        <div class="legend-item"><div class="legend-color" style="background: #ffaa44;"></div> 显微镜位置</div>
+    </div>
+
+    <!-- 返回实验列表按钮 -->
+    
+    <div class="hint-text">🖱️ 鼠标拖拽旋转视角 | 滚轮缩放 | 点击环形墙放置显微镜</div>
+</div>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // --- 初始化场景 ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x050b1a);
+    scene.fog = new THREE.FogExp2(0x050b1a, 0.005);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(7.5, 5.5, 9);
+    camera.lookAt(0, 1.8, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.left = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.getElementById('canvas-container').appendChild(labelRenderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.autoRotate = false;
+    controls.enableZoom = true;
+    controls.target.set(0, 1.8, 0);
+
+    // --- 灯光系统 ---
+    const ambientLight = new THREE.AmbientLight(0x404060);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+    dirLight.position.set(3, 8, 2);
+    dirLight.castShadow = true;
+    scene.add(dirLight);
+    const backLight = new THREE.PointLight(0x4466cc, 0.3);
+    backLight.position.set(-2, 2, -3);
+    scene.add(backLight);
+    const fillLight = new THREE.PointLight(0xffaa66, 0.4);
+    fillLight.position.set(1, 2, 2);
+    scene.add(fillLight);
+    
+    const gridHelper = new THREE.GridHelper(16, 20, 0x88aaff, 0x335588);
+    gridHelper.position.y = -0.08;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.25;
+    scene.add(gridHelper);
+
+    // --- 实验平台 ---
+    const platformMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.7, metalness: 0.1 });
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(14, 0.15, 14), platformMat);
+    platform.position.set(0, -0.1, 0);
+    platform.receiveShadow = true;
+    platform.castShadow = true;
+    scene.add(platform);
+
+    // ========== 金箔 (无装饰环) ==========
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xffaa33, metalness: 0.85, roughness: 0.25, emissive: 0x442200 });
+    const goldFoil = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.05, 64), goldMat);
+    goldFoil.position.set(2.0, 1.2, 0);
+    goldFoil.rotation.z = Math.PI / 2;
+    goldFoil.rotation.x = Math.PI / 2;
+    goldFoil.castShadow = true;
+    scene.add(goldFoil);
+    
+    const goldLabelDiv = document.createElement('div');
+    goldLabelDiv.textContent = '⚜️ 金箔 (Au)';
+    goldLabelDiv.style.cssText = 'color:#ffcc77;font-size:14px;font-weight:bold;background:rgba(0,0,0,0.5);padding:2px 8px;border-radius:20px;';
+    const goldLabel = new CSS2DObject(goldLabelDiv);
+    goldLabel.position.set(2.0, 1.65, 0);
+    scene.add(goldLabel);
+
+    // ========== 粒子源: 黑色盒子 + 金色小圆盘出口 (圆盘旋转90°使其平面朝向粒子发射方向) ==========
+    const sourceBoxMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.2, roughness: 0.5, emissive: 0x111111 });
+    const sourceBox = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), sourceBoxMat);
+    sourceBox.position.set(-3.5, 1.3, 0);
+    sourceBox.castShadow = true;
+    scene.add(sourceBox);
+    
+    // 金色小圆盘出口 - 旋转使其平面朝向 +X 方向 (粒子出射方向)
+    const outletDisk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.22, 0.05, 24),
+        new THREE.MeshStandardMaterial({ color: 0xffaa44, metalness: 0.9, roughness: 0.2, emissive: 0x442200 })
+    );
+    outletDisk.position.set(-3.05, 1.3, 0);
+    outletDisk.rotation.z = Math.PI / 2;  // 使圆柱轴向为X，圆面朝向X方向
+    scene.add(outletDisk);
+    
+    const sourceGlow = new THREE.PointLight(0xffaa55, 0.5, 2.5);
+    sourceGlow.position.set(-3.2, 1.3, 0);
+    scene.add(sourceGlow);
+    
+    const sourceLabelDiv = document.createElement('div');
+    sourceLabelDiv.textContent = '🔬 α粒子源';
+    sourceLabelDiv.style.cssText = 'color:#ccccdd;font-size:12px;background:rgba(0,0,0,0.6);padding:2px 8px;border-radius:16px;';
+    const sourceLabel = new CSS2DObject(sourceLabelDiv);
+    sourceLabel.position.set(-3.5, 1.9, 0);
+    scene.add(sourceLabel);
+
+    // ========== 环形观测墙 (整体上移) ==========
+    const wallRadius = 5.6;
+    const wallHeight = 3.5;
+    const wallCenterY = 1.85;
+    const wallGeo = new THREE.CylinderGeometry(wallRadius, wallRadius, wallHeight, 80, 40);
+    const wallMat = new THREE.MeshPhongMaterial({ color: 0x88aaff, transparent: true, opacity: 0.2, side: THREE.DoubleSide });
+    const observationWall = new THREE.Mesh(wallGeo, wallMat);
+    observationWall.position.set(0, wallCenterY, 0);
+    observationWall.receiveShadow = false;
+    scene.add(observationWall);
+    
+    const edgesGeo = new THREE.EdgesGeometry(wallGeo);
+    const edgesMat = new THREE.LineBasicMaterial({ color: 0x88aaff });
+    const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
+    wireframe.position.copy(observationWall.position);
+    scene.add(wireframe);
+
+    // ========== 粒子系统核心 ==========
+    let currentSpeed = 4.8;
+    let emitInterval = 0.55;
+    
+    class AlphaParticle {
+        constructor(mesh, startPos, dirToGold, speed) {
+            this.mesh = mesh;
+            this.position = startPos.clone();
+            this.velocity = dirToGold.clone().normalize().multiplyScalar(speed);
+            this.state = 'toGold';
+            this.scatterPoint = null;
+            this.scatteredDir = null;
+            this.alive = true;
+            this.speed = speed;
+            mesh.position.copy(startPos);
+        }
+        
+        update(deltaTime, goldPlaneX, goldRadiusSq, wallRadius, wallYCenter, onHitWallCallback) {
+            if (!this.alive) return false;
+            const step = this.velocity.clone().multiplyScalar(deltaTime);
+            const newPos = this.position.clone().add(step);
+            
+            if (this.state === 'toGold') {
+                const x0 = this.position.x;
+                const x1 = newPos.x;
+                if ((x0 <= goldPlaneX && x1 >= goldPlaneX) || (x0 >= goldPlaneX && x1 <= goldPlaneX)) {
+                    const t = (goldPlaneX - this.position.x) / (newPos.x - this.position.x);
+                    const intersectY = this.position.y + t * (newPos.y - this.position.y);
+                    const intersectZ = this.position.z + t * (newPos.z - this.position.z);
+                    const dy = intersectY - 1.2;
+                    const dz = intersectZ;
+                    if (dy*dy + dz*dz <= goldRadiusSq) {
+                        this.state = 'scattered';
+                        this.scatterPoint = new THREE.Vector3(goldPlaneX, intersectY, intersectZ);
+                        let theta;
+                        if (Math.random() < 0.7) {
+                            theta = Math.pow(Math.random(), 1.5) * Math.PI / 5;
+                        } else {
+                            theta = Math.PI / 5 + Math.random() * Math.PI * 0.7;
+                        }
+                        const phi = Math.random() * Math.PI * 2;
+                        const incDir = new THREE.Vector3(1, 0, 0);
+                        const axis = new THREE.Vector3(0, Math.sin(phi), Math.cos(phi)).normalize();
+                        const scatteredDirGlobal = incDir.clone().applyAxisAngle(axis, theta);
+                        this.scatteredDir = scatteredDirGlobal.normalize();
+                        this.velocity = this.scatteredDir.clone().multiplyScalar(this.speed);
+                        this.position.copy(this.scatterPoint);
+                        this.mesh.position.copy(this.position);
+                        addSparkEffect(this.scatterPoint);
+                        return true;
+                    } else {
+                        this.alive = false;
+                        return false;
+                    }
+                }
+                this.position.copy(newPos);
+                this.mesh.position.copy(this.position);
+                return true;
+            } 
+            else if (this.state === 'scattered') {
+                const currentRad = Math.sqrt(this.position.x*this.position.x + this.position.z*this.position.z);
+                const newRad = Math.sqrt(newPos.x*newPos.x + newPos.z*newPos.z);
+                const halfH = wallHeight/2;
+                const wallBottom = wallYCenter - halfH;
+                const wallTop = wallYCenter + halfH;
+                if (currentRad < wallRadius && newRad >= wallRadius && this.position.y >= wallBottom && this.position.y <= wallTop) {
+                    const p0 = this.position;
+                    const p1 = newPos;
+                    const dirSeg = p1.clone().sub(p0);
+                    const a = dirSeg.x*dirSeg.x + dirSeg.z*dirSeg.z;
+                    const b = 2 * (p0.x*dirSeg.x + p0.z*dirSeg.z);
+                    const c = p0.x*p0.x + p0.z*p0.z - wallRadius*wallRadius;
+                    const delta = b*b - 4*a*c;
+                    if (delta >= 0) {
+                        let tHit = (-b - Math.sqrt(delta)) / (2*a);
+                        if (tHit < 0 || tHit > 1) tHit = (-b + Math.sqrt(delta)) / (2*a);
+                        if (tHit >= 0 && tHit <= 1) {
+                            const hitPoint = p0.clone().lerp(p1, tHit);
+                            let azimuth = Math.atan2(hitPoint.z, hitPoint.x);
+                            onHitWallCallback(azimuth, hitPoint);
+                            addWallHitEffect(hitPoint);
+                            this.alive = false;
+                            return false;
+                        }
+                    }
+                }
+                this.position.copy(newPos);
+                this.mesh.position.copy(this.position);
+                if (Math.abs(this.position.x) > 9 || Math.abs(this.position.z) > 9 || this.position.y < -1 || this.position.y > 5) {
+                    this.alive = false;
+                    return false;
+                }
+                return true;
+            }
+            return true;
+        }
+    }
+    
+    function addSparkEffect(pos) {
+        const sparkGeo = new THREE.SphereGeometry(0.06, 6, 6);
+        const sparkMat = new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0xff4400 });
+        const spark = new THREE.Mesh(sparkGeo, sparkMat);
+        spark.position.copy(pos);
+        scene.add(spark);
+        setTimeout(() => scene.remove(spark), 150);
+    }
+    
+    function addWallHitEffect(pos) {
+        const glowGeo = new THREE.SphereGeometry(0.1, 8, 8);
+        const glowMat = new THREE.MeshStandardMaterial({ color: 0xff8866, emissive: 0xff4422, transparent: true });
+        const hitMark = new THREE.Mesh(glowGeo, glowMat);
+        hitMark.position.copy(pos);
+        scene.add(hitMark);
+        setTimeout(() => scene.remove(hitMark), 250);
+    }
+    
+    let particles = [];
+    let lastEmitTime = 0;
+    const maxParticles = 35;
+    const goldPlaneX = 2.0;
+    const goldRadiusSq = 1.15 * 1.15;
+    const particleMat = new THREE.MeshStandardMaterial({ color: 0xffaa77, emissive: 0xaa5533, emissiveIntensity: 0.5 });
+    
+    function emitParticle() {
+        if (particles.length >= maxParticles) return;
+        const startX = -3.0;
+        const startY = 1.3 + (Math.random() - 0.5) * 0.28;
+        const startZ = (Math.random() - 0.5) * 0.45;
+        const startPos = new THREE.Vector3(startX, startY, startZ);
+        const target = new THREE.Vector3(goldPlaneX, 1.2, 0);
+        const dir = target.clone().sub(startPos).normalize();
+        const jitter = 0.12;
+        const randomDir = new THREE.Vector3(
+            dir.x + (Math.random() - 0.5) * jitter,
+            dir.y + (Math.random() - 0.5) * jitter,
+            dir.z + (Math.random() - 0.5) * jitter
+        ).normalize();
+        
+        const sphere = new THREE.Mesh(new THREE.SphereGeometry(0.09, 16, 16), particleMat);
+        sphere.castShadow = true;
+        scene.add(sphere);
+        const particle = new AlphaParticle(sphere, startPos, randomDir, currentSpeed);
+        particles.push(particle);
+    }
+    
+    // ========== 显微镜交互系统 (采用参考代码中的模型，圆柱+球体，指向圆心) ==========
+    let activeMicroscopeAngle = null;
+    let microscopeModel = null;
+    let microscopeHits = [];
+    const canvas2d = document.getElementById('microscope-canvas');
+    const ctx = canvas2d.getContext('2d');
+    const microscopeAngleDiv = document.getElementById('microscope-angle');
+    
+    // 将角度转换为 -180° ~ 180° 显示，顺时针为正
+    function formatAngle(rad) {
+        let deg = rad * 180 / Math.PI;
+        // 将 0~360 转换为 -180~180
+        if (deg > 180) deg -= 360;
+        // 顺时针为正：取负值
+        let signedDeg = -deg;
+        if (signedDeg > 180) signedDeg -= 360;
+        if (signedDeg < -180) signedDeg += 360;
+        return signedDeg.toFixed(0);
+    }
+    
+    function drawMicroscopeView() {
+        const w = canvas2d.width, h = canvas2d.height;
+        ctx.clearRect(0, 0, w, h);
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, w/2 - 2, 0, Math.PI*2);
+        ctx.fillStyle = '#1e3a2a';
+        ctx.fill();
+        ctx.strokeStyle = '#b87333';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(w/2, h/2, w/2 - 2, 0, Math.PI*2);
+        ctx.clip();
+        ctx.beginPath();
+        ctx.moveTo(w/2, 10);
+        ctx.lineTo(w/2, h-10);
+        ctx.moveTo(10, h/2);
+        ctx.lineTo(w-10, h/2);
+        ctx.strokeStyle = '#88aaff';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        const now = performance.now() / 1000;
+        for (let i = microscopeHits.length-1; i >= 0; i--) {
+            const hit = microscopeHits[i];
+            const age = now - hit.time;
+            if (age > 10.0) {  // 延长至10秒
+                microscopeHits.splice(i,1);
+                continue;
+            }
+            const alpha = Math.max(0, 1 - age/10.0);
+            const radX = (hit.offsetX * 0.8) * (w/2);
+            const radY = (hit.offsetY * 0.8) * (h/2);
+            const x = w/2 + radX;
+            const y = h/2 + radY;
+            ctx.beginPath();
+            ctx.arc(x, y, 6 * (0.5 + (1-alpha)), 0, Math.PI*2);
+            ctx.fillStyle = `rgba(255, 200, 100, ${alpha*0.9})`;
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y, 2.5, 0, Math.PI*2);
+            ctx.fillStyle = `rgba(255, 100, 50, ${alpha})`;
+            ctx.fill();
+        }
+        if (activeMicroscopeAngle !== null) {
+            let angleDeg = formatAngle(activeMicroscopeAngle);
+            microscopeAngleDiv.innerHTML = `🔍 观测角度: ${angleDeg}° | 击中: ${microscopeHits.length}次`;
+        } else {
+            microscopeAngleDiv.innerHTML = `⚡ 点击环形墙放置显微镜`;
+        }
+    }
+    
+    function registerHitForMicroscope(azimuthRad, hitPoint) {
+        if (activeMicroscopeAngle !== null) {
+            let diff = Math.abs(azimuthRad - activeMicroscopeAngle);
+            diff = Math.min(diff, Math.abs(azimuthRad - activeMicroscopeAngle + 2*Math.PI));
+            diff = Math.min(diff, Math.abs(azimuthRad - activeMicroscopeAngle - 2*Math.PI));
+            if (diff < 0.28) {
+                const offsetX = (Math.random() - 0.5) * 1.3;
+                const offsetY = (Math.random() - 0.5) * 1.3;
+                microscopeHits.push({
+                    time: performance.now() / 1000,
+                    offsetX: offsetX,
+                    offsetY: offsetY
+                });
+                if (microscopeHits.length > 40) microscopeHits.shift();
+                drawMicroscopeView();
+            }
+        }
+    }
+    
+    // 放置显微镜模型 (严格按照参考代码的设计，使其贴在墙上并指向圆心)
+    function placeMicroscopeAt(azimuth, hitPointWorld) {
+        if (microscopeModel) scene.remove(microscopeModel);
+        const group = new THREE.Group();
+        
+        // 镜筒圆柱
+        const bodyGeo = new THREE.CylinderGeometry(0.2, 0.25, 0.5, 12);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xccaa88, metalness: 0.7 });
+        const body = new THREE.Mesh(bodyGeo, bodyMat);
+        body.position.y = 0;
+        group.add(body);
+        
+        // 透镜球体
+        const lensGeo = new THREE.SphereGeometry(0.18, 16, 16);
+        const lensMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x2266aa });
+        const lens = new THREE.Mesh(lensGeo, lensMat);
+        lens.position.y = 0.3;
+        group.add(lens);
+        
+        // 目镜
+        const eyePiece = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.3, 8), new THREE.MeshStandardMaterial({ color: 0xddbb99 }));
+        eyePiece.position.set(0.15, 0.4, 0);
+        group.add(eyePiece);
+        
+        // 放置在墙的外表面
+        const radiusOuter = wallRadius + 0.08;
+        const xPos = Math.cos(azimuth) * radiusOuter;
+        const zPos = Math.sin(azimuth) * radiusOuter;
+        group.position.set(xPos, hitPointWorld.y + 0.1, zPos);
+        
+        // 使显微镜指向圆心：先让物体看向圆心，再绕Z轴旋转90度使圆柱轴向指向圆心
+        group.lookAt(0, hitPointWorld.y, 0);
+        group.rotateX(-Math.PI / 2);
+        
+        scene.add(group);
+        microscopeModel = group;
+        activeMicroscopeAngle = azimuth;
+        microscopeHits = [];
+        drawMicroscopeView();
+        
+        // 添加放置闪光效果
+        const flash = new THREE.PointLight(0xffaa66, 0.8, 2);
+        flash.position.copy(group.position);
+        scene.add(flash);
+        setTimeout(() => scene.remove(flash), 300);
+    }
+    
+    // 射线检测点击环形墙
+    const raycaster = new THREE.Raycaster();
+    function onCanvasClick(event) {
+        const mouse = new THREE.Vector2();
+        mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+        mouse.y = -(event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObject(observationWall);
+        if (intersects.length > 0) {
+            const hitPoint = intersects[0].point;
+            let azimuth = Math.atan2(hitPoint.z, hitPoint.x);
+            if (azimuth < 0) azimuth += Math.PI * 2;
+            const finalPoint = hitPoint.clone();
+            finalPoint.y = Math.max(1.0, Math.min(2.6, hitPoint.y));
+            placeMicroscopeAt(azimuth, finalPoint);
+        }
+    }
+    window.addEventListener('click', onCanvasClick, false);
+    
+    function updateMicroscopeDisplay() {
+        drawMicroscopeView();
+        requestAnimationFrame(updateMicroscopeDisplay);
+    }
+    updateMicroscopeDisplay();
+    
+    function onParticleHitWall(azimuth, hitPoint) {
+        registerHitForMicroscope(azimuth, hitPoint);
+    }
+    
+    // ========== UI 交互 ==========
+    const speedSlider = document.getElementById('speedSlider');
+    const speedValueSpan = document.getElementById('speedValue');
+    speedSlider.addEventListener('input', (e) => {
+        currentSpeed = parseFloat(e.target.value);
+        speedValueSpan.innerText = currentSpeed.toFixed(2);
+    });
+    
+    const rateSlider = document.getElementById('rateSlider');
+    const rateValueSpan = document.getElementById('rateValue');
+    rateSlider.addEventListener('input', (e) => {
+        emitInterval = parseFloat(e.target.value);
+        rateValueSpan.innerText = emitInterval.toFixed(2) + ' s';
+    });
+    
+    const resetBtn = document.getElementById('resetBtn');
+    const clearParticlesBtn = document.getElementById('clearParticlesBtn');
+    resetBtn.addEventListener('click', () => {
+        for (let p of particles) scene.remove(p.mesh);
+        particles = [];
+        currentSpeed = 4.8;
+        speedSlider.value = "4.8";
+        speedValueSpan.innerText = "4.80";
+        emitInterval = 0.55;
+        rateSlider.value = "0.55";
+        rateValueSpan.innerText = "0.55 s";
+        if (microscopeModel) scene.remove(microscopeModel);
+        microscopeModel = null;
+        activeMicroscopeAngle = null;
+        microscopeHits = [];
+        drawMicroscopeView();
+        for(let i=0;i<2;i++) setTimeout(()=>emitParticle(), i*150);
+    });
+    clearParticlesBtn.addEventListener('click', () => {
+        for (let p of particles) scene.remove(p.mesh);
+        particles = [];
+    });
+    
+    // 动画循环
+    let lastTime = performance.now() / 1000;
+    let emitterAcc = 0;
+    
+    function animate() {
+        const now = performance.now() / 1000;
+        let delta = Math.min(0.033, now - lastTime);
+        if (delta <= 0) delta = 0.016;
+        lastTime = now;
+        
+        emitterAcc += delta;
+        if (emitterAcc >= emitInterval) {
+            emitterAcc = 0;
+            emitParticle();
+        }
+        
+        for (let i = particles.length-1; i >= 0; i--) {
+            const p = particles[i];
+            const alive = p.update(delta, goldPlaneX, goldRadiusSq, wallRadius, wallCenterY, onParticleHitWall);
+            if (!alive) {
+                scene.remove(p.mesh);
+                particles.splice(i,1);
+            }
+        }
+        
+        const intensity = 0.4 + Math.sin(now * 5) * 0.25;
+        sourceGlow.intensity = intensity;
+        
+        controls.update();
+        renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
+        requestAnimationFrame(animate);
+    }
+    
+    setTimeout(() => {
+        for(let i=0;i<3;i++) setTimeout(()=>emitParticle(), i*200);
+    }, 400);
+    animate();
+    
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+    
+</script>
+</body>
+</html>

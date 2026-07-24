@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>浸润现象 | PhySenLab</title>
+    <style>
+        :root{
+            --primary-color:#4A90E2;
+            --primary-light:#E8F4FD;
+            --primary-dark:#357ABD;
+            --secondary-color:#6BB6FF;
+            --text-primary:#2C3E50;
+            --text-secondary:#5A6C7D;
+            --text-light:#8B9DC3;
+            --border-color:#E1EEF7;
+            --shadow:0 2px 12px rgba(74,144,226,0.1);
+            --shadow-hover:0 8px 24px rgba(74,144,226,0.2);
+            --radius:12px;
+            --transition:all .3s ease;
+        }
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+            background:linear-gradient(135deg,#E8F4FD 0%,#F8FBFF 50%,#E1EEF7 100%);
+            min-height:100vh;
+            overflow:hidden;
+            color:var(--text-primary);
+        }
+        .simulation-container{position:relative;width:100vw;height:100vh;}
+        #canvas-container{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;}
+
+        .glass-panel{
+            background:rgba(255,255,255,0.88);
+            backdrop-filter:blur(10px);
+            -webkit-backdrop-filter:blur(10px);
+            border:1px solid var(--border-color);
+            border-radius:var(--radius);
+            box-shadow:var(--shadow);
+            padding:16px 22px;
+            color:var(--text-primary);
+            transition:var(--transition);
+            z-index:10;
+        }
+        .glass-panel:hover{box-shadow:var(--shadow-hover);}
+
+        .info-panel{position:absolute;top:20px;left:20px;max-width:280px;z-index:20;}
+        .info-panel h1{font-size:1.15rem;margin-bottom:8px;display:flex;align-items:center;gap:8px;color:var(--primary-dark);}
+        .formula-box{background:var(--primary-light);padding:8px 12px;border-radius:8px;border-left:4px solid var(--primary-color);margin-bottom:8px;}
+        .formula{font-size:.95rem;font-family:'Times New Roman',serif;font-style:italic;}
+        .info-text{font-size:.82rem;color:var(--text-secondary);line-height:1.5;}
+
+        .controls-panel{position:absolute;top:20px;right:20px;width:320px;z-index:20;max-height:calc(100vh - 40px);overflow-y:auto;}
+        .controls-panel h3{font-size:1.05rem;margin-bottom:16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border-color);padding-bottom:8px;}
+        .btn-row{display:flex;gap:10px;margin:12px 0;}
+        .btn{flex:1;padding:10px 14px;border:none;border-radius:30px;font-weight:600;font-size:.85rem;cursor:pointer;transition:var(--transition);}
+        .btn-primary{background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));color:white;box-shadow:0 4px 12px rgba(74,144,226,.3);}
+        .btn-primary:hover{transform:translateY(-2px);}
+        .btn-secondary{background:#f0f0f0;color:var(--text-secondary);}
+        .btn-secondary:hover{background:#e0e0e0;}
+
+        .slider-group{margin:18px 0;}
+        .slider-label{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px;color:var(--text-secondary);}
+        .value-badge{background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));color:white;padding:2px 10px;border-radius:20px;font-family:monospace;font-size:.8rem;font-weight:600;}
+        input[type=range]{width:100%;height:6px;border-radius:3px;background:#E1EEF7;outline:none;-webkit-appearance:none;cursor:pointer;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,var(--primary-color),var(--secondary-color));border:2px solid white;box-shadow:0 2px 8px rgba(74,144,226,.4);cursor:pointer;}
+
+        .info-block{background:var(--primary-light);border-radius:8px;padding:12px;margin-top:16px;font-size:.82rem;color:var(--text-secondary);border-left:3px solid var(--primary-color);line-height:1.6;}
+        .info-block p{margin:5px 0;}
+
+        .legend-panel{position:absolute;bottom:20px;right:20px;z-index:20;font-size:.8rem;width:160px;background:rgba(255,255,255,0.88);backdrop-filter:blur(10px);border-radius:var(--radius);border:1px solid var(--border-color);padding:14px;box-shadow:var(--shadow);}
+        .legend-item{display:flex;align-items:center;gap:8px;margin:8px 0;color:var(--text-secondary);}
+        .legend-color{width:16px;height:16px;border-radius:4px;}
+        .legend-color.liquid{background:#3a86ff;border-radius:50%;}
+        .legend-color.solid{background:#adb5bd;}
+        .legend-color.tangent{background:#ffaa44;width:16px;height:2px;}
+
+        .hint-text{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);color:white;font-size:.72rem;background:rgba(44,62,80,0.55);padding:5px 16px;border-radius:20px;z-index:20;white-space:nowrap;}
+        .back-btn{position:absolute;bottom:20px;left:20px;background:white;color:var(--primary-color);padding:10px 20px;border-radius:30px;text-decoration:none;font-weight:600;border:2px solid var(--primary-color);box-shadow:var(--shadow);transition:var(--transition);z-index:30;font-size:.85rem;}
+        .back-btn:hover{background:var(--primary-color);color:white;}
+
+        .controls-panel::-webkit-scrollbar{width:4px;}
+        .controls-panel::-webkit-scrollbar-thumb{background:var(--border-color);border-radius:4px;}
+        @media (max-width: 680px) {
+            .controls-panel{width:280px; padding:12px 16px;}
+            .info-panel{max-width:240px;}
+            .legend-panel{width:140px; padding:10px;}
+            .hint-text{font-size:10px; white-space: nowrap;}
+        }
+    </style>
+    <script type="importmap">
+        {"imports":{"three":"https://unpkg.com/three@0.128.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.128.0/examples/jsm/"}}
+    </script>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"></div>
+
+    <div class="info-panel glass-panel">
+        <h1>💧 浸润现象</h1>
+        <div class="formula-box">
+            <div class="formula">cosθ = (γ<sub>SV</sub> − γ<sub>SL</sub>) / γ<sub>LV</sub></div>
+        </div>
+        <p class="info-text">
+            <strong>浸润</strong>：θ &lt; 90°，液滴扁平铺展<br>
+            <strong>不浸润</strong>：θ &gt; 90°，液滴高耸趋近球形
+        </p>
+    </div>
+
+    <div class="controls-panel glass-panel">
+        <h3>🔧 实验控制</h3>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="waterGlassBtn">💧 水 + 玻璃</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="mercuryGlassBtn">⚪ 水银 + 玻璃</button>
+        </div>
+        <div class="slider-group">
+            <div class="slider-label"><span>📐 接触角 θ</span><span id="angleValue" class="value-badge">30°</span></div>
+            <input type="range" id="angleSlider" min="10" max="170" step="1" value="30">
+        </div>
+        <div class="info-block">
+            <p><strong>📖 教学要点</strong></p>
+            <p>• θ ≤ 90°: 角度指示器在<strong>左侧</strong>，切线指向左上方 (浸润)。</p>
+            <p>• θ > 90°: 角度指示器在<strong>右侧</strong>，切线指向右上方 (不浸润)。</p>
+            <p>• 橙色切线与固体表面夹角 = θ，标签显示真实角度。</p>
+        </div>
+    </div>
+
+    <div class="legend-panel">
+        <div style="font-weight:600;margin-bottom:10px;">📖 图例</div>
+        <div class="legend-item"><div class="legend-color liquid"></div> 液滴</div>
+        <div class="legend-item"><div class="legend-color solid"></div> 固体表面</div>
+        <div class="legend-item"><div class="legend-color tangent"></div> 接触角切线</div>
+    </div>
+
+    
+    <div class="hint-text">🖱️ 鼠标拖拽旋转视角</div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// 场景初始化
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xdce8f5);
+scene.fog = new THREE.FogExp2(0xdce8f5, 0.005);
+
+const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(3.0, 2.2, 4.2);
+camera.lookAt(0, 0.7, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.shadowMap.enabled = true;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(window.innerWidth, window.innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0px';
+labelRenderer.domElement.style.left = '0px';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.getElementById('canvas-container').appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.target.set(0, 0.7, 0);
+
+// 光照
+const ambientLight = new THREE.AmbientLight(0xaaccee, 0.75);
+scene.add(ambientLight);
+const mainLight = new THREE.DirectionalLight(0xffffff, 1.3);
+mainLight.position.set(3, 5, 2);
+mainLight.castShadow = true;
+scene.add(mainLight);
+
+// 固体平面
+const planeMat = new THREE.MeshStandardMaterial({
+    color: 0xcbdae8,
+    roughness: 0.3,
+    metalness: 0.15,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.55
+});
+const solidPlane = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 4.2), planeMat);
+solidPlane.rotation.x = -Math.PI / 2;
+solidPlane.position.y = 0;
+scene.add(solidPlane);
+
+// 水平参考线
+const refLineGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-2.0, 0, 0), new THREE.Vector3(2.0, 0, 0)]);
+const refLineMat = new THREE.LineBasicMaterial({ color: 0x8aaec9, transparent: true, opacity: 0.45 });
+const refLine = new THREE.Line(refLineGeo, refLineMat);
+scene.add(refLine);
+
+// 材质
+const waterMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0x4a91ff,
+    emissive: 0x001133,
+    metalness: 0.85,
+    roughness: 0.2,
+    transparent: true,
+    opacity: 0.72,
+    clearcoat: 1.0
+});
+
+const mercuryMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xb8c2cc,
+    emissive: 0x222222,
+    metalness: 0.96,
+    roughness: 0.28,
+    transparent: true,
+    opacity: 0.75
+});
+
+let currentDroplet = null;
+let clippingPlane = null;
+let currentMaterial = waterMaterial;
+let angleIndicatorGroup = null;
+
+function clearAngleIndicator() {
+    if (angleIndicatorGroup) {
+        angleIndicatorGroup.traverse(child => {
+            if (child instanceof CSS2DObject && child.element) child.element.remove();
+        });
+        scene.remove(angleIndicatorGroup);
+        angleIndicatorGroup = null;
+    }
+}
+
+function computeCapGeometry(deg, volume = 1.25) {
+    const thetaRad = deg * Math.PI / 180;
+    const cosTheta = Math.cos(thetaRad);
+    const sinTheta = Math.sin(thetaRad);
+    
+    function volumeError(R) {
+        const h = R * (1 - cosTheta);
+        const V = (Math.PI * h * h * (3 * R - h)) / 3;
+        return V - volume;
+    }
+    
+    let Rmin = 0.4, Rmax = 2.5;
+    for (let i = 0; i < 60; i++) {
+        const Rmid = (Rmin + Rmax) / 2;
+        const err = volumeError(Rmid);
+        if (err > 0) Rmax = Rmid;
+        else Rmin = Rmid;
+    }
+    const R = (Rmin + Rmax) / 2;
+    const h = R * (1 - cosTheta);
+    const contactRadius = R * sinTheta;
+    const sphereCenterY = -R * cosTheta;
+    const capTopY = sphereCenterY + R;
+    return { R, h, contactRadius, sphereCenterY, capTopY };
+}
+
+// 更新接触角指示器 - 只有切线和角度标签，没有弧线
+function updateAngleIndicator(deg, contactRadius) {
+    clearAngleIndicator();
+    angleIndicatorGroup = new THREE.Group();
+    
+    const thetaRad = deg * Math.PI / 180;
+    const useLeftSide = deg <= 90;
+    
+    let contactX, drawAngleRad;
+    if (useLeftSide) {
+        contactX = -contactRadius;
+        drawAngleRad = thetaRad;
+    } else {
+        contactX = contactRadius;
+        drawAngleRad = Math.PI - thetaRad;
+    }
+    
+    const tangentLen = 0.95;
+    const endX = contactX + tangentLen * Math.cos(drawAngleRad);
+    const endY = tangentLen * Math.sin(drawAngleRad);
+    
+    // 切线 (橙色)
+    const tangentPoints = [new THREE.Vector3(contactX, 0, 0), new THREE.Vector3(endX, endY, 0)];
+    const tangentGeo = new THREE.BufferGeometry().setFromPoints(tangentPoints);
+    const tangentMat = new THREE.LineBasicMaterial({ color: 0xffaa44, linewidth: 2 });
+    const tangentLine = new THREE.Line(tangentGeo, tangentMat);
+    angleIndicatorGroup.add(tangentLine);
+    
+    // 角度标签 - 放在切线末端旁
+    const labelX = endX + 0.15 * Math.cos(drawAngleRad);
+    const labelY = endY + 0.15 * Math.sin(drawAngleRad);
+    const angleDiv = document.createElement('div');
+    angleDiv.textContent = deg + '°';
+    angleDiv.style.cssText = `
+        background: #fff6e8;
+        color: #d97a0c;
+        font-size: 14px;
+        font-weight: bold;
+        font-family: monospace;
+        padding: 2px 9px;
+        border-radius: 24px;
+        border: 1px solid #ffbb77;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+        pointer-events: none;
+    `;
+    const angleLabelObj = new CSS2DObject(angleDiv);
+    angleLabelObj.position.set(labelX, labelY, 0.03);
+    angleIndicatorGroup.add(angleLabelObj);
+    
+    scene.add(angleIndicatorGroup);
+}
+
+function updateDroplet(deg) {
+    if (currentDroplet) {
+        scene.remove(currentDroplet);
+        if (currentDroplet.material) currentDroplet.material.dispose();
+        if (currentDroplet.geometry) currentDroplet.geometry.dispose();
+    }
+    
+    const { R, contactRadius, sphereCenterY, capTopY } = computeCapGeometry(deg);
+    const geometry = new THREE.SphereGeometry(R, 128, 128);
+    const isHydrophilic = deg < 90;
+    const material = isHydrophilic ? waterMaterial.clone() : mercuryMaterial.clone();
+    material.transparent = true;
+    material.opacity = isHydrophilic ? 0.72 : 0.75;
+    material.side = THREE.DoubleSide;
+    
+    if (!clippingPlane) {
+        clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
+    }
+    material.clippingPlanes = [clippingPlane];
+    
+    const dropletMesh = new THREE.Mesh(geometry, material);
+    dropletMesh.position.set(0, sphereCenterY, 0);
+    dropletMesh.castShadow = true;
+    scene.add(dropletMesh);
+    currentDroplet = dropletMesh;
+    currentMaterial = material;
+    
+    updateAngleIndicator(deg, contactRadius);
+    updateLiquidLabel(deg, capTopY);
+}
+
+let liquidLabelObj = null;
+function updateLiquidLabel(deg, topY) {
+    if (liquidLabelObj) {
+        if (liquidLabelObj.element) liquidLabelObj.element.remove();
+        scene.remove(liquidLabelObj);
+    }
+    const isHydrophilic = deg < 90;
+    const div = document.createElement('div');
+    div.textContent = isHydrophilic ? `💧 水 (浸润)  θ = ${deg}°` : `⚪ 水银 (不浸润)  θ = ${deg}°`;
+    div.style.cssText = `color:${isHydrophilic ? '#1a5899' : '#4a5568'};font-size:13px;font-weight:bold;background:rgba(255,255,255,0.85);padding:4px 16px;border-radius:28px;border-left:4px solid ${isHydrophilic ? '#3a86ff' : '#9aaebf'};box-shadow:0 2px 8px rgba(0,0,0,0.1);white-space:nowrap;`;
+    liquidLabelObj = new CSS2DObject(div);
+    liquidLabelObj.position.set(0, topY + 0.2, 0);
+    scene.add(liquidLabelObj);
+}
+
+// UI 交互
+const angleSlider = document.getElementById('angleSlider');
+const waterGlassBtn = document.getElementById('waterGlassBtn');
+const mercuryGlassBtn = document.getElementById('mercuryGlassBtn');
+const angleValueSpan = document.getElementById('angleValue');
+
+function setAngle(deg) {
+    deg = Math.min(170, Math.max(10, deg));
+    angleValueSpan.textContent = deg + '°';
+    angleSlider.value = deg;
+    updateDroplet(deg);
+}
+
+angleSlider.addEventListener('input', (e) => setAngle(parseInt(e.target.value, 10)));
+waterGlassBtn.addEventListener('click', () => setAngle(30));
+mercuryGlassBtn.addEventListener('click', () => setAngle(140));
+
+// 初始化
+setAngle(30);
+
+// 窗口适配
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// 动画循环
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>

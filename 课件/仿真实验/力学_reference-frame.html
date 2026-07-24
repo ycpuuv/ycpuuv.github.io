@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>参考系 · 相对运动</title>
+    <style>
+        /* ===== 全局重置 & 变量 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --accent-color: #FF7A33;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+            --bg-start: #E8F4FD;
+            --bg-end: #F8FBFF;
+            --bg-accent: #E1EEF7;
+        }
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 50%, var(--bg-accent) 100%);
+            color: var(--text-primary);
+        }
+
+        /* ===== 仿真容器 ===== */
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== 画布区域 ===== */
+        .canvas-wrap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 0;
+            overflow: hidden;
+        }
+        #canvas-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: transparent;
+        }
+
+        /* ===== 毛玻璃面板 ===== */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            z-index: 20;
+            position: absolute;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* ===== 左上角：信息面板 ===== */
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 270px;
+            min-width: 180px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .formula-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 2px;
+        }
+        .f-label {
+            color: #5a7a9a;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-right: 6px;
+            min-width: 56px;
+        }
+        .f-expr {
+            color: #1a2b42;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .f-expr .hl {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-top: 4px;
+        }
+        .info-text .hl {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        .phys-desc {
+            font-size: .75rem;
+            color: var(--primary-dark);
+            margin-top: 4px;
+            padding: 4px 8px;
+            background: rgba(74, 144, 226, 0.07);
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+            line-height: 1.5;
+        }
+
+        /* ===== 右上角：控制面板 ===== */
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 280px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            padding: 14px 16px;
+        }
+        .controls-panel::-webkit-scrollbar {
+            width: 3px;
+        }
+        .controls-panel::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 6px;
+        }
+        .controls-panel h3 {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-label {
+            font-size: .70rem;
+            color: var(--text-light);
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .4px;
+        }
+        .section-label:first-of-type {
+            margin-top: 0;
+        }
+        .param-item {
+            margin-bottom: 10px;
+        }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .param-name {
+            font-size: .82rem;
+            color: var(--text-primary);
+        }
+        .param-value {
+            font-size: .82rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            touch-action: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .range-limits {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-light);
+            margin-top: 1px;
+        }
+
+        /* 参考系切换按钮 */
+        .ref-toggle {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            margin-bottom: 6px;
+        }
+        .ref-btn {
+            flex: 1;
+            padding: 8px 0;
+            border: 2px solid #d0dae8;
+            background: #ffffff;
+            border-radius: 8px;
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            user-select: none;
+        }
+        .ref-btn .icon {
+            font-size: 1.1rem;
+        }
+        .ref-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .ref-btn.active {
+            background: var(--primary-color);
+            color: #ffffff;
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.25);
+        }
+
+        /* 播放控制按钮 */
+        .ctrl-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        .ctrl-btn {
+            flex: 1;
+            padding: 7px 0;
+            border: 1.5px solid #d0dae8;
+            background: #ffffff;
+            border-radius: 8px;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            user-select: none;
+            min-height: 34px;
+        }
+        .ctrl-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .ctrl-btn.primary {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+        .ctrl-btn.primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        .ctrl-btn .icon {
+            font-size: 1rem;
+        }
+
+        /* ===== 右下角：实时数据 ===== */
+        .physics-panel {
+            bottom: 16px;
+            right: 16px;
+            width: 220px;
+            padding: 12px 16px;
+        }
+        .physics-panel h3 {
+            font-size: .88rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .readout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-top: 4px;
+        }
+        .readout-item {
+            background: #f0f5fa;
+            border-radius: 6px;
+            padding: 6px 8px;
+        }
+        .readout-item .r-label {
+            font-size: 9px;
+            color: #5a7a9a;
+            margin-bottom: 1px;
+        }
+        .readout-item .r-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .readout-item .r-value.boat-color {
+            color: #e74c3c;
+        }
+        .readout-item .r-value.cloud-color {
+            color: #2980b9;
+        }
+        .readout-item .r-value.rel-color {
+            color: #e67e22;
+        }
+
+        /* ===== 诗句叠加 (画布左下角) ===== */
+        .poem-overlay {
+            position: absolute;
+            bottom: 70px;
+            left: 30px;
+            font-family: "STKaiti", "KaiTi", serif;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: rgba(44, 62, 80, 0.55);
+            pointer-events: none;
+            z-index: 5;
+            text-shadow: 0 1px 4px rgba(255,255,255,0.6);
+            background: rgba(255,255,255,0.25);
+            padding: 8px 16px;
+            border-radius: 10px;
+            backdrop-filter: blur(2px);
+        }
+        .poem-overlay strong {
+            color: rgba(44, 62, 80, 0.7);
+        }
+        @media (max-width: 600px) {
+            .poem-overlay {
+                font-size: 0.9rem;
+                bottom: 60px;
+                left: 12px;
+                padding: 4px 10px;
+            }
+        }
+
+        /* ===== 参考系指示器（画布内） ===== */
+        #ref-indicator {
+            pointer-events: none;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 200px;
+                padding: 10px 12px;
+                top: 12px;
+                left: 12px;
+            }
+            .info-panel h1 {
+                font-size: 0.95rem;
+            }
+            .formula-box {
+                font-size: .75rem;
+                padding: 6px 10px;
+            }
+            .controls-panel {
+                width: 230px;
+                padding: 10px 12px;
+                top: 12px;
+                right: 12px;
+            }
+            .physics-panel {
+                width: 180px;
+                padding: 10px 12px;
+                bottom: 12px;
+                right: 12px;
+            }
+            .readout-item .r-value {
+                font-size: 12px;
+            }
+            .ctrl-btn {
+                font-size: .7rem;
+                padding: 5px 0;
+                min-height: 30px;
+            }
+            .ref-btn {
+                font-size: .72rem;
+                padding: 6px 0;
+            }
+        }
+        @media (max-width: 600px) {
+            .info-panel {
+                display: none;
+            }
+            .controls-panel {
+                width: 190px;
+                padding: 8px 10px;
+                top: 8px;
+                right: 8px;
+                max-height: calc(100vh - 70px);
+            }
+            .controls-panel h3 {
+                font-size: .8rem;
+                margin-bottom: 6px;
+                padding-bottom: 4px;
+            }
+            .param-name {
+                font-size: .72rem;
+            }
+            .param-value {
+                font-size: .72rem;
+            }
+            .ref-btn {
+                font-size: .65rem;
+                padding: 4px 0;
+            }
+            .ctrl-btn {
+                font-size: .62rem;
+                padding: 4px 0;
+                min-height: 26px;
+            }
+            .physics-panel {
+                width: 150px;
+                padding: 8px 10px;
+                bottom: 8px;
+                right: 8px;
+            }
+            .physics-panel h3 {
+                font-size: .75rem;
+                padding-bottom: 4px;
+            }
+            .readout {
+                grid-template-columns: 1fr 1fr;
+                gap: 3px;
+            }
+            .readout-item {
+                padding: 4px 6px;
+            }
+            .readout-item .r-value {
+                font-size: 11px;
+            }
+            .readout-item .r-label {
+                font-size: 8px;
+            }
+            .poem-overlay {
+                font-size: 0.75rem;
+                bottom: 50px;
+                left: 8px;
+                padding: 4px 8px;
+            }
+        }
+        @media (max-width: 420px) {
+            .controls-panel {
+                width: 160px;
+                padding: 6px 8px;
+                top: 6px;
+                right: 6px;
+            }
+            .controls-panel h3 {
+                font-size: .7rem;
+            }
+            .param-name {
+                font-size: .65rem;
+            }
+            .param-value {
+                font-size: .65rem;
+            }
+            .ref-btn {
+                font-size: .55rem;
+                padding: 3px 0;
+            }
+            .ctrl-btn {
+                font-size: .55rem;
+                padding: 3px 0;
+                min-height: 22px;
+            }
+            .physics-panel {
+                width: 130px;
+                padding: 6px 8px;
+                bottom: 6px;
+                right: 6px;
+            }
+            .physics-panel h3 {
+                font-size: .65rem;
+            }
+            .readout-item .r-value {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="simulation-container">
+        <!-- ===== SVG 画布 ===== -->
+        <div class="canvas-wrap">
+            <svg id="canvas-svg" viewBox="0 0 1100 600" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                    <!-- 渐变 -->
+                    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4A90D9" />
+                        <stop offset="45%" stop-color="#87CEEB" />
+                        <stop offset="100%" stop-color="#B5D8F7" />
+                    </linearGradient>
+                    <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#7EC8E3" />
+                        <stop offset="100%" stop-color="#4A90D9" />
+                    </linearGradient>
+                    <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#FFF7DC" />
+                        <stop offset="60%" stop-color="#FFE066" />
+                        <stop offset="100%" stop-color="#FFD700" stop-opacity="0.2" />
+                    </radialGradient>
+                    <!-- 箭头标记 -->
+                    <marker id="arrowRed" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+                        <path d="M 0 0 L 10 4 L 0 8 Z" fill="#e74c3c" />
+                    </marker>
+                    <marker id="arrowBlue" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+                        <path d="M 0 0 L 10 4 L 0 8 Z" fill="#2980b9" />
+                    </marker>
+                    <marker id="arrowGreen" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+                        <path d="M 0 0 L 10 4 L 0 8 Z" fill="#27ae60" />
+                    </marker>
+                    <marker id="arrowOrange" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+                        <path d="M 0 0 L 10 4 L 0 8 Z" fill="#e67e22" />
+                    </marker>
+                </defs>
+
+                <!-- 天空 -->
+                <rect width="1100" height="600" fill="url(#skyGrad)" />
+
+                <!-- 太阳 (左移) -->
+                <circle cx="880" cy="100" r="42" fill="url(#sunGrad)" opacity="0.9" />
+                <circle cx="880" cy="100" r="28" fill="#FFF5CC" opacity="0.6" />
+
+                <!-- 远山 (动态) 多段平滑山丘 -->
+                <g id="mountains-layer" transform="translate(0,0)">
+                    <!-- 使用曲线绘制圆润山丘，覆盖 -3300 ~ 3300 -->
+                    <path d="M -3300 360 Q -3250 200 -3200 250 Q -3150 310 -3100 280 Q -3050 220 -3000 260 Q -2950 300 -2900 240 Q -2850 180 -2800 220 Q -2750 270 -2700 230 Q -2650 190 -2600 250 Q -2550 310 -2500 270 Q -2450 210 -2400 240 Q -2350 280 -2300 220 Q -2250 160 -2200 200 Q -2150 250 -2100 210 Q -2050 170 -2000 230 Q -1950 290 -1900 250 Q -1850 200 -1800 240 Q -1750 280 -1700 220 Q -1650 150 -1600 190 Q -1550 240 -1500 200 Q -1450 160 -1400 220 Q -1350 280 -1300 240 Q -1250 190 -1200 230 Q -1150 270 -1100 210 Q -1050 140 -1000 180 Q -950 230 -900 190 Q -850 150 -800 210 Q -750 270 -700 230 Q -650 180 -600 220 Q -550 260 -500 200 Q -450 130 -400 170 Q -350 220 -300 180 Q -250 140 -200 200 Q -150 260 -100 220 Q -50 170 0 210 Q 50 250 100 190 Q 150 120 200 160 Q 250 210 300 170 Q 350 130 400 190 Q 450 250 500 210 Q 550 160 600 200 Q 650 240 700 180 Q 750 110 800 150 Q 850 200 900 160 Q 950 120 1000 180 Q 1050 240 1100 200 Q 1150 150 1200 190 Q 1250 230 1300 170 Q 1350 100 1400 140 Q 1450 190 1500 150 Q 1550 110 1600 170 Q 1650 230 1700 190 Q 1750 140 1800 180 Q 1850 220 1900 160 Q 1950 90 2000 130 Q 2050 180 2100 140 Q 2150 100 2200 160 Q 2250 220 2300 180 Q 2350 130 2400 170 Q 2450 210 2500 150 Q 2550 80 2600 120 Q 2650 170 2700 130 Q 2750 90 2800 150 Q 2850 210 2900 170 Q 2950 120 3000 160 Q 3050 200 3100 140 Q 3150 70 3200 110 Q 3250 160 3300 120 L 3300 420 L -3300 420 Z" fill="#7BA68C" opacity="0.5" />
+                    <path d="M -3300 380 Q -3250 240 -3200 280 Q -3150 330 -3100 300 Q -3050 250 -3000 290 Q -2950 320 -2900 270 Q -2850 210 -2800 250 Q -2750 300 -2700 260 Q -2650 220 -2600 280 Q -2550 340 -2500 300 Q -2450 240 -2400 270 Q -2350 310 -2300 250 Q -2250 190 -2200 230 Q -2150 280 -2100 240 Q -2050 200 -2000 260 Q -1950 320 -1900 280 Q -1850 230 -1800 270 Q -1750 310 -1700 250 Q -1650 180 -1600 220 Q -1550 270 -1500 230 Q -1450 190 -1400 250 Q -1350 310 -1300 270 Q -1250 220 -1200 260 Q -1150 300 -1100 240 Q -1050 170 -1000 210 Q -950 260 -900 220 Q -850 180 -800 240 Q -750 300 -700 260 Q -650 210 -600 250 Q -550 290 -500 230 Q -450 160 -400 200 Q -350 250 -300 210 Q -250 170 -200 230 Q -150 290 -100 250 Q -50 200 0 240 Q 50 280 100 220 Q 150 150 200 190 Q 250 240 300 200 Q 350 160 400 220 Q 450 280 500 240 Q 550 190 600 230 Q 650 270 700 210 Q 750 140 800 180 Q 850 230 900 190 Q 950 150 1000 210 Q 1050 270 1100 230 Q 1150 180 1200 220 Q 1250 260 1300 200 Q 1350 130 1400 170 Q 1450 220 1500 180 Q 1550 140 1600 200 Q 1650 260 1700 220 Q 1750 170 1800 210 Q 1850 250 1900 190 Q 1950 120 2000 160 Q 2050 210 2100 170 Q 2150 130 2200 190 Q 2250 250 2300 210 Q 2350 160 2400 200 Q 2450 240 2500 180 Q 2550 110 2600 150 Q 2650 200 2700 160 Q 2750 120 2800 180 Q 2850 240 2900 200 Q 2950 150 3000 190 Q 3050 230 3100 170 Q 3150 100 3200 140 Q 3250 190 3300 150 L 3300 420 L -3300 420 Z" fill="#6B8F7A" opacity="0.4" />
+                    <!-- 再增加一层更柔和的山 -->
+                    <path d="M -3300 400 Q -3200 280 -3100 320 Q -3000 360 -2900 310 Q -2800 260 -2700 300 Q -2600 350 -2500 300 Q -2400 250 -2300 290 Q -2200 340 -2100 280 Q -2000 220 -1900 260 Q -1800 310 -1700 270 Q -1600 220 -1500 270 Q -1400 320 -1300 280 Q -1200 230 -1100 270 Q -1000 320 -900 280 Q -800 230 -700 270 Q -600 320 -500 280 Q -400 230 -300 270 Q -200 320 -100 280 Q 0 230 100 270 Q 200 320 300 280 Q 400 230 500 270 Q 600 320 700 280 Q 800 230 900 270 Q 1000 320 1100 280 Q 1200 230 1300 270 Q 1400 320 1500 280 Q 1600 230 1700 270 Q 1800 320 1900 280 Q 2000 230 2100 270 Q 2200 320 2300 280 Q 2400 230 2500 270 Q 2600 320 2700 280 Q 2800 230 2900 270 Q 3000 320 3100 280 Q 3200 230 3300 270 L 3300 420 L -3300 420 Z" fill="#8FBC8F" opacity="0.3" />
+                </g>
+
+                <!-- 云层 (动态) -->
+                <g id="clouds-layer"></g>
+
+                <!-- 河岸 (动态) 多段，确保循环 -->
+                <g id="shore-layer" transform="translate(0,0)">
+                    <!-- 岸的基本路径，重复多次覆盖 -3300~3300 -->
+                    <path d="M -3300 430 Q -3050 410 -2800 430 Q -2550 450 -2300 430 Q -2050 410 -1800 430 Q -1550 450 -1300 430 Q -1050 410 -800 430 Q -550 450 -300 430 Q -50 410 0 430 Q 250 450 500 430 Q 750 410 1000 430 Q 1250 450 1500 430 Q 1750 410 2000 430 Q 2250 450 2500 430 Q 2750 410 3000 430 Q 3250 450 3300 430 L 3300 600 L -3300 600 Z" fill="#8BC34A" />
+                    <path d="M -3300 442 Q -3050 425 -2800 442 Q -2550 458 -2300 442 Q -2050 425 -1800 442 Q -1550 458 -1300 442 Q -1050 425 -800 442 Q -550 458 -300 442 Q -50 425 0 442 Q 250 458 500 442 Q 750 425 1000 442 Q 1250 458 1500 442 Q 1750 425 2000 442 Q 2250 458 2500 442 Q 2750 425 3000 442 Q 3250 458 3300 442 L 3300 600 L -3300 600 Z" fill="#7CB342" />
+                    <!-- 树木 (大量分布覆盖 -3300~3300) -->
+                    <g id="trees">
+                        <!-- 每200单位一组树，从-3300到3300 -->
+                        <circle cx="-3300" cy="405" r="28" fill="#388E3C" />
+                        <circle cx="-3200" cy="410" r="24" fill="#2E7D32" />
+                        <circle cx="-3100" cy="415" r="20" fill="#43A047" />
+                        <circle cx="-3000" cy="400" r="30" fill="#388E3C" />
+                        <circle cx="-2900" cy="408" r="26" fill="#2E7D32" />
+                        <circle cx="-2800" cy="415" r="22" fill="#43A047" />
+                        <circle cx="-2700" cy="420" r="18" fill="#388E3C" />
+                        <circle cx="-2600" cy="405" r="28" fill="#2E7D32" />
+                        <circle cx="-2500" cy="412" r="24" fill="#43A047" />
+                        <circle cx="-2400" cy="418" r="20" fill="#388E3C" />
+                        <circle cx="-2300" cy="400" r="30" fill="#2E7D32" />
+                        <circle cx="-2200" cy="408" r="26" fill="#43A047" />
+                        <circle cx="-2100" cy="415" r="22" fill="#388E3C" />
+                        <circle cx="-2000" cy="420" r="18" fill="#2E7D32" />
+                        <circle cx="-1900" cy="405" r="28" fill="#43A047" />
+                        <circle cx="-1800" cy="412" r="24" fill="#388E3C" />
+                        <circle cx="-1700" cy="418" r="20" fill="#2E7D32" />
+                        <circle cx="-1600" cy="400" r="30" fill="#43A047" />
+                        <circle cx="-1500" cy="408" r="26" fill="#388E3C" />
+                        <circle cx="-1400" cy="415" r="22" fill="#2E7D32" />
+                        <circle cx="-1300" cy="420" r="18" fill="#43A047" />
+                        <circle cx="-1200" cy="405" r="28" fill="#388E3C" />
+                        <circle cx="-1100" cy="412" r="24" fill="#2E7D32" />
+                        <circle cx="-1000" cy="418" r="20" fill="#43A047" />
+                        <circle cx="-900" cy="400" r="30" fill="#388E3C" />
+                        <circle cx="-800" cy="408" r="26" fill="#2E7D32" />
+                        <circle cx="-700" cy="415" r="22" fill="#43A047" />
+                        <circle cx="-600" cy="420" r="18" fill="#388E3C" />
+                        <circle cx="-500" cy="405" r="28" fill="#2E7D32" />
+                        <circle cx="-400" cy="412" r="24" fill="#43A047" />
+                        <circle cx="-300" cy="418" r="20" fill="#388E3C" />
+                        <circle cx="-200" cy="400" r="30" fill="#2E7D32" />
+                        <circle cx="-100" cy="408" r="26" fill="#43A047" />
+                        <circle cx="0" cy="415" r="22" fill="#388E3C" />
+                        <circle cx="100" cy="420" r="18" fill="#2E7D32" />
+                        <circle cx="200" cy="405" r="28" fill="#43A047" />
+                        <circle cx="300" cy="412" r="24" fill="#388E3C" />
+                        <circle cx="400" cy="418" r="20" fill="#2E7D32" />
+                        <circle cx="500" cy="400" r="30" fill="#43A047" />
+                        <circle cx="600" cy="408" r="26" fill="#388E3C" />
+                        <circle cx="700" cy="415" r="22" fill="#2E7D32" />
+                        <circle cx="800" cy="420" r="18" fill="#43A047" />
+                        <circle cx="900" cy="405" r="28" fill="#388E3C" />
+                        <circle cx="1000" cy="412" r="24" fill="#2E7D32" />
+                        <circle cx="1100" cy="418" r="20" fill="#43A047" />
+                        <circle cx="1200" cy="400" r="30" fill="#388E3C" />
+                        <circle cx="1300" cy="408" r="26" fill="#2E7D32" />
+                        <circle cx="1400" cy="415" r="22" fill="#43A047" />
+                        <circle cx="1500" cy="420" r="18" fill="#388E3C" />
+                        <circle cx="1600" cy="405" r="28" fill="#2E7D32" />
+                        <circle cx="1700" cy="412" r="24" fill="#43A047" />
+                        <circle cx="1800" cy="418" r="20" fill="#388E3C" />
+                        <circle cx="1900" cy="400" r="30" fill="#2E7D32" />
+                        <circle cx="2000" cy="408" r="26" fill="#43A047" />
+                        <circle cx="2100" cy="415" r="22" fill="#388E3C" />
+                        <circle cx="2200" cy="420" r="18" fill="#2E7D32" />
+                        <circle cx="2300" cy="405" r="28" fill="#43A047" />
+                        <circle cx="2400" cy="412" r="24" fill="#388E3C" />
+                        <circle cx="2500" cy="418" r="20" fill="#2E7D32" />
+                        <circle cx="2600" cy="400" r="30" fill="#43A047" />
+                        <circle cx="2700" cy="408" r="26" fill="#388E3C" />
+                        <circle cx="2800" cy="415" r="22" fill="#2E7D32" />
+                        <circle cx="2900" cy="420" r="18" fill="#43A047" />
+                        <circle cx="3000" cy="405" r="28" fill="#388E3C" />
+                        <circle cx="3100" cy="412" r="24" fill="#2E7D32" />
+                        <circle cx="3200" cy="418" r="20" fill="#43A047" />
+                        <circle cx="3300" cy="400" r="30" fill="#388E3C" />
+                    </g>
+                </g>
+
+                <!-- 水面 -->
+                <rect y="432" width="1100" height="168" fill="url(#waterGrad)" />
+
+                <!-- 水波 (动态) -->
+                <g id="waves-layer"></g>
+
+                <!-- ===== 船组 ===== -->
+                <g id="boat-group" transform="translate(350, 420)">
+                    <ellipse cx="0" cy="32" rx="80" ry="10" fill="rgba(0,0,0,0.10)" />
+                    <path d="M -75 0 L 75 0 L 60 24 L -60 24 Z" fill="#6D4C41" stroke="#4E342E" stroke-width="1.5" />
+                    <path d="M -70 2 L 70 2 L 56 22 L -56 22 Z" fill="#8D6E63" />
+                    <path d="M -38 0 Q 0 -52 38 0" fill="#A1887F" stroke="#4E342E" stroke-width="2" />
+                    <rect x="-32" y="-10" width="64" height="10" rx="4" fill="#BCAAA4" opacity="0.5" />
+                    <circle cx="0" cy="-6" r="11" fill="#FFCCBC" stroke="#D7A08A" stroke-width="1" />
+                    <ellipse cx="0" cy="-15" rx="8" ry="6" fill="#3E2723" />
+                    <path d="M -5 -18 Q 0 -25 5 -18" fill="#3E2723" />
+                    <rect x="-9" y="4" width="18" height="9" rx="2" fill="#F5F5F5" stroke="#D0D0D0" stroke-width="0.5" />
+                    <text x="-36" y="50" font-size="13" font-weight="bold" fill="#3E2723" font-family="'STKaiti','KaiTi',serif">🪷 观察者</text>
+                    <!-- 船速箭头 -->
+                    <g id="boat-arrow">
+                        <line x1="0" y1="-34" x2="55" y2="-34" stroke="#e74c3c" stroke-width="3" marker-end="url(#arrowRed)" />
+                        <text x="20" y="-42" font-size="13" fill="#e74c3c" font-weight="bold">v船</text>
+                    </g>
+                </g>
+
+                <!-- 云速箭头 (动态) -->
+                <g id="cloud-arrow-group" transform="translate(0,0)">
+                    <line id="cloud-arrow-line" x1="0" y1="0" x2="60" y2="0" stroke="#2980b9" stroke-width="3" marker-end="url(#arrowBlue)" />
+                    <text id="cloud-arrow-label" x="20" y="-10" font-size="13" fill="#2980b9" font-weight="bold">v云</text>
+                </g>
+
+                <!-- 岸速箭头 (船参考系下显示) 放在岸上，右移 -->
+                <g id="shore-arrow-group" transform="translate(180, 410)" style="display:none;">
+                    <line id="shore-arrow-line" x1="0" y1="0" x2="60" y2="0" stroke="#27ae60" stroke-width="3" marker-end="url(#arrowGreen)" />
+                    <text id="shore-arrow-label" x="20" y="-10" font-size="13" fill="#27ae60" font-weight="bold">v岸</text>
+                </g>
+
+                <!-- 参考系标签 (上移) -->
+                <text id="ref-label" x="40" y="540" font-size="18" font-weight="bold" fill="rgba(0,0,0,0.45)" font-family="'STKaiti','KaiTi',serif">📍 参考系：地面</text>
+
+                <!-- 视角指示器 (船参考系时显示"船静止") 下移 -->
+                <g id="ref-indicator" style="display:none;">
+                    <rect x="480" y="50" width="140" height="32" rx="16" fill="rgba(44,62,80,0.85)" />
+                    <text x="550" y="71" font-size="15" fill="white" font-weight="bold" text-anchor="middle">⛵ 船静止</text>
+                </g>
+            </svg>
+        </div>
+
+        <!-- ===== 诗句叠加 (画布左下角) ===== -->
+        <div class="poem-overlay">
+            飞花两岸照船红，<br>
+            百里榆堤半日风。<br>
+            <strong>卧看满天云不动，</strong><br>
+            <strong>不知云与我俱东。</strong>
+        </div>
+
+        <!-- ===== 左上角：信息面板 ===== -->
+        <div class="glass-panel info-panel">
+            <h1>📐 参考系 · 相对运动</h1>
+            <div class="formula-box">
+                <div class="formula-row"><span class="f-label">相对速度</span><span class="f-expr">v<sub>云对船</sub> = v<sub>云</sub> − v<sub>船</sub></span></div>
+                <div class="formula-row"><span class="f-label">物理意义</span><span class="f-expr">不同参考系，运动描述不同</span></div>
+            </div>
+            <p class="info-text">切换参考系，观察物体运动如何改变。<br>拖动滑块调节速度，<span class="hl">相对速度</span> 决定云的运动。</p>
+            <div class="phys-desc" id="phys-desc">✅ 船与云速度相同，云相对船静止。</div>
+        </div>
+
+        <!-- ===== 右上角：控制面板 ===== -->
+        <div class="glass-panel controls-panel">
+            <h3>🔧 控制面板</h3>
+
+            <div class="section-label">参考系选择</div>
+            <div class="ref-toggle">
+                <button class="ref-btn active" id="ref-ground" data-ref="ground"><span class="icon">🟫</span> 地面</button>
+                <button class="ref-btn" id="ref-boat" data-ref="boat"><span class="icon">⛵</span> 船 (诗人)</button>
+            </div>
+
+            <div class="section-label">速度调节</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">🚢 船速 (向东)</span><span class="param-value" id="boat-v-val">6.0</span> m/s</div>
+                <input type="range" id="boat-v" min="0" max="20" step="0.1" value="6.0">
+                <div class="range-limits"><span>0</span><span>20</span></div>
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">☁️ 云速 (向东)</span><span class="param-value" id="cloud-v-val">6.0</span> m/s</div>
+                <input type="range" id="cloud-v" min="0" max="20" step="0.1" value="6.0">
+                <div class="range-limits"><span>0</span><span>20</span></div>
+            </div>
+
+            <div class="section-label">播放控制</div>
+            <div class="ctrl-row">
+                <button class="ctrl-btn primary" id="btnPlay"><span class="icon">▶</span> 开始</button>
+                <button class="ctrl-btn" id="btnPause"><span class="icon">⏸</span> 暂停</button>
+                <button class="ctrl-btn" id="btnReset"><span class="icon">⟳</span> 重置</button>
+            </div>
+        </div>
+
+        <!-- ===== 右下角：实时数据 ===== -->
+        <div class="glass-panel physics-panel">
+            <h3>📊 实时数据</h3>
+            <div class="readout">
+                <div class="readout-item"><div class="r-label">🚢 船速</div><div class="r-value boat-color" id="roBoat">6.0</div></div>
+                <div class="readout-item"><div class="r-label">☁️ 云速</div><div class="r-value cloud-color" id="roCloud">6.0</div></div>
+                <div class="readout-item" style="grid-column: span 2;"><div class="r-label">🔄 云相对船的速度</div><div class="r-value rel-color" id="roRel">0.0</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            //  DOM 引用
+            // ============================================================
+            const refGround = document.getElementById('ref-ground');
+            const refBoat = document.getElementById('ref-boat');
+            const boatSlider = document.getElementById('boat-v');
+            const cloudSlider = document.getElementById('cloud-v');
+            const boatVVal = document.getElementById('boat-v-val');
+            const cloudVVal = document.getElementById('cloud-v-val');
+            const roBoat = document.getElementById('roBoat');
+            const roCloud = document.getElementById('roCloud');
+            const roRel = document.getElementById('roRel');
+            const physDesc = document.getElementById('phys-desc');
+            const refLabel = document.getElementById('ref-label');
+            const refIndicator = document.getElementById('ref-indicator');
+            const shoreArrowGroup = document.getElementById('shore-arrow-group');
+            const btnPlay = document.getElementById('btnPlay');
+            const btnPause = document.getElementById('btnPause');
+            const btnReset = document.getElementById('btnReset');
+
+            // SVG 动态元素
+            const boatGroup = document.getElementById('boat-group');
+            const cloudsLayer = document.getElementById('clouds-layer');
+            const wavesLayer = document.getElementById('waves-layer');
+            const mountainsLayer = document.getElementById('mountains-layer');
+            const shoreLayer = document.getElementById('shore-layer');
+            const boatArrow = document.getElementById('boat-arrow');
+            const cloudArrowLine = document.getElementById('cloud-arrow-line');
+            const cloudArrowLabel = document.getElementById('cloud-arrow-label');
+            const cloudArrowGroup = document.getElementById('cloud-arrow-group');
+            const shoreArrowLine = document.getElementById('shore-arrow-line');
+            const shoreArrowLabel = document.getElementById('shore-arrow-label');
+
+            // ============================================================
+            //  状态 (直接使用实际速度，默认6.0)
+            // ============================================================
+            let refMode = 'ground';
+            let boatSpeed = 6.0;
+            let cloudSpeed = 6.0;
+            let paused = false;
+            let animId = null;
+
+            // 云朵数据
+            let cloudPositions = [];
+            const NUM_CLOUDS = 8;
+
+            // 山和岸的偏移量
+            let mountainOffset = 0;
+            let shoreOffset = 0;
+
+            // 波浪相位
+            let wavePhase = 0;
+
+            // 船位置
+            let boatX = 350;
+
+            // ============================================================
+            //  初始化云朵
+            // ============================================================
+            function initClouds() {
+                cloudPositions = [];
+                for (let i = 0; i < NUM_CLOUDS; i++) {
+                    cloudPositions.push({
+                        x: 60 + i * 140 + Math.random() * 50,
+                        y: 80 + Math.random() * 80,
+                        w: 80 + Math.random() * 70,
+                        h: 22 + Math.random() * 22,
+                        baseX: 60 + i * 140 + Math.random() * 50,
+                    });
+                }
+            }
+            initClouds();
+
+            // ============================================================
+            //  渲染云朵
+            // ============================================================
+            function renderClouds() {
+                let html = '';
+                for (const c of cloudPositions) {
+                    const x = c.x;
+                    const y = c.y;
+                    const w = c.w;
+                    const h = c.h;
+                    html += `
+                        <g transform="translate(${x}, ${y})">
+                            <ellipse cx="0" cy="0" rx="${w*0.5}" ry="${h*0.6}" fill="white" opacity="0.92" />
+                            <ellipse cx="${-w*0.25}" cy="${-h*0.2}" rx="${w*0.35}" ry="${h*0.7}" fill="white" opacity="0.96" />
+                            <ellipse cx="${w*0.3}" cy="${-h*0.1}" rx="${w*0.3}" ry="${h*0.6}" fill="white" opacity="0.94" />
+                            <ellipse cx="${w*0.1}" cy="${h*0.15}" rx="${w*0.4}" ry="${h*0.4}" fill="white" opacity="0.88" />
+                        </g>
+                    `;
+                }
+                cloudsLayer.innerHTML = html;
+            }
+
+            // ============================================================
+            //  渲染波浪
+            // ============================================================
+            function renderWaves() {
+                let html = '';
+                const waveCount = 10;
+                for (let i = 0; i < waveCount; i++) {
+                    const yBase = 445 + i * 15;
+                    const amp = 3 + (i % 4) * 2;
+                    const freq = 0.02 + (i % 3) * 0.008;
+                    const phase = wavePhase + i * 1.0;
+                    let path = '';
+                    for (let x = 0; x <= 1100; x += 2) {
+                        const y = yBase + Math.sin(x * freq + phase) * amp;
+                        path += (x === 0) ? `M ${x} ${y}` : ` L ${x} ${y}`;
+                    }
+                    html += `<path d="${path}" stroke="rgba(255,255,255,${0.12 + i*0.015})" stroke-width="1.8" fill="none" />`;
+                }
+                wavesLayer.innerHTML = html;
+            }
+
+            // ============================================================
+            //  更新山和岸的位置 (循环)
+            // ============================================================
+            function updateLandscape(offset) {
+                mountainsLayer.setAttribute('transform', `translate(${offset}, 0)`);
+                shoreLayer.setAttribute('transform', `translate(${offset}, 0)`);
+            }
+
+            // ============================================================
+            //  更新速度显示和物理说明
+            // ============================================================
+            function updateSpeedDisplay() {
+                const vBoat = boatSpeed;
+                const vCloud = cloudSpeed;
+                const vRel = vCloud - vBoat;
+
+                boatVVal.textContent = vBoat.toFixed(1);
+                cloudVVal.textContent = vCloud.toFixed(1);
+                roBoat.textContent = vBoat.toFixed(1);
+                roCloud.textContent = vCloud.toFixed(1);
+                roRel.textContent = vRel.toFixed(1);
+
+                const refText = refMode === 'ground' ? '地面' : '船 (诗人)';
+                refLabel.textContent = `📍 参考系：${refText}`;
+
+                if (Math.abs(vRel) < 0.05) {
+                    physDesc.innerHTML = '✅ 船与云速度相同，以船为参考系，云 <strong>静止不动</strong>。';
+                } else if (vRel > 0) {
+                    physDesc.innerHTML = `☁️ 云比船快 ${vRel.toFixed(1)} m/s，以船为参考系，云 <strong>向东飘动</strong>。`;
+                } else {
+                    physDesc.innerHTML = `⛵ 云比船慢 ${(-vRel).toFixed(1)} m/s，以船为参考系，云 <strong>向西飘动</strong>。`;
+                }
+
+                updateArrows(vBoat, vCloud, vRel);
+
+                if (refMode === 'boat') {
+                    refIndicator.style.display = 'block';
+                    shoreArrowGroup.style.display = 'block';
+                } else {
+                    refIndicator.style.display = 'none';
+                    shoreArrowGroup.style.display = 'none';
+                }
+            }
+
+            // ============================================================
+            //  更新箭头
+            // ============================================================
+            function updateArrows(vBoat, vCloud, vRel) {
+                // 船箭头
+                const boatArrowGroup = document.getElementById('boat-arrow');
+                if (boatArrowGroup) {
+                    const line = boatArrowGroup.querySelector('line');
+                    const text = boatArrowGroup.querySelector('text');
+                    if (line) {
+                        const len = 20 + vBoat * 2;
+                        line.setAttribute('x2', len);
+                        line.setAttribute('x1', '0');
+                    }
+                    if (text) {
+                        const len = 20 + vBoat * 2;
+                        text.setAttribute('x', len * 0.35);
+                        text.textContent = `v船=${vBoat.toFixed(1)}`;
+                    }
+                }
+
+                // 云箭头
+                const displayV = (refMode === 'ground') ? vCloud : vRel;
+                const arrowLen = 20 + Math.abs(displayV) * 2;
+                const dir = displayV >= 0 ? 1 : -1;
+
+                if (cloudArrowLine) {
+                    cloudArrowLine.setAttribute('x1', '0');
+                    cloudArrowLine.setAttribute('x2', arrowLen * dir);
+                    const color = displayV >= 0 ? '#2980b9' : '#e67e22';
+                    cloudArrowLine.setAttribute('stroke', color);
+                }
+                if (cloudArrowLabel) {
+                    const label = (refMode === 'ground') ? `v云=${vCloud.toFixed(1)}` : `v云对船=${vRel.toFixed(1)}`;
+                    cloudArrowLabel.textContent = label;
+                    const color = displayV >= 0 ? '#2980b9' : '#e67e22';
+                    cloudArrowLabel.setAttribute('fill', color);
+                    const len = 20 + Math.abs(displayV) * 2;
+                    cloudArrowLabel.setAttribute('x', len * dir * 0.3 + 4);
+                }
+
+                // 岸箭头
+                if (shoreArrowLine) {
+                    const shoreV = -vBoat;
+                    const sLen = 20 + Math.abs(shoreV) * 2;
+                    const sDir = shoreV >= 0 ? 1 : -1;
+                    shoreArrowLine.setAttribute('x1', '0');
+                    shoreArrowLine.setAttribute('x2', sLen * sDir);
+                    shoreArrowLine.setAttribute('stroke', '#27ae60');
+                }
+                if (shoreArrowLabel) {
+                    const shoreV = -vBoat;
+                    shoreArrowLabel.textContent = `v岸=${shoreV.toFixed(1)}`;
+                    const sLen = 20 + Math.abs(shoreV) * 2;
+                    shoreArrowLabel.setAttribute('x', sLen * (shoreV >= 0 ? 1 : -1) * 0.3 + 4);
+                }
+
+                const avgX = cloudPositions.reduce((s, c) => s + c.x, 0) / cloudPositions.length;
+                const avgY = cloudPositions.reduce((s, c) => s + c.y, 0) / cloudPositions.length;
+                cloudArrowGroup.setAttribute('transform', `translate(${avgX}, ${avgY+20})`);
+
+                shoreArrowGroup.setAttribute('transform', `translate(180, 410)`);
+            }
+
+            // ============================================================
+            //  更新动画 (步长加倍，速度加快)
+            // ============================================================
+            function updateAnimation() {
+                if (paused) return;
+
+                const vBoat = boatSpeed;
+                const vCloud = cloudSpeed;
+                const dt = 0.032; // 比原来0.016快一倍
+
+                let cloudDisp;
+                let boatDisp;
+                let landscapeDisp;
+
+                if (refMode === 'ground') {
+                    cloudDisp = vCloud * dt * 0.7;
+                    boatDisp = vBoat * dt * 0.7;
+                    landscapeDisp = 0;
+                } else {
+                    cloudDisp = (vCloud - vBoat) * dt * 0.7;
+                    boatDisp = 0;
+                    landscapeDisp = -vBoat * dt * 0.7;
+                }
+
+                for (const c of cloudPositions) {
+                    c.x += cloudDisp;
+                    if (c.x > 1250) c.x = -200;
+                    if (c.x < -200) c.x = 1250;
+                }
+                renderClouds();
+
+                mountainOffset += landscapeDisp;
+                shoreOffset += landscapeDisp;
+                // 循环范围 -3300~3300 与山体覆盖匹配
+                if (mountainOffset > 3300) mountainOffset -= 6600;
+                if (mountainOffset < -3300) mountainOffset += 6600;
+                if (shoreOffset > 3300) shoreOffset -= 6600;
+                if (shoreOffset < -3300) shoreOffset += 6600;
+                updateLandscape(shoreOffset);
+
+                if (refMode === 'ground') {
+                    boatX += boatDisp;
+                    if (boatX > 950) boatX = 50;
+                    if (boatX < 50) boatX = 950;
+                } else {
+                    boatX = 350;
+                }
+                boatGroup.setAttribute('transform', `translate(${boatX}, 420)`);
+
+                wavePhase += dt * 1.0;
+                renderWaves();
+
+                updateSpeedDisplay();
+            }
+
+            // ============================================================
+            //  动画循环
+            // ============================================================
+            function animate() {
+                updateAnimation();
+                animId = requestAnimationFrame(animate);
+            }
+
+            function startAnimation() {
+                if (animId) cancelAnimationFrame(animId);
+                paused = false;
+                updatePlayButtons();
+                animate();
+            }
+
+            function updatePlayButtons() {
+                if (paused) {
+                    btnPlay.innerHTML = '<span class="icon">▶</span> 开始';
+                    btnPlay.classList.add('primary');
+                } else {
+                    btnPlay.innerHTML = '<span class="icon">▶</span> 运行中';
+                    btnPlay.classList.remove('primary');
+                }
+            }
+
+            function resetAll() {
+                if (animId) cancelAnimationFrame(animId);
+                animId = null;
+
+                paused = false;
+                boatSpeed = 6.0;
+                cloudSpeed = 6.0;
+                boatSlider.value = 6.0;
+                cloudSlider.value = 6.0;
+                refMode = 'ground';
+                boatX = 350;
+                mountainOffset = 0;
+                shoreOffset = 0;
+                wavePhase = 0;
+
+                refGround.classList.add('active');
+                refBoat.classList.remove('active');
+
+                initClouds();
+                renderClouds();
+                updateLandscape(0);
+                boatGroup.setAttribute('transform', `translate(${boatX}, 420)`);
+                renderWaves();
+                updateSpeedDisplay();
+                updatePlayButtons();
+                startAnimation();
+            }
+
+            // ============================================================
+            //  事件绑定
+            // ============================================================
+
+            refGround.addEventListener('click', function() {
+                refGround.classList.add('active');
+                refBoat.classList.remove('active');
+                refMode = 'ground';
+                boatX = 350;
+                mountainOffset = 0;
+                shoreOffset = 0;
+                updateLandscape(0);
+                updateSpeedDisplay();
+                const vRel = cloudSpeed - boatSpeed;
+                const color = vRel >= 0 ? '#2980b9' : '#e67e22';
+                cloudArrowLine.setAttribute('stroke', color);
+                cloudArrowLabel.setAttribute('fill', color);
+            });
+
+            refBoat.addEventListener('click', function() {
+                refBoat.classList.add('active');
+                refGround.classList.remove('active');
+                refMode = 'boat';
+                boatX = 350;
+                mountainOffset = 0;
+                shoreOffset = 0;
+                updateLandscape(0);
+                updateSpeedDisplay();
+                const vRel = cloudSpeed - boatSpeed;
+                const color = vRel >= 0 ? '#2980b9' : '#e67e22';
+                cloudArrowLine.setAttribute('stroke', color);
+                cloudArrowLabel.setAttribute('fill', color);
+            });
+
+            boatSlider.addEventListener('input', function() {
+                boatSpeed = parseFloat(this.value);
+                boatVVal.textContent = boatSpeed.toFixed(1);
+                updateSpeedDisplay();
+            });
+
+            cloudSlider.addEventListener('input', function() {
+                cloudSpeed = parseFloat(this.value);
+                cloudVVal.textContent = cloudSpeed.toFixed(1);
+                updateSpeedDisplay();
+            });
+
+            btnPlay.addEventListener('click', function() {
+                if (paused) {
+                    paused = false;
+                    updatePlayButtons();
+                    if (!animId) startAnimation();
+                } else {
+                    if (!animId) startAnimation();
+                }
+            });
+
+            btnPause.addEventListener('click', function() {
+                if (!paused) {
+                    paused = true;
+                    updatePlayButtons();
+                }
+            });
+
+            btnReset.addEventListener('click', function() {
+                resetAll();
+            });
+
+            let resizeTimer;
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(() => {
+                    renderClouds();
+                    renderWaves();
+                }, 100);
+            });
+
+            window.addEventListener('keydown', function(e) {
+                if (e.key === '1') { refGround.click();
+                    e.preventDefault(); }
+                if (e.key === '2') { refBoat.click();
+                    e.preventDefault(); }
+                if (e.key === ' ' || e.key === 'Space') {
+                    e.preventDefault();
+                    if (paused) btnPlay.click();
+                    else btnPause.click();
+                }
+                if (e.key === 'r' || e.key === 'R') { btnReset.click();
+                    e.preventDefault(); }
+            });
+
+            // ============================================================
+            //  初始化
+            // ============================================================
+            function init() {
+                boatSpeed = 6.0;
+                cloudSpeed = 6.0;
+                boatSlider.value = 6.0;
+                cloudSlider.value = 6.0;
+                boatX = 350;
+                mountainOffset = 0;
+                shoreOffset = 0;
+
+                initClouds();
+                renderClouds();
+                renderWaves();
+                updateLandscape(0);
+                updateSpeedDisplay();
+
+                boatGroup.setAttribute('transform', `translate(${boatX}, 420)`);
+
+                const avgX = cloudPositions.reduce((s, c) => s + c.x, 0) / cloudPositions.length;
+                const avgY = cloudPositions.reduce((s, c) => s + c.y, 0) / cloudPositions.length;
+                cloudArrowGroup.setAttribute('transform', `translate(${avgX}, ${avgY - 30})`);
+
+                paused = false;
+                updatePlayButtons();
+                startAnimation();
+
+                console.log('🌊 参考系仿真已启动 | 速度直接显示实际值，动画步长加倍');
+                console.log('📖 快捷键: [1] 地面 [2] 船 [Space] 暂停/继续 [R] 重置');
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+    </body>
+</html>

@@ -1,0 +1,398 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>光电效应 · 高中物理 - PhySenLab</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#E8F4FD 0%,#F8FBFF 50%,#E1EEF7 100%);min-height:100vh;overflow:hidden;}
+        .simulation-container{position:relative;width:100vw;height:100vh;}
+        #canvas-container{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:flex;justify-content:center;align-items:center;}
+        #mainCanvas{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);}
+        .panel{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid #E1EEF7;border-radius:14px;box-shadow:0 4px 20px rgba(74,144,226,.12);padding:16px 20px;z-index:10;position:absolute;}
+        .info-panel{top:16px;left:16px;max-width:260px;}
+        .info-panel h1{font-size:1.1rem;color:#2C3E50;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+        .formula-box{background:linear-gradient(135deg,#E8F4FD,#F8FBFF);padding:8px 12px;border-radius:8px;border-left:4px solid #4A90E2;margin-bottom:8px;font-size:.85rem;font-family:'Times New Roman',serif;font-style:italic;color:#2C3E50;}
+        .info-text{font-size:.78rem;color:#5A6C7D;line-height:1.55;}
+        .physics-panel{bottom:16px;left:16px;width:250px;}
+        .physics-panel h3{font-size:.92rem;color:#2C3E50;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E1EEF7;}
+        .param-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.8rem;color:#5A6C7D;}
+        .param-value{font-family:Consolas,monospace;font-weight:600;color:#4A90E2;}
+        .param-value.red{color:#e74c3c;}
+        .param-value.green{color:#27ae60;}
+        .controls-panel{top:16px;right:16px;width:300px;max-height:calc(100vh - 32px);overflow-y:auto;}
+        .controls-panel h3{font-size:1rem;color:#2C3E50;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #E1EEF7;}
+        .section-label{font-size:.72rem;color:#8B9DC3;margin:12px 0 4px;font-weight:600;letter-spacing:.5px;}
+        .slider-group{margin-bottom:12px;padding:10px;background:#F8FBFF;border-radius:10px;border:1px solid #E1EEF7;}
+        .slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:.85rem;}
+        .slider-label .lt{font-weight:600;color:#2C3E50;}
+        .vbadge{background:linear-gradient(135deg,#4A90E2,#6BB6FF);color:#fff;padding:2px 8px;border-radius:12px;font-family:monospace;font-size:.78rem;font-weight:600;}
+        input[type=range]{width:100%;height:6px;border-radius:3px;background:#E1EEF7;outline:none;-webkit-appearance:none;cursor:pointer;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#6BB6FF);border:2px solid #fff;box-shadow:0 2px 8px rgba(74,144,226,.4);cursor:pointer;}
+        .metal-group{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+        .metal-btn{padding:6px 10px;border:1px solid #E1EEF7;border-radius:18px;background:#F8FBFF;font-size:.76rem;cursor:pointer;transition:all .2s;color:#2C3E50;font-weight:500;text-align:center;}
+        .metal-btn:hover{background:#4A90E2;color:#fff;border-color:#4A90E2;}
+        .metal-btn.active{background:#4A90E2;color:#fff;border-color:#4A90E2;}
+        .btn-row{display:flex;gap:8px;margin:10px 0;}
+        .btn{padding:9px 16px;border:none;border-radius:22px;font-weight:600;font-size:.82rem;cursor:pointer;transition:all .2s;}
+        .btn-primary{background:linear-gradient(135deg,#4A90E2,#6BB6FF);color:#fff;box-shadow:0 3px 10px rgba(74,144,226,.3);}
+        .btn-ghost{background:#F0F4F8;color:#5A6C7D;border:1px solid #E1EEF7;}
+        .back-btn{position:absolute;bottom:16px;right:16px;background:#fff;color:#4A90E2;padding:9px 18px;border-radius:22px;text-decoration:none;font-weight:600;border:2px solid #4A90E2;box-shadow:0 2px 10px rgba(74,144,226,.15);transition:all .3s;z-index:10;font-size:.82rem;}
+        .back-btn:hover{background:#4A90E2;color:#fff;}
+    </style>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"><canvas id="mainCanvas"></canvas></div>
+
+    <div class="info-panel panel">
+        <h1>💡 光电效应</h1>
+        <div class="formula-box">
+            E<sub>k</sub> = hf − W₀<br>
+            截止频率 f₀ = W₀ / h<br>
+            截止电压 U₀ = E<sub>k</sub> / e
+        </div>
+        <p class="info-text">
+            光照射金属表面，当频率 f ≥ f₀ 时，<strong>瞬时</strong>发射光电子。增大光强只增加光电子数目，不改变最大初动能。增大频率增大最大初动能。
+        </p>
+    </div>
+
+    <div class="physics-panel panel">
+        <h3>📊 实时参数</h3>
+        <div class="param-row"><span>光子能量 hf:</span><span id="pHf" class="param-value">—</span></div>
+        <div class="param-row"><span>逸出功 W₀:</span><span id="pW" class="param-value">—</span></div>
+        <div class="param-row"><span>最大初动能:</span><span id="pEk" class="param-value">—</span></div>
+        <div class="param-row"><span>截止频率 f₀:</span><span id="pF0" class="param-value">—</span></div>
+        <div class="param-row"><span>截止电压 U₀:</span><span id="pU0" class="param-value">—</span></div>
+        <div style="border-top:1px solid #E1EEF7;margin:6px 0;"></div>
+        <div class="param-row"><span>状态:</span><span id="pState" class="param-value">—</span></div>
+    </div>
+
+    <div class="controls-panel panel">
+        <h3>🔧 实验控制</h3>
+        <div class="section-label">光源参数</div>
+        <div class="slider-group">
+            <div class="slider-label"><span class="lt">🌈 光频率</span><span id="vFreq" class="vbadge">6.0 ×10¹⁴Hz</span></div>
+            <input type="range" id="sFreq" min="3" max="12" step="0.1" value="6">
+        </div>
+        <div class="slider-group">
+            <div class="slider-label"><span class="lt">💪 光强度</span><span id="vInt" class="vbadge">50%</span></div>
+            <input type="range" id="sInt" min="10" max="100" step="5" value="50">
+        </div>
+
+        <div class="section-label">金属材料（逸出功 W₀）</div>
+        <div class="metal-group">
+            <button class="metal-btn active" data-w="2.29" data-name="钠 Na">钠 Na<br><small>W=2.29eV</small></button>
+            <button class="metal-btn" data-w="4.26" data-name="铁 Fe">铁 Fe<br><small>W=4.26eV</small></button>
+            <button class="metal-btn" data-w="2.22" data-name="铯 Cs">铯 Cs<br><small>W=2.22eV</small></button>
+            <button class="metal-btn" data-w="4.65" data-name="铜 Cu">铜 Cu<br><small>W=4.65eV</small></button>
+            <button class="metal-btn" data-w="3.66" data-name="锌 Zn">锌 Zn<br><small>W=3.66eV</small></button>
+            <button class="metal-btn" data-w="4.54" data-name="铂 Pt">铂 Pt<br><small>W=4.54eV</small></button>
+        </div>
+
+        <div class="section-label">操作</div>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btnLight">💡 开灯</button>
+            <button class="btn btn-ghost" id="btnReset">🔄 重置</button>
+        </div>
+    </div>
+
+    
+</div>
+
+<script>
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+    const vw = innerWidth, vh = innerHeight;
+    W = canvas.width = Math.min(vw * 0.55, vh * 0.92, 860);
+    H = canvas.height = Math.min(vh * 0.88, W * 0.72, 620);
+}
+resize();
+window.addEventListener('resize', () => { resize(); });
+
+const h_c = 6.626e-34;
+const eV = 1.602e-19;
+const c_light = 3e8;
+
+let freq = 6; // ×10¹⁴ Hz
+let intensity = 50;
+let workFunc = 2.29; // eV
+let metalName = '钠 Na';
+let lightOn = false;
+let electrons = [];
+let photonBeams = [];
+let timer = 0;
+
+function freqToColor(f) {
+    const nm = c_light / (f * 1e14) * 1e9;
+    if (nm > 700) return '#ff0000';
+    if (nm > 620) return '#ff4400';
+    if (nm > 590) return '#ffcc00';
+    if (nm > 570) return '#aaff00';
+    if (nm > 495) return '#00cc66';
+    if (nm > 450) return '#0066ff';
+    if (nm > 380) return '#6600cc';
+    return '#8800ff';
+}
+
+function canEmit() {
+    const photonE = h_c * freq * 1e14 / eV;
+    return photonE >= workFunc;
+}
+
+function getEk() {
+    const photonE = h_c * freq * 1e14 / eV;
+    return Math.max(0, photonE - workFunc);
+}
+
+// ============ 绘制 ============
+function drawDevice() {
+    // 金属板
+    const mx = W * 0.38, my = H * 0.2, mw = 18, mh = H * 0.6;
+    const g = ctx.createLinearGradient(mx, my, mx + mw, my);
+    g.addColorStop(0, '#8B8B8B');
+    g.addColorStop(0.5, '#C0C0C0');
+    g.addColorStop(1, '#9A9A9A');
+    ctx.fillStyle = g;
+    ctx.fillRect(mx, my, mw, mh);
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
+    ctx.strokeRect(mx, my, mw, mh);
+    ctx.fillStyle = '#555'; ctx.font = '11px "PingFang SC"'; ctx.textAlign = 'center';
+    ctx.fillText(metalName, mx + mw / 2, my + mh + 18);
+    ctx.fillText('阴极（光电板）', mx + mw / 2, my + mh + 32);
+
+    // 收集板
+    const ax = W * 0.62, ay = my, aw = 12, ah = mh;
+    ctx.fillStyle = '#A0A0A0';
+    ctx.fillRect(ax, ay, aw, ah);
+    ctx.strokeStyle = '#666'; ctx.lineWidth = 1;
+    ctx.strokeRect(ax, ay, aw, ah);
+    ctx.fillStyle = '#555'; ctx.font = '11px "PingFang SC"';
+    ctx.fillText('阳极', ax + aw / 2, ay + ah + 18);
+
+    // 连线（电路）
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(mx + mw / 2, my + mh); ctx.lineTo(mx + mw / 2, my + mh + 45);
+    ctx.lineTo(ax + aw / 2, my + mh + 45); ctx.lineTo(ax + aw / 2, my + mh);
+    ctx.stroke();
+
+    // 电流表
+    const gx = (mx + ax) / 2 + 10, gy = my + mh + 45;
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#4A90E2'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(gx, gy, 14, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#4A90E2'; ctx.font = 'bold 10px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('A', gx, gy);
+    ctx.textBaseline = 'alphabetic';
+
+    // 真空管外框
+    ctx.strokeStyle = 'rgba(100,100,100,0.2)'; ctx.lineWidth = 1;
+    ctx.setLineDash([6, 4]);
+    const bx = mx - 20, by = my - 20, bw = ax - mx + aw + 40, bh = mh + 40;
+    ctx.beginPath();
+    ctx.moveTo(bx + 15, by); ctx.lineTo(bx + bw - 15, by);
+    ctx.quadraticCurveTo(bx + bw, by, bx + bw, by + 15);
+    ctx.lineTo(bx + bw, by + bh - 15);
+    ctx.quadraticCurveTo(bx + bw, by + bh, bx + bw - 15, by + bh);
+    ctx.lineTo(bx + 15, by + bh);
+    ctx.quadraticCurveTo(bx, by + bh, bx, by + bh - 15);
+    ctx.lineTo(bx, by + 15);
+    ctx.quadraticCurveTo(bx, by, bx + 15, by);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#aaa'; ctx.font = '10px "PingFang SC"'; ctx.textAlign = 'center';
+    ctx.fillText('真空管', bx + bw / 2, by - 5);
+}
+
+function drawLightBeam() {
+    if (!lightOn) return;
+    const color = freqToColor(freq);
+    const mx = W * 0.38;
+    const my = H * 0.2, mh = H * 0.6;
+
+    // 光束
+    for (let i = 0; i < 5; i++) {
+        const y = my + mh * 0.15 + (mh * 0.7 / 4) * i;
+        const alpha = 0.15 + 0.25 * (intensity / 100);
+        ctx.strokeStyle = color;
+        ctx.globalAlpha = alpha + Math.sin(timer * 0.1 + i) * 0.08;
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(30, y); ctx.lineTo(mx - 5, y); ctx.stroke();
+        // 波浪线
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let x = 30; x < mx - 5; x += 2) {
+            const yy = y + Math.sin((x - timer * 3) * 0.08) * 4;
+            x === 30 ? ctx.moveTo(x, yy) : ctx.lineTo(x, yy);
+        }
+        ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+
+    // 光子粒子
+    for (const b of photonBeams) {
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.7;
+        ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+    // 光源标签
+    ctx.fillStyle = color; ctx.font = 'bold 12px "PingFang SC"'; ctx.textAlign = 'left';
+    const nm = (c_light / (freq * 1e14) * 1e9).toFixed(0);
+    ctx.fillText('光源 λ=' + nm + 'nm', 10, H * 0.15);
+}
+
+function drawElectrons() {
+    for (const e of electrons) {
+        ctx.fillStyle = '#3498db';
+        ctx.globalAlpha = Math.max(0, e.life / e.maxLife);
+        ctx.beginPath(); ctx.arc(e.x, e.y, 3, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+}
+
+function drawStatus() {
+    const emit = canEmit();
+    const statusX = W * 0.5, statusY = H * 0.08;
+    ctx.font = 'bold 16px "PingFang SC"'; ctx.textAlign = 'center';
+    if (lightOn) {
+        ctx.fillStyle = emit ? '#27ae60' : '#e74c3c';
+        ctx.fillText(emit ? '✅ 有光电子逸出' : '❌ 频率不足，无法逸出', statusX, statusY);
+        if (emit) {
+            ctx.fillStyle = '#4A90E2'; ctx.font = '12px "PingFang SC"';
+            ctx.fillText('瞬时性：光照瞬间即产生光电子（< 10⁻⁹s）', statusX, statusY + 20);
+        }
+    } else {
+        ctx.fillStyle = '#8B9DC3';
+        ctx.fillText('点击「开灯」照射金属', statusX, statusY);
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fafcff';
+    ctx.fillRect(0, 0, W, H);
+    drawDevice();
+    drawLightBeam();
+    drawElectrons();
+    drawStatus();
+}
+
+// ============ 更新 ============
+function update() {
+    timer++;
+    if (lightOn) {
+        const mx = W * 0.38 + 18;
+        const my = H * 0.2, mh = H * 0.6;
+
+        // 光子粒子
+        if (timer % Math.max(2, Math.floor(20 - intensity / 6)) === 0) {
+            const y = my + mh * 0.15 + Math.random() * mh * 0.7;
+            photonBeams.push({ x: 30, y, vx: 4 });
+        }
+        for (let i = photonBeams.length - 1; i >= 0; i--) {
+            photonBeams[i].x += photonBeams[i].vx;
+            if (photonBeams[i].x >= mx - 5) {
+                // 打到金属板
+                if (canEmit()) {
+                    const ek = getEk();
+                    const speed = 1.5 + ek * 0.8;
+                    electrons.push({
+                        x: mx + 2, y: photonBeams[i].y,
+                        vx: speed * (0.5 + Math.random() * 0.5),
+                        vy: (Math.random() - 0.5) * 1.5,
+                        life: 80 + Math.random() * 40,
+                        maxLife: 120
+                    });
+                }
+                photonBeams.splice(i, 1);
+            }
+        }
+
+        // 电子运动
+        for (let i = electrons.length - 1; i >= 0; i--) {
+            electrons[i].x += electrons[i].vx;
+            electrons[i].y += electrons[i].vy;
+            electrons[i].life--;
+            if (electrons[i].life <= 0 || electrons[i].x > W) electrons.splice(i, 1);
+        }
+    }
+}
+
+function updatePanel() {
+    const photonE = h_c * freq * 1e14 / eV;
+    const ek = getEk();
+    const f0 = workFunc * eV / h_c / 1e14;
+    const u0 = ek;
+
+    document.getElementById('pHf').textContent = photonE.toFixed(3) + ' eV';
+    document.getElementById('pW').textContent = workFunc.toFixed(2) + ' eV';
+
+    const ekEl = document.getElementById('pEk');
+    ekEl.textContent = ek > 0 ? ek.toFixed(3) + ' eV' : '0（无法逸出）';
+    ekEl.className = 'param-value ' + (ek > 0 ? 'green' : 'red');
+
+    document.getElementById('pF0').textContent = f0.toFixed(2) + ' ×10¹⁴Hz';
+    document.getElementById('pU0').textContent = ek > 0 ? u0.toFixed(3) + ' V' : '—';
+
+    const stateEl = document.getElementById('pState');
+    if (!lightOn) { stateEl.textContent = '未照射'; stateEl.className = 'param-value'; }
+    else if (canEmit()) { stateEl.textContent = '光电子逸出'; stateEl.className = 'param-value green'; }
+    else { stateEl.textContent = '频率不足'; stateEl.className = 'param-value red'; }
+}
+
+function animate() {
+    update();
+    draw();
+    requestAnimationFrame(animate);
+}
+animate();
+updatePanel();
+
+// ============ UI ============
+document.getElementById('sFreq').addEventListener('input', e => {
+    freq = +e.target.value;
+    document.getElementById('vFreq').textContent = freq.toFixed(1) + ' ×10¹⁴Hz';
+    updatePanel();
+});
+document.getElementById('sInt').addEventListener('input', e => {
+    intensity = +e.target.value;
+    document.getElementById('vInt').textContent = intensity + '%';
+});
+document.querySelectorAll('.metal-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.metal-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        workFunc = +btn.dataset.w;
+        metalName = btn.dataset.name;
+        updatePanel();
+    });
+});
+document.getElementById('btnLight').addEventListener('click', function() {
+    lightOn = !lightOn;
+    this.textContent = lightOn ? '🔦 关灯' : '💡 开灯';
+    if (!lightOn) { electrons = []; photonBeams = []; }
+    updatePanel();
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+    lightOn = false; electrons = []; photonBeams = [];
+    document.getElementById('btnLight').textContent = '💡 开灯';
+    freq = 6; intensity = 50; workFunc = 2.29; metalName = '钠 Na';
+    document.getElementById('sFreq').value = 6;
+    document.getElementById('sInt').value = 50;
+    document.getElementById('vFreq').textContent = '6.0 ×10¹⁴Hz';
+    document.getElementById('vInt').textContent = '50%';
+    document.querySelectorAll('.metal-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.metal-btn').classList.add('active');
+    updatePanel();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>道尔顿板 · 连续模式</title>
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .canvas-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 4px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+            background: #f0f4f8;
+        }
+        .ctrl-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d0dae8;
+            border-radius: 10px;
+            padding: 6px 12px;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            flex-wrap: wrap;
+            gap: 4px 6px;
+            justify-content: center;
+        }
+        .ctrl-bar>* {
+            margin-left: 6px;
+        }
+        .ctrl-bar>*:first-child {
+            margin-left: 0;
+        }
+        .cbtn {
+            background: #ffffff;
+            color: #5a7a9a;
+            border: 1.5px solid #d0dae8;
+            border-radius: 7px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cbtn:hover {
+            border-color: #2979ff;
+            color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.15);
+        }
+        .cbtn.active {
+            background: #2979ff;
+            color: #ffffff;
+            border-color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.3);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            z-index: 20;
+            position: absolute;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 260px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 300px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-label {
+            font-size: .72rem;
+            color: var(--text-light);
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .param-item {
+            margin-bottom: 10px;
+        }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .param-name {
+            font-size: .85rem;
+            color: var(--text-primary);
+        }
+        .param-value {
+            font-size: .85rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .stat-box {
+            background: var(--primary-light);
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-top: 10px;
+        }
+        .stat-line {
+            display: flex;
+            justify-content: space-between;
+            font-size: .78rem;
+            margin-bottom: 4px;
+            color: var(--text-secondary);
+        }
+        .stat-line .val {
+            font-weight: 700;
+            color: var(--primary-dark);
+            font-family: 'Courier New', monospace;
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: var(--primary-color);
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            transition: all .3s;
+            z-index: 30;
+            font-size: .82rem;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 180px;
+                padding: 10px 12px;
+            }
+            .controls-panel {
+                width: 220px;
+                padding: 10px 12px;
+                top: 12px;
+                right: 12px;
+            }
+            .back-btn {
+                bottom: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+            .ctrl-bar {
+                padding: 4px 8px;
+                bottom: 8px;
+                gap: 2px 4px;
+            }
+            .cbtn {
+                font-size: 12px;
+                padding: 4px 7px;
+            }
+        }
+        @media (max-width: 600px) {
+            .info-panel {
+                max-width: 140px;
+                padding: 6px 8px;
+                top: 8px;
+                left: 8px;
+            }
+            .info-panel h1 {
+                font-size: 0.85rem;
+            }
+            .formula-box {
+                font-size: 0.7rem;
+                padding: 4px 8px;
+            }
+            .info-text {
+                font-size: 0.65rem;
+            }
+            .controls-panel {
+                width: 160px;
+                padding: 6px 8px;
+                top: 8px;
+                right: 8px;
+            }
+            .controls-panel h3 {
+                font-size: 0.8rem;
+                margin-bottom: 6px;
+            }
+            .param-name,
+            .param-value {
+                font-size: 0.7rem;
+            }
+            .stat-line {
+                font-size: 0.65rem;
+            }
+            .back-btn {
+                font-size: 0.6rem;
+                padding: 4px 10px;
+                bottom: 6px;
+                right: 6px;
+            }
+            .ctrl-bar {
+                padding: 3px 6px;
+                bottom: 4px;
+            }
+            .cbtn {
+                font-size: 10px;
+                padding: 3px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div class="canvas-section">
+            <div class="canvas-wrap" id="cvWrap">
+                <canvas id="simCanvas"></canvas>
+            </div>
+            <div class="ctrl-bar">
+                <button class="cbtn" id="btnStart" onclick="toggleStart()">▶ 开始</button>
+                <button class="cbtn" onclick="resetAll()">↻ 重置</button>
+                <span style="width:1px;height:18px;background:#d0dae8;margin:0 4px"></span>
+                <button class="cbtn" data-spd="0.5" onclick="setSpd(0.5)">½×</button>
+                <button class="cbtn active" data-spd="1" onclick="setSpd(1)">1×</button>
+                <button class="cbtn" data-spd="2" onclick="setSpd(2)">2×</button>
+                <button class="cbtn" data-spd="5" onclick="setSpd(5)">5×</button>
+            </div>
+        </div>
+
+        <div class="info-panel glass-panel">
+            <h1>🔽 道尔顿板</h1>
+            <div class="formula-box">
+                P(x) = (1/σ√(2π)) · e<sup>−(x−μ)²/(2σ²)</sup>
+            </div>
+            <p class="info-text">每排钉子数量相同（<span id="hintPinsPerRow">11</span> 个），奇数行与偶数行错开。连续投放，钉子靠边均匀分布，碰撞更充分。</p>
+        </div>
+
+        <div class="controls-panel glass-panel">
+            <h3>🔧 参数调节</h3>
+
+            <div class="section-label">钉子层数</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">层数</span><span class="param-value" id="valLayers">8 层</span></div>
+                <input type="range" id="slLayers" min="4" max="14" value="8" oninput="updateParams()">
+            </div>
+
+            <div class="section-label">小球数量</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">总数</span><span class="param-value" id="valBalls">500 个</span></div>
+                <input type="range" id="slBalls" min="100" max="2000" step="100" value="500" oninput="updateParams()">
+            </div>
+
+            <div class="section-label">统计信息</div>
+            <div class="stat-box">
+                <div class="stat-line"><span>已投放</span><span class="val" id="statDropped">0</span></div>
+                <div class="stat-line"><span>已落地</span><span class="val" id="statLanded">0</span></div>
+                <div class="stat-line"><span>平均位置</span><span class="val" id="statMean">--</span></div>
+                <div class="stat-line"><span>标准差</span><span class="val" id="statStd">--</span></div>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <script>
+        // ============================================================
+        //  道尔顿板 · 纯连续模式 · 每排钉子 +1 · 靠边均匀分布
+        //  核心改动：
+        //    1. MARGIN_X = 6（从 28 大幅减小，让钉子几乎贴边）
+        //    2. 钉子分布从居中改为均匀分布（从 MARGIN_X 到 W-MARGIN_X）
+        //    3. 所有相关计算（槽位、墙壁）同步适配
+        // ============================================================
+
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const cvWrap = document.getElementById('cvWrap');
+        let W, H;
+
+        const params = {
+            layers: 8,
+            totalBalls: 500,
+            speed: 1
+        };
+
+        let balls = [];
+        let bins = [];
+        let dropped = 0;
+        let landed = 0;
+        let running = false;
+        let animId = null;
+        let lastTs = 0;
+        let dropTimer = 0;
+        let pins = [];
+
+        const G = 0.15;
+        const DAMPING = 0.70;
+        const BALL_R = 4.5;
+        const PIN_R = 5.0;
+        const SLOT_H = 50;
+        // ★ 核心改动：边距从 28 减小到 6，钉子几乎贴边
+        const MARGIN_X = 6;
+        const WALL_PAD = 2;
+
+        // ---------- 尺寸 ----------
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const cw = cvWrap.clientWidth || window.innerWidth - 8;
+            const ch = cvWrap.clientHeight || Math.round(cw * 0.5);
+            const RATIO = 0.75;
+            let w, h;
+            if (cw / ch > RATIO) {
+                h = Math.max(ch, 300);
+                w = Math.round(h * RATIO);
+            } else {
+                w = cw;
+                h = Math.max(Math.round(w / RATIO), 300);
+            }
+            w = Math.round(w * 0.94);
+            h = Math.round(h * 0.94);
+            W = Math.max(w, 400);
+            H = Math.max(h, 300);
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            buildPins();
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        // ---------- 钉子布局：靠边均匀分布 ----------
+        function buildPins() {
+            pins = [];
+            const layers = params.layers;
+            const marginX = MARGIN_X;
+            const marginY = 160;
+            const availableW = W - marginX * 2;
+            const availableH = H - marginY * 2 - 80;
+            const spacingY = availableH / (layers + 1);
+
+            // 每排增加一个钉子：layers+3
+            const pinsPerRow = layers + 3;
+            document.getElementById('hintPinsPerRow').textContent = pinsPerRow;
+
+            // ★ 关键改动：均匀分布，从 marginX 到 W-marginX
+            const spacingX = (W - marginX * 2) / (pinsPerRow - 1);
+            const startX = marginX;
+
+            for (let row = 0; row < layers; row++) {
+                const offset = (row % 2 === 0) ? 0 : spacingX / 2;
+                for (let col = 0; col < pinsPerRow; col++) {
+                    pins.push({
+                        x: startX + col * spacingX + offset,
+                        y: marginY + row * spacingY,
+                        r: PIN_R
+                    });
+                }
+            }
+        }
+
+        // ---------- 参数更新 ----------
+        function updateParams() {
+            const newLayers = parseInt(document.getElementById('slLayers').value, 10);
+            const newTotal = parseInt(document.getElementById('slBalls').value, 10);
+
+            if (newLayers !== params.layers) {
+                params.layers = newLayers;
+                params.totalBalls = newTotal;
+                resetAll();
+                buildPins();
+                document.getElementById('valLayers').textContent = params.layers + ' 层';
+                document.getElementById('valBalls').textContent = params.totalBalls + ' 个';
+                updateStats();
+                draw();
+                return;
+            }
+
+            if (newTotal !== params.totalBalls) {
+                params.totalBalls = newTotal;
+                document.getElementById('valLayers').textContent = params.layers + ' 层';
+                document.getElementById('valBalls').textContent = params.totalBalls + ' 个';
+                if (dropped > params.totalBalls) {
+                    while (balls.length > 0 && dropped > params.totalBalls) {
+                        const b = balls.pop();
+                        if (b.landed) {
+                            landed--;
+                            if (b.bin >= 0 && b.bin < bins.length) {
+                                bins[b.bin] = Math.max(0, (bins[b.bin] || 0) - 1);
+                            }
+                        }
+                        dropped--;
+                    }
+                    updateStats();
+                    draw();
+                }
+                return;
+            }
+
+            document.getElementById('valLayers').textContent = params.layers + ' 层';
+            document.getElementById('valBalls').textContent = params.totalBalls + ' 个';
+        }
+
+        // ---------- 速度 ----------
+        function setSpd(s) {
+            params.speed = s;
+            document.querySelectorAll('.ctrl-bar .cbtn[data-spd]').forEach(b => {
+                const v = parseFloat(b.dataset.spd);
+                b.classList.toggle('active', Math.abs(v - s) < 0.001);
+            });
+        }
+
+        // ---------- 开始 / 暂停 ----------
+        function toggleStart() {
+            if (!running && dropped >= params.totalBalls && balls.every(b => b.landed)) {
+                return;
+            }
+            running = !running;
+            const btn = document.getElementById('btnStart');
+            btn.textContent = running ? '⏸ 暂停' : '▶ 开始';
+            btn.classList.toggle('active', running);
+            if (running && !animId) {
+                lastTs = performance.now();
+                animId = requestAnimationFrame(loop);
+            }
+        }
+
+        // ---------- 重置 ----------
+        function resetAll() {
+            running = false;
+            if (animId) {
+                cancelAnimationFrame(animId);
+                animId = null;
+            }
+            balls = [];
+            bins = new Array(params.layers + 3).fill(0);
+            dropped = 0;
+            landed = 0;
+            dropTimer = 0;
+            const btn = document.getElementById('btnStart');
+            btn.textContent = '▶ 开始';
+            btn.classList.remove('active');
+            buildPins();
+            updateStats();
+            draw();
+        }
+
+        // ---------- 投放球（连续） ----------
+        function dropBall() {
+            if (dropped >= params.totalBalls) return;
+            const spread = 4;
+            balls.push({
+                x: W / 2 + (Math.random() - 0.5) * spread,
+                y: 28,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: 0.2,
+                landed: false,
+                bin: -1
+            });
+            dropped++;
+        }
+
+        // ---------- 物理更新 ----------
+        function updateBalls() {
+            const dt = params.speed;
+            const marginX = MARGIN_X;
+            const marginY = 110;
+            // ★ 墙壁边界使用新的 MARGIN_X 和 WALL_PAD
+            const leftWall = marginX - WALL_PAD + BALL_R;
+            const rightWall = W - marginX + WALL_PAD - BALL_R;
+            const floorY = H - 55;
+
+            for (const b of balls) {
+                if (b.landed) continue;
+
+                b.vy += G * dt;
+                b.x += b.vx * dt;
+                b.y += b.vy * dt;
+
+                for (const p of pins) {
+                    const dx = b.x - p.x;
+                    const dy = b.y - p.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    const minDist = BALL_R + PIN_R + 0.3;
+
+                    if (dist < minDist && dist > 0.0001 && b.y < p.y + PIN_R + BALL_R + 2) {
+                        const nx = dx / dist;
+                        const ny = dy / dist;
+                        const overlap = minDist - dist;
+                        b.x += nx * overlap;
+                        b.y += ny * overlap;
+
+                        const vn = b.vx * nx + b.vy * ny;
+                        if (vn < 0) {
+                            b.vx -= 2 * vn * nx;
+                            b.vy -= 2 * vn * ny;
+                            b.vx *= DAMPING;
+                            b.vy *= DAMPING;
+                            b.vx += (Math.random() - 0.5) * 2.0;
+                            b.vy += (Math.random() - 0.5) * 0.5;
+                            const spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy);
+                            if (spd > 8) {
+                                b.vx = (b.vx / spd) * 8;
+                                b.vy = (b.vy / spd) * 8;
+                            }
+                        }
+                    }
+                }
+
+                if (b.x < leftWall) { b.x = leftWall;
+                    b.vx = Math.abs(b.vx) * 0.5; }
+                if (b.x > rightWall) { b.x = rightWall;
+                    b.vx = -Math.abs(b.vx) * 0.5; }
+                if (b.y < 10) { b.y = 10;
+                    b.vy = Math.abs(b.vy) * 0.5; }
+
+                if (b.y > floorY - BALL_R) {
+                    const layers = params.layers;
+                    const pinsPerRow = layers + 3;
+                    // ★ 槽位计算与钉子布局一致：均匀分布
+                    const spacingX = (W - MARGIN_X * 2) / (pinsPerRow - 1);
+                    const startX = MARGIN_X;
+                    const binIdx = Math.round((b.x - startX) / spacingX);
+                    const clamped = Math.max(0, Math.min(layers + 2, binIdx));
+
+                    if (bins.length !== layers + 3) {
+                        bins = new Array(layers + 3).fill(0);
+                        let cnt = 0;
+                        for (const bb of balls) {
+                            if (bb.landed && bb.bin >= 0 && bb.bin < bins.length) {
+                                bins[bb.bin] = (bins[bb.bin] || 0) + 1;
+                                cnt++;
+                            }
+                        }
+                        landed = cnt;
+                    }
+
+                    const countInBin = bins[clamped] || 0;
+                    const binX = startX + clamped * spacingX;
+                    const stackGap = BALL_R * 1.7;
+                    const maxVisible = Math.floor((SLOT_H - BALL_R * 1.5) / stackGap);
+                    const stackPos = Math.min(countInBin, maxVisible);
+
+                    b.x = binX;
+                    b.y = floorY + SLOT_H - BALL_R - stackPos * stackGap;
+                    b.vy = 0;
+                    b.vx = 0;
+                    b.landed = true;
+                    b.bin = clamped;
+                    bins[clamped] = (bins[clamped] || 0) + 1;
+                    landed++;
+
+                    if (countInBin > maxVisible) {
+                        const extra = countInBin - maxVisible;
+                        b.y -= extra * 0.3;
+                        if (b.y < floorY + 2) b.y = floorY + 2;
+                    }
+                }
+            }
+
+            balls = balls.filter(b => {
+                if (b.landed) return true;
+                if (b.y > H + 50 || b.x < -50 || b.x > W + 50) {
+                    if (!b.landed) landed++;
+                    return false;
+                }
+                return true;
+            });
+        }
+
+        // ---------- 统计 ----------
+        function updateStats() {
+            document.getElementById('statDropped').textContent = dropped;
+            document.getElementById('statLanded').textContent = landed;
+            if (landed > 0) {
+                let sum = 0,
+                    sumSq = 0;
+                for (let i = 0; i < bins.length; i++) {
+                    const c = bins[i] || 0;
+                    if (c) {
+                        sum += i * c;
+                        sumSq += i * i * c;
+                    }
+                }
+                const mean = sum / landed;
+                const variance = Math.max(0, sumSq / landed - mean * mean);
+                const std = Math.sqrt(variance);
+                document.getElementById('statMean').textContent = mean.toFixed(2);
+                document.getElementById('statStd').textContent = std.toFixed(2);
+            } else {
+                document.getElementById('statMean').textContent = '--';
+                document.getElementById('statStd').textContent = '--';
+            }
+        }
+
+        // ---------- 绘图辅助 ----------
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // ---------- 主绘制 ----------
+        function draw() {
+            const W2 = W,
+                H2 = H;
+            ctx.clearRect(0, 0, W2, H2);
+
+            const layers = params.layers;
+            const marginX = MARGIN_X;
+            const marginY = 110;
+            const pinsPerRow = layers + 3;
+            // ★ 绘制时使用与 buildPins 相同的均匀分布
+            const spacingX = (W2 - marginX * 2) / (pinsPerRow - 1);
+            const startX = marginX;
+            const slotY = H2 - 55;
+            const numBins = layers + 3;
+
+            // 底板
+            ctx.shadowColor = 'rgba(0,0,0,0.12)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetX = 3;
+            ctx.shadowOffsetY = 3;
+            ctx.fillStyle = '#8a9199';
+            roundRect(ctx, marginX - 8, marginY - 25, W2 - marginX * 2 + 16, slotY - marginY + 30 + 50, 8);
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+
+            const faceGrad = ctx.createLinearGradient(marginX, marginY, marginX, slotY);
+            faceGrad.addColorStop(0, '#f5f7fa');
+            faceGrad.addColorStop(0.5, '#e8ecf1');
+            faceGrad.addColorStop(1, '#dce2e8');
+            ctx.fillStyle = faceGrad;
+            roundRect(ctx, marginX - 4, marginY - 20, W2 - marginX * 2 + 8, slotY - marginY + 25, 5);
+
+            // 漏斗
+            const funnelTopY = marginY - 45;
+            const funnelBottomY = marginY - 20;
+            const funnelCenterX = W2 / 2;
+            const funnelTopW = 40;
+            const funnelBottomW = 20;
+
+            const funnelGrad = ctx.createLinearGradient(funnelCenterX - 30, funnelTopY, funnelCenterX + 30, funnelTopY);
+            funnelGrad.addColorStop(0, '#a0a8b0');
+            funnelGrad.addColorStop(0.5, '#c0c8d0');
+            funnelGrad.addColorStop(1, '#a0a8b0');
+            ctx.fillStyle = funnelGrad;
+            ctx.beginPath();
+            ctx.moveTo(funnelCenterX - funnelTopW / 2, funnelTopY);
+            ctx.lineTo(funnelCenterX + funnelTopW / 2, funnelTopY);
+            ctx.lineTo(funnelCenterX + funnelBottomW / 2, funnelBottomY);
+            ctx.lineTo(funnelCenterX - funnelBottomW / 2, funnelBottomY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#d0d8e0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(funnelCenterX - funnelTopW / 2, funnelTopY);
+            ctx.lineTo(funnelCenterX + funnelTopW / 2, funnelTopY);
+            ctx.stroke();
+
+            ctx.fillStyle = '#333';
+            ctx.beginPath();
+            ctx.arc(funnelCenterX, funnelBottomY, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 钉子（更粗）
+            for (const p of pins) {
+                ctx.fillStyle = 'rgba(0,0,0,0.18)';
+                ctx.beginPath();
+                ctx.arc(p.x + 1, p.y + 1, p.r + 0.5, 0, Math.PI * 2);
+                ctx.fill();
+                const pinGrad = ctx.createRadialGradient(p.x - 1, p.y - 1, 0, p.x, p.y, p.r);
+                pinGrad.addColorStop(0, '#e0e4e8');
+                pinGrad.addColorStop(0.6, '#a0a8b0');
+                pinGrad.addColorStop(1, '#707880');
+                ctx.fillStyle = pinGrad;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.6)';
+                ctx.beginPath();
+                ctx.arc(p.x - 1, p.y - 1, p.r * 0.35, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // ★ 槽分隔线（与钉子列对齐）
+            for (let i = 0; i < numBins; i++) {
+                const x = startX + i * spacingX - spacingX / 2;
+                ctx.strokeStyle = '#a0a8b0';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(x, slotY);
+                ctx.lineTo(x, slotY + 50);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, slotY + 50);
+                ctx.lineTo(x + spacingX, slotY + 50);
+                ctx.stroke();
+            }
+            const lastX = startX + numBins * spacingX - spacingX / 2;
+            ctx.strokeStyle = '#a0a8b0';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(lastX, slotY);
+            ctx.lineTo(lastX, slotY + 50);
+            ctx.stroke();
+
+            // ---- 贝尔曲线（保留） ----
+            if (landed > 5) {
+                let sum = 0,
+                    sumSq = 0;
+                for (let i = 0; i < bins.length; i++) {
+                    const c = bins[i] || 0;
+                    if (c) {
+                        sum += i * c;
+                        sumSq += i * i * c;
+                    }
+                }
+                const mean = sum / landed;
+                const variance = Math.max(0.05, sumSq / landed - mean * mean);
+                const std = Math.sqrt(variance);
+                const maxCountVal = Math.max(1, ...bins.map(v => v || 0));
+
+                ctx.strokeStyle = 'rgba(231, 76, 60, 0.7)';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                let first = true;
+                for (let i = 0; i < numBins; i++) {
+                    const x = startX + i * spacingX;
+                    const dx = (i - mean) / std;
+                    const yNorm = Math.exp(-dx * dx / 2) / (std * Math.sqrt(2 * Math.PI));
+                    const barH = yNorm * maxCountVal * 0.65 * spacingX;
+                    const y = slotY + 50 - barH;
+                    if (first) { ctx.moveTo(x, y);
+                        first = false; } else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(231, 76, 60, 0.08)';
+                ctx.lineTo(startX + (numBins - 1) * spacingX, slotY + 50);
+                ctx.lineTo(startX, slotY + 50);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // ---- 球 ----
+            for (const b of balls) {
+                const bx = b.x,
+                    by = b.y;
+                if (!b.landed) {
+                    ctx.fillStyle = 'rgba(0,0,0,0.12)';
+                    ctx.beginPath();
+                    ctx.arc(bx + 1, by + 1, BALL_R + 0.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    const ballGrad = ctx.createRadialGradient(bx - 1.5, by - 1.5, 0, bx, by, BALL_R);
+                    ballGrad.addColorStop(0, '#ff6b6b');
+                    ballGrad.addColorStop(0.5, '#e74c3c');
+                    ballGrad.addColorStop(1, '#c0392b');
+                    ctx.fillStyle = ballGrad;
+                    ctx.beginPath();
+                    ctx.arc(bx, by, BALL_R, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+                    ctx.beginPath();
+                    ctx.arc(bx - 1, by - 1, BALL_R * 0.3, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    const ballGrad = ctx.createRadialGradient(bx - 1, by - 1, 0, bx, by, BALL_R);
+                    ballGrad.addColorStop(0, '#e74c3c');
+                    ballGrad.addColorStop(1, '#c0392b');
+                    ctx.fillStyle = ballGrad;
+                    ctx.beginPath();
+                    ctx.arc(bx, by, BALL_R, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+                    ctx.beginPath();
+                    ctx.arc(bx - 1, by - 1, BALL_R * 0.25, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.fillStyle = '#7a828a';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('道尔顿板 · 连续投放', W2 / 2, marginY - 55);
+        }
+
+        // ---------- 动画循环 ----------
+        function loop(ts) {
+            if (!running) {
+                animId = null;
+                return;
+            }
+            const dt = Math.min((ts - lastTs) / 16, 3);
+            lastTs = ts;
+
+            dropTimer += dt;
+            const interval = 1.8;
+            if (dropTimer >= interval) {
+                dropTimer = 0;
+                dropBall();
+            }
+
+            updateBalls();
+            updateStats();
+            draw();
+
+            const allDone = dropped >= params.totalBalls && balls.every(b => b.landed);
+            if (!allDone) {
+                animId = requestAnimationFrame(loop);
+            } else {
+                running = false;
+                document.getElementById('btnStart').textContent = '▶ 开始';
+                document.getElementById('btnStart').classList.remove('active');
+                animId = null;
+                updateStats();
+                draw();
+            }
+        }
+
+        // ---------- 初始化 ----------
+        function init() {
+            resizeCanvas();
+            resetAll();
+            setSpd(1);
+        }
+
+        window.addEventListener('resize', () => {
+            if (!running) {
+                buildPins();
+                draw();
+            }
+        });
+
+        init();
+    </script>
+    </body>
+</html>    

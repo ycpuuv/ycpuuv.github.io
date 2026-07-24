@@ -1,0 +1,961 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>人造卫星轨道演示 · 高中物理 - PhySenLab</title>
+    <style>
+        /* ===== 样式变量 ===== */
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --bg-color: #F8FBFF;
+            --card-bg: #FFFFFF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.2);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 3D画布容器 */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 通用毛玻璃卡片 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 22px;
+            color: var(--text-primary);
+            transition: var(--transition);
+            z-index: 10;
+        }
+
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* 左上信息卡片 */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            max-width: 280px;
+            z-index: 20;
+        }
+
+        .info-panel h1 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-dark);
+        }
+
+        .formula-box {
+            background: var(--primary-light);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+        }
+
+        .formula {
+            font-size: 1rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+
+        .info-text {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* 左侧物理参数面板 */
+        .physics-panel {
+            position: absolute;
+            top: 260px;
+            left: 20px;
+            width: 260px;
+            z-index: 20;
+        }
+
+        .physics-panel h3 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+        }
+
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .param-value {
+            font-family: 'Consolas', monospace;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        /* 右侧控制面板 */
+        .controls-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            z-index: 20;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .controls-panel h3 {
+            font-size: 1.1rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+        }
+
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            min-width: 90px;
+            padding: 8px 10px;
+            border: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(255,255,255,0.6);
+            color: var(--text-secondary);
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 4px 12px rgba(74,144,226,0.3);
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+        }
+
+        .value-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+
+        /* 卫星类型标签 */
+        .sat-type-badge {
+            text-align: center;
+            margin-bottom: 16px;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            border: 2px solid;
+        }
+
+        /* 图例面板 - 右下角 */
+        .legend-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 20;
+            font-size: 0.75rem;
+            width: 150px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            color: var(--text-secondary);
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .legend-color.earth { background: #2a6f8f; border-radius: 50%; }
+        .legend-color.geo-orbit { background: #44aaff; width: 18px; height: 3px; }
+        .legend-color.inclined-orbit { background: #ffaa88; width: 18px; height: 3px; }
+        .legend-color.satellite { background: #ffaa44; border-radius: 50%; }
+        .legend-color.marker { background: #ffaa66; border-radius: 50%; width: 8px; height: 8px; }
+
+        /* 底部按钮栏 */
+        .bottom-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 30;
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 10px 24px;
+            border-radius: 60px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(74,144,226,0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* 返回按钮 */
+        .back-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 20px;
+            background: white;
+            color: var(--primary-color);
+            padding: 8px 18px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            z-index: 30;
+            font-size: 0.85rem;
+        }
+
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 100px;
+            left: 20px;
+            color: var(--text-light);
+            font-size: 0.7rem;
+            background: rgba(255,255,255,0.6);
+            padding: 4px 12px;
+            border-radius: 20px;
+            z-index: 20;
+        }
+
+        @media (max-width: 1000px) {
+            .controls-panel { width: 280px; }
+            .physics-panel { width: 240px; top: 240px; }
+            .legend-panel { width: 130px; }
+            .info-panel { max-width: 240px; }
+            .mode-btn { min-width: 70px; font-size: 0.7rem; padding: 6px 8px; }
+        }
+    </style>
+    <!-- 引入Three.js核心库和扩展 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="simulation-container">
+        <!-- Three.js 画布容器 -->
+        <div id="canvas-container"></div>
+
+        <!-- 左上信息卡片 -->
+        <div class="info-panel glass-panel">
+            <h1>🛰️ 人造卫星轨道演示</h1>
+            <div class="formula-box">
+                <div class="formula">GMm/r² = m·v²/r</div>
+            </div>
+            <p class="info-text">
+                不同轨道高度和倾角决定卫星运动特性。近地卫星周期短，极地卫星覆盖全球，静止卫星定点于赤道上空。
+            </p>
+        </div>
+
+        <!-- 左侧物理参数面板 -->
+        <div class="physics-panel glass-panel">
+            <h3>📊 轨道物理参数</h3>
+            <div class="param-row">
+                <span>线速度 v :</span>
+                <span id="speedValue" class="param-value">--- km/s</span>
+            </div>
+            <div class="param-row">
+                <span>角速度 ω :</span>
+                <span id="omegaValue" class="param-value">--- rad/s</span>
+            </div>
+            <div class="param-row">
+                <span>周期 T :</span>
+                <span id="periodValue" class="param-value">--- h</span>
+            </div>
+            <div class="param-row">
+                <span>向心加速度 a :</span>
+                <span id="accValue" class="param-value">--- m/s²</span>
+            </div>
+        </div>
+
+        <!-- 右侧控制面板 -->
+        <div class="controls-panel glass-panel">
+            <h3>🔧 卫星类型与参数</h3>
+
+            <!-- 动态卫星类型标签 -->
+            <div class="sat-type-badge" id="satTypeBadge">🛰️ 地球静止卫星</div>
+
+            <div class="btn-group" id="satTypeGroup">
+                <button class="mode-btn active" data-type="geo">🛰️ 静止卫星</button>
+                <button class="mode-btn" data-type="inclined">🔄 倾斜同步</button>
+                <button class="mode-btn" data-type="leo">🚀 近地卫星</button>
+                <button class="mode-btn" data-type="polar">🧭 极地卫星</button>
+                <button class="mode-btn" data-type="equatorial">🌍 赤道卫星</button>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>📐 轨道倾角</span>
+                    <span id="inclinationVal" class="value-badge">0°</span>
+                </div>
+                <input type="range" id="inclinationSlider" min="0" max="90" step="1" value="0">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>🌍 轨道半径 (R<sub>地</sub>)</span>
+                    <span id="orbitVal" class="value-badge">6.6</span>
+                </div>
+                <input type="range" id="orbitSlider" min="1.0" max="8.0" step="0.05" value="6.6">
+            </div>
+        </div>
+
+        <!-- 右下角图例 -->
+        <div class="legend-panel">
+            <div style="font-weight: 600; margin-bottom: 8px;">📖 图例</div>
+            <div class="legend-item"><div class="legend-color earth"></div> 地球</div>
+            <div class="legend-item"><div class="legend-color geo-orbit"></div> 赤道/静止轨道</div>
+            <div class="legend-item"><div class="legend-color inclined-orbit"></div> 倾斜/极地轨道</div>
+            <div class="legend-item"><div class="legend-color satellite"></div> 卫星</div>
+            <div class="legend-item"><div class="legend-color marker"></div> 赤道参考点</div>
+        </div>
+
+        <!-- 底部按钮栏 -->
+        <div class="bottom-bar">
+            <button class="btn btn-primary" id="resetViewBtn">🎥 重置视角</button>
+            <button class="btn btn-secondary" id="toggleOrbitBtn">🔘 隐藏辅助球</button>
+        </div>
+
+        <!-- 返回按钮 -->
+        
+        <div class="hint-text">🖱️ 鼠标拖拽旋转 | 滚轮缩放 | 轨道半径以地球半径Rₑ为单位 (1Rₑ = 6371km)</div>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // ================= 物理常数 =================
+        const R_EARTH = 6371e3;              // 地球半径 (米)
+        const GM = 3.986004418e14;           // 地球引力常数 (m³/s²)
+
+        // ================= 卫星预设（快捷按钮用） =================
+        const SATELLITE_PRESETS = {
+            geo:        { inclination: 0,  defaultRadius: 6.6  },
+            inclined:   { inclination: 45, defaultRadius: 6.6  },
+            leo:        { inclination: 0,  defaultRadius: 1.05 },
+            polar:      { inclination: 90, defaultRadius: 1.2  },
+            equatorial: { inclination: 0,  defaultRadius: 1.5  }
+        };
+
+        // ================= 动态卫星类型判断 =================
+        function getSatelliteTypeName(radius, inclinationDeg) {
+            const isSync = Math.abs(radius - 6.6) < 0.01;  // 同步轨道 ≈ 6.6R
+            const isEquatorial = (inclinationDeg === 0);
+            const isPolar = (inclinationDeg === 90);
+
+            if (isSync && isEquatorial) return { name: '地球静止卫星', color: '#ff8844' };
+            if (isSync && isPolar)      return { name: '同步极地卫星', color: '#ff6688' };
+            if (isSync)                 return { name: '同步卫星',     color: '#88aaff' };
+            if (isEquatorial)           return { name: '赤道卫星',     color: '#44aaff' };
+            if (isPolar)                return { name: '极地卫星',     color: '#ffaa99' };
+            return                             { name: '普通卫星',     color: '#66cc99' };
+        }
+
+        // ================= 场景初始化 =================
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050b1a);
+        scene.fog = new THREE.FogExp2(0x050b1a, 0.0008);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+        camera.position.set(12, 6, 14);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // CSS2渲染文字标签
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        document.body.appendChild(labelRenderer.domElement);
+
+        // 控制器
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.zoomSpeed = 1.2;
+        controls.rotateSpeed = 0.8;
+        controls.target.set(0, 0, 0);
+
+        // 灯光
+        const ambientLight = new THREE.AmbientLight(0x404060);
+        scene.add(ambientLight);
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        dirLight.position.set(5, 10, 7);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        const backLight = new THREE.DirectionalLight(0x88aaff, 0.5);
+        backLight.position.set(-3, -1, -4);
+        scene.add(backLight);
+        const fillLight = new THREE.PointLight(0xcc9966, 0.3);
+        fillLight.position.set(0, -3, 0);
+        scene.add(fillLight);
+
+        // 星空粒子
+        const starGeometry = new THREE.BufferGeometry();
+        const starCount = 2500;
+        const starPositions = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount; i++) {
+            starPositions[i*3] = (Math.random() - 0.5) * 400;
+            starPositions[i*3+1] = (Math.random() - 0.5) * 200;
+            starPositions[i*3+2] = (Math.random() - 0.5) * 150 - 80;
+        }
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0xffffff, size: 0.2, transparent: true, opacity: 0.6 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
+
+        // 飘浮粒子装饰
+        const particleCount = 800;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            particlePositions[i*3] = (Math.random() - 0.5) * 50;
+            particlePositions[i*3+1] = (Math.random() - 0.5) * 30;
+            particlePositions[i*3+2] = (Math.random() - 0.5) * 50;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0x88aaff, size: 0.04, transparent: true, opacity: 0.4 });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // ================= 地球模型（真实纹理） =================
+        const textureLoader = new THREE.TextureLoader();
+        const earthGeometry = new THREE.SphereGeometry(1, 128, 128);
+        const earthMaterial = new THREE.MeshPhongMaterial({
+            map: textureLoader.load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+            specularMap: textureLoader.load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg'),
+            specular: new THREE.Color('grey'),
+            shininess: 5,
+            normalMap: textureLoader.load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg')
+        });
+        const earthMesh = new THREE.Mesh(earthGeometry, earthMaterial);
+        earthMesh.castShadow = true;
+        scene.add(earthMesh);
+
+        // 云层（半透明，缓慢旋转）
+        const cloudMesh = new THREE.Mesh(
+            new THREE.SphereGeometry(1.012, 128, 128),
+            new THREE.MeshPhongMaterial({
+                map: textureLoader.load('https://threejs.org/examples/textures/planets/earth_clouds_1024.png'),
+                transparent: true,
+                opacity: 0.15,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            })
+        );
+        scene.add(cloudMesh);
+
+        // 赤道辅助环
+        const equatorRing = new THREE.Mesh(
+            new THREE.TorusGeometry(1, 0.02, 64, 200),
+            new THREE.MeshStandardMaterial({ color: 0xff5555, emissive: 0x441111 })
+        );
+        equatorRing.rotation.x = Math.PI / 2;
+        scene.add(equatorRing);
+
+        // 地轴辅助线
+        const yAxisPoints = [new THREE.Vector3(0, -1.2, 0), new THREE.Vector3(0, 1.2, 0)];
+        const yAxisLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints(yAxisPoints), new THREE.LineBasicMaterial({ color: 0x88aaff }));
+        scene.add(yAxisLine);
+
+        // 地面标记点 (赤道0°经度)
+        const groundMarker = new THREE.Mesh(new THREE.SphereGeometry(0.08, 24, 24), new THREE.MeshStandardMaterial({ color: 0xffaa44, emissive: 0x442200 }));
+        scene.add(groundMarker);
+        const markerGlow = new THREE.PointLight(0xffaa66, 0.5, 3);
+        groundMarker.add(markerGlow);
+
+        // 卫星模型
+        const satellite = new THREE.Mesh(new THREE.SphereGeometry(0.18, 48, 48), new THREE.MeshStandardMaterial({ color: 0xff8844, metalness: 0.7, roughness: 0.3, emissive: 0x442200 }));
+        satellite.castShadow = true;
+        scene.add(satellite);
+        const satGlow = new THREE.PointLight(0xffaa55, 0.8, 8);
+        satellite.add(satGlow);
+
+        // CSS2D标签
+        const satLabelDiv = document.createElement('div');
+        satLabelDiv.textContent = '🛰️ 地球静止卫星';
+        satLabelDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+        satLabelDiv.style.color = '#ffaa66';
+        satLabelDiv.style.fontSize = '14px';
+        satLabelDiv.style.padding = '2px 8px';
+        satLabelDiv.style.borderRadius = '20px';
+        satLabelDiv.style.border = '1px solid #ffaa66';
+        const satLabel = new CSS2DObject(satLabelDiv);
+        scene.add(satLabel);
+
+        const markerDiv = document.createElement('div');
+        markerDiv.textContent = '📍 赤道参考点';
+        markerDiv.style.backgroundColor = 'rgba(0,0,0,0.6)';
+        markerDiv.style.color = '#ffcc88';
+        markerDiv.style.fontSize = '10px';
+        markerDiv.style.padding = '2px 6px';
+        markerDiv.style.borderRadius = '12px';
+        const markerLabel = new CSS2DObject(markerDiv);
+        scene.add(markerLabel);
+
+        // ================= 轨道对象 =================
+        let equatorialOrbit = null;
+        let inclinedOrbit = null;
+        let ghostOrbit = null;
+        let dashLine = null;
+
+        function createEquatorialOrbit(radius) {
+            const points = [];
+            const segments = 200;
+            for (let i = 0; i <= segments; i++) {
+                const a = (i / segments) * Math.PI * 2;
+                points.push(new THREE.Vector3(radius * Math.cos(a), 0, radius * Math.sin(a)));
+            }
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            return new THREE.LineLoop(geo, new THREE.LineBasicMaterial({ color: 0x44aaff }));
+        }
+
+        function createInclinedOrbit(radius, inclinationRad) {
+            const points = [];
+            const segments = 200;
+            for (let i = 0; i <= segments; i++) {
+                const a = (i / segments) * Math.PI * 2;
+                const x0 = radius * Math.cos(a);
+                const z0 = radius * Math.sin(a);
+                const y1 = -z0 * Math.sin(inclinationRad);
+                const z1 = z0 * Math.cos(inclinationRad);
+                points.push(new THREE.Vector3(x0, y1, z1));
+            }
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            return new THREE.LineLoop(geo, new THREE.LineBasicMaterial({ color: 0xffaa88 }));
+        }
+
+        function createGhostOrbit(radius) {
+            const geometry = new THREE.SphereGeometry(radius, 64, 32);
+            const material = new THREE.MeshBasicMaterial({ color: 0x2277aa, wireframe: true, transparent: true, opacity: 0.08 });
+            return new THREE.Mesh(geometry, material);
+        }
+
+        function createDashLine() {
+            const points = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)];
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            return new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x66ccff }));
+        }
+
+        // 引力矢量箭头
+        const arrowHelper = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 1, 0xff8866, 0.6, 0.4);
+        scene.add(arrowHelper);
+
+        // ================= 状态变量 =================
+        let currentInclinationDeg = 0;
+        let satOrbitRadius = 6.6;
+        let angle = 0;
+        let earthAngle = 0;
+        const earthRotationSpeed = 0.006;  // 地球自转角速度 = 同步卫星角速度
+
+        // 卫星角速度：开普勒定律 ω ∝ r^(-3/2)，以同步轨道6.6R为基准
+        function getSatAngularSpeed() {
+            return earthRotationSpeed * Math.pow(6.6 / satOrbitRadius, 1.5);
+        }
+
+        // ================= 物理计算与显示 =================
+        function updatePhysicsDisplay(radiusInRE) {
+            const radiusMeters = radiusInRE * R_EARTH;
+            const v = Math.sqrt(GM / radiusMeters);            // 线速度 m/s
+            const omega = v / radiusMeters;                     // 角速度 rad/s
+            const T = 2 * Math.PI / omega;                      // 周期 秒
+            const a = GM / (radiusMeters * radiusMeters);       // 向心加速度 m/s²
+
+            document.getElementById('speedValue').innerHTML = (v / 1000).toFixed(2) + ' km/s';
+            document.getElementById('omegaValue').innerHTML = omega.toFixed(6) + ' rad/s';
+            document.getElementById('periodValue').innerHTML = (T / 3600).toFixed(2) + ' h';
+            document.getElementById('accValue').innerHTML = a.toFixed(2) + ' m/s²';
+        }
+
+        // ================= 动态更新卫星标签 =================
+        function updateSatelliteLabel() {
+            const typeInfo = getSatelliteTypeName(satOrbitRadius, currentInclinationDeg);
+            const colorHex = parseInt(typeInfo.color.slice(1), 16);
+
+            // 更新3D场景中的标签
+            satLabelDiv.textContent = `🛰️ ${typeInfo.name}`;
+            satLabelDiv.style.color = typeInfo.color;
+            satLabelDiv.style.borderColor = typeInfo.color;
+
+            // 更新卫星材质颜色
+            satellite.material.color.setHex(colorHex);
+
+            // 更新右侧面板中的类型标签
+            const badge = document.getElementById('satTypeBadge');
+            badge.textContent = `🛰️ ${typeInfo.name}`;
+            badge.style.color = typeInfo.color;
+            badge.style.borderColor = typeInfo.color;
+            badge.style.background = typeInfo.color + '18';  // 带透明度的背景
+        }
+
+        // 更新轨道显示
+        function rebuildOrbits() {
+            if (equatorialOrbit) scene.remove(equatorialOrbit);
+            if (inclinedOrbit) scene.remove(inclinedOrbit);
+            if (ghostOrbit) scene.remove(ghostOrbit);
+
+            equatorialOrbit = createEquatorialOrbit(satOrbitRadius);
+            const inclRad = currentInclinationDeg * Math.PI / 180;
+            inclinedOrbit = createInclinedOrbit(satOrbitRadius, inclRad);
+            ghostOrbit = createGhostOrbit(satOrbitRadius);
+
+            scene.add(equatorialOrbit);
+            scene.add(inclinedOrbit);
+            scene.add(ghostOrbit);
+
+            // 倾角为0时只显示赤道轨道，否则显示倾斜轨道
+            const isEquatorial = (currentInclinationDeg === 0);
+            equatorialOrbit.visible = isEquatorial;
+            inclinedOrbit.visible = !isEquatorial;
+
+            if (!ghostVisible) ghostOrbit.visible = false;
+        }
+
+        // 卫星位置计算 —— 直接根据当前倾角
+        function getSatellitePosition(angleRad) {
+            const x0 = satOrbitRadius * Math.cos(angleRad);
+            const z0 = satOrbitRadius * Math.sin(angleRad);
+            const inclRad = currentInclinationDeg * Math.PI / 180;
+            if (inclRad === 0) {
+                return new THREE.Vector3(x0, 0, z0);
+            } else {
+                const y1 = -z0 * Math.sin(inclRad);
+                const z1 = z0 * Math.cos(inclRad);
+                return new THREE.Vector3(x0, y1, z1);
+            }
+        }
+
+        // 更新地面标记点 (赤道0°经度)
+        function updateGroundMarker(angleRad) {
+            const markerX = 1.02 * Math.cos(angleRad);
+            const markerZ = 1.02 * Math.sin(angleRad);
+            groundMarker.position.set(markerX, 0, markerZ);
+            markerLabel.position.set(markerX, 0.2, markerZ);
+        }
+
+        // 更新投影虚线
+        function updateDashLine(satPos) {
+            const projPoint = new THREE.Vector3(satPos.x, 0, satPos.z);
+            const points = [satPos, projPoint];
+            if (dashLine) scene.remove(dashLine);
+            const lineColor = currentInclinationDeg > 0 ? 0xffaa88 : 0x44aaff;
+            const geo = new THREE.BufferGeometry().setFromPoints(points);
+            dashLine = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: lineColor, transparent: true, opacity: 0.6 }));
+            scene.add(dashLine);
+        }
+
+        function updateArrow(satPos) {
+            const direction = new THREE.Vector3().subVectors(new THREE.Vector3(0, 0, 0), satPos).normalize();
+            const length = satPos.length() - 0.25;
+            arrowHelper.setDirection(direction);
+            arrowHelper.setLength(length, 0.6, 0.4);
+            arrowHelper.position.copy(satPos);
+        }
+
+        // ================= UI 交互 =================
+        const satTypeGroup = document.getElementById('satTypeGroup');
+        const inclinationSlider = document.getElementById('inclinationSlider');
+        const inclinationVal = document.getElementById('inclinationVal');
+        const orbitSlider = document.getElementById('orbitSlider');
+        const orbitVal = document.getElementById('orbitVal');
+        const resetViewBtn = document.getElementById('resetViewBtn');
+        const toggleOrbitBtn = document.getElementById('toggleOrbitBtn');
+
+        // 预设按钮 —— 快捷设置参数
+        function applyPreset(type) {
+            const preset = SATELLITE_PRESETS[type];
+
+            // 设置轨道半径
+            satOrbitRadius = preset.defaultRadius;
+            orbitSlider.value = preset.defaultRadius;
+            orbitVal.innerText = preset.defaultRadius.toFixed(2);
+
+            // 设置倾角
+            currentInclinationDeg = preset.inclination;
+            inclinationSlider.value = preset.inclination;
+            inclinationVal.innerText = preset.inclination + '°';
+
+            // 更新按钮高亮
+            document.querySelectorAll('#satTypeGroup .mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.type === type);
+            });
+
+            // 重建轨道并更新显示
+            rebuildOrbits();
+            updatePhysicsDisplay(satOrbitRadius);
+            updateSatelliteLabel();
+        }
+
+        function updateOrbitRadius(val) {
+            satOrbitRadius = val;
+            orbitVal.innerText = val.toFixed(2);
+            rebuildOrbits();
+            updatePhysicsDisplay(satOrbitRadius);
+            updateSatelliteLabel();
+            clearPresetHighlight();
+        }
+
+        function updateInclination(deg) {
+            currentInclinationDeg = deg;
+            inclinationVal.innerText = deg + '°';
+            rebuildOrbits();
+            updateSatelliteLabel();
+            clearPresetHighlight();
+        }
+
+        // 手动调滑块时取消预设按钮高亮
+        function clearPresetHighlight() {
+            document.querySelectorAll('#satTypeGroup .mode-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+        }
+
+        // 绑定事件
+        document.querySelectorAll('#satTypeGroup .mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                applyPreset(e.target.dataset.type);
+            });
+        });
+
+        inclinationSlider.addEventListener('input', (e) => {
+            updateInclination(parseFloat(e.target.value));
+        });
+        orbitSlider.addEventListener('input', (e) => {
+            updateOrbitRadius(parseFloat(e.target.value));
+        });
+
+        resetViewBtn.addEventListener('click', () => {
+            camera.position.set(12, 6, 14);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+
+        let ghostVisible = true;
+        toggleOrbitBtn.addEventListener('click', () => {
+            ghostVisible = !ghostVisible;
+            if (ghostOrbit) ghostOrbit.visible = ghostVisible;
+            toggleOrbitBtn.textContent = ghostVisible ? '🔘 隐藏辅助球' : '🔘 显示辅助球';
+        });
+
+        // 初始化
+        dashLine = createDashLine();
+        scene.add(dashLine);
+        applyPreset('geo');
+
+        // ================= 动画循环 =================
+        function animate() {
+            // 地球自转（自西向东，从北极看逆时针）
+            earthAngle -= earthRotationSpeed;
+            if (earthAngle < -Math.PI * 2) earthAngle += Math.PI * 2;
+            earthMesh.rotation.y += earthRotationSpeed;
+
+            // 卫星公转（自西向东，角速度随轨道半径变化）
+            const satSpeed = getSatAngularSpeed();
+            angle -= satSpeed;
+            if (angle < -Math.PI * 2) angle += Math.PI * 2;
+
+            const satPos = getSatellitePosition(angle);
+            satellite.position.copy(satPos);
+            satLabel.position.copy(satPos);
+            satLabel.position.y += 0.35;
+
+            // 地面标记点跟随地球自转
+            updateGroundMarker(earthAngle);
+            updateDashLine(satPos);
+            updateArrow(satPos);
+
+            // 动态光晕
+            if (currentInclinationDeg > 0) {
+                const yVal = Math.abs(satPos.y);
+                satGlow.intensity = 0.6 + yVal * 0.8;
+                markerGlow.intensity = 0.4;
+            } else {
+                satGlow.intensity = 0.7;
+                markerGlow.intensity = 0.6;
+            }
+
+            // 云层旋转（比地球略慢，模拟大气环流）
+            cloudMesh.rotation.y += earthRotationSpeed * 0.85;
+
+            stars.rotation.y += 0.0003;
+            stars.rotation.x += 0.0002;
+            particles.rotation.y += 0.0002;
+
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        // 窗口适配
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+    </body>
+</html>
