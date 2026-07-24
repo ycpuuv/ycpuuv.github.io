@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/looogo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>牛顿摆</title>
+    <link rel="stylesheet" href="../../css/style.css" />
+    <style>
+        /* ----- 全局重置 & 布局 ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2C3E50;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* ----- 玻璃面板 ----- */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E1EEF7;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+            padding: 16px 22px;
+            color: #2C3E50;
+            transition: all 0.3s ease;
+        }
+        .glass-panel:hover {
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+        }
+
+        /* ----- 信息面板 (左上) ----- */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 30;
+            max-width: 280px;
+            padding: 14px 18px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #357ABD;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .formula-box {
+            background: #E8F4FD;
+            padding: 6px 12px;
+            border-radius: 30px;
+            margin-bottom: 10px;
+            border-left: 3px solid #4A90E2;
+        }
+        .formula {
+            font-size: 1.0rem;
+            font-family: 'Times New Roman', serif;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: #5A6C7D;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #E1EEF7;
+        }
+        .stats-grid div {
+            white-space: nowrap;
+        }
+        .stats-grid .label {
+            color: #8B9DC3;
+        }
+        .stats-grid .value {
+            color: #4A90E2;
+            font-weight: 600;
+        }
+
+        /* ----- 控制面板 (右上) ----- */
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            min-width: 260px;
+            padding: 16px 20px;
+        }
+        .control-panel h3 {
+            margin: 0 0 12px 0;
+            color: #357ABD;
+            text-align: center;
+            font-size: 1.0rem;
+            font-weight: 600;
+        }
+        .param-info {
+            text-align: center;
+            padding: 6px 10px;
+            margin: 8px 0;
+            border-radius: 8px;
+            background: #E8F4FD;
+            color: #357ABD;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .control-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+        .control-btn {
+            flex: 1;
+            padding: 8px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        .control-btn.primary {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+        }
+        .control-btn.primary:hover {
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+        }
+        .control-btn.danger {
+            background: linear-gradient(135deg, #e74c3c, #ff6b6b);
+        }
+        .control-btn.danger:hover {
+            box-shadow: 0 6px 16px rgba(231, 76, 60, 0.4);
+        }
+        .control-btn.success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        .control-btn.success:hover {
+            box-shadow: 0 6px 16px rgba(46, 204, 113, 0.4);
+        }
+        .control-btn.secondary {
+            background: linear-gradient(135deg, #8B9DC3, #A8B9D0);
+        }
+        .control-btn.secondary:hover {
+            box-shadow: 0 6px 16px rgba(139, 157, 195, 0.4);
+        }
+
+        .slider-container {
+            margin: 10px 0;
+            padding: 10px 12px;
+            background: #F8FBFF;
+            border-radius: 8px;
+            border: 1px solid #E1EEF7;
+        }
+        .slider-container label {
+            display: block;
+            color: #357ABD;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            text-align: center;
+            font-weight: 500;
+        }
+        .slider-container input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 2px solid white;
+            box-shadow: 0 2px 6px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .slider-value {
+            display: flex;
+            justify-content: space-between;
+            color: #8B9DC3;
+            font-size: 0.7rem;
+            margin-top: 4px;
+        }
+        .slider-value span:nth-child(2) {
+            color: #4A90E2;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 6px;
+            background: #F8FBFF;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            color: #5A6C7D;
+            margin-top: 8px;
+            border: 1px solid #E1EEF7;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #2ecc71;
+            box-shadow: 0 0 6px rgba(46, 204, 113, 0.6);
+        }
+        .status-dot.paused {
+            background: #e74c3c;
+            box-shadow: 0 0 6px rgba(231, 76, 60, 0.6);
+        }
+
+        /* ----- 碰撞信息 (底部居中) ----- */
+        #collision-info {
+            position: absolute;
+            bottom: 270px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #357ABD;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(8px);
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.15);
+            pointer-events: none;
+            z-index: 15;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        /* ----- 底部图表 ----- */
+        #charts-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 16px;
+            z-index: 15;
+            pointer-events: none;
+        }
+        .chart-box {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #E1EEF7;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 4px 15px rgba(74, 144, 226, 0.1);
+            pointer-events: auto;
+        }
+        .chart-box canvas {
+            display: block;
+            border-radius: 6px;
+            background: #F8FBFF;
+        }
+        .chart-title {
+            color: #5A6C7D;
+            font-size: 0.85rem;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .chart-legend {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 6px;
+            font-size: 0.7rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #8B9DC3;
+        }
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* ----- 底部按钮 ----- */
+        .back-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #4A90E2;
+            padding: 12px 28px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            transition: all 0.3s ease;
+            z-index: 50;
+            font-size: 0.9rem;
+        }
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
+        }
+
+        .view-btn {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: white;
+            color: #4A90E2;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            transition: all 0.3s ease;
+            z-index: 50;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .view-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(74, 144, 226, 0.3);
+        }
+        .view-btn.active {
+            background: #4A90E2;
+            color: white;
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #8B9DC3;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            padding: 4px 18px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            z-index: 20;
+            border: 1px solid #E1EEF7;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* ----- 响应式 ----- */
+        @media (max-width: 1000px) {
+            #charts-container {
+                flex-direction: column;
+                bottom: 80px;
+            }
+            .chart-box canvas {
+                width: 300px;
+                height: 150px;
+            }
+            .info-panel {
+                max-width: 200px;
+                font-size: 0.8rem;
+            }
+            .hint-text {
+                font-size: 0.6rem;
+                bottom: 70px;
+            }
+        }
+        @media (max-width: 700px) {
+            .control-panel {
+                min-width: 180px;
+                padding: 10px 12px;
+                top: 10px;
+                right: 10px;
+            }
+            .info-panel {
+                max-width: 160px;
+                padding: 10px 12px;
+                top: 10px;
+                left: 10px;
+            }
+            .info-panel h1 {
+                font-size: 0.9rem;
+            }
+            .stats-grid {
+                font-size: 0.65rem;
+            }
+            .control-btn {
+                font-size: 0.7rem;
+                padding: 6px 0;
+            }
+            .slider-container {
+                padding: 6px 8px;
+            }
+            .slider-container label {
+                font-size: 0.7rem;
+            }
+            .back-btn,
+            .view-btn {
+                padding: 8px 14px;
+                font-size: 0.7rem;
+                bottom: 15px;
+            }
+            .view-btn {
+                left: 15px;
+            }
+            .back-btn {
+                right: 15px;
+            }
+            #collision-info {
+                font-size: 0.7rem;
+                padding: 4px 12px;
+                bottom: 190px;
+            }
+            #charts-container {
+                bottom: 50px;
+            }
+            .chart-box canvas {
+                width: 200px;
+                height: 100px;
+            }
+            .chart-title {
+                font-size: 0.7rem;
+            }
+            .hint-text {
+                display: none;
+            }
+        }
+    </style>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Three.js 容器 -->
+    <div id="canvas-container"></div>
+
+    <!-- ===== 信息面板 ===== -->
+    <div class="info-panel glass-panel">
+        <h1>⚡ 牛顿摆</h1>
+        <div class="formula-box">
+            <div class="formula">T ≈ 2π√(L/g)</div>
+        </div>
+        <div class="stats-grid">
+            <div><span class="label">角度:</span> <span class="value" id="angleDisplay">--</span></div>
+            <div><span class="label">角速度:</span> <span class="value" id="velocityDisplay">--</span></div>
+            <div><span class="label">总能量:</span> <span class="value" id="energyDisplay">--</span></div>
+            <div><span class="label">状态:</span> <span class="value" id="stateDisplay">--</span></div>
+            <div><span class="label">播放速度:</span> <span class="value" id="speedDisplay">1.0x</span></div>
+        </div>
+    </div>
+
+    <!-- ===== 控制面板 ===== -->
+    <div class="control-panel glass-panel">
+        <h3>🎛️ 控制面板</h3>
+        <div class="param-info" id="paramInfo">总球数: 5 | 摆动球数: 1</div>
+        <div class="control-buttons">
+            <button class="control-btn success" id="playBtn">▶ 播放</button>
+            <button class="control-btn danger" id="pauseBtn">⏸ 暂停</button>
+        </div>
+        <div class="control-buttons">
+            <button class="control-btn primary" id="resetBtn">🔄 重置</button>
+        </div>
+
+        <div class="slider-container">
+            <label>🔵 总球数</label>
+            <input type="range" id="totalBallsSlider" min="4" max="12" value="5" step="1" />
+            <div class="slider-value"><span>4</span><span id="totalBallsValue">5</span><span>12</span></div>
+        </div>
+
+        <div class="slider-container">
+            <label>🔵 初始摆动球数（左侧）</label>
+            <input type="range" id="swingBallsSlider" min="1" max="2" value="1" step="1" />
+            <div class="slider-value"><span>1</span><span id="swingBallsValue">1</span><span id="swingMaxLabel">6</span></div>
+        </div>
+
+        <div class="slider-container">
+            <label>📐 初始角度</label>
+            <input type="range" id="angleSlider" min="15" max="55" value="35" step="1" />
+            <div class="slider-value"><span>15°</span><span id="angleValue">35°</span><span>55°</span></div>
+        </div>
+        <div class="slider-container">
+            <label>⏩ 播放速度</label>
+            <input type="range" id="speedSlider" min="0.5" max="5.0" value="1.0" step="0.1" />
+            <div class="slider-value"><span>0.5x</span><span id="speedValue">1.0x</span><span>5.0x</span></div>
+        </div>
+        <div class="status-indicator">
+            <span class="status-dot" id="statusDot"></span><span id="statusText">运行中</span>
+        </div>
+    </div>
+
+    <!-- ===== 碰撞信息 ===== -->
+    <div id="collision-info">⚡ 左侧 1 个球释放 → 右侧 1 个球弹起</div>
+
+    <!-- ===== 底部图表 ===== -->
+    <div id="charts-container">
+        <div class="chart-box">
+            <div class="chart-title">📈 位移-时间 (x-t) 图</div>
+            <canvas id="xtChart" width="360" height="180"></canvas>
+            <div class="chart-legend">
+                <div class="legend-item"><span class="legend-dot" style="background:#FF6B6B"></span>左侧</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#4A90E2"></span>右侧</div>
+            </div>
+        </div>
+        <div class="chart-box">
+            <div class="chart-title">📈 速度-时间 (v-t) 图</div>
+            <canvas id="vtChart" width="360" height="180"></canvas>
+            <div class="chart-legend">
+                <div class="legend-item"><span class="legend-dot" style="background:#FF6B6B"></span>左侧</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#4A90E2"></span>右侧</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 提示文字 ===== -->
+    <div class="hint-text">🖱️ 鼠标拖动旋转 / 滚轮缩放 &nbsp;|&nbsp; 空格键 播放/暂停 &nbsp;|&nbsp; R键 重置</div>
+
+    <!-- ===== 正面视图按钮 ===== -->
+    <button class="view-btn" id="frontViewBtn">👁️ 正面视图</button>
+
+    <!-- ===== 返回按钮 ===== -->
+    
+
+    <!-- ============================================================ -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // ----- 图表初始化 -----
+        const xtCanvas = document.getElementById('xtChart');
+        const vtCanvas = document.getElementById('vtChart');
+        const xtCtx = xtCanvas.getContext('2d');
+        const vtCtx = vtCanvas.getContext('2d');
+
+        const maxDataPoints = 200;
+        const timeData = [];
+        const xtDataLeft = [],
+            xtDataRight = [],
+            vtDataLeft = [],
+            vtDataRight = [];
+        let currentTime = 0;
+
+        function drawGrid(ctx, w, h) {
+            ctx.strokeStyle = '#E1EEF7';
+            ctx.lineWidth = 0.5;
+            for (let i = 1; i < 4; i++) {
+                const y = (i * h) / 4;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+            for (let i = 1; i < 5; i++) {
+                const x = (i * w) / 5;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = '#8B9DC3';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2);
+            ctx.lineTo(w, h / 2);
+            ctx.stroke();
+        }
+
+        function drawCharts() {
+            const w = 360,
+                h = 180;
+
+            // x-t
+            xtCtx.clearRect(0, 0, w, h);
+            xtCtx.fillStyle = '#F8FBFF';
+            xtCtx.fillRect(0, 0, w, h);
+            drawGrid(xtCtx, w, h);
+
+            if (xtDataLeft.length > 1) {
+                xtCtx.strokeStyle = '#FF6B6B';
+                xtCtx.lineWidth = 2.5;
+                xtCtx.beginPath();
+                for (let i = 0; i < xtDataLeft.length; i++) {
+                    const x = (i / maxDataPoints) * w;
+                    const y = h / 2 - xtDataLeft[i] * (h / 3.5);
+                    i === 0 ? xtCtx.moveTo(x, y) : xtCtx.lineTo(x, y);
+                }
+                xtCtx.stroke();
+                xtCtx.strokeStyle = '#4A90E2';
+                xtCtx.lineWidth = 2.5;
+                xtCtx.beginPath();
+                for (let i = 0; i < xtDataRight.length; i++) {
+                    const x = (i / maxDataPoints) * w;
+                    const y = h / 2 - xtDataRight[i] * (h / 3.5);
+                    i === 0 ? xtCtx.moveTo(x, y) : xtCtx.lineTo(x, y);
+                }
+                xtCtx.stroke();
+            }
+
+            // v-t
+            vtCtx.clearRect(0, 0, w, h);
+            vtCtx.fillStyle = '#F8FBFF';
+            vtCtx.fillRect(0, 0, w, h);
+            drawGrid(vtCtx, w, h);
+
+            if (vtDataLeft.length > 1) {
+                vtCtx.strokeStyle = '#FF6B6B';
+                vtCtx.lineWidth = 2.5;
+                vtCtx.beginPath();
+                for (let i = 0; i < vtDataLeft.length; i++) {
+                    const x = (i / maxDataPoints) * w;
+                    const y = h / 2 - vtDataLeft[i] * (h / 3.5);
+                    i === 0 ? vtCtx.moveTo(x, y) : vtCtx.lineTo(x, y);
+                }
+                vtCtx.stroke();
+                vtCtx.strokeStyle = '#4A90E2';
+                vtCtx.lineWidth = 2.5;
+                vtCtx.beginPath();
+                for (let i = 0; i < vtDataRight.length; i++) {
+                    const x = (i / maxDataPoints) * w;
+                    const y = h / 2 - vtDataRight[i] * (h / 3.5);
+                    i === 0 ? vtCtx.moveTo(x, y) : vtCtx.lineTo(x, y);
+                }
+                vtCtx.stroke();
+            }
+        }
+
+        // ----- Three.js 场景 -----
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xF8FBFF);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(20, 10, 32);
+        camera.lookAt(0, 4, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        container.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        container.appendChild(labelRenderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.target.set(0, 4, 0);
+        controls.maxPolarAngle = Math.PI / 2;
+
+        // ----- 光照 -----
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
+        dirLight.position.set(14, 30, 20);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        const d = 45;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        dirLight.shadow.camera.near = 1;
+        dirLight.shadow.camera.far = 80;
+        scene.add(dirLight);
+        scene.add(new THREE.PointLight(0xffeedd, 0.6)).position.set(-10, 10, 8);
+        scene.add(new THREE.PointLight(0xffffff, 0.5)).position.set(10, 10, -8);
+        scene.add(new THREE.PointLight(0xE8F4FD, 0.4)).position.set(0, 8, 10);
+
+        // ----- 物理参数 -----
+        const ballRadius = 0.38;
+        const pillarHeight = 11.0;
+        const pivotY = 10.0;
+        const stringLength = 6.0;
+        const restY = pivotY - stringLength;
+        const g = 15.0;
+
+        let ballCount = 5;
+        let swingCount = 1;
+        let initialAngleDeg = 35;
+        let initialAngleRad = -initialAngleDeg * Math.PI / 180;
+        let isPlaying = true;
+        let swingDirection = 'left';
+        let playSpeed = 1.0;
+        let restDistance = ballRadius * 2;
+
+        let balls = [];
+        let strings = [];
+        let angles = [];
+        let velocities = [];
+        let ballPosX = [];
+
+        const ballMat = new THREE.MeshStandardMaterial({
+            color: 0x4A90E2,
+            roughness: 0.2,
+            metalness: 0.7,
+            emissive: new THREE.Color(0x224488),
+            emissiveIntensity: 0.1,
+        });
+        const stringMat = new THREE.MeshStandardMaterial({ color: 0x8B9DC3, roughness: 0.4 });
+
+        // ----- 场景构建 -----
+        function clearScene() {
+            balls.forEach(b => scene.remove(b.mesh));
+            strings.forEach(s => scene.remove(s.mesh));
+            scene.children.filter(c => c.isCSS2DObject).forEach(c => scene.remove(c));
+            scene.children
+                .filter(c => c.isMesh && (c.position.y === -0.25 || c.position.y === pillarHeight / 2 || c.position.y ===
+                    pillarHeight - 0.2))
+                .forEach(c => scene.remove(c));
+            balls = [];
+            strings = [];
+            angles = [];
+            velocities = [];
+        }
+
+        function createBaseAndSupports(count) {
+            const totalWidth = Math.max(32, count * 1.4 + 24);
+            const base = new THREE.Mesh(
+                new THREE.BoxGeometry(totalWidth, 0.5, 5),
+                new THREE.MeshStandardMaterial({ color: 0xE1EEF7, roughness: 0.3 })
+            );
+            base.position.y = -0.25;
+            base.receiveShadow = true;
+            base.castShadow = true;
+            scene.add(base);
+
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0x8B9DC3, roughness: 0.4, metalness: 0.2 });
+            const pillarGeo = new THREE.CylinderGeometry(0.6, 0.7, pillarHeight, 12);
+            const pillarSpacing = totalWidth / 2 - 2.5;
+            const pLeft = new THREE.Mesh(pillarGeo, pillarMat);
+            pLeft.position.set(-pillarSpacing, pillarHeight / 2, 0);
+            pLeft.castShadow = pLeft.receiveShadow = true;
+            scene.add(pLeft);
+            const pRight = pLeft.clone();
+            pRight.position.set(pillarSpacing, pillarHeight / 2, 0);
+            scene.add(pRight);
+
+            const beam = new THREE.Mesh(
+                new THREE.BoxGeometry(totalWidth - 1, 0.3, 0.9),
+                new THREE.MeshStandardMaterial({ color: 0xA8B9D0, roughness: 0.4 })
+            );
+            beam.position.set(0, pillarHeight - 0.2, 0);
+            beam.castShadow = beam.receiveShadow = true;
+            scene.add(beam);
+
+            const grid = new THREE.GridHelper(totalWidth + 12, 40, 0x4A90E2, 0xE1EEF7);
+            grid.position.y = -0.24;
+            scene.add(grid);
+        }
+
+        function createBalls(count) {
+            const spacing = ballRadius * 2.02;
+            ballPosX = [];
+            if (count % 2 === 1) {
+                const half = Math.floor(count / 2);
+                for (let i = -half; i <= half; i++) ballPosX.push(i * spacing);
+            } else {
+                const half = count / 2;
+                for (let i = 0; i < count; i++) ballPosX.push((i - half + 0.5) * spacing);
+            }
+            ballPosX.sort((a, b) => a - b);
+
+            ballPosX.forEach((x, i) => {
+                const ball = new THREE.Mesh(new THREE.SphereGeometry(ballRadius, 72, 48), ballMat.clone());
+                ball.castShadow = true;
+                ball.receiveShadow = true;
+                const angle = angles[i] || 0;
+                ball.position.x = x + Math.sin(angle) * stringLength;
+                ball.position.y = pivotY - Math.cos(angle) * stringLength;
+                ball.position.z = 0;
+                scene.add(ball);
+
+                const hl = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.07, 12),
+                    new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: new THREE.Color(0xffffff),
+                        emissiveIntensity: 0.3 })
+                );
+                hl.position.set(0.1, 0.1, 0.3);
+                ball.add(hl);
+
+                balls.push({ mesh: ball, baseX: x });
+
+                [-0.18, 0.18].forEach(zOffset => {
+                    const cyl = new THREE.Mesh(
+                        new THREE.CylinderGeometry(0.018, 0.018, stringLength, 8),
+                        stringMat
+                    );
+                    cyl.castShadow = true;
+                    cyl.receiveShadow = true;
+                    const start = new THREE.Vector3(x, pivotY, zOffset);
+                    const end = new THREE.Vector3(ball.position.x, ball.position.y, zOffset);
+                    cyl.position.lerpVectors(start, end, 0.5);
+                    cyl.quaternion.setFromUnitVectors(
+                        new THREE.Vector3(0, 1, 0),
+                        new THREE.Vector3().subVectors(end, start).normalize()
+                    );
+                    scene.add(cyl);
+                    strings.push({ mesh: cyl, ballIndex: i, baseX: x, zOffset });
+                });
+            });
+        }
+
+        function updatePositions() {
+            balls.forEach((ball, i) => {
+                const angle = angles[i] || 0;
+                ball.mesh.position.x = ball.baseX + Math.sin(angle) * stringLength;
+                ball.mesh.position.y = pivotY - Math.cos(angle) * stringLength;
+                strings.filter(s => s.ballIndex === i).forEach(s => {
+                    const start = new THREE.Vector3(s.baseX, pivotY, s.zOffset);
+                    const end = new THREE.Vector3(ball.mesh.position.x, ball.mesh.position.y, s.zOffset);
+                    s.mesh.position.lerpVectors(start, end, 0.5);
+                    s.mesh.quaternion.setFromUnitVectors(
+                        new THREE.Vector3(0, 1, 0),
+                        new THREE.Vector3().subVectors(end, start).normalize()
+                    );
+                });
+            });
+        }
+
+        function resetState() {
+            for (let i = 0; i < ballCount; i++) angles[i] = 0;
+            for (let i = 0; i < swingCount; i++) {
+                angles[i] = initialAngleRad;
+            }
+            swingDirection = 'left';
+            for (let i = 0; i < ballCount; i++) velocities[i] = 0;
+            updatePositions();
+
+            timeData.length = 0;
+            xtDataLeft.length = 0;
+            xtDataRight.length = 0;
+            vtDataLeft.length = 0;
+            vtDataRight.length = 0;
+            currentTime = 0;
+        }
+
+        // ----- 计算正面视图的合适距离 -----
+        function calcFrontViewDistance() {
+            const span = Math.max(ballPosX[ballPosX.length - 1] - ballPosX[0], 4);
+            const swingAmp = stringLength * Math.sin(Math.abs(initialAngleRad));
+            const totalWidth = span + 2 * swingAmp + 4;
+            const dist = (totalWidth / 2) / Math.tan(22.5 * Math.PI / 180);
+            return Math.max(dist + 2, 18);
+        }
+
+        // ----- 切换到正面视图 -----
+        let isFrontView = false;
+
+        function setFrontView(enable) {
+            isFrontView = enable;
+            const btn = document.getElementById('frontViewBtn');
+            if (enable) {
+                const dist = calcFrontViewDistance();
+                camera.position.set(0, 4, dist);
+                camera.lookAt(0, 4, 0);
+                controls.target.set(0, 4, 0);
+                controls.enableRotate = false;
+                controls.enableZoom = true;
+                controls.enablePan = true;
+                controls.update();
+                btn.classList.add('active');
+                btn.innerHTML = '🔓 自由视角';
+            } else {
+                camera.position.set(20, 10, 32);
+                camera.lookAt(0, 4, 0);
+                controls.target.set(0, 4, 0);
+                controls.enableRotate = true;
+                controls.enableZoom = true;
+                controls.enablePan = true;
+                controls.update();
+                btn.classList.remove('active');
+                btn.innerHTML = '👁️ 正面视图';
+            }
+        }
+
+        function refreshFrontViewIfNeeded() {
+            if (isFrontView) {
+                const dist = calcFrontViewDistance();
+                camera.position.set(0, 4, dist);
+                camera.lookAt(0, 4, 0);
+                controls.target.set(0, 4, 0);
+                controls.update();
+            }
+        }
+
+        // ----- 重建场景 -----
+        function rebuildScene() {
+            clearScene();
+            createBaseAndSupports(ballCount);
+            angles = new Array(ballCount).fill(0);
+            velocities = new Array(ballCount).fill(0);
+            restDistance = ballRadius * 2;
+            createBalls(ballCount);
+
+            // 球编号标签
+            ballPosX.forEach((x, i) => {
+                const div = document.createElement('div');
+                div.textContent = `${i+1}`;
+                div.style.cssText =
+                    'color:#357ABD;font-size:13px;font-weight:bold;background:rgba(255,255,255,0.95);padding:2px 7px;border-radius:10px;border:1px solid #4A90E2;box-shadow:0 2px 6px rgba(74,144,226,0.2);';
+                const label = new CSS2DObject(div);
+                label.position.set(x, 0.5, 1.3);
+                scene.add(label);
+            });
+
+            resetState();
+            updateParamInfo();
+            updateCollisionInfo();
+            refreshFrontViewIfNeeded();
+            // 更新摆动滑块最大值
+            const maxSwing = Math.floor(ballCount / 2);
+            document.getElementById('swingBallsSlider').max = maxSwing;
+            document.getElementById('swingMaxLabel').textContent = maxSwing;
+        }
+
+        function updateParamInfo() {
+            document.getElementById('paramInfo').textContent = `总球数: ${ballCount} | 摆动球数: ${swingCount}`;
+        }
+
+        function updateCollisionInfo() {
+            document.getElementById('collision-info').innerHTML =
+                `⚡ 左侧 ${swingCount} 个球释放 → 右侧 ${swingCount} 个球弹起`;
+        }
+
+        // ----- 物理更新 -----
+        let frameCount = 0;
+
+        function physicsUpdate() {
+            if (!isPlaying) return;
+            const dt = 0.016 * playSpeed;
+            currentTime += dt;
+
+            const leftEnd = swingCount;
+            const rightStart = ballCount - swingCount;
+
+            if (swingDirection === 'left') {
+                for (let i = 0; i < leftEnd; i++) {
+                    velocities[i] += -(g / stringLength) * Math.sin(angles[i]) * dt;
+                    angles[i] += velocities[i] * dt;
+                }
+            } else {
+                for (let i = rightStart; i < ballCount; i++) {
+                    velocities[i] += -(g / stringLength) * Math.sin(angles[i]) * dt;
+                    angles[i] += velocities[i] * dt;
+                }
+            }
+
+            // 碰撞：左侧 → 右侧
+            const leftEdge = balls[leftEnd - 1].mesh;
+            const middleFirst = balls[leftEnd].mesh;
+            const dxLeft = middleFirst.position.x - leftEdge.position.x;
+            const dyLeft = middleFirst.position.y - leftEdge.position.y;
+            const distLeft = Math.sqrt(dxLeft * dxLeft + dyLeft * dyLeft);
+
+            if (swingDirection === 'left' && distLeft < restDistance && velocities[leftEnd - 1] > 0) {
+                const speed = Math.abs(velocities[leftEnd - 1]);
+                for (let i = 0; i < leftEnd; i++) {
+                    velocities[i] = 0;
+                    angles[i] = 0;
+                    balls[i].mesh.position.x = balls[i].baseX;
+                    balls[i].mesh.position.y = restY;
+                }
+                for (let i = rightStart; i < ballCount; i++) {
+                    velocities[i] = speed;
+                }
+                swingDirection = 'right';
+                document.getElementById('collision-info').innerHTML =
+                    `⚡ 左侧 ${swingCount} 个球停止 → 右侧 ${swingCount} 个球弹起！`;
+            }
+
+            // 碰撞：右侧 → 左侧
+            const rightEdge = balls[rightStart].mesh;
+            const middleLast = balls[rightStart - 1].mesh;
+            const dxRight = rightEdge.position.x - middleLast.position.x;
+            const dyRight = rightEdge.position.y - middleLast.position.y;
+            const distRight = Math.sqrt(dxRight * dxRight + dyRight * dyRight);
+
+            if (swingDirection === 'right' && distRight < restDistance && velocities[rightStart] < 0) {
+                const speed = velocities[rightStart];
+                for (let i = rightStart; i < ballCount; i++) {
+                    velocities[i] = 0;
+                    angles[i] = 0;
+                    balls[i].mesh.position.x = balls[i].baseX;
+                    balls[i].mesh.position.y = restY;
+                }
+                for (let i = 0; i < leftEnd; i++) {
+                    velocities[i] = speed;
+                }
+                swingDirection = 'left';
+                document.getElementById('collision-info').innerHTML =
+                    `⚡ 右侧 ${swingCount} 个球停止 → 左侧 ${swingCount} 个球弹起！`;
+            }
+
+            // 中间静止
+            for (let i = leftEnd; i < rightStart; i++) {
+                angles[i] = 0;
+                velocities[i] = 0;
+                balls[i].mesh.position.x = balls[i].baseX;
+                balls[i].mesh.position.y = restY;
+            }
+
+            // 另一侧静止
+            if (swingDirection === 'left') {
+                for (let i = rightStart; i < ballCount; i++) {
+                    angles[i] = 0;
+                    velocities[i] = 0;
+                    balls[i].mesh.position.x = balls[i].baseX;
+                    balls[i].mesh.position.y = restY;
+                }
+            } else {
+                for (let i = 0; i < leftEnd; i++) {
+                    angles[i] = 0;
+                    velocities[i] = 0;
+                    balls[i].mesh.position.x = balls[i].baseX;
+                    balls[i].mesh.position.y = restY;
+                }
+            }
+
+            const maxA = Math.abs(initialAngleRad) * 1.1;
+            for (let i = 0; i < ballCount; i++) {
+                if (angles[i] > maxA) angles[i] = maxA;
+                if (angles[i] < -maxA) angles[i] = -maxA;
+            }
+
+            updatePositions();
+
+            // 图表
+            if (++frameCount % 2 === 0) {
+                const leftAngle = angles[0];
+                const rightAngle = angles[ballCount - 1];
+                const leftVel = velocities[0];
+                const rightVel = velocities[ballCount - 1];
+                timeData.push(currentTime);
+                xtDataLeft.push(leftAngle);
+                xtDataRight.push(rightAngle);
+                vtDataLeft.push(leftVel);
+                vtDataRight.push(rightVel);
+                if (timeData.length > maxDataPoints) {
+                    timeData.shift();
+                    xtDataLeft.shift();
+                    xtDataRight.shift();
+                    vtDataLeft.shift();
+                    vtDataRight.shift();
+                }
+                drawCharts();
+            }
+
+            // UI
+            let angleStr = '';
+            if (swingCount === 1) {
+                angleStr =
+                    `左: ${(angles[0] * 180 / Math.PI).toFixed(2)}° | 右: ${(angles[ballCount-1] * 180 / Math.PI).toFixed(2)}°`;
+            } else {
+                angleStr = `左${swingCount}球摆动 | 右${swingCount}球摆动`;
+            }
+            document.getElementById('angleDisplay').innerHTML = angleStr;
+            document.getElementById('stateDisplay').innerHTML =
+                `${swingDirection === 'left' ? `左侧 ${swingCount} 球摆动` : `右侧 ${swingCount} 球摆动`}`;
+            const maxV = Math.max(...velocities.map(Math.abs)).toFixed(4);
+            document.getElementById('velocityDisplay').innerHTML = `${maxV} rad/s`;
+            let energy = 0;
+            for (let i = 0; i < ballCount; i++) {
+                const h = stringLength * (1 - Math.cos(angles[i]));
+                energy += g * h + 0.5 * (velocities[i] * stringLength) ** 2;
+            }
+            document.getElementById('energyDisplay').innerHTML = `${energy.toFixed(3)}`;
+            document.getElementById('speedDisplay').innerHTML = `${playSpeed.toFixed(1)}x`;
+        }
+
+        // ----- 控件事件绑定 -----
+        const totalSlider = document.getElementById('totalBallsSlider');
+        const swingSlider = document.getElementById('swingBallsSlider');
+        const angleSlider = document.getElementById('angleSlider');
+        const speedSlider = document.getElementById('speedSlider');
+
+        function updateTotalBalls() {
+            const val = parseInt(totalSlider.value, 10);
+            ballCount = val;
+            document.getElementById('totalBallsValue').textContent = val;
+            const maxSwing = Math.floor(ballCount / 2);
+            swingSlider.max = maxSwing;
+            document.getElementById('swingMaxLabel').textContent = maxSwing;
+            let curSwing = parseInt(swingSlider.value, 10);
+            if (curSwing > maxSwing) {
+                curSwing = maxSwing;
+                swingSlider.value = curSwing;
+                document.getElementById('swingBallsValue').textContent = curSwing;
+            }
+            swingCount = curSwing;
+            rebuildScene();
+        }
+
+        function updateSwingBalls() {
+            const val = parseInt(swingSlider.value, 10);
+            swingCount = val;
+            document.getElementById('swingBallsValue').textContent = val;
+            rebuildScene();
+        }
+
+        function updateAngle() {
+            const deg = parseInt(angleSlider.value, 10);
+            initialAngleDeg = deg;
+            initialAngleRad = -deg * Math.PI / 180;
+            document.getElementById('angleValue').textContent = deg + '°';
+            resetState();
+            refreshFrontViewIfNeeded();
+        }
+
+        function updateSpeed() {
+            playSpeed = parseFloat(speedSlider.value);
+            document.getElementById('speedValue').textContent = playSpeed.toFixed(1) + 'x';
+        }
+
+        totalSlider.addEventListener('input', updateTotalBalls);
+        swingSlider.addEventListener('input', updateSwingBalls);
+        angleSlider.addEventListener('input', updateAngle);
+        speedSlider.addEventListener('input', updateSpeed);
+
+        document.getElementById('playBtn').addEventListener('click', () => {
+            isPlaying = true;
+            document.getElementById('statusDot').classList.remove('paused');
+            document.getElementById('statusText').textContent = '运行中';
+        });
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            isPlaying = false;
+            document.getElementById('statusDot').classList.add('paused');
+            document.getElementById('statusText').textContent = '已暂停';
+        });
+        document.getElementById('resetBtn').addEventListener('click', resetState);
+
+        // ----- 正面视图按钮 -----
+        document.getElementById('frontViewBtn').addEventListener('click', () => {
+            setFrontView(!isFrontView);
+        });
+
+        // 键盘快捷键
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                isPlaying = !isPlaying;
+                document.getElementById('statusDot').classList.toggle('paused', !isPlaying);
+                document.getElementById('statusText').textContent = isPlaying ? '运行中' : '已暂停';
+            }
+            if (e.key === 'r' || e.key === 'R') resetState();
+        });
+
+        // ----- 初始化 -----
+        rebuildScene();
+        document.getElementById('totalBallsValue').textContent = ballCount;
+        document.getElementById('swingBallsValue').textContent = swingCount;
+        document.getElementById('angleValue').textContent = initialAngleDeg + '°';
+        document.getElementById('speedValue').textContent = playSpeed.toFixed(1) + 'x';
+        const maxSwing = Math.floor(ballCount / 2);
+        swingSlider.max = maxSwing;
+        document.getElementById('swingMaxLabel').textContent = maxSwing;
+
+        drawCharts();
+
+        // ----- 动画循环 -----
+        function animate() {
+            requestAnimationFrame(animate);
+            physicsUpdate();
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+
+        // ----- 窗口自适应 -----
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        console.log('✅ 牛顿摆已启动 | 按空格暂停/继续，R重置');
+    </script>
+    </body>
+</html>

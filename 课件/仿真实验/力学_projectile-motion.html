@@ -1,0 +1,924 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>斜抛运动 - PhySenLab仿真实验</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #simCanvas {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        /* 返回按钮 - 左下角 */
+        .back-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            color: #4A90E2;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.2);
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+        }
+        
+        /* 信息面板 - 左上角 */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 18px 22px;
+            border-radius: 12px;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+            z-index: 10;
+            max-width: 320px;
+        }
+        
+        .info-panel h1 {
+            font-size: 1.15rem;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-panel h1 .icon { font-size: 1.3rem; }
+        
+        .formula-box {
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 100%);
+            padding: 10px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 8px;
+        }
+        
+        .formula {
+            font-size: 1.05rem;
+            color: #000000;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        
+        .formula sub {
+            font-size: 0.7em;
+        }
+        
+        .info-text {
+            font-size: 0.85rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+        }
+        
+        /* 数据展示 */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .data-item {
+            background: #F8FBFF;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #E1EEF7;
+        }
+        
+        .data-label {
+            font-size: 0.75rem;
+            color: #7A8C9D;
+        }
+        
+        .data-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #4A90E2;
+        }
+        
+        /* 右侧控制面板 */
+        .controls-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 22px;
+            border-radius: 16px;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15);
+            width: 320px;
+            z-index: 10;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+        
+        .controls-panel h3 {
+            font-size: 1.05rem;
+            color: #2C3E50;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #E1EEF7;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .slider-group {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #F8FBFF;
+            border-radius: 10px;
+            border: 1px solid #E1EEF7;
+        }
+        
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .slider-label .label-text {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+        }
+        
+        .value-badge {
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: grab;
+            transition: transform 0.2s;
+        }
+        
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 2px solid #E1EEF7;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(74, 144, 226, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #F0F4F8;
+            color: #5A6C7D;
+            border: 2px solid #E1EEF7;
+        }
+        
+        .btn-secondary:hover {
+            background: #E1EEF7;
+        }
+        
+        /* 复选框样式 */
+        .checkbox-group {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #F8FBFF;
+            border-radius: 8px;
+            border: 1px solid #E1EEF7;
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #4A90E2;
+        }
+        
+        /* 动画提示 */
+        .hint-text {
+            font-size: 0.8rem;
+            color: #7A8C9D;
+            text-align: center;
+            margin-top: 12px;
+            padding: 8px;
+            background: #F8FBFF;
+            border-radius: 6px;
+        }
+        
+        @media (max-width: 768px) {
+            .info-panel, .controls-panel {
+                position: relative;
+                width: calc(100% - 40px);
+                max-width: none;
+                margin: 10px 20px;
+                top: auto;
+                right: auto;
+                left: auto;
+            }
+            
+            #canvas-container {
+                position: relative;
+                height: 50vh;
+                min-height: 300px;
+            }
+            
+            .back-btn {
+                position: fixed;
+                bottom: 20px;
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <!-- 信息面板 -->
+        <div class="info-panel">
+            <h1><span class="icon">🏹</span> 斜抛运动</h1>
+            <div class="formula-box">
+                <div class="formula">x = v<sub>0</sub>cosθ · t</div>
+                <div class="formula" style="margin-top:4px;">y = v<sub>0</sub>sinθ · t - ½gt²</div>
+            </div>
+            <p class="info-text">调整初速度和抛射角，观察物体在重力作用下的运动轨迹。落地后速度矢量定格显示。</p>
+            <div class="data-grid">
+                <div class="data-item">
+                    <div class="data-label">射程</div>
+                    <div class="data-value" id="rangeVal">0 m</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">最大高度</div>
+                    <div class="data-value" id="heightVal">0 m</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">飞行时间</div>
+                    <div class="data-value" id="timeVal">0 s</div>
+                </div>
+                <div class="data-item">
+                    <div class="data-label">当前速度</div>
+                    <div class="data-value" id="velVal">0 m/s</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 画布 -->
+        <div id="canvas-container">
+            <canvas id="simCanvas" width="900" height="600"></canvas>
+        </div>
+        
+        <!-- 控制面板 -->
+        <div class="controls-panel">
+            <h3>⚙️ 参数设置</h3>
+            
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span class="label-text">🚀 初速度 v₀</span>
+                    <span class="value-badge" id="v0Badge">20 m/s</span>
+                </div>
+                <input type="range" id="v0Slider" min="5" max="50" value="20" step="1">
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span class="label-text">📐 抛射角 θ</span>
+                    <span class="value-badge" id="angleBadge">45°</span>
+                </div>
+                <input type="range" id="angleSlider" min="10" max="80" value="45" step="1">
+            </div>
+            
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span class="label-text">🌍 重力加速度 g</span>
+                    <span class="value-badge" id="gBadge">9.8 m/s²</span>
+                </div>
+                <input type="range" id="gSlider" min="1" max="20" value="9.8" step="0.1">
+            </div>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showVelocity" checked>
+                    <span>显示瞬时速度矢量</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showComponents" checked>
+                    <span>显示速度分量 (vₓ, vᵧ)</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="showTrail" checked>
+                    <span>显示运动轨迹</span>
+                </label>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="playBtn">
+                    <span>▶</span> 发射
+                </button>
+                <button class="btn btn-secondary" id="resetBtn">
+                    <span>↺</span> 重置
+                </button>
+            </div>
+            
+            <p class="hint-text">💡 调整参数自动预览</p>
+        </div>
+        
+        <!-- 返回按钮 -->
+        
+    </div>
+
+    <script>
+        // Canvas 设置
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 物理参数
+        let v0 = 20;          // 初速度 (m/s)
+        let angle = 45;       // 抛射角 (度)
+        let g = 9.8;          // 重力加速度 (m/s²)
+        let scale = 7;        // 像素/米（适配110米范围）
+        
+        // 动画状态
+        let isRunning = false;
+        let startTime = 0;
+        let ballPos = { x: 0, y: 0 };
+        let trajectory = [];
+        let animationId = null;
+        
+        // 落地标志与最终数据（定格用）
+        let hasLanded = false;
+        let finalFlightTime = 0;
+        let finalRange = 0;
+        let finalMaxHeight = 0;
+        let finalVx = 0, finalVy = 0;     // 落地瞬间速度分量，用于定格显示
+        
+        // 原点位置（画布左下角偏移）
+        const origin = { x: 60, y: canvas.height - 60 };
+        
+        // 获取控件
+        const v0Slider = document.getElementById('v0Slider');
+        const angleSlider = document.getElementById('angleSlider');
+        const gSlider = document.getElementById('gSlider');
+        const v0Badge = document.getElementById('v0Badge');
+        const angleBadge = document.getElementById('angleBadge');
+        const gBadge = document.getElementById('gBadge');
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const showVelocity = document.getElementById('showVelocity');
+        const showComponents = document.getElementById('showComponents');
+        const showTrail = document.getElementById('showTrail');
+        
+        // 数据显示
+        const rangeVal = document.getElementById('rangeVal');
+        const heightVal = document.getElementById('heightVal');
+        const timeVal = document.getElementById('timeVal');
+        const velVal = document.getElementById('velVal');
+        
+        // ---------- 辅助函数: 完全重置状态 ----------
+        function fullResetState() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            isRunning = false;
+            hasLanded = false;
+            finalFlightTime = 0;
+            finalRange = 0;
+            finalMaxHeight = 0;
+            finalVx = 0;
+            finalVy = 0;
+            ballPos = { x: 0, y: 0 };
+            trajectory = [];
+            playBtn.innerHTML = '<span>▶</span> 发射';
+            playBtn.classList.remove('btn-secondary');
+            playBtn.classList.add('btn-primary');
+            drawPreview();
+        }
+        
+        // 参数变更回调
+        function onParameterChange() {
+            if (isRunning) {
+                fullResetState();
+            } else {
+                fullResetState();
+            }
+        }
+        
+        // 事件监听
+        v0Slider.addEventListener('input', () => {
+            v0 = parseFloat(v0Slider.value);
+            v0Badge.textContent = v0 + ' m/s';
+            onParameterChange();
+        });
+        
+        angleSlider.addEventListener('input', () => {
+            angle = parseFloat(angleSlider.value);
+            angleBadge.textContent = angle + '°';
+            onParameterChange();
+        });
+        
+        gSlider.addEventListener('input', () => {
+            g = parseFloat(gSlider.value);
+            gBadge.textContent = g + ' m/s²';
+            onParameterChange();
+        });
+        
+        playBtn.addEventListener('click', toggleAnimation);
+        resetBtn.addEventListener('click', () => fullResetState());
+        
+        showVelocity.addEventListener('change', () => drawFrame());
+        showComponents.addEventListener('change', () => drawFrame());
+        showTrail.addEventListener('change', () => drawFrame());
+        
+        // 坐标转换
+        function worldToCanvas(x, y) {
+            return {
+                x: origin.x + x * scale,
+                y: origin.y - y * scale
+            };
+        }
+        
+        // ========== 绘制网格（0~110米）==========
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#FAFBFC';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#E8EEF4';
+            ctx.lineWidth = 1;
+            // 垂直网格线 0~110 步长10
+            for (let x = 0; x <= 110; x += 10) {
+                const pos = worldToCanvas(x, 0);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, 0);
+                ctx.lineTo(pos.x, canvas.height);
+                ctx.stroke();
+            }
+            // 水平网格线 0~70 步长5
+            for (let y = 0; y <= 70; y += 5) {
+                const pos = worldToCanvas(0, y);
+                ctx.beginPath();
+                ctx.moveTo(0, pos.y);
+                ctx.lineTo(canvas.width, pos.y);
+                ctx.stroke();
+            }
+            
+            // X轴
+            ctx.strokeStyle = '#4A90E2';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(canvas.width - 20, origin.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 20, origin.y);
+            ctx.lineTo(canvas.width - 30, origin.y - 5);
+            ctx.lineTo(canvas.width - 30, origin.y + 5);
+            ctx.fillStyle = '#4A90E2';
+            ctx.fill();
+            
+            // Y轴
+            ctx.beginPath();
+            ctx.moveTo(origin.x, origin.y);
+            ctx.lineTo(origin.x, 20);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(origin.x, 20);
+            ctx.lineTo(origin.x - 5, 30);
+            ctx.lineTo(origin.x + 5, 30);
+            ctx.fill();
+            
+            ctx.font = 'bold 14px "Times New Roman", serif';
+            ctx.fillStyle = '#4A90E2';
+            ctx.fillText('x/m', canvas.width - 45, origin.y + 20);
+            ctx.fillText('y/m', origin.x - 35, 30);
+            
+            ctx.font = '12px sans-serif';
+            ctx.fillStyle = '#7A8C9D';
+            for (let x = 0; x <= 110; x += 10) {
+                const pos = worldToCanvas(x, 0);
+                ctx.fillText(x + 'm', pos.x - 10, origin.y + 20);
+            }
+            for (let y = 5; y <= 70; y += 5) {
+                const pos = worldToCanvas(0, y);
+                ctx.fillText(y + 'm', origin.x - 35, pos.y + 4);
+            }
+        }
+        
+        // 绘制速度矢量（落地后使用定格速度）
+        function drawVelocityVector(x, y, vx, vy, color = '#FF6B6B') {
+            let actualVx = vx, actualVy = vy;
+            if (hasLanded) {
+                actualVx = finalVx;
+                actualVy = finalVy;
+            }
+            if (Math.hypot(actualVx, actualVy) < 0.05) return; // 速度极小不绘制
+            
+            const start = worldToCanvas(x, y);
+            const scaleV = 0.3;
+            const end = worldToCanvas(x + actualVx * scaleV, y + actualVy * scaleV);
+            
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.stroke();
+            
+            const angleRad = Math.atan2(end.y - start.y, end.x - start.x);
+            const headLen = 10;
+            ctx.beginPath();
+            ctx.moveTo(end.x, end.y);
+            ctx.lineTo(end.x - headLen * Math.cos(angleRad - Math.PI/6), end.y - headLen * Math.sin(angleRad - Math.PI/6));
+            ctx.lineTo(end.x - headLen * Math.cos(angleRad + Math.PI/6), end.y - headLen * Math.sin(angleRad + Math.PI/6));
+            ctx.fill();
+            
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillStyle = color;
+            const vMag = Math.hypot(actualVx, actualVy).toFixed(1);
+            ctx.fillText('v=' + vMag, end.x + 5, end.y - 5);
+        }
+        
+        // 绘制速度分量（落地后使用定格速度）
+        function drawVelocityComponents(x, y, vx, vy) {
+            let actualVx = vx, actualVy = vy;
+            if (hasLanded) {
+                actualVx = finalVx;
+                actualVy = finalVy;
+            }
+            if (Math.hypot(actualVx, actualVy) < 0.05) return;
+            
+            const pos = worldToCanvas(x, y);
+            const scaleV = 0.3;
+            const vxEnd = worldToCanvas(x + actualVx * scaleV, y);
+            const vyEnd = worldToCanvas(x, y + actualVy * scaleV);
+            const vEnd = worldToCanvas(x + actualVx * scaleV, y + actualVy * scaleV);
+            
+            // vx 水平
+            ctx.strokeStyle = '#4ECDC4';
+            ctx.fillStyle = '#4ECDC4';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(vxEnd.x, vxEnd.y);
+            ctx.stroke();
+            let arrowAngle = 0;
+            ctx.beginPath();
+            ctx.moveTo(vxEnd.x, vxEnd.y);
+            ctx.lineTo(vxEnd.x - 8 * Math.cos(arrowAngle - Math.PI/6), vxEnd.y - 8 * Math.sin(arrowAngle - Math.PI/6));
+            ctx.lineTo(vxEnd.x - 8 * Math.cos(arrowAngle + Math.PI/6), vxEnd.y - 8 * Math.sin(arrowAngle + Math.PI/6));
+            ctx.fill();
+            ctx.font = '11px sans-serif';
+            ctx.fillText('vx=' + actualVx.toFixed(1), vxEnd.x - 15, vxEnd.y + 15);
+            
+            // vy 垂直
+            ctx.strokeStyle = '#FF9F43';
+            ctx.fillStyle = '#FF9F43';
+            ctx.beginPath();
+            ctx.moveTo(pos.x, pos.y);
+            ctx.lineTo(vyEnd.x, vyEnd.y);
+            ctx.stroke();
+            arrowAngle = actualVy > 0 ? -Math.PI/2 : Math.PI/2;
+            ctx.beginPath();
+            ctx.moveTo(vyEnd.x, vyEnd.y);
+            ctx.lineTo(vyEnd.x - 8 * Math.cos(arrowAngle - Math.PI/6), vyEnd.y - 8 * Math.sin(arrowAngle - Math.PI/6));
+            ctx.lineTo(vyEnd.x - 8 * Math.cos(arrowAngle + Math.PI/6), vyEnd.y - 8 * Math.sin(arrowAngle + Math.PI/6));
+            ctx.fill();
+            ctx.fillText('vy=' + actualVy.toFixed(1), vyEnd.x + 5, vyEnd.y);
+            
+            // 虚线连接
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 3]);
+            ctx.beginPath();
+            ctx.moveTo(vxEnd.x, vxEnd.y);
+            ctx.lineTo(vEnd.x, vEnd.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(vyEnd.x, vyEnd.y);
+            ctx.lineTo(vEnd.x, vEnd.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // 绘制小球
+        function drawBall(x, y) {
+            const pos = worldToCanvas(x, y);
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.beginPath();
+            ctx.ellipse(pos.x + 3, pos.y + 3, 12, 12, 0, 0, Math.PI*2);
+            ctx.fill();
+            const grad = ctx.createRadialGradient(pos.x - 5, pos.y - 5, 0, pos.x, pos.y, 15);
+            grad.addColorStop(0, '#6BB6FF');
+            grad.addColorStop(0.5, '#4A90E2');
+            grad.addColorStop(1, '#2E5C8A');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 12, 0, Math.PI*2);
+            ctx.fill();
+            ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.beginPath();
+            ctx.arc(pos.x - 4, pos.y - 4, 4, 0, Math.PI*2);
+            ctx.fill();
+        }
+        
+        // 炮台
+        function drawCannon() {
+            const pos = worldToCanvas(0, 0);
+            const rad = angle * Math.PI / 180;
+            ctx.fillStyle = '#5A6C7D';
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 15, Math.PI, 0);
+            ctx.fill();
+            ctx.save();
+            ctx.translate(pos.x, pos.y);
+            ctx.rotate(-rad);
+            ctx.fillStyle = '#4A90E2';
+            ctx.fillRect(0, -6, 35, 12);
+            ctx.fillStyle = '#2E5C8A';
+            ctx.fillRect(32, -8, 6, 16);
+            ctx.restore();
+        }
+        
+        // 轨迹
+        function drawTrajectory() {
+            if (!showTrail.checked || trajectory.length < 2) return;
+            ctx.strokeStyle = 'rgba(74, 144, 226, 0.7)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            const start = worldToCanvas(trajectory[0].x, trajectory[0].y);
+            ctx.moveTo(start.x, start.y);
+            for (let i = 1; i < trajectory.length; i++) {
+                const pos = worldToCanvas(trajectory[i].x, trajectory[i].y);
+                ctx.lineTo(pos.x, pos.y);
+            }
+            ctx.stroke();
+            ctx.fillStyle = 'rgba(74, 144, 226, 0.4)';
+            for (let i = 0; i < trajectory.length; i += 5) {
+                const pos = worldToCanvas(trajectory[i].x, trajectory[i].y);
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 3, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+        
+        // 预览虚线轨迹
+        function drawPreviewTrajectory() {
+            const rad = angle * Math.PI / 180;
+            const vx0 = v0 * Math.cos(rad);
+            const vy0 = v0 * Math.sin(rad);
+            const totalTime = 2 * vy0 / g;
+            const maxRange = vx0 * totalTime;
+            const maxHeight = (vy0 * vy0) / (2 * g);
+            updateDataDisplay(maxRange, maxHeight, totalTime, v0);
+            
+            ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            const start = worldToCanvas(0, 0);
+            ctx.moveTo(start.x, start.y);
+            for (let t = 0; t <= totalTime; t += 0.05) {
+                const x = vx0 * t;
+                const y = vy0 * t - 0.5 * g * t * t;
+                if (y < 0) break;
+                const pos = worldToCanvas(x, y);
+                ctx.lineTo(pos.x, pos.y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        function updateDataDisplay(range, height, time, velocity) {
+            rangeVal.textContent = range.toFixed(1) + ' m';
+            heightVal.textContent = height.toFixed(1) + ' m';
+            timeVal.textContent = time.toFixed(2) + ' s';
+            velVal.textContent = velocity.toFixed(1) + ' m/s';
+        }
+        
+        // 绘制主帧（速度显示与矢量绘制使用定格或实时速度）
+        function drawFrame() {
+            drawGrid();
+            drawCannon();
+            if (showTrail.checked) drawTrajectory();
+            drawBall(ballPos.x, ballPos.y);
+            
+            // 确定当前显示的速度数值
+            let currentSpeed = 0;
+            let vx_disp = 0, vy_disp = 0;
+            if (hasLanded) {
+                currentSpeed = Math.hypot(finalVx, finalVy);
+                vx_disp = finalVx;
+                vy_disp = finalVy;
+            } else if (isRunning) {
+                const elapsed = (Date.now() - startTime) / 1000;
+                const rad = angle * Math.PI / 180;
+                vx_disp = v0 * Math.cos(rad);
+                vy_disp = v0 * Math.sin(rad) - g * elapsed;
+                currentSpeed = Math.hypot(vx_disp, vy_disp);
+            } else {
+                currentSpeed = 0;
+                vx_disp = 0;
+                vy_disp = 0;
+            }
+            velVal.textContent = currentSpeed.toFixed(1) + ' m/s';
+            
+            // 绘制速度矢量（使用 vx_disp, vy_disp 但函数内部会根据落地标志切换为 finalVx/finalVy）
+            if (showVelocity.checked) {
+                // 注意：如果未落地且 isRunning，传入实时分量；否则传入0，函数内落地会用final
+                if (hasLanded) {
+                    drawVelocityVector(ballPos.x, ballPos.y, 0, 0);
+                } else if (isRunning) {
+                    drawVelocityVector(ballPos.x, ballPos.y, vx_disp, vy_disp);
+                }
+            }
+            if (showComponents.checked && (hasLanded || isRunning)) {
+                if (hasLanded) {
+                    drawVelocityComponents(ballPos.x, ballPos.y, 0, 0);
+                } else if (isRunning) {
+                    drawVelocityComponents(ballPos.x, ballPos.y, vx_disp, vy_disp);
+                }
+            }
+        }
+        
+        // 动画循环
+        function animate() {
+            if (!isRunning) return;
+            const elapsed = (Date.now() - startTime) / 1000;
+            const rad = angle * Math.PI / 180;
+            const vx0 = v0 * Math.cos(rad);
+            const vy0 = v0 * Math.sin(rad);
+            ballPos.x = vx0 * elapsed;
+            ballPos.y = vy0 * elapsed - 0.5 * g * elapsed * elapsed;
+            trajectory.push({ x: ballPos.x, y: ballPos.y });
+            
+            // 落地检测
+            if (ballPos.y <= 0 && elapsed > 0.05) {
+                ballPos.y = 0;
+                isRunning = false;
+                hasLanded = true;
+                finalFlightTime = elapsed;
+                // 记录落地瞬间的速度分量（定格用）
+                finalVx = vx0;
+                finalVy = vy0 - g * elapsed;
+                // 理论射程、高度用于显示（非定格数据）
+                const theoreticalTime = 2 * vy0 / g;
+                finalRange = vx0 * theoreticalTime;
+                finalMaxHeight = (vy0 * vy0) / (2 * g);
+                updateDataDisplay(finalRange, finalMaxHeight, finalFlightTime, Math.hypot(finalVx, finalVy));
+                
+                playBtn.innerHTML = '<span>▶</span> 发射';
+                playBtn.classList.remove('btn-secondary');
+                playBtn.classList.add('btn-primary');
+                if (animationId) cancelAnimationFrame(animationId);
+                animationId = null;
+                drawFrame(); // 重绘定格画面
+                return;
+            }
+            drawFrame();
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        function toggleAnimation() {
+            if (isRunning) {
+                isRunning = false;
+                if (animationId) cancelAnimationFrame(animationId);
+                playBtn.innerHTML = '<span>▶</span> 继续';
+                playBtn.classList.remove('btn-primary');
+                playBtn.classList.add('btn-secondary');
+                drawFrame();
+            } else {
+                // 如果已经落地，必须重置才能重新发射
+                if (hasLanded) fullResetState();
+                isRunning = true;
+                hasLanded = false;
+                startTime = Date.now();
+                trajectory = [{ x: 0, y: 0 }];
+                playBtn.innerHTML = '<span>⏸</span> 暂停';
+                playBtn.classList.remove('btn-secondary');
+                playBtn.classList.add('btn-primary');
+                animate();
+            }
+        }
+        
+        function drawPreview() {
+            ballPos = { x: 0, y: 0 };
+            trajectory = [];
+            hasLanded = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            animationId = null;
+            drawGrid();
+            drawCannon();
+            drawBall(0, 0);
+            drawPreviewTrajectory();
+        }
+        
+        // 启动
+        fullResetState();
+    </script>
+</body>
+</html>

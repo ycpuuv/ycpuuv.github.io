@@ -1,0 +1,619 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微元法推导·匀变速x-t关系 - PhySenLab仿真实验</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2C3E50;
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            width: 950px;
+            height: 650px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+            border-radius: 24px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+            border: 1px solid #E1EEF7;
+        }
+
+        #mainCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            background: #ffffffd0;
+            cursor: default;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E1EEF7;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            padding: 16px 22px;
+            color: #2C3E50;
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 30;
+            max-width: 280px;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid #E1EEF7;
+        }
+
+        .info-panel h1 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #357ABD;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .formula-box {
+            background: #E8F4FD;
+            padding: 4px 10px;
+            border-radius: 30px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4A90E2;
+        }
+
+        .formula {
+            font-size: 1.0rem;
+            font-family: 'Times New Roman', serif;
+            text-align: center;
+        }
+
+        .principle-text {
+            font-size: 0.8rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+            border-top: 1px dashed #E1EEF7;
+            padding-top: 8px;
+            margin-top: 6px;
+        }
+
+        .stats-box {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            min-width: 200px;
+            text-align: right;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-item { margin-bottom: 12px; }
+        .stat-item:last-child { margin-bottom: 0; }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #5A6C7D;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-family: 'Consolas', monospace;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #4A90E2;
+            line-height: 1.2;
+        }
+
+        .stats-note {
+            font-size: 0.7rem;
+            color: #8B9DC3;
+            border-top: 1px dashed #E1EEF7;
+            margin-top: 12px;
+            padding-top: 8px;
+            text-align: left;
+        }
+
+        .steps-panel {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 30;
+            width: 210px;
+            padding: 16px 16px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .step-item {
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+        }
+        .step-item b {
+            color: #357ABD;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 0.9rem;
+        }
+        .step-item:last-child { margin-bottom: 0; }
+
+        .bottom-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 950px;
+            z-index: 40;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 60px;
+            padding: 18px 28px;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .sliders {
+            display: flex;
+            gap: 20px;
+            flex: 3;
+            min-width: 500px;
+        }
+
+        .slider-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.8rem;
+            color: #5A6C7D;
+        }
+
+        .slider-item input[type=range] {
+            width: 100%;
+            margin-top: 4px;
+            accent-color: #4A90E2;
+        }
+
+        .slider-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #357ABD;
+        }
+
+        .n-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255,255,255,0.5);
+            padding: 5px 18px;
+            border-radius: 40px;
+            border: 1px solid #E1EEF7;
+        }
+        .n-control label {
+            font-size: 0.85rem;
+            color: #5A6C7D;
+            white-space: nowrap;
+        }
+        .n-control input[type=range] {
+            width: 140px;
+            accent-color: #4A90E2;
+        }
+        .n-control input[type=number] {
+            width: 80px;
+            background: rgba(255,255,255,0.8);
+            border: 1px solid #E1EEF7;
+            border-radius: 20px;
+            padding: 6px 12px;
+            font-family: 'Consolas', monospace;
+            color: #357ABD;
+            font-weight: bold;
+            outline: none;
+            text-align: center;
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #4A90E2;
+            padding: 12px 28px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            transition: all 0.3s ease;
+            z-index: 50;
+        }
+
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #8B9DC3;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+            padding: 4px 18px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            z-index: 20;
+            border: 1px solid #E1EEF7;
+        }
+
+        @media (max-width: 1000px) {
+            #canvas-wrapper { width: 90vw; height: 500px; }
+            .bottom-controls { width: 90vw; flex-direction: column; border-radius: 20px; }
+            .info-panel { max-width: 200px; font-size: 0.8rem; }
+            .steps-panel { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-wrapper">
+            <canvas id="mainCanvas" width="950" height="650"></canvas>
+        </div>
+
+        <div class="info-panel glass-panel">
+            <h1>⚡ 微元法·匀变速x-t关系</h1>
+            <div class="formula-box">
+                <div class="formula">x = v₀·t + ½·a·t²</div>
+            </div>
+            <div class="principle-text">
+                <strong>微元思想：</strong>将时间t分割为n个小段，每段内近似匀速，矩形面积之和趋近于梯形面积，即总位移。
+            </div>
+        </div>
+
+        <div class="stats-box glass-panel">
+            <div class="stat-item">
+                <div class="stat-label">理论位移 (m)</div>
+                <div class="stat-value" id="theoDisp">0.0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">微元位移 (m)</div>
+                <div class="stat-value" id="sumDisp">0.0</div>
+            </div>
+            <div class="stats-note">
+                微元份数 <span id="nDisplay">20</span> | 误差 <span id="errorDisplay">0.00</span>%
+            </div>
+        </div>
+
+        <div class="steps-panel glass-panel">
+            <div style="margin-bottom: 12px; font-weight:600;">📐 微元步骤</div>
+            <div class="step-item">
+                <b>① 时间分割</b>
+                将T分为n份，Δt = T/n
+            </div>
+            <div class="step-item">
+                <b>② 矩形面积</b>
+                第i段速度 vᵢ = v₀ + a·i·Δt，面积 vᵢ·Δt
+            </div>
+            <div class="step-item">
+                <b>③ 累加求和</b>
+                总位移 ≈ Σ(vᵢ·Δt) 
+            </div>
+            <div class="step-item">
+                <b>④ 极限精确</b>
+                当n→∞，Σ→梯形面积
+            </div>
+        </div>
+
+        <div class="bottom-controls">
+            <div class="sliders">
+                <div class="slider-item">
+                    <span>初速度 v₀ (m/s)</span>
+                    <input type="range" id="v0-i" min="0" max="40" value="15" step="0.1">
+                    <div class="slider-values">
+                        <span>0</span>
+                        <span id="v0-v">15.0</span>
+                        <span>40</span>
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <span>加速度 a (m/s²)</span>
+                    <input type="range" id="a-i" min="0" max="10" value="3" step="0.1">
+                    <div class="slider-values">
+                        <span>0</span>
+                        <span id="a-v">3.0</span>
+                        <span>10</span>
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <span>总时间 T (s)</span>
+                    <input type="range" id="t-i" min="1" max="15" value="8" step="0.1">
+                    <div class="slider-values">
+                        <span>1</span>
+                        <span id="t-v">8.0</span>
+                        <span>15</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="n-control">
+                <label>分割数 n</label>
+                <input type="range" id="n-slider" min="1" max="1000" value="20" step="1">
+                <input type="number" id="n-input" value="20" min="1" max="1000" step="1">
+            </div>
+        </div>
+
+        
+        <div class="hint-text">坐标轴已添加数字刻度 | 调节滑块观察微元矩形逼近</div>
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('mainCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const CANVAS_W = 950, CANVAS_H = 650;
+            canvas.width = CANVAS_W;
+            canvas.height = CANVAS_H;
+
+            const v0Slider = document.getElementById('v0-i');
+            const aSlider = document.getElementById('a-i');
+            const tSlider = document.getElementById('t-i');
+            const v0Span = document.getElementById('v0-v');
+            const aSpan = document.getElementById('a-v');
+            const tSpan = document.getElementById('t-v');
+            const nSlider = document.getElementById('n-slider');
+            const nInput = document.getElementById('n-input');
+            const theoDispSpan = document.getElementById('theoDisp');
+            const sumDispSpan = document.getElementById('sumDisp');
+            const nDisplaySpan = document.getElementById('nDisplay');
+            const errorSpan = document.getElementById('errorDisplay');
+
+            const pad = 80;  
+
+            function syncN(value) {
+                const n = parseInt(value);
+                if (!isNaN(n) && n >= 1 && n <= 1000) {
+                    nSlider.value = n;
+                    nInput.value = n;
+                    update();
+                }
+            }
+
+            nSlider.addEventListener('input', () => syncN(nSlider.value));
+            nInput.addEventListener('input', () => syncN(nInput.value));
+
+            function drawArrow(x, y, angle, size = 12) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-size, -size/2);
+                ctx.lineTo(-size, size/2);
+                ctx.closePath();
+                ctx.fillStyle = '#666';
+                ctx.fill();
+                ctx.restore();
+            }
+
+            function drawGrid() {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(160, 180, 200, 0.25)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+
+                const yStart = pad;
+                const yEnd = CANVAS_H - pad;
+                const xStart = pad;
+                const xEnd = CANVAS_W - pad/2;
+
+                const vLines = 8;
+                for (let i = 1; i < vLines; i++) {
+                    let y = yStart + (i / vLines) * (yEnd - yStart);
+                    ctx.beginPath();
+                    ctx.moveTo(xStart, y);
+                    ctx.lineTo(xEnd, y);
+                    ctx.stroke();
+                }
+
+                const hLines = 10;
+                for (let i = 1; i < hLines; i++) {
+                    let x = xStart + (i / hLines) * (xEnd - xStart);
+                    ctx.beginPath();
+                    ctx.moveTo(x, yStart);
+                    ctx.lineTo(x, yEnd);
+                    ctx.stroke();
+                }
+
+                ctx.restore();
+            }
+
+            function update() {
+                const v0 = parseFloat(v0Slider.value);
+                const a = parseFloat(aSlider.value);
+                const T = parseFloat(tSlider.value);
+                let N = parseInt(nSlider.value);
+                if (isNaN(N) || N < 1) N = 1;
+                if (N > 2000) N = 2000;
+
+                v0Span.innerText = v0.toFixed(1);
+                aSpan.innerText = a.toFixed(1);
+                tSpan.innerText = T.toFixed(1);
+                nDisplaySpan.innerText = N;
+
+                const x_theory = v0 * T + 0.5 * a * T * T;
+
+                const dt = T / N;
+                let x_sum = 0;
+                for (let i = 0; i < N; i++) {
+                    const t_i = i * dt;
+                    const v_i = v0 + a * t_i;
+                    x_sum += v_i * dt;
+                }
+
+                const error = (x_sum - x_theory) / x_theory * 100;
+
+                theoDispSpan.innerText = x_theory.toFixed(2);
+                sumDispSpan.innerText = x_sum.toFixed(2);
+                errorSpan.innerText = error.toFixed(2);
+
+                render(v0, a, T, N);
+            }
+
+            function render(v0, a, T, N) {
+                ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+
+                const maxV = Math.max(v0 + a * T, 20);
+                const maxT = T;
+
+                const getX = (t) => pad + (t / maxT) * (CANVAS_W - 2 * pad);
+                const getY = (v) => (CANVAS_H - pad) - (v / maxV) * (CANVAS_H - 2 * pad);
+
+                drawGrid();
+
+                ctx.strokeStyle = '#888';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.moveTo(pad, pad/2);
+                ctx.lineTo(pad, CANVAS_H - pad);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(pad, CANVAS_H - pad);
+                ctx.lineTo(CANVAS_W - pad/2, CANVAS_H - pad);
+                ctx.stroke();
+
+                drawArrow(pad, pad/2, -Math.PI/2, 10);
+                drawArrow(CANVAS_W - pad/2, CANVAS_H - pad, 0, 10);
+
+                ctx.fillStyle = '#555';
+                ctx.font = '12px "Consolas", monospace';
+                ctx.setLineDash([]);
+
+                const vTicks = 5;
+                for (let i = 0; i <= vTicks; i++) {
+                    const vVal = (i / vTicks) * maxV;
+                    const y = getY(vVal);
+                    if (y >= pad && y <= CANVAS_H - pad) {
+                        ctx.beginPath();
+                        ctx.moveTo(pad - 5, y);
+                        ctx.lineTo(pad, y);
+                        ctx.strokeStyle = '#666';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        ctx.fillText(vVal.toFixed(1), pad - 45, y + 4);
+                    }
+                }
+
+                const tTicks = 5;
+                for (let i = 0; i <= tTicks; i++) {
+                    const tVal = (i / tTicks) * maxT;
+                    const x = getX(tVal);
+                    if (x >= pad && x <= CANVAS_W - pad/2) {
+                        ctx.beginPath();
+                        ctx.moveTo(x, CANVAS_H - pad + 5);
+                        ctx.lineTo(x, CANVAS_H - pad);
+                        ctx.stroke();
+                        ctx.fillText(tVal.toFixed(1), x - 12, CANVAS_H - pad + 22);
+                    }
+                }
+
+                const dt = T / N;
+                for (let i = 0; i < N; i++) {
+                    const ts = i * dt;
+                    const curV = v0 + a * ts;
+                    const xL = getX(ts);
+                    const xR = getX(ts + dt);
+                    const yTop = getY(curV);
+                    const yBase = getY(0);
+
+                    ctx.fillStyle = `rgba(64, 158, 255, ${0.2 + (i/N)*0.4})`;
+                    ctx.fillRect(xL, yTop, xR - xL, yBase - yTop);
+
+                    if (N < 150) {
+                        ctx.strokeStyle = 'rgba(100,100,100,0.3)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(xL, yTop, xR - xL, yBase - yTop);
+                    }
+                }
+
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.moveTo(getX(0), getY(v0));
+                ctx.lineTo(getX(T), getY(v0 + a * T));
+                ctx.stroke();
+
+                ctx.setLineDash([6, 4]);
+                ctx.strokeStyle = '#2c3e50';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(getX(0), getY(v0));
+                ctx.lineTo(getX(0), getY(0));
+                ctx.lineTo(getX(T), getY(0));
+                ctx.lineTo(getX(T), getY(v0 + a * T));
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.fillStyle = '#2C3E50';
+                ctx.font = 'bold 15px "Segoe UI", "Roboto", Arial';
+                ctx.fillText('v₀', getX(0) - 30, getY(v0) - 8);
+
+                ctx.fillStyle = '#4A90E2';
+                ctx.font = '14px "Segoe UI", "Roboto", Arial';
+                ctx.fillText('速度 v (m/s)', pad - 25, pad/2 - 8);
+                ctx.fillText('时间 t (s)', CANVAS_W - pad/2 - 45, CANVAS_H - pad + 30);
+            }
+
+            [v0Slider, aSlider, tSlider].forEach(el => {
+                el.addEventListener('input', update);
+            });
+
+            update();
+        })();
+    </script>
+    </body>
+</html>

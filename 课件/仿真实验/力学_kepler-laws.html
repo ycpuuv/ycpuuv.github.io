@@ -1,0 +1,773 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>开普勒三大定律 · 椭圆轨道清晰展示 · 高精度纹理</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.2);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #050b1a; min-height: 100vh; overflow: hidden; color: var(--text-primary);
+        }
+        .simulation-container { position: relative; width: 100vw; height: 100vh; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+        .glass-panel {
+            background: rgba(255,255,255,0.88); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 16px 20px; color: var(--text-primary);
+            transition: var(--transition); z-index: 10;
+        }
+        .glass-panel:hover { box-shadow: var(--shadow-hover); }
+
+        .info-panel {
+            position: absolute; top: 16px; left: 16px; max-width: 270px; z-index: 20;
+        }
+        .info-panel h1 {
+            font-size: 1.15rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; color: var(--primary-dark);
+        }
+        .formula-box {
+            background: var(--primary-light); padding: 7px 11px; border-radius: 8px;
+            border-left: 4px solid var(--primary-color); margin-bottom: 6px;
+        }
+        .formula { font-size: 0.92rem; font-family: 'Times New Roman', serif; font-style: italic; }
+        .info-text { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+        .tab-info { display: none; }
+        .tab-info.active { display: block; }
+
+        .physics-panel {
+            position: absolute; top: 280px; left: 16px; width: 250px; z-index: 20;
+        }
+        .physics-panel h3 {
+            font-size: 0.95rem; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 5px;
+        }
+        .param-row {
+            display: flex; justify-content: space-between; margin-bottom: 10px;
+            font-size: 0.82rem; color: var(--text-secondary);
+        }
+        .param-value { font-family: 'Consolas', monospace; font-weight: 600; color: var(--primary-color); }
+        .tab-params { display: none; }
+        .tab-params.active { display: block; }
+
+        .controls-panel {
+            position: absolute; top: 16px; right: 16px; width: 300px; z-index: 20;
+            max-height: calc(100vh - 32px); overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid var(--border-color); padding-bottom: 6px;
+        }
+
+        .tab-group { display: flex; gap: 4px; margin-bottom: 16px; }
+        .tab-btn {
+            flex: 1; padding: 7px 4px; border: none; border-radius: 22px;
+            font-weight: 600; font-size: 0.72rem; cursor: pointer; transition: var(--transition);
+            background: rgba(0,0,0,0.04); color: var(--text-secondary); white-space: nowrap;
+        }
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white; box-shadow: 0 3px 10px rgba(74,144,226,0.3);
+        }
+
+        .tab-controls { display: none; }
+        .tab-controls.active { display: block; }
+        .section-label {
+            font-size: 0.78rem; color: var(--text-light); margin: 14px 0 6px;
+            font-weight: 600; letter-spacing: 0.5px;
+        }
+
+        .slider-group { margin-bottom: 16px; }
+        .slider-label {
+            display: flex; justify-content: space-between; font-size: 0.82rem;
+            margin-bottom: 5px; color: var(--text-secondary);
+        }
+        .value-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white; padding: 1px 9px; border-radius: 16px;
+            font-family: monospace; font-size: 0.72rem; font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%; height: 5px; border-radius: 3px; background: #E1EEF7;
+            outline: none; -webkit-appearance: none; cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid white; box-shadow: 0 2px 6px rgba(74,144,226,0.4); cursor: pointer;
+        }
+
+        .btn-group-row { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+        .mode-btn {
+            flex: 1; min-width: 60px; padding: 6px 8px; border: none; border-radius: 22px;
+            font-weight: 600; font-size: 0.75rem; cursor: pointer; transition: var(--transition);
+            background: rgba(0,0,0,0.04); color: var(--text-secondary);
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white; box-shadow: 0 3px 10px rgba(74,144,226,0.25);
+        }
+
+        .legend-panel {
+            position: absolute; bottom: 16px; right: 16px; z-index: 20;
+            font-size: 0.72rem; width: 150px;
+            background: rgba(255,255,255,0.85); backdrop-filter: blur(10px);
+            border-radius: var(--radius); border: 1px solid var(--border-color); padding: 10px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 7px; margin: 5px 0; color: var(--text-secondary); }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+        .bottom-bar {
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 30;
+            display: flex; gap: 14px; background: rgba(255,255,255,0.9); backdrop-filter: blur(12px);
+            padding: 8px 20px; border-radius: 50px; border: 1px solid var(--border-color); box-shadow: var(--shadow-hover);
+        }
+        .btn {
+            padding: 7px 18px; border: none; border-radius: 30px; font-weight: 600;
+            font-size: 0.82rem; cursor: pointer; transition: var(--transition);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 16px rgba(74,144,226,0.35); }
+        .btn-secondary { background: #f0f0f0; color: var(--text-secondary); }
+        .btn-secondary:hover { background: #e0e0e0; }
+
+        .back-btn {
+            position: absolute; bottom: 24px; left: 16px; background: white; color: var(--primary-color);
+            padding: 7px 16px; border-radius: 24px; text-decoration: none; font-weight: 600;
+            border: 2px solid var(--primary-color); box-shadow: var(--shadow); transition: var(--transition);
+            z-index: 30; font-size: 0.82rem;
+        }
+        .back-btn:hover { background: var(--primary-color); color: white; }
+        .hint-text {
+            position: absolute; bottom: 80px; left: 16px; color: var(--text-light); font-size: 0.68rem;
+            background: rgba(255,255,255,0.55); padding: 3px 10px; border-radius: 16px; z-index: 20;
+        }
+
+        #chart-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 35; background: rgba(5,11,26,0.7);
+            justify-content: center; align-items: center;
+        }
+        #chart-overlay.active { display: flex; }
+        .chart-panel {
+            background: rgba(255,255,255,0.95); backdrop-filter: blur(14px); border-radius: 16px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3); padding: 28px 32px; max-width: 900px;
+            width: 92%; max-height: 88vh; overflow-y: auto;
+        }
+        .chart-panel h2 { font-size: 1.2rem; margin-bottom: 16px; color: var(--primary-dark); text-align: center; }
+        .chart-canvas-wrap { text-align: center; margin-bottom: 16px; }
+        .chart-canvas-wrap canvas { max-width: 100%; border-radius: 8px; background: #fafcff; border: 1px solid var(--border-color); }
+        .data-table {
+            width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-bottom: 12px;
+        }
+        .data-table th {
+            background: var(--primary-light); color: var(--primary-dark); padding: 8px 10px;
+            text-align: center; font-weight: 600; border-bottom: 2px solid var(--primary-color);
+        }
+        .data-table td {
+            padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--border-color);
+            font-family: 'Consolas', monospace; font-size: 0.8rem;
+        }
+        .data-table tr:hover td { background: var(--primary-light); }
+        .avg-row { font-weight: 700; color: var(--primary-color); font-size: 0.95rem; text-align: center; margin-top: 8px; }
+
+        #area-info {
+            max-height: 180px; overflow-y: auto; font-size: 0.78rem; margin-top: 8px;
+        }
+        .area-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 3px 0; border-bottom: 1px solid rgba(0,0,0,0.04);
+        }
+        .area-color { width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; flex-shrink: 0; }
+        .focus-marker {
+            position: absolute;
+            background: rgba(255,100,0,0.6);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 40;
+            width: 12px;
+            height: 12px;
+            transform: translate(-50%, -50%);
+        }
+        @media (max-width: 1000px) {
+            .controls-panel { width: 260px; }
+            .physics-panel { width: 230px; }
+            .info-panel { max-width: 230px; }
+        }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"></div>
+
+    <div class="info-panel glass-panel">
+        <div id="info-law1" class="tab-info">
+            <h1>🪐 开普勒第一定律</h1>
+            <div class="formula-box"><div class="formula">椭圆轨道定律</div></div>
+            <p class="info-text">所有行星绕太阳运动的轨道都是<strong>椭圆</strong>，太阳位于椭圆的一个<strong>焦点</strong>上。八大行星以不同的周期和离心率运行。</p>
+        </div>
+        <div id="info-law2" class="tab-info active">
+            <h1>📐 开普勒第二定律</h1>
+            <div class="formula-box"><div class="formula">ΔA/Δt = L/(2m) = 常量</div></div>
+            <p class="info-text"><strong>单一椭圆轨道清晰演示：</strong> 行星与太阳的连线在相等时间内扫过<strong>相等面积</strong>。近日点速度快、远日点速度慢。彩色扇形面积相等。</p>
+        </div>
+        <div id="info-law3" class="tab-info">
+            <h1>📊 开普勒第三定律</h1>
+            <div class="formula-box"><div class="formula">T² / a³ = k（常量）</div></div>
+            <p class="info-text">所有行星轨道半长轴 a 的三次方与公转周期 T 的平方之比为<strong>常数</strong>。以 AU 和年为单位时 k ≈ 1。</p>
+        </div>
+    </div>
+
+    <div class="physics-panel glass-panel">
+        <div id="params-law1" class="tab-params">
+            <h3>📊 太阳系参数</h3>
+            <div class="param-row"><span>模拟时间:</span><span id="pTime" class="param-value">0.00 yr</span></div>
+            <div class="param-row"><span>行星数量:</span><span class="param-value">8</span></div>
+            <div class="param-row"><span>显示模式:</span><span id="pScale" class="param-value">全景</span></div>
+        </div>
+        <div id="params-law2" class="tab-params active">
+            <h3>📐 面积定律参数 (单一椭圆)</h3>
+            <div class="param-row"><span>当前行星:</span><span id="p2Name" class="param-value">地球</span></div>
+            <div class="param-row"><span>半长轴 a:</span><span id="p2A" class="param-value">1.000 AU</span></div>
+            <div class="param-row"><span>离心率 e:</span><span id="p2E" class="param-value">0.0167</span></div>
+            <div class="param-row"><span>周期 T:</span><span id="p2T" class="param-value">1.000 yr</span></div>
+            <div class="param-row"><span>等分数:</span><span id="p2N" class="param-value">6</span></div>
+            <div id="area-info"></div>
+        </div>
+        <div id="params-law3" class="tab-params">
+            <h3>📊 第三定律验证</h3>
+            <div class="param-row"><span>数据点:</span><span class="param-value">8 颗行星</span></div>
+            <div class="param-row"><span>拟合关系:</span><span class="param-value">T² = a³</span></div>
+            <div class="param-row"><span>平均 T²/a³:</span><span id="p3Avg" class="param-value">≈ 1.0000</span></div>
+        </div>
+    </div>
+
+    <div class="controls-panel glass-panel">
+        <h3>🔧 实验控制</h3>
+        <div class="tab-group">
+            <button class="tab-btn" data-tab="1">🪐 第一定律</button>
+            <button class="tab-btn active" data-tab="2">📐 第二定律</button>
+            <button class="tab-btn" data-tab="3">📊 第三定律</button>
+        </div>
+
+        <div id="ctrl-law1" class="tab-controls">
+            <div class="section-label">时间控制</div>
+            <div class="slider-group">
+                <div class="slider-label"><span>⏱️ 时间速度</span><span id="timeSpeedVal" class="value-badge">0.3 yr/s</span></div>
+                <input type="range" id="timeSpeedSlider" min="1" max="100" step="1" value="3">
+            </div>
+            <div class="section-label">显示选项</div>
+            <div class="btn-group-row">
+                <button class="mode-btn active" id="toggleOrbits">轨道线</button>
+                <button class="mode-btn active" id="toggleLabels">名称标签</button>
+            </div>
+        </div>
+
+        <div id="ctrl-law2" class="tab-controls active">
+            <div class="section-label">行星选择 (单一椭圆轨道研究)</div>
+            <div class="slider-group">
+                <div class="slider-label"><span>🌍 选择行星</span><span id="planet2Val" class="value-badge">地球</span></div>
+                <input type="range" id="planet2Slider" min="0" max="7" step="1" value="2">
+            </div>
+            <div class="section-label">面积等分 (展示相等面积)</div>
+            <div class="slider-group">
+                <div class="slider-label"><span>✂️ 等分数量</span><span id="sectorVal" class="value-badge">6</span></div>
+                <input type="range" id="sectorSlider" min="3" max="12" step="1" value="6">
+            </div>
+            <div class="section-label">时间控制 (公转已调慢)</div>
+            <div class="slider-group">
+                <div class="slider-label"><span>⏱️ 时间速度</span><span id="timeSpeed2Val" class="value-badge">0.3 yr/s</span></div>
+                <input type="range" id="timeSpeed2Slider" min="1" max="50" step="1" value="3">
+            </div>
+        </div>
+
+        <div id="ctrl-law3" class="tab-controls">
+            <p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.6;margin-bottom:12px;">
+                点击下方按钮查看 T²-a³ 散点图和数据表格，验证开普勒第三定律。
+            </p>
+            <button class="btn btn-primary" id="showChartBtn" style="width:100%;">📊 查看 T²-a³ 关系图</button>
+        </div>
+    </div>
+
+    <div class="legend-panel" id="legendPanel">
+        <div style="font-weight:600;margin-bottom:6px;">📖 图例</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#FDB813;"></div> 太阳 (高分辨率纹理)</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#8c8c8c;"></div> 水星</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#e8cda0;"></div> 金星</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4a90e2;"></div> 地球</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c1440e;"></div> 火星</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#c88b3a;"></div> 木星</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#d4b896;"></div> 土星</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#72b5c4;"></div> 天王星</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#3f54ba;"></div> 海王星</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffaa44;"></div> 椭圆焦点(太阳)</div>
+    </div>
+
+    <div id="chart-overlay">
+        <div class="chart-panel">
+            <h2>📊 开普勒第三定律 —— T² - a³ 关系图</h2>
+            <div class="chart-canvas-wrap"><canvas id="chartCanvas" width="780" height="420"></canvas></div>
+            <table class="data-table">
+                <thead><tr><th>行星</th><th>a (AU)</th><th>T (yr)</th><th>a³ (AU³)</th><th>T² (yr²)</th><th>T²/a³</th></tr></thead>
+                <tbody id="chartTableBody"></tbody>
+            </table>
+            <div class="avg-row" id="avgRow"></div>
+            <div style="text-align:center;margin-top:14px;">
+                <button class="btn btn-secondary" id="closeChartBtn">✕ 关闭图表</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部控制栏：添加预设视角按钮组 -->
+    <div class="bottom-bar">
+        <button class="btn btn-primary" id="resetViewBtn">🎥 重置视角</button>
+        <button class="btn btn-secondary" id="pauseBtn">⏸ 暂停</button>
+        <div style="display: flex; gap: 6px; margin-left: 8px;">
+            <button class="btn btn-secondary" data-view="all">🌌 全景</button>
+            <button class="btn btn-secondary" data-view="inner">🔵 内行星</button>
+            <button class="btn btn-secondary" data-view="outer">🟤 外行星</button>
+        </div>
+    </div>
+    
+    <div class="hint-text">🖱️ 鼠标拖拽旋转 | 滚轮缩放 | 公转速度已优化，第二定律聚焦单一椭圆轨道，纹理全面升级</div>
+</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ==================== 行星数据 ====================
+const PLANETS = [
+    { name:'水星', a:0.387, e:0.2056, T:0.2408, color:0x8c8c8c, hex:'#8c8c8c', size:0.045 },
+    { name:'金星', a:0.723, e:0.0068, T:0.6152, color:0xe8cda0, hex:'#e8cda0', size:0.058 },
+    { name:'地球', a:1.000, e:0.0167, T:1.0000, color:0x4a90e2, hex:'#4a90e2', size:0.062, hasTexture:true },
+    { name:'火星', a:1.524, e:0.0934, T:1.8809, color:0xc1440e, hex:'#c1440e', size:0.05 },
+    { name:'木星', a:5.203, e:0.0484, T:11.862, color:0xc88b3a, hex:'#c88b3a', size:0.165 },
+    { name:'土星', a:9.537, e:0.0542, T:29.457, color:0xd4b896, hex:'#d4b896', size:0.14, hasRing:true },
+    { name:'天王星', a:19.19, e:0.0472, T:84.011, color:0x72b5c4, hex:'#72b5c4', size:0.09 },
+    { name:'海王星', a:30.07, e:0.0086, T:164.79, color:0x3f54ba, hex:'#3f54ba', size:0.085 },
+];
+
+const SCALE = 1;
+
+function solveKepler(M, e) {
+    let E = M;
+    for (let i = 0; i < 50; i++) {
+        const dE = (M - E + e * Math.sin(E)) / (1 - e * Math.cos(E));
+        E += dE;
+        if (Math.abs(dE) < 1e-10) break;
+    }
+    return E;
+}
+
+function getOrbitalPosition(t, planet) {
+    const M = (2 * Math.PI * t / planet.T) % (2 * Math.PI);
+    const E = solveKepler(M, planet.e);
+    const x = planet.a * (Math.cos(E) - planet.e) * SCALE;
+    const z = planet.a * Math.sqrt(1 - planet.e * planet.e) * Math.sin(E) * SCALE;
+    return { x, z, r: Math.sqrt(x*x + z*z), E };
+}
+
+// 高级程序纹理生成器 (更逼真的行星表面)
+function createPlanetTexture(baseColor, stripeColor, spotColor, hasBands = false, isGasGiant = false) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = baseColor;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // 噪点与云带效果
+    for (let i = 0; i < 2500; i++) {
+        const rad = Math.random() * 12 + 2;
+        const x = Math.random() * canvas.width;
+        const y = Math.random() * canvas.height;
+        ctx.beginPath();
+        ctx.arc(x, y, rad, 0, Math.PI * 2);
+        ctx.fillStyle = spotColor;
+        ctx.fill();
+    }
+    if (hasBands || isGasGiant) {
+        const bandCount = 22;
+        for (let i = 0; i < bandCount; i++) {
+            const yPos = (i / bandCount) * canvas.height;
+            const bandHeight = canvas.height / bandCount * 0.6;
+            ctx.fillStyle = stripeColor;
+            ctx.fillRect(0, yPos, canvas.width, bandHeight);
+            ctx.fillStyle = baseColor;
+            ctx.fillRect(0, yPos + bandHeight*0.2, canvas.width, bandHeight*0.2);
+        }
+    }
+    // 模拟大红斑
+    if (baseColor === '#c88b3a') {
+        ctx.fillStyle = '#aa5533';
+        ctx.beginPath();
+        ctx.ellipse(canvas.width * 0.65, canvas.height * 0.45, 70, 50, 0, 0, Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle = '#cc7755';
+        ctx.beginPath();
+        ctx.ellipse(canvas.width * 0.63, canvas.height * 0.43, 40, 35, 0, 0, Math.PI*2);
+        ctx.fill();
+    }
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    return texture;
+}
+
+// 太阳高质量纹理
+function createSunTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 1024;
+    const ctx = canvas.getContext('2d');
+    const grad = ctx.createLinearGradient(0,0,canvas.width,canvas.height);
+    grad.addColorStop(0, '#ffaa44');
+    grad.addColorStop(0.5, '#ff8822');
+    grad.addColorStop(1, '#ff5511');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    for (let i=0;i<4000;i++) {
+        ctx.fillStyle = `rgba(255,100,30,${Math.random()*0.5})`;
+        ctx.beginPath();
+        ctx.arc(Math.random()*canvas.width, Math.random()*canvas.height, Math.random()*6+1, 0, Math.PI*2);
+        ctx.fill();
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    return tex;
+}
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050b1a);
+scene.fog = new THREE.FogExp2(0x050b1a, 0.002);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.01, 500);
+camera.position.set(2.2, 1.8, 3.5); // 初始视角聚焦于内行星椭圆
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(devicePixelRatio);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.setSize(innerWidth, innerHeight);
+labelRenderer.domElement.style.position = 'absolute';
+labelRenderer.domElement.style.top = '0';
+labelRenderer.domElement.style.left = '0';
+labelRenderer.domElement.style.pointerEvents = 'none';
+document.body.appendChild(labelRenderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 0.5;
+controls.maxDistance = 180;
+
+scene.add(new THREE.AmbientLight(0x404060, 0.7));
+const sunLight = new THREE.PointLight(0xffaa66, 1.6, 120);
+scene.add(sunLight);
+const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+fillLight.position.set(2,5,3);
+scene.add(fillLight);
+
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(3500*3);
+for (let i=0;i<3500;i++) {
+    starPos[i*3]=(Math.random()-0.5)*450;
+    starPos[i*3+1]=(Math.random()-0.5)*250;
+    starPos[i*3+2]=(Math.random()-0.5)*450-80;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({color:0xffffff,size:0.12,transparent:true,opacity:0.7})));
+
+// 太阳 (高分辨率纹理 + 自发光)
+const sunTexture = createSunTexture();
+const sunMat = new THREE.MeshStandardMaterial({ map: sunTexture, emissive: 0xff6622, emissiveIntensity: 1.3, metalness: 0.1, roughness: 0.4 });
+const sunMesh = new THREE.Mesh(new THREE.SphereGeometry(0.28, 128, 128), sunMat);
+scene.add(sunMesh);
+const sunGlow = new THREE.Mesh(new THREE.SphereGeometry(0.38, 32, 32), new THREE.MeshBasicMaterial({ color: 0xffaa55, transparent: true, opacity: 0.2 }));
+scene.add(sunGlow);
+const sunLabelDiv = document.createElement('div');
+sunLabelDiv.textContent = '☀️ 太阳';
+sunLabelDiv.style.cssText = 'background:rgba(0,0,0,0.6);color:#FDB813;font-size:12px;padding:2px 8px;border-radius:14px;';
+const sunLabel = new CSS2DObject(sunLabelDiv);
+sunLabel.position.set(0, 0.42, 0);
+scene.add(sunLabel);
+
+// 行星创建
+const planetMeshes = [], planetLabels = [], orbitLines = [];
+PLANETS.forEach((p, idx) => {
+    let mat;
+    if (p.hasTexture) {
+        mat = new THREE.MeshPhongMaterial({
+            map: new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg'),
+            specularMap: new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_specular_2048.jpg'),
+            shininess: 5,
+            normalMap: new THREE.TextureLoader().load('https://threejs.org/examples/textures/planets/earth_normal_2048.jpg')
+        });
+    } else {
+        let tex;
+        if (p.name === '木星') tex = createPlanetTexture('#d8a27a', '#b87c4f', '#9a5e3a', true, true);
+        else if (p.name === '土星') tex = createPlanetTexture('#e8cfaa', '#c8a87a', '#a8885a', true, true);
+        else if (p.name === '火星') tex = createPlanetTexture('#c46a4a', '#9a4a2a', '#7a3a1a', false, false);
+        else if (p.name === '金星') tex = createPlanetTexture('#e6b856', '#c9943a', '#b87a3a', false, false);
+        else if (p.name === '水星') tex = createPlanetTexture('#b0a88c', '#8f7a5c', '#6a5a42', false, false);
+        else if (p.name === '天王星') tex = createPlanetTexture('#b0e0e6', '#8fc0c6', '#6ea0aa', false, false);
+        else if (p.name === '海王星') tex = createPlanetTexture('#4169e1', '#2349b1', '#1a2f8a', false, false);
+        else tex = createPlanetTexture(p.hex, '#888888', '#666666', false, false);
+        mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5, metalness: 0.2 });
+    }
+    const mesh = new THREE.Mesh(new THREE.SphereGeometry(p.size, 64, 64), mat);
+    scene.add(mesh);
+    planetMeshes.push(mesh);
+    if (p.hasRing) {
+        const ring = new THREE.Mesh(new THREE.RingGeometry(p.size*1.25, p.size*2.0, 64), new THREE.MeshStandardMaterial({ color: 0xd4c896, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
+        ring.rotation.x = Math.PI * 0.45;
+        mesh.add(ring);
+    }
+    const div = document.createElement('div');
+    div.textContent = p.name;
+    div.style.cssText = `background:rgba(0,0,0,0.6);color:${p.hex};font-size:10px;padding:1px 6px;border-radius:12px;font-weight:500;`;
+    const lbl = new CSS2DObject(div);
+    lbl.position.set(0, p.size + 0.1, 0);
+    mesh.add(lbl);
+    planetLabels.push(lbl);
+    const pts = [];
+    for (let i = 0; i <= 300; i++) {
+        const E = (i / 300) * Math.PI * 2;
+        pts.push(new THREE.Vector3(p.a * (Math.cos(E) - p.e) * SCALE, 0, p.a * Math.sqrt(1 - p.e*p.e) * Math.sin(E) * SCALE));
+    }
+    const orbitGeo = new THREE.BufferGeometry().setFromPoints(pts);
+    const orbitLine = new THREE.LineLoop(orbitGeo, new THREE.LineBasicMaterial({ color: p.color, transparent: true, opacity: 0.6, linewidth: 1 }));
+    scene.add(orbitLine);
+    orbitLines.push(orbitLine);
+});
+
+// 第二定律扇形组
+const sectorsGroup = new THREE.Group();
+scene.add(sectorsGroup);
+
+function buildSectors(planetIdx, numSectors) {
+    while(sectorsGroup.children.length) sectorsGroup.remove(sectorsGroup.children[0]);
+    const p = PLANETS[planetIdx];
+    const areaInfo = document.getElementById('area-info');
+    let html = '';
+    for (let i = 0; i < numSectors; i++) {
+        const hue = i / numSectors;
+        const color = new THREE.Color().setHSL(hue, 0.7, 0.55);
+        const t1 = (i / numSectors) * p.T;
+        const t2 = ((i+1)/numSectors) * p.T;
+        const trackPts = [];
+        const steps = 100;
+        let area = 0;
+        for (let j=0; j<=steps; j++) {
+            const t = t1 + (j/steps)*(t2-t1);
+            const pos = getOrbitalPosition(t, p);
+            trackPts.push(new THREE.Vector3(pos.x, 0, pos.z));
+            if(j>0) {
+                const prev=trackPts[j-1], cur=trackPts[j];
+                area += 0.5*Math.abs(prev.x*cur.z - cur.x*prev.z);
+            }
+        }
+        const verts = [];
+        for(let j=0; j<trackPts.length-1; j++) {
+            verts.push(0,0,0);
+            verts.push(trackPts[j].x,0,trackPts[j].z);
+            verts.push(trackPts[j+1].x,0,trackPts[j+1].z);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(verts), 3));
+        const mat = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.5, side: THREE.DoubleSide });
+        sectorsGroup.add(new THREE.Mesh(geo, mat));
+        html += `<div class="area-row"><div style="display:flex;"><div class="area-color" style="background:hsl(${hue*360},70%,55%);"></div> 区域 ${i+1}</div><span>${area.toFixed(4)} AU²</span></div>`;
+    }
+    areaInfo.innerHTML = html;
+}
+
+// 初始状态: 第二定律模式，单一行星，公转速度调慢
+let currentTab = 2;
+let simTime = 0;
+let timeSpeed = 0.3;      // 初始慢速
+let paused = false;
+let selectedPlanet = 2;
+let numSectors = 6;
+let showOrbits = true;
+let showLabels = true;
+
+// 预设视角配置
+const VIEW_PRESETS = {
+    all:   { pos: [18, 14, 22], target: [0, 0, 0] },
+    inner: { pos: [2.5, 2.0, 3.8], target: [0, 0, 0] },
+    outer: { pos: [30, 20, 45], target: [0, 0, 0] },
+};
+
+function setView(name) {
+    const v = VIEW_PRESETS[name];
+    if (!v) return;
+    camera.position.set(v.pos[0], v.pos[1], v.pos[2]);
+    controls.target.set(v.target[0], v.target[1], v.target[2]);
+    controls.update(); // 立即更新控制器
+    document.getElementById('pScale').textContent = name === 'all' ? '全景' : name === 'inner' ? '内行星' : '外行星';
+    // 高亮底部按钮（可选）
+    document.querySelectorAll('[data-view]').forEach(btn => btn.classList.toggle('active', btn.getAttribute('data-view') === name));
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', +b.dataset.tab === tab));
+    document.querySelectorAll('.tab-info').forEach(el => el.classList.remove('active'));
+    document.getElementById(`info-law${tab}`).classList.add('active');
+    document.querySelectorAll('.tab-params').forEach(el => el.classList.remove('active'));
+    document.getElementById(`params-law${tab}`).classList.add('active');
+    document.querySelectorAll('.tab-controls').forEach(el => el.classList.remove('active'));
+    document.getElementById(`ctrl-law${tab}`).classList.add('active');
+    if (tab === 1) {
+        sectorsGroup.visible = false;
+        PLANETS.forEach((_,i) => { planetMeshes[i].visible = true; orbitLines[i].visible = showOrbits; });
+        document.getElementById('chart-overlay').classList.remove('active');
+        setView('all'); // 进入第一定律时恢复全景视角（可选，保持体验一致）
+    } else if (tab === 2) {
+        sectorsGroup.visible = true;
+        PLANETS.forEach((_,i) => {
+            planetMeshes[i].visible = (i === selectedPlanet);
+            orbitLines[i].visible = (i === selectedPlanet);
+        });
+        buildSectors(selectedPlanet, numSectors);
+        // 不自动重置视角，保留用户上次的视角，如果用户想重置可通过预设按钮
+        document.getElementById('chart-overlay').classList.remove('active');
+    } else {
+        sectorsGroup.visible = false;
+        PLANETS.forEach((_,i) => { planetMeshes[i].visible = true; orbitLines[i].visible = showOrbits; });
+        document.getElementById('chart-overlay').classList.remove('active');
+        setView('all');
+    }
+}
+
+// 绑定UI事件
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(+b.dataset.tab)));
+document.getElementById('timeSpeedSlider').addEventListener('input', e => { timeSpeed = +e.target.value / 10; document.getElementById('timeSpeedVal').textContent = timeSpeed.toFixed(1)+' yr/s'; });
+document.getElementById('timeSpeed2Slider').addEventListener('input', e => { timeSpeed = +e.target.value / 10; document.getElementById('timeSpeed2Val').textContent = timeSpeed.toFixed(1)+' yr/s'; });
+document.getElementById('planet2Slider').addEventListener('input', e => {
+    selectedPlanet = +e.target.value;
+    const p = PLANETS[selectedPlanet];
+    document.getElementById('planet2Val').textContent = p.name;
+    document.getElementById('p2Name').textContent = p.name;
+    document.getElementById('p2A').textContent = p.a.toFixed(3)+' AU';
+    document.getElementById('p2E').textContent = p.e.toFixed(4);
+    document.getElementById('p2T').textContent = p.T.toFixed(4)+' yr';
+    if(currentTab===2) switchTab(2);
+});
+document.getElementById('sectorSlider').addEventListener('input', e => {
+    numSectors = +e.target.value;
+    document.getElementById('sectorVal').textContent = numSectors;
+    document.getElementById('p2N').textContent = numSectors;
+    if(currentTab===2) buildSectors(selectedPlanet, numSectors);
+});
+document.getElementById('toggleOrbits').addEventListener('click', function() {
+    showOrbits = !showOrbits; this.classList.toggle('active', showOrbits);
+    orbitLines.forEach(l => { if(currentTab===1) l.visible = showOrbits; });
+});
+document.getElementById('toggleLabels').addEventListener('click', function() {
+    showLabels = !showLabels; this.classList.toggle('active', showLabels);
+    planetLabels.forEach(l => l.visible = showLabels);
+    sunLabel.visible = showLabels;
+});
+document.getElementById('resetViewBtn').addEventListener('click', () => {
+    // 重置视角：根据当前标签页合理选择
+    if (currentTab === 2) {
+        // 第二定律模式下，重置到当前行星合适的视角
+        const p = PLANETS[selectedPlanet];
+        const dist = Math.max(p.a * 1.5, 2.5);
+        camera.position.set(dist * 0.8, dist * 0.7, dist);
+        controls.target.set(0,0,0);
+        controls.update();
+    } else {
+        setView('all');
+    }
+});
+document.getElementById('pauseBtn').addEventListener('click', function() { paused = !paused; this.textContent = paused ? '▶ 继续' : '⏸ 暂停'; });
+document.getElementById('showChartBtn').addEventListener('click', () => { drawChart(); document.getElementById('chart-overlay').classList.add('active'); });
+document.getElementById('closeChartBtn').addEventListener('click', () => document.getElementById('chart-overlay').classList.remove('active'));
+document.getElementById('chart-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) document.getElementById('chart-overlay').classList.remove('active'); });
+
+// 预设视角按钮绑定
+document.querySelectorAll('[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => setView(btn.getAttribute('data-view')));
+});
+
+function drawChart() { /* 保持原第三定律绘制逻辑 */ 
+    const canvas = document.getElementById('chartCanvas');
+    const ctx = canvas.getContext('2d');
+    const W=780,H=420, padL=65,padR=30,padT=40,padB=50, pw=W-padL-padR, ph=H-padT-padB;
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#fafcff'; ctx.fillRect(0,0,W,H);
+    const data = PLANETS.map(p=>({name:p.name,hex:p.hex,a:p.a,T:p.T,a3:Math.pow(p.a,3),T2:Math.pow(p.T,2),ratio:Math.pow(p.T,2)/Math.pow(p.a,3)}));
+    const logMin=-2,logMax=5.5;
+    const toX=v=>padL+(Math.log10(v)-logMin)/(logMax-logMin)*pw;
+    const toY=v=>padT+ph-(Math.log10(v)-logMin)/(logMax-logMin)*ph;
+    ctx.strokeStyle='#e8ecf1'; ctx.lineWidth=0.5;
+    for(let i=logMin;i<=logMax;i++){ let x=toX(Math.pow(10,i)); ctx.beginPath();ctx.moveTo(x,padT);ctx.lineTo(x,padT+ph);ctx.stroke(); let y=toY(Math.pow(10,i)); ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(padL+pw,y);ctx.stroke(); }
+    ctx.strokeStyle='#aab'; ctx.lineWidth=1.5; ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+ph);ctx.lineTo(padL+pw,padT+ph);ctx.stroke();
+    ctx.fillStyle='#5A6C7D'; ctx.font='12px sans-serif'; ctx.fillText('a³ (AU³) — 对数坐标', padL+pw/2, H-8);
+    ctx.save(); ctx.translate(14, padT+ph/2); ctx.rotate(-Math.PI/2); ctx.fillText('T² (yr²) — 对数坐标',0,0); ctx.restore();
+    for(let i=logMin;i<=logMax;i+=1){ let v=Math.pow(10,i); ctx.fillStyle='#8B9DC3'; ctx.font='10px Consolas'; ctx.fillText(i<=0?v.toFixed(Math.abs(i)+1):v.toFixed(0), toX(v), padT+ph+16); ctx.fillText(i<=0?v.toFixed(Math.abs(i)+1):v.toFixed(0), padL-6, toY(v)+4); }
+    ctx.strokeStyle='#4A90E2'; ctx.lineWidth=2; ctx.setLineDash([6,4]); ctx.beginPath(); ctx.moveTo(toX(Math.pow(10,logMin)), toY(Math.pow(10,logMin))); ctx.lineTo(toX(Math.pow(10,logMax)), toY(Math.pow(10,logMax))); ctx.stroke(); ctx.setLineDash([]);
+    data.forEach(d=>{ let cx=toX(d.a3), cy=toY(d.T2); ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2); ctx.fillStyle=d.hex; ctx.fill(); ctx.strokeStyle='white'; ctx.stroke(); ctx.fillStyle='#2C3E50'; ctx.font='11px sans-serif'; ctx.fillText(d.name, cx+10, cy+4); });
+    let tbody=document.getElementById('chartTableBody'); tbody.innerHTML=''; let sum=0; data.forEach(d=>{ sum+=d.ratio; tbody.innerHTML+=`<tr><td style="color:${d.hex}">${d.name}</td><td>${d.a.toFixed(3)}</td><td>${d.T.toFixed(4)}</td><td>${d.a3.toFixed(4)}</td><td>${d.T2.toFixed(4)}</td><td>${d.ratio.toFixed(4)}</td></tr>`; });
+    document.getElementById('avgRow').textContent = `✅ 平均 T²/a³ = ${(sum/data.length).toFixed(4)} ≈ 1.0000 （验证开普勒第三定律）`;
+    document.getElementById('p3Avg').textContent = '≈ '+(sum/data.length).toFixed(4);
+}
+
+let lastTime = null;
+function animate(ts) {
+    requestAnimationFrame(animate);
+    if(lastTime===null) lastTime=ts;
+    const dt = Math.min((ts-lastTime)/1000, 0.05);
+    lastTime=ts;
+    if(!paused) { simTime += timeSpeed * dt; document.getElementById('pTime').textContent = simTime.toFixed(2)+' yr'; }
+    PLANETS.forEach((p,i)=>{
+        const pos = getOrbitalPosition(simTime, p);
+        planetMeshes[i].position.set(pos.x, 0, pos.z);
+        if(p.hasTexture) planetMeshes[i].rotation.y += 0.008;
+    });
+    sunMesh.rotation.y += 0.003;
+    sunGlow.scale.setScalar(1+0.02*Math.sin(ts*0.003));
+    controls.update();
+    renderer.render(scene, camera);
+    labelRenderer.render(scene, camera);
+}
+
+switchTab(2);
+requestAnimationFrame(animate);
+window.addEventListener('resize', () => { camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); labelRenderer.setSize(innerWidth,innerHeight); });
+</script>
+</body>
+</html>

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>停表 - PhySenLab仿真实验</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2C3E50;
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            width: 500px;
+            height: 540px;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+            border-radius: 24px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+            border: 1px solid #E1EEF7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,.15));
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E1EEF7;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            padding: 16px 22px;
+            color: #2C3E50;
+            transition: all 0.3s ease;
+        }
+        .glass-panel:hover { box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2); }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 30;
+            max-width: 280px;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid #E1EEF7;
+        }
+
+        .info-panel h1 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #357ABD;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .formula-box {
+            background: #E8F4FD;
+            padding: 4px 10px;
+            border-radius: 30px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4A90E2;
+        }
+        .formula { font-size: 1.0rem; font-family: 'Times New Roman', serif; }
+
+        .principle-text {
+            font-size: 0.8rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+            border-top: 1px dashed #E1EEF7;
+            padding-top: 8px;
+            margin-top: 6px;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            min-width: 200px;
+            text-align: center;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .digital-display {
+            font-size: 22px;
+            font-family: 'Consolas', monospace;
+            font-weight: 700;
+            color: #4A90E2;
+            background: #E8F4FD;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 1px solid #E1EEF7;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s;
+            min-width: 180px;
+            margin-bottom: 12px;
+        }
+        .digital-display:hover { background: #d0e8f7; }
+        .digital-display.hidden-mode {
+            color: #8B9DC3;
+            font-family: "Microsoft YaHei", sans-serif;
+            font-size: 16px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            color: white;
+            width: 100px;
+        }
+        .action-btn:hover { transform: translateY(-2px); }
+
+        .btn-start {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            box-shadow: 0 2px 8px rgba(46,204,113,0.3);
+        }
+        .btn-start:hover { box-shadow: 0 8px 18px rgba(46,204,113,0.4); }
+        .btn-start.active {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            box-shadow: 0 2px 8px rgba(243,156,18,0.3);
+        }
+        .btn-start.active:hover { box-shadow: 0 8px 18px rgba(243,156,18,0.4); }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 2px 8px rgba(231,76,60,0.3);
+        }
+        .btn-reset:hover { box-shadow: 0 8px 18px rgba(231,76,60,0.4); }
+
+        .back-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #4A90E2;
+            padding: 12px 28px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            transition: all 0.3s ease;
+            z-index: 50;
+        }
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #8B9DC3;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+            padding: 4px 18px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            z-index: 20;
+            border: 1px solid #E1EEF7;
+        }
+
+        .num-black { fill: #111; font-size: 17px; font-family: Arial, sans-serif; text-anchor: middle; dominant-baseline: central; font-weight: 700; }
+        .num-red { fill: #d32f2f; font-size: 15px; font-family: Arial, sans-serif; text-anchor: middle; dominant-baseline: central; font-weight: 700; }
+        .num-inner { fill: #111; font-size: 14px; font-family: Arial, sans-serif; text-anchor: middle; dominant-baseline: central; }
+
+        @media (max-width: 1000px) {
+            #canvas-wrapper { width: 90vw; height: auto; }
+            .info-panel { max-width: 200px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-wrapper">
+            <svg viewBox="0 0 500 520" id="stopwatch">
+                <defs>
+                    <radialGradient id="caseGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+                        <stop offset="0%" stop-color="#ffffff"/>
+                        <stop offset="85%" stop-color="#d5d5d5"/>
+                        <stop offset="100%" stop-color="#888888"/>
+                    </radialGradient>
+                    <linearGradient id="crownGrad" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stop-color="#666"/>
+                        <stop offset="20%" stop-color="#ccc"/>
+                        <stop offset="50%" stop-color="#fff"/>
+                        <stop offset="80%" stop-color="#ccc"/>
+                        <stop offset="100%" stop-color="#666"/>
+                    </linearGradient>
+                </defs>
+                <g id="crown">
+                    <rect x="230" y="25" width="40" height="25" fill="url(#crownGrad)" stroke="#555" stroke-width="2"/>
+                    <rect id="crown-btn" x="220" y="5" width="60" height="20" fill="url(#crownGrad)" stroke="#555" stroke-width="2" rx="3"/>
+                </g>
+                <circle cx="250" cy="280" r="230" fill="url(#caseGrad)" stroke="#777" stroke-width="2"/>
+                <circle cx="250" cy="280" r="215" fill="#ffffff" stroke="#ccc" stroke-width="1"/>
+                <g id="outer-marks"></g>
+                <circle cx="250" cy="200" r="75" fill="#ffffff" stroke="#555" stroke-width="1.5"/>
+                <g id="inner-marks"></g>
+                <g id="minHand" transform="rotate(0, 250, 200)">
+                    <line x1="250" y1="215" x2="250" y2="135" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="250" cy="200" r="4.5" fill="#111"/>
+                </g>
+                <g id="secHand" transform="rotate(0, 250, 280)">
+                    <line x1="250" y1="320" x2="250" y2="75" stroke="#111" stroke-width="2.5" stroke-linecap="round"/>
+                    <circle cx="250" cy="280" r="7" fill="#111"/>
+                    <circle cx="250" cy="280" r="2" fill="#d32f2f"/>
+                </g>
+            </svg>
+        </div>
+
+        <div class="info-panel glass-panel">
+            <h1>⏱️ 停表（机械秒表）</h1>
+            <div class="formula-box">
+                <div class="formula">T = n × 0.1s</div>
+            </div>
+            <div class="principle-text">
+                <strong>读数方法：</strong><br>
+                1. 小表盘（内圈）读分钟，分度值 0.5 min<br>
+                2. 大表盘（外圈）读秒数，分度值 0.1 s<br>
+                3. 最终读数 = 小表盘读数 + 大表盘读数
+            </div>
+        </div>
+
+        <div class="control-panel glass-panel">
+            <div class="digital-display" id="time-display" title="点击切换显示/隐藏读数">00 分 00.0 秒</div>
+            <div class="action-buttons">
+                <button class="action-btn btn-start" id="btn-toggle">启动</button>
+                <button class="action-btn btn-reset" id="btn-reset">复位</button>
+            </div>
+        </div>
+
+        
+        <div class="hint-text">点击"启动"开始计时 | 再次点击暂停 | 点击数字可隐藏/显示读数</div>
+    </div>
+
+    <script>
+    (function() {
+        const svgNS = "http://www.w3.org/2000/svg";
+        const outerMarks = document.getElementById("outer-marks");
+        const innerMarks = document.getElementById("inner-marks");
+
+        // 绘制外圈刻度（大秒针，一圈30秒，共300格，每格0.1秒）
+        for (let i = 0; i < 300; i++) {
+            let angle = 1.2 * i;
+            let isMajor = i % 10 === 0;
+            let s = 65, a = s + (isMajor ? 20 : (i % 5 === 0 ? 12 : 8));
+            let line = document.createElementNS(svgNS, "line");
+            line.setAttribute("x1", 250);
+            line.setAttribute("y1", s);
+            line.setAttribute("x2", 250);
+            line.setAttribute("y2", a);
+            line.setAttribute("stroke", "#000");
+            line.setAttribute("stroke-width", isMajor ? "2" : "1");
+            line.setAttribute("transform", `rotate(${angle}, 250, 280)`);
+            outerMarks.appendChild(line);
+
+            if (isMajor) {
+                let num = i / 10;
+                let rad = (angle - 90) * Math.PI / 180;
+                let nx = 250 + 185 * Math.cos(rad);
+                let ny = 280 + 185 * Math.sin(rad);
+                let text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", nx);
+                text.setAttribute("y", ny);
+                text.setAttribute("class", num % 2 === 0 ? "num-black" : "num-red");
+                text.textContent = num % 2 === 0 ? num : num + 30;
+                outerMarks.appendChild(text);
+            }
+        }
+
+        // 绘制内圈刻度（小分针，一圈15分钟，共30格，每格0.5分钟）
+        for (let i = 0; i < 30; i++) {
+            let angle = 12 * i;
+            let isMajor = i % 2 === 0;
+            let s = 125, a = s + (isMajor ? 12 : 7);
+            let line = document.createElementNS(svgNS, "line");
+            line.setAttribute("x1", 250);
+            line.setAttribute("y1", s);
+            line.setAttribute("x2", 250);
+            line.setAttribute("y2", a);
+            line.setAttribute("stroke", "#000");
+            line.setAttribute("stroke-width", isMajor ? "2" : "1.5");
+            line.setAttribute("transform", `rotate(${angle}, 250, 200)`);
+            innerMarks.appendChild(line);
+
+            if (isMajor) {
+                let num = i / 2;
+                let rad = (angle - 90) * Math.PI / 180;
+                let nx = 250 + 48 * Math.cos(rad);
+                let ny = 200 + 48 * Math.sin(rad);
+                let text = document.createElementNS(svgNS, "text");
+                text.setAttribute("x", nx);
+                text.setAttribute("y", ny);
+                text.setAttribute("class", "num-inner");
+                text.textContent = num;
+                innerMarks.appendChild(text);
+            }
+        }
+
+        // 逻辑
+        let startTime = 0, elapsed = 0, running = false, raf = null, showDigital = true;
+        const secHand = document.getElementById("secHand");
+        const minHand = document.getElementById("minHand");
+        const timeDisplay = document.getElementById("time-display");
+        const btnToggle = document.getElementById("btn-toggle");
+        const btnReset = document.getElementById("btn-reset");
+        const crownBtn = document.getElementById("crown-btn");
+
+        function animate() {
+            if (!running) return;
+            updateHands(performance.now() - startTime + elapsed);
+            raf = requestAnimationFrame(animate);
+        }
+
+        function updateHands(totalMs) {
+            let totalSec = totalMs / 1000;
+            let secAngle = (totalSec % 30) / 30 * 360;
+            secHand.setAttribute("transform", `rotate(${secAngle}, 250, 280)`);
+            let minAngle = (totalSec % 900) / 900 * 360;
+            minHand.setAttribute("transform", `rotate(${minAngle}, 250, 200)`);
+
+            if (showDigital) {
+                let min = Math.floor(totalSec / 60);
+                let sec = totalSec % 60;
+                timeDisplay.classList.remove("hidden-mode");
+                timeDisplay.innerText = `${min.toString().padStart(2, "0")} 分 ${sec.toFixed(1).padStart(4, "0")} 秒`;
+            } else {
+                timeDisplay.classList.add("hidden-mode");
+                timeDisplay.innerText = "点击显示辅助读数";
+            }
+        }
+
+        function pressCrown() {
+            crownBtn.setAttribute("transform", "translate(0, 6)");
+            setTimeout(() => { crownBtn.setAttribute("transform", "translate(0, 0)"); }, 100);
+        }
+
+        function toggle() {
+            pressCrown();
+            if (running) {
+                running = false;
+                cancelAnimationFrame(raf);
+                elapsed += performance.now() - startTime;
+                btnToggle.innerText = "继续";
+                btnToggle.classList.remove("active");
+            } else {
+                running = true;
+                startTime = performance.now();
+                raf = requestAnimationFrame(animate);
+                btnToggle.innerText = "暂停";
+                btnToggle.classList.add("active");
+            }
+        }
+
+        function reset() {
+            pressCrown();
+            running = false;
+            cancelAnimationFrame(raf);
+            elapsed = 0;
+            updateHands(0);
+            btnToggle.innerText = "启动";
+            btnToggle.classList.remove("active");
+        }
+
+        timeDisplay.addEventListener("click", () => {
+            showDigital = !showDigital;
+            updateHands(running ? performance.now() - startTime + elapsed : elapsed);
+        });
+
+        btnToggle.addEventListener("click", toggle);
+        btnReset.addEventListener("click", reset);
+
+        // 初始化
+        updateHands(0);
+    })();
+    </script>
+    </body>
+</html>

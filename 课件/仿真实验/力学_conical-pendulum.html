@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>圆锥摆 · 高中物理 - PhySenLab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2C3E50;
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #mainCanvas {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+        }
+        .panel {
+            background: rgba(255, 255, 255, .92);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E1EEF7;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, .12);
+            padding: 16px 20px;
+            z-index: 10;
+            position: absolute;
+        }
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 280px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(145deg, #f0f7fd 0%, #fdfeff 40%, #eaf3fb 100%);
+            padding: 12px 14px;
+            border-radius: 10px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 10px;
+            font-size: .88rem;
+            font-family: 'Times New Roman', 'Georgia', 'STIX Two Math', 'Latin Modern Math', serif;
+            font-style: italic;
+            color: #1a2d3d;
+            line-height: 1.7;
+            letter-spacing: 0.02em;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 2px 8px rgba(74, 144, 226, 0.08);
+            position: relative;
+        }
+        .formula-box::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 30px;
+            background: linear-gradient(to right, transparent, rgba(240, 247, 253, 0.6));
+            border-radius: 0 10px 10px 0;
+            pointer-events: none;
+        }
+        .formula-box .eq-row {
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+            white-space: nowrap;
+        }
+        .formula-box .eq-label {
+            font-style: normal;
+            font-size: .7rem;
+            color: #6B8DB5;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            margin-right: 2px;
+            min-width: 18px;
+            font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+        .info-text {
+            font-size: .78rem;
+            color: #5A6C7D;
+            line-height: 1.55;
+        }
+        .physics-panel {
+            bottom: 16px;
+            left: 16px;
+            width: 260px;
+        }
+        .physics-panel h3 {
+            font-size: .92rem;
+            color: #2C3E50;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #E1EEF7;
+        }
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: .8rem;
+            color: #5A6C7D;
+        }
+        .param-value {
+            font-family: Consolas, monospace;
+            font-weight: 600;
+            color: #4A90E2;
+        }
+        .param-value.red {
+            color: #e74c3c;
+        }
+        .param-value.green {
+            color: #27ae60;
+        }
+        .param-value.orange {
+            color: #e67e22;
+        }
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 310px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1rem;
+            color: #2C3E50;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E1EEF7;
+        }
+        .section-label {
+            font-size: .72rem;
+            color: #8B9DC3;
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .slider-group {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #F8FBFF;
+            border-radius: 10px;
+            border: 1px solid #E1EEF7;
+            transition: opacity 0.3s;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: .85rem;
+        }
+        .slider-label .lt {
+            font-weight: 600;
+            color: #2C3E50;
+        }
+        .vbadge {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 10px;
+            padding: 4px;
+            background: #E8F4FD;
+            border-radius: 10px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 7px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: .8rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: #5A6C7D;
+            transition: all .2s;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, .3);
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, .4);
+            cursor: pointer;
+        }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 22px;
+            font-weight: 600;
+            font-size: .82rem;
+            cursor: pointer;
+            transition: all .2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(74, 144, 226, .3);
+        }
+        .btn-ghost {
+            background: #F0F4F8;
+            color: #5A6C7D;
+            border: 1px solid #E1EEF7;
+        }
+        .btn.active {
+            background: #4A90E2;
+            color: #fff;
+            border-color: #4A90E2;
+        }
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: #4A90E2;
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, .15);
+            transition: all .3s;
+            z-index: 10;
+            font-size: .82rem;
+        }
+        .back-btn:hover {
+            background: #4A90E2;
+            color: #fff;
+        }
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .75rem;
+            color: #5A6C7D;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        @media (max-width: 900px) {
+            .info-panel,
+            .physics-panel {
+                max-width: 200px;
+                font-size: .75rem;
+            }
+            .controls-panel {
+                width: 220px;
+            }
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-container"><canvas id="mainCanvas"></canvas></div>
+
+        <div class="info-panel panel">
+            <h1>🎯 圆锥摆</h1>
+            <div class="formula-box">
+                <div class="eq-row"><span class="eq-label">⏱</span> T = 2π√(h/g)</div>
+                <div class="eq-row"><span class="eq-label">⚡</span> ω = √(g/h) = √(g/Lcosθ)</div>
+                <div class="eq-row"><span class="eq-label">🧲</span> F<sub>向</sub> = mg·tanθ</div>
+            </div>
+            <p class="info-text">
+                摆球在水平面内做匀速圆周运动，由重力与绳子拉力的合力提供向心力。<strong>周期仅与高度 h 和 g 有关</strong>，与质量、摆长无关（在同一高度时）。
+            </p>
+            <div class="legend-row">
+                <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div>重力 mg</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#27ae60;"></div>张力 T</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#4A90E2;"></div>向心力</div>
+                <div class="legend-item"><div class="legend-dot" style="background:rgba(74,144,226,.25);"></div>圆锥面</div>
+                <div class="legend-item"><div class="legend-dot" style="background:transparent; border:2px dashed #4A90E2; width:8px; height:8px;"></div>轨迹圆</div>
+            </div>
+        </div>
+
+        <div class="physics-panel panel">
+            <h3>📊 实时参数</h3>
+            <div class="param-row"><span>摆角 θ:</span><span id="pAngle" class="param-value">—</span></div>
+            <div class="param-row"><span>高度 h:</span><span id="pHeight" class="param-value">—</span></div>
+            <div class="param-row"><span>半径 r:</span><span id="pRadius" class="param-value">—</span></div>
+            <div class="param-row"><span>周期 T:</span><span id="pPeriod" class="param-value">—</span></div>
+            <div class="param-row"><span>角速度 ω:</span><span id="pOmega" class="param-value">—</span></div>
+            <div class="param-row"><span>线速度 v:</span><span id="pVelocity" class="param-value">—</span></div>
+            <div style="border-top:1px solid #E1EEF7;margin:6px 0;"></div>
+            <div class="param-row"><span>向心力 F:</span><span id="pForce" class="param-value red">—</span></div>
+            <div class="param-row"><span>绳张力 T:</span><span id="pTension" class="param-value green">—</span></div>
+        </div>
+
+        <div class="controls-panel panel">
+            <h3>🔧 实验控制</h3>
+            <div class="section-label">调节模式</div>
+            <div class="mode-switch">
+                <button class="mode-btn active" id="modeL">固定摆长</button>
+                <button class="mode-btn" id="modeH">固定高度</button>
+            </div>
+
+            <div class="section-label" id="paramLabel">运动参数</div>
+            <div class="slider-group" id="lengthGroup">
+                <div class="slider-label"><span class="lt">📏 摆长 L</span><span id="vLength" class="vbadge">1.00 m</span></div>
+                <input type="range" id="sLength" min="0.5" max="3.0" step="0.05" value="1.0">
+            </div>
+            <div class="slider-group" id="angleGroup">
+                <div class="slider-label"><span class="lt">📐 摆角 θ</span><span id="vAngle" class="vbadge">30.0°</span></div>
+                <input type="range" id="sAngle" min="5" max="60" step="0.5" value="30">
+            </div>
+            <div class="slider-group" id="heightGroup" style="display:none;">
+                <div class="slider-label"><span class="lt">📏 高度 h</span><span id="vHeight" class="vbadge">0.866 m</span></div>
+                <input type="range" id="sHeight" min="0.2" max="2.5" step="0.02" value="0.866">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">⚖️ 质量 m</span><span id="vMass" class="vbadge">0.50 kg</span></div>
+                <input type="range" id="sMass" min="0.1" max="2.0" step="0.05" value="0.5">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">🌍 重力 g</span><span id="vG" class="vbadge">9.80 m/s²</span></div>
+                <input type="range" id="sG" min="1.6" max="20" step="0.1" value="9.8">
+            </div>
+
+            <div class="section-label">显示控制</div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">⏱️ 时间倍率</span><span id="vSpeed" class="vbadge">1.0×</span></div>
+                <input type="range" id="sSpeed" min="0.1" max="3.0" step="0.1" value="1.0">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-ghost active" id="btnForce">📐 受力分析</button>
+                <button class="btn btn-ghost active" id="btnCone">🔺 圆锥面</button>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ========== 参数状态 ==========
+        const state = {
+            mode: 'length', // 'length' | 'height'
+            L: 1.0, // 摆长 (m)
+            theta: 30, // 摆角 (°)
+            h: 0.866, // 高度 (m), cos30° ≈ 0.866
+            m: 0.5, // 质量 (kg)
+            g: 9.8, // 重力加速度 (m/s²)
+            timeScale: 1.0,
+            showForce: true,
+            showCone: true,
+            t: 0 // 累计时间
+        };
+
+        // ========== 常量定义 ==========
+        const BALL_RADIUS = 0.08; // 摆球半径
+        const BALL_CENTER_Y = BALL_RADIUS; // 球心始终在 y = 0.08 的水平面上运动
+
+        // ========== Three.js 初始化 ==========
+        const canvas = document.getElementById('mainCanvas');
+        const container = document.getElementById('canvas-container');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf5f7fa);
+
+        const aspect = container.clientWidth / container.clientHeight;
+        const camera = new THREE.PerspectiveCamera(45, aspect, 0.1, 100);
+        camera.position.set(5, 1.5, 0);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.08;
+        controls.target.set(0, 0.5, 0);
+
+        // ========== 灯光 ==========
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(5, 10, 5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.3);
+        fillLight.position.set(-5, 3, -5);
+        scene.add(fillLight);
+
+        // ========== 场景对象 ==========
+        // 悬挂点
+        const pivotGeo = new THREE.SphereGeometry(0.04, 16, 16);
+        const pivotMat = new THREE.MeshStandardMaterial({ color: 0x34495e });
+        const pivot = new THREE.Mesh(pivotGeo, pivotMat);
+        scene.add(pivot);
+
+        // 摆球
+        const bobGeo = new THREE.SphereGeometry(BALL_RADIUS, 32, 32);
+        const bobMat = new THREE.MeshStandardMaterial({ color: 0x4A90E2, metalness: 0.3, roughness: 0.4 });
+        const bob = new THREE.Mesh(bobGeo, bobMat);
+        bob.castShadow = true;
+        scene.add(bob);
+
+        // 摆线
+        const stringMat = new THREE.LineBasicMaterial({ color: 0x5A6C7D });
+        const stringGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 0)]);
+        const stringLine = new THREE.Line(stringGeo, stringMat);
+        scene.add(stringLine);
+
+        // 圆锥面 (以球心为底面参考)
+        let coneMesh;
+        function createConeMesh(h, r) {
+            if (coneMesh) scene.remove(coneMesh);
+            const coneHeight = h - BALL_CENTER_Y;
+            if (coneHeight <= 0.01 || r <= 0.001) return;
+            const coneGeo = new THREE.ConeGeometry(r, coneHeight, 64, 1, true);
+            const coneMat = new THREE.MeshBasicMaterial({
+                color: 0x4A90E2,
+                transparent: true,
+                opacity: 0.12,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            coneMesh = new THREE.Mesh(coneGeo, coneMat);
+            // 使底面位于 y = BALL_CENTER_Y，顶点位于 y = h
+            coneMesh.position.set(0, BALL_CENTER_Y + coneHeight / 2, 0);
+            coneMesh.name = 'cone_surface';
+            scene.add(coneMesh);
+        }
+
+        // 底部虚线圆轨迹 (以球心为参考，始终可见)
+        const dashCircleSegments = 100;
+        const dashCirclePoints = [];
+        for (let i = 0; i <= dashCircleSegments; i++) {
+            const angle = (i / dashCircleSegments) * Math.PI * 2;
+            dashCirclePoints.push(new THREE.Vector3(Math.cos(angle), 0, Math.sin(angle)));
+        }
+        const dashCircleGeo = new THREE.BufferGeometry().setFromPoints(dashCirclePoints);
+        const dashCircleMat = new THREE.LineDashedMaterial({
+            color: 0x4A90E2,
+            dashSize: 0.14,
+            gapSize: 0.09,
+            linewidth: 1,
+            transparent: true,
+            opacity: 0.7
+        });
+        const dashedCircle = new THREE.Line(dashCircleGeo, dashCircleMat);
+        dashedCircle.computeLineDistances();
+        dashedCircle.position.set(0, BALL_CENTER_Y, 0);
+        dashedCircle.name = 'dashed_trajectory';
+        scene.add(dashedCircle);
+
+        // 圆锥底面圆环 (以球心为参考)
+        const ringGeo = new THREE.RingGeometry(0.001, 0.004, 64);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x4A90E2, side: THREE.DoubleSide, transparent: true, opacity: 0.4 });
+        const baseRing = new THREE.Mesh(ringGeo, ringMat);
+        baseRing.rotation.x = -Math.PI / 2;
+        baseRing.position.set(0, BALL_CENTER_Y, 0);
+        scene.add(baseRing);
+
+        // 圆锥母线 (从顶点到底面圆周，以球心为底面参考)
+        let generatrixLines = [];
+        function createGeneratrix(h, r, count = 8) {
+            generatrixLines.forEach(l => scene.remove(l));
+            generatrixLines = [];
+            if (r <= 0.01) return;
+            for (let i = 0; i < count; i++) {
+                const angle = (i / count) * Math.PI * 2;
+                const pts = [
+                    new THREE.Vector3(0, h, 0),
+                    new THREE.Vector3(r * Math.cos(angle), BALL_CENTER_Y, r * Math.sin(angle))
+                ];
+                const geo = new THREE.BufferGeometry().setFromPoints(pts);
+                const mat = new THREE.LineBasicMaterial({ color: 0x4A90E2, transparent: true, opacity: 0.25 });
+                const line = new THREE.Line(geo, mat);
+                generatrixLines.push(line);
+                scene.add(line);
+            }
+        }
+
+        // 圆心标记 (以球心为参考)
+        const centerGeo = new THREE.CylinderGeometry(0.015, 0.015, 0.06, 16);
+        const centerMat = new THREE.MeshStandardMaterial({ color: 0x8B9DC3 });
+        const centerMark = new THREE.Mesh(centerGeo, centerMat);
+        centerMark.position.set(0, BALL_CENTER_Y, 0);
+        scene.add(centerMark);
+
+        // ========== 受力分析箭头 ==========
+        const arrowColor = { gravity: 0xe74c3c, tension: 0x27ae60, centripetal: 0x4A90E2 };
+        const arrowHead = 0.08;
+
+        function createArrow(color, origin, direction, length, name) {
+            const dir = direction.clone().normalize();
+            const arr = new THREE.ArrowHelper(dir, origin, length, color, arrowHead, 0.05);
+            arr.name = name;
+            scene.add(arr);
+            return arr;
+        }
+
+        function updateArrows(bobPos, h, r, T, m, g) {
+            scene.children.filter(c => c.name && c.name.startsWith('force_')).forEach(c => scene.remove(c));
+            if (!state.showForce) return;
+            const scale = 0.15;
+            const origin = bobPos.clone();
+            const Fg = m * g;
+            createArrow(arrowColor.gravity, origin, new THREE.Vector3(0, -1, 0), Fg * scale, 'force_gravity');
+            const Tension = m * g / Math.cos(state.theta * Math.PI / 180);
+            const toPivot = new THREE.Vector3(0, h, 0).sub(bobPos).normalize();
+            createArrow(arrowColor.tension, origin, toPivot, Tension * scale, 'force_tension');
+            const Fc = m * g * Math.tan(state.theta * Math.PI / 180);
+            const toCenter = new THREE.Vector3(0, BALL_CENTER_Y, 0).sub(new THREE.Vector3(bobPos.x, BALL_CENTER_Y, bobPos.z)).normalize();
+            if (toCenter.length() > 0.01) {
+                createArrow(arrowColor.centripetal, origin, toCenter, Fc * scale, 'force_centripetal');
+            }
+        }
+
+        // ========== 物理计算 ==========
+        function computePhysics() {
+            const thetaRad = state.theta * Math.PI / 180;
+            let h, r, L;
+            if (state.mode === 'length') {
+                L = state.L;
+                h = L * Math.cos(thetaRad);
+                r = L * Math.sin(thetaRad);
+            } else {
+                h = state.h;
+                L = h / Math.cos(thetaRad);
+                r = h * Math.tan(thetaRad);
+                state.L = L;
+            }
+            const T = (state.g > 0 && h > 0) ? (2 * Math.PI * Math.sqrt(h / state.g)) : 0;
+            const omega = (h > 0) ? Math.sqrt(state.g / h) : 0;
+            const v = omega * r;
+            const Fc = state.m * state.g * Math.tan(thetaRad);
+            const Tension = state.m * state.g / Math.cos(thetaRad);
+            return { thetaRad, h, r, L, T, omega, v, Fc, Tension };
+        }
+
+        function updateScene() {
+            const { thetaRad, h, r, L, T, omega, v, Fc, Tension } = computePhysics();
+            pivot.position.set(0, h, 0);
+            const angle = state.t;
+            const x = r * Math.cos(angle);
+            const z = r * Math.sin(angle);
+            bob.position.set(x, BALL_CENTER_Y, z);
+            // 更新摆线
+            const positions = stringLine.geometry.attributes.position.array;
+            positions[0] = 0; positions[1] = h; positions[2] = 0;
+            positions[3] = x; positions[4] = BALL_CENTER_Y; positions[5] = z;
+            stringLine.geometry.attributes.position.needsUpdate = true;
+            // 更新圆锥面
+            if (state.showCone) {
+                createConeMesh(h, r);
+                createGeneratrix(h, r, 8);
+                baseRing.scale.set(r, r, 1);
+                baseRing.visible = r > 0.01;
+            } else {
+                if (coneMesh) { coneMesh.visible = false; }
+                generatrixLines.forEach(l => l.visible = false);
+                baseRing.visible = false;
+            }
+            // 更新虚线轨迹圆 (始终可见)
+            dashedCircle.scale.set(r, 1, r);
+            dashedCircle.position.set(0, BALL_CENTER_Y, 0);
+            dashedCircle.visible = r > 0.005;
+            // 更新受力
+            updateArrows(bob.position, h, r, T, state.m, state.g);
+            // 更新UI
+            document.getElementById('pAngle').textContent = state.theta.toFixed(1) + '°';
+            document.getElementById('pHeight').textContent = h.toFixed(3) + ' m';
+            document.getElementById('pRadius').textContent = r.toFixed(3) + ' m';
+            document.getElementById('pPeriod').textContent = (T > 0 ? T.toFixed(3) : '—') + ' s';
+            document.getElementById('pOmega').textContent = (omega > 0 ? omega.toFixed(3) : '—') + ' rad/s';
+            document.getElementById('pVelocity').textContent = (v > 0 ? v.toFixed(3) : '—') + ' m/s';
+            document.getElementById('pForce').textContent = Fc.toFixed(3) + ' N';
+            document.getElementById('pTension').textContent = Tension.toFixed(3) + ' N';
+        }
+
+        // ========== 动画循环 ==========
+        let lastTime = performance.now();
+        function animate(now) {
+            requestAnimationFrame(animate);
+            const dt = Math.min((now - lastTime) / 1000, 0.05);
+            lastTime = now;
+            const { omega } = computePhysics();
+            state.t += omega * dt * state.timeScale;
+            updateScene();
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // ========== 模式切换 ==========
+        const modeLBtn = document.getElementById('modeL');
+        const modeHBtn = document.getElementById('modeH');
+        const angleGroup = document.getElementById('angleGroup');
+        const heightGroup = document.getElementById('heightGroup');
+        const lengthGroup = document.getElementById('lengthGroup');
+        const paramLabel = document.getElementById('paramLabel');
+
+        function switchMode(mode) {
+            state.mode = mode;
+            modeLBtn.classList.toggle('active', mode === 'length');
+            modeHBtn.classList.toggle('active', mode === 'height');
+            if (mode === 'length') {
+                angleGroup.style.display = 'block';
+                heightGroup.style.display = 'none';
+                lengthGroup.style.display = 'block';
+                paramLabel.textContent = '运动参数（固定摆长 L）';
+            } else {
+                angleGroup.style.display = 'block';
+                heightGroup.style.display = 'block';
+                lengthGroup.style.display = 'none';
+                paramLabel.textContent = '运动参数（固定高度 h）';
+            }
+            updateScene();
+        }
+
+        modeLBtn.addEventListener('click', () => switchMode('length'));
+        modeHBtn.addEventListener('click', () => switchMode('height'));
+
+        // ========== 滑块绑定 ==========
+        function bindSlider(id, key, fmt, fn) {
+            const el = document.getElementById(id);
+            const disp = document.getElementById(id.replace('s', 'v'));
+            if (!el || !disp) return;
+            el.addEventListener('input', () => {
+                state[key] = parseFloat(el.value);
+                disp.textContent = fmt(state[key]);
+                if (fn) fn();
+            });
+        }
+
+        bindSlider('sLength', 'L', v => v.toFixed(2) + ' m', () => {
+            if (state.mode === 'length') {
+                const thetaRad = state.theta * Math.PI / 180;
+                state.h = state.L * Math.cos(thetaRad);
+                document.getElementById('sHeight').value = state.h.toFixed(3);
+                document.getElementById('vHeight').textContent = state.h.toFixed(3) + ' m';
+            }
+        });
+
+        bindSlider('sAngle', 'theta', v => v.toFixed(1) + '°', () => {
+            if (state.mode === 'length') {
+                const thetaRad = state.theta * Math.PI / 180;
+                state.h = state.L * Math.cos(thetaRad);
+                document.getElementById('sHeight').value = state.h.toFixed(3);
+                document.getElementById('vHeight').textContent = state.h.toFixed(3) + ' m';
+            } else {
+                const thetaRad = state.theta * Math.PI / 180;
+                state.L = state.h / Math.cos(thetaRad);
+                document.getElementById('sLength').value = state.L.toFixed(3);
+                document.getElementById('vLength').textContent = state.L.toFixed(3) + ' m';
+            }
+        });
+
+        bindSlider('sHeight', 'h', v => v.toFixed(3) + ' m', () => {
+            if (state.mode === 'height') {
+                const thetaRad = state.theta * Math.PI / 180;
+                state.L = state.h / Math.cos(thetaRad);
+                document.getElementById('sLength').value = state.L.toFixed(3);
+                document.getElementById('vLength').textContent = state.L.toFixed(3) + ' m';
+            }
+        });
+
+        bindSlider('sMass', 'm', v => v.toFixed(2) + ' kg');
+        bindSlider('sG', 'g', v => v.toFixed(2) + ' m/s²');
+        bindSlider('sSpeed', 'timeScale', v => v.toFixed(1) + '×');
+
+        document.getElementById('btnForce').addEventListener('click', function() {
+            state.showForce = !state.showForce;
+            this.classList.toggle('active', state.showForce);
+            updateScene();
+        });
+
+        document.getElementById('btnCone').addEventListener('click', function() {
+            state.showCone = !state.showCone;
+            this.classList.toggle('active', state.showCone);
+            updateScene();
+        });
+
+        // ========== 窗口适配 ==========
+        window.addEventListener('resize', () => {
+            const w = container.clientWidth, h = container.clientHeight;
+            camera.aspect = w / h;
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        });
+
+        // 启动
+        updateScene();
+        animate(performance.now());
+    </script>
+ </body>
+</html>

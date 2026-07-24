@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>电荷电场线 - PhySenLab仿真实验</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%); min-height: 100vh; overflow: hidden; }
+        .simulation-container { position: relative; width: 100vw; height: 100vh; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; display: flex; justify-content: center; align-items: center; }
+        #fieldCanvas { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); cursor: crosshair; touch-action: none; }
+        #fieldCanvas:active { cursor: grabbing; }
+        .back-btn { position: absolute; bottom: 20px; left: 20px; background: white; color: #4A90E2; padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: 600; border: 2px solid #4A90E2; box-shadow: 0 2px 10px rgba(74, 144, 226, 0.2); transition: all 0.3s; z-index: 10; }
+        .back-btn:hover { background: #4A90E2; color: white; }
+        .info-panel { position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 18px 22px; border-radius: 12px; border: 1px solid #E1EEF7; box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15); z-index: 10; max-width: 320px; }
+        .info-panel h1 { font-size: 1.15rem; color: #2C3E50; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .info-panel h1 .icon { font-size: 1.3rem; }
+        .formula-box { background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 100%); padding: 10px 12px; border-radius: 8px; border-left: 4px solid #4A90E2; margin-bottom: 8px; }
+        .formula { font-size: 1.05rem; color: #000000; font-family: 'Times New Roman', serif; font-style: italic; }
+        .info-text { font-size: 0.85rem; color: #5A6C7D; line-height: 1.5; }
+        .controls-panel { position: absolute; top: 20px; right: 20px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 22px; border-radius: 16px; border: 1px solid #E1EEF7; box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15); width: 320px; z-index: 10; max-height: calc(100vh - 40px); overflow-y: auto; }
+        .controls-panel h3 { font-size: 1.05rem; color: #2C3E50; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #E1EEF7; display: flex; align-items: center; gap: 6px; }
+        .tool-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+        .tool-btn { padding: 10px 8px; border-radius: 10px; border: 1px solid #dbe8f5; background: #f8fbff; color: #2C3E50; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .tool-btn:hover { background: #eef5fc; transform: translateY(-1px); }
+        .tool-btn.active { background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%); color: white; border-color: #4A90E2; }
+        .slider-group { margin-bottom: 12px; padding: 10px; background: #F8FBFF; border-radius: 10px; border: 1px solid #E1EEF7; }
+        .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85rem; }
+        .slider-label .label-text { font-weight: 600; }
+        .value-badge { background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%); color: white; padding: 3px 10px; border-radius: 20px; font-family: monospace; font-size: 0.8rem; font-weight: 600; }
+        input[type=range] { width: 100%; height: 6px; border-radius: 3px; background: #E1EEF7; outline: none; -webkit-appearance: none; cursor: pointer; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%); border: 3px solid white; box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4); cursor: pointer; }
+        .action-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .btn { flex: 1; padding: 10px 12px; border: none; border-radius: 20px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3); }
+        .btn-secondary { background: #f0f0f0; color: #5A6C7D; }
+        .btn-danger { background: linear-gradient(135deg, #e74c3c 0%, #ec7063 100%); color: white; }
+        .toggles { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .toggle-item { display: flex; align-items: center; gap: 5px; background: #f8fbff; padding: 5px 10px; border-radius: 20px; border: 1px solid #dbe8f5; font-size: 0.8rem; color: #5A6C7D; cursor: pointer; user-select: none; }
+        .preset-section { margin-top: 14px; padding-top: 14px; border-top: 1px solid #E1EEF7; }
+        .preset-section h4 { font-size: 0.9rem; color: #2C3E50; margin-bottom: 8px; }
+        .preset-btn { display: block; width: 100%; margin-bottom: 5px; padding: 8px 10px; border-radius: 8px; border: 1px solid #dbe8f5; background: #f8fbff; color: #2C3E50; font-size: 0.8rem; font-weight: 600; cursor: pointer; text-align: left; transition: all 0.2s; }
+        .preset-btn:hover { background: #eef5fc; }
+        .legend-panel { position: absolute; top: 50%; left: 20px; transform: translateY(-50%); background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 14px 16px; border-radius: 12px; border: 1px solid #E1EEF7; box-shadow: 0 4px 20px rgba(74, 144, 226, 0.15); z-index: 10; font-size: 0.85rem; }
+        .legend-item { display: flex; align-items: center; margin: 5px 0; color: #5A6C7D; }
+        .legend-arrow { width: 18px; height: 3px; border-radius: 2px; margin-right: 8px; position: relative; }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 10px; }
+        .hint-text { position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%); color: #8B9DC3; font-size: 0.8rem; background: rgba(255,255,255,0.92); padding: 6px 15px; border-radius: 20px; border: 1px solid #E1EEF7; z-index: 10; pointer-events: none; }
+        .charge-editor { position: absolute; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); z-index: 100; display: none; min-width: 200px; border: 2px solid #4A90E2; }
+        .charge-editor.show { display: block; }
+        .charge-editor h4 { font-size: 0.9rem; color: #2C3E50; margin-bottom: 10px; text-align: center; }
+        .charge-editor input[type="number"] { width: 100%; padding: 8px 12px; border: 2px solid #E1EEF7; border-radius: 8px; font-size: 1rem; text-align: center; margin-bottom: 10px; }
+        .charge-editor input[type="number"]:focus { outline: none; border-color: #4A90E2; }
+        .charge-editor .editor-btns { display: flex; gap: 8px; }
+        .charge-editor .editor-btns button { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+        .charge-editor .btn-confirm { background: linear-gradient(135deg, #4A90E2 0%, #6BB6FF 100%); color: white; }
+        .charge-editor .btn-cancel { background: #f0f0f0; color: #5A6C7D; }
+        @media (max-width: 900px) { .controls-panel { width: 280px; right: 10px; top: 10px; max-height: calc(100vh - 20px); } .info-panel { left: 10px; top: 10px; max-width: 250px; } .legend-panel { display: none; } .back-btn { bottom: 10px; left: 10px; } }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-container"><canvas id="fieldCanvas" width="1000" height="700"></canvas></div>
+        <div class="info-panel">
+            <h1><span class="icon">⚡</span>电荷电场线仿真</h1>
+            <div class="formula-box"><div class="formula">E = k · q / r²</div></div>
+            <p class="info-text">电场线疏密表示场强大小，箭头表示场强方向。正电荷发出电场线，负电荷接收电场线。</p>
+        </div>
+        <div class="legend-panel">
+            <div class="legend-item"><div class="legend-arrow" style="background:#111;"></div>电场线（疏密=场强）</div>
+            <div class="legend-item"><div class="legend-arrow" style="background:#2563eb;border:1px dashed #2563eb;height:1px;"></div>等势线</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div>正电荷（发出）</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#3498db;"></div>负电荷（接收）</div>
+        </div>
+        
+        <div class="charge-editor" id="chargeEditor">
+            <h4>修改电荷量</h4>
+            <input type="number" id="chargeInput" step="0.1" placeholder="输入电荷量">
+            <div class="editor-btns">
+                <button class="btn-confirm" onclick="confirmChargeEdit()">确定</button>
+                <button class="btn-cancel" onclick="cancelChargeEdit()">取消</button>
+            </div>
+        </div>
+        <div class="controls-panel">
+            <h3>🔧 工具箱</h3>
+            <div class="tool-grid">
+                <button class="tool-btn" data-tool="pos" id="btnPos">➕ 正电荷</button>
+                <button class="tool-btn" data-tool="neg" id="btnNeg">➖ 负电荷</button>
+                <button class="tool-btn" data-tool="platePos" id="btnPlatePos">⬜ 正极板</button>
+                <button class="tool-btn" data-tool="plateNeg" id="btnPlateNeg">⬜ 负极板</button>
+            </div>
+            <div class="action-row">
+                <button class="btn btn-secondary" id="btnClear">🗑️ 清空</button>
+                <button class="btn btn-danger" id="btnDelete">删除选中</button>
+            </div>
+            <div class="toggles">
+                <label class="toggle-item"><input type="checkbox" id="showLines" checked> 电场线</label>
+                <label class="toggle-item"><input type="checkbox" id="showEquipotential" checked> 等势线</label>
+                <label class="toggle-item"><input type="checkbox" id="showVectors"> 场强矢量</label>
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="label-text">电场线密度系数</span><span id="lineDensityVal" class="value-badge">1.0</span></div>
+                <input type="range" id="lineDensity" min="0.3" max="2" value="1" step="0.1">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="label-text">等势线数量</span><span id="equipDensityVal" class="value-badge">中</span></div>
+                <input type="range" id="equipDensity" min="1" max="5" value="3" step="1">
+            </div>
+            <div class="preset-section">
+                <h4>📌 快速预设</h4>
+                <button class="preset-btn" data-preset="dipole">💡 电偶极子</button>
+                <button class="preset-btn" data-preset="quadrupole">🔷 四极子</button>
+                <button class="preset-btn" data-preset="capacitor">⬜ 平行板电容器</button>
+                <button class="preset-btn" data-preset="tri">🔺 三点电荷</button>
+                <button class="preset-btn" data-preset="ring">⭕ 均匀带电圆环</button>
+            </div>
+        </div>
+        <div class="hint-text">🖱️ 选工具后点击放置 · 拖拽移动/旋转 · 点击电荷修改电量 · 左键拖空白平移 · 滚轮缩放</div>
+    </div>
+    <script>
+        (function(){
+            const canvas = document.getElementById('fieldCanvas'), ctx = canvas.getContext('2d');
+            const W = 1000, H = 700, k = 8000;
+            const view = { scale: 1, offsetX: 0, offsetY: 0 };
+            const state = { charges: [], plates: [], selectedId: null, tool: null, dragging: null, dragOffset: null, showLines: true, showEquipotential: true, showVectors: false, lineDensity: 1, equipDensity: 3, cachedLines: [], needsRecalc: true };
+            let nextId = 1, editingObj = null, isPanning = false, panStart = {x:0,y:0}, panOffset = {x:0,y:0};
+            const R = 18;
+
+            const presets = {
+                dipole() { state.charges = [{x:W*0.35,y:H/2,q:3,id:nextId++},{x:W*0.65,y:H/2,q:-3,id:nextId++}]; state.plates = []; },
+                quadrupole() { state.charges = [{x:W*0.35,y:H*0.35,q:2.5,id:nextId++},{x:W*0.65,y:H*0.35,q:2.5,id:nextId++},{x:W*0.35,y:H*0.65,q:-2.5,id:nextId++},{x:W*0.65,y:H*0.65,q:-2.5,id:nextId++}]; state.plates = []; },
+                capacitor() { state.charges = []; const cx=W/2,cy=H/2,len=220,gap=140; state.plates = [{x1:cx-gap/2,y1:cy-len/2,x2:cx-gap/2,y2:cy+len/2,q:6,id:nextId++},{x1:cx+gap/2,y1:cy-len/2,x2:cx+gap/2,y2:cy+len/2,q:-6,id:nextId++}]; },
+                tri() { state.charges = [{x:W*0.5,y:H*0.3,q:3,id:nextId++},{x:W*0.3,y:H*0.7,q:3,id:nextId++},{x:W*0.7,y:H*0.7,q:-3,id:nextId++}]; state.plates = []; },
+                ring() { state.charges = []; const n=12,r=120,cx=W/2,cy=H/2; for(let i=0;i<n;i++) { const ang=i*2*Math.PI/n; state.charges.push({x:cx+r*Math.cos(ang),y:cy+r*Math.sin(ang),q:1.5,id:nextId++}); } state.plates = []; }
+            };
+            presets.dipole();
+
+            function screenToWorld(sx, sy) { const rect = canvas.getBoundingClientRect(); return { x: (sx - rect.left - view.offsetX) / view.scale, y: (sy - rect.top - view.offsetY) / view.scale }; }
+            function worldToScreen(wx, wy) { const rect = canvas.getBoundingClientRect(); return { x: rect.left + wx * view.scale + view.offsetX, y: rect.top + wy * view.scale + view.offsetY }; }
+            function clampView() { const rect = canvas.getBoundingClientRect(); view.offsetX = Math.min(0, Math.max(rect.width - W * view.scale, view.offsetX)); view.offsetY = Math.min(0, Math.max(rect.height - H * view.scale, view.offsetY)); }
+            function dist(x1,y1,x2,y2) { return Math.hypot(x2-x1, y2-y1); }
+            function distToSegment(px, py, x1, y1, x2, y2) { const l2 = (x2-x1)**2 + (y2-y1)**2; if (!l2) return Math.hypot(px-x1, py-y1); let t = ((px-x1)*(x2-x1) + (py-y1)*(y2-y1)) / l2; t = Math.max(0, Math.min(1, t)); return Math.hypot(px - (x1+t*(x2-x1)), py - (y1+t*(y2-y1))); }
+
+            // 计算总电场（矢量叠加）
+            function getE(x, y) {
+                let Ex = 0, Ey = 0;
+                for (const c of state.charges) {
+                    const dx = x - c.x, dy = y - c.y, r2 = dx*dx + dy*dy;
+                    if (r2 < 1) continue;
+                    const r = Math.sqrt(r2), E = k * c.q / r2;
+                    Ex += E * dx / r; Ey += E * dy / r;
+                }
+                for (const p of state.plates) {
+                    const L = dist(p.x1, p.y1, p.x2, p.y2), n = Math.max(20, Math.floor(L / 3)), dq = p.q / n;
+                    for (let i = 0; i < n; i++) {
+                        const t = (i + 0.5) / n, px = p.x1 + t * (p.x2 - p.x1), py = p.y1 + t * (p.y2 - p.y1);
+                        const dx = x - px, dy = y - py, r2 = dx*dx + dy*dy;
+                        if (r2 < 1) continue;
+                        const r = Math.sqrt(r2), E = k * dq / r2;
+                        Ex += E * dx / r; Ey += E * dy / r;
+                    }
+                }
+                return { Ex, Ey, mag: Math.hypot(Ex, Ey) };
+            }
+
+            function getV(x, y) {
+                let V = 0;
+                for (const c of state.charges) V += k * c.q / Math.max(1, dist(x, y, c.x, c.y));
+                for (const p of state.plates) { const L = dist(p.x1, p.y1, p.x2, p.y2), n = Math.max(20, Math.floor(L / 3)), dq = p.q / n; for (let i = 0; i < n; i++) { const t = (i + 0.5) / n, px = p.x1 + t * (p.x2 - p.x1), py = p.y1 + t * (p.y2 - p.y1); V += k * dq / Math.max(1, dist(x, y, px, py)); } }
+                return V;
+            }
+
+            // ========== 电场线追踪 ==========
+            // 从起点出发，沿电场方向（或反方向）追踪
+            function traceFieldLine(sx, sy, dirSign) {
+                const pts = [{x: sx, y: sy}];
+                let x = sx, y = sy;
+                const maxSteps = 1500, minStep = 2, maxStep = 5;
+
+                for (let i = 0; i < maxSteps; i++) {
+                    const E = getE(x, y);
+                    if (E.mag < 0.001) break;
+
+                    // 自适应步长：场强越大步长越小（让线更密）
+                    const stepSize = Math.max(minStep, Math.min(maxStep, 100 / E.mag));
+                    const ux = (E.Ex / E.mag) * dirSign, uy = (E.Ey / E.mag) * dirSign;
+
+                    // RK2积分
+                    const k1x = ux * stepSize, k1y = uy * stepSize;
+                    const midE = getE(x + k1x * 0.5, y + k1y * 0.5);
+                    if (midE.mag < 0.001) break;
+                    const vx = (midE.Ex / midE.mag) * dirSign, vy = (midE.Ey / midE.mag) * dirSign;
+                    const k2x = vx * stepSize, k2y = vy * stepSize;
+                    const nx = x + k2x, ny = y + k2y;
+
+                    // 检测终止：碰到异号电荷或极板
+                    let terminated = false;
+                    for (const c of state.charges) {
+                        const d = dist(nx, ny, c.x, c.y);
+                        if (d < R + 2) {
+                            // dirSign=1（正向）：碰到负电荷终止；dirSign=-1（反向）：碰到正电荷终止
+                            if (c.q * dirSign < 0) { pts.push({x: nx, y: ny}); terminated = true; }
+                            else { terminated = true; } // 同号电荷，停止
+                            break;
+                        }
+                    }
+                    if (terminated) break;
+
+                    for (const p of state.plates) {
+                        if (distToSegment(nx, ny, p.x1, p.y1, p.x2, p.y2) < 10) {
+                            if (p.q * dirSign < 0) { pts.push({x: nx, y: ny}); }
+                            terminated = true;
+                            break;
+                        }
+                    }
+                    if (terminated) break;
+
+                    x = nx; y = ny;
+                    pts.push({x, y});
+                    if (x < -100 || x > W + 100 || y < -100 || y > H + 100) break;
+                }
+                return pts;
+            }
+
+            // ========== 生成电场线 ==========
+            // 核心原则：电场线从正电荷发出，终止于负电荷
+            // 疏密程度应该反映场强大小 - 通过从电荷表面均匀发射实现
+            function computeFieldLines() {
+                const lines = [];
+                const densityCoeff = state.lineDensity;
+                const baseLinesPerCharge = 12; // 单位电荷的基础线数
+
+                // 收集所有正电荷和负电荷
+                const posCharges = state.charges.filter(c => c.q > 0);
+                const negCharges = state.charges.filter(c => c.q < 0);
+                const posPlates = state.plates.filter(p => p.q > 0);
+                const negPlates = state.plates.filter(p => p.q < 0);
+
+                // 1. 从每个正电荷均匀发射电场线（数量正比于电荷量）
+                for (const c of posCharges) {
+                    const nLines = Math.max(8, Math.floor(baseLinesPerCharge * Math.abs(c.q) * densityCoeff));
+                    for (let i = 0; i < nLines; i++) {
+                        const ang = (i / nLines) * 2 * Math.PI;
+                        const sx = c.x + (R + 2) * Math.cos(ang);
+                        const sy = c.y + (R + 2) * Math.sin(ang);
+                        const pts = traceFieldLine(sx, sy, 1); // 沿电场方向
+                        if (pts.length > 5) {
+                            lines.push({ pts, arrowAt: Math.floor(pts.length * 0.4) });
+                        }
+                    }
+                }
+
+                // 2. 从正极板两侧发射
+                for (const p of posPlates) {
+                    const L = dist(p.x1, p.y1, p.x2, p.y2);
+                    const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+                    const len = Math.hypot(dx, dy) || 1;
+                    const perpX = -dy / len, perpY = dx / len;
+                    const nLines = Math.max(6, Math.floor(L / 12 * Math.abs(p.q) / 3 * densityCoeff));
+
+                    for (const side of [-1, 1]) {
+                        const offsetX = perpX * side * 8, offsetY = perpY * side * 8;
+                        for (let i = 0; i < nLines; i++) {
+                            const t = (i + 0.5) / nLines;
+                            const sx = p.x1 + t * dx + offsetX;
+                            const sy = p.y1 + t * dy + offsetY;
+                            const pts = traceFieldLine(sx, sy, 1);
+                            if (pts.length > 5) {
+                                lines.push({ pts, arrowAt: Math.floor(pts.length * 0.4) });
+                            }
+                        }
+                    }
+                }
+
+                // 3. 负电荷的处理：需要电场线指向它们
+                // 方法：从负电荷表面出发，逆着电场方向追踪（dirSign=-1），然后反转序列
+                for (const c of negCharges) {
+                    const nLines = Math.max(8, Math.floor(baseLinesPerCharge * Math.abs(c.q) * densityCoeff));
+                    for (let i = 0; i < nLines; i++) {
+                        const ang = (i / nLines) * 2 * Math.PI;
+                        const sx = c.x + (R + 2) * Math.cos(ang);
+                        const sy = c.y + (R + 2) * Math.sin(ang);
+                        // 逆着电场追踪（找到电场的"来源"）
+                        const pts = traceFieldLine(sx, sy, -1);
+                        // 要求线足够长（真的连到了某个正电荷）
+                        if (pts.length > 15) {
+                            // 反转序列，得到指向负电荷的电场线
+                            const rev = pts.slice().reverse();
+                            lines.push({ pts: rev, arrowAt: Math.floor(rev.length * 0.4) });
+                        }
+                    }
+                }
+
+                // 4. 负极板的处理（反向追踪）
+                for (const p of negPlates) {
+                    const L = dist(p.x1, p.y1, p.x2, p.y2);
+                    const dx = p.x2 - p.x1, dy = p.y2 - p.y1;
+                    const len = Math.hypot(dx, dy) || 1;
+                    const perpX = -dy / len, perpY = dx / len;
+                    const nLines = Math.max(6, Math.floor(L / 12 * Math.abs(p.q) / 3 * densityCoeff));
+
+                    for (const side of [-1, 1]) {
+                        const offsetX = perpX * side * 8, offsetY = perpY * side * 8;
+                        for (let i = 0; i < nLines; i++) {
+                            const t = (i + 0.5) / nLines;
+                            const sx = p.x1 + t * dx + offsetX;
+                            const sy = p.y1 + t * dy + offsetY;
+                            const pts = traceFieldLine(sx, sy, -1);
+                            if (pts.length > 15) {
+                                const rev = pts.slice().reverse();
+                                lines.push({ pts: rev, arrowAt: Math.floor(rev.length * 0.4) });
+                            }
+                        }
+                    }
+                }
+
+                return lines;
+            }
+
+            function drawArrowHead(x, y, angle, size) {
+                ctx.save();
+                ctx.translate(x, y);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-size, -size/2.5);
+                ctx.moveTo(0, 0);
+                ctx.lineTo(-size, size/2.5);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            function drawCharge(c) {
+                const isPos = c.q > 0, color = isPos ? '#e74c3c' : '#3498db';
+                // 光晕
+                const g = ctx.createRadialGradient(c.x, c.y, R*0.5, c.x, c.y, R*2.5);
+                g.addColorStop(0, isPos ? 'rgba(231,76,60,0.25)' : 'rgba(52,152,219,0.25)');
+                g.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = g; ctx.beginPath(); ctx.arc(c.x, c.y, R*2.5, 0, Math.PI*2); ctx.fill();
+                // 主体
+                ctx.fillStyle = color; ctx.beginPath(); ctx.arc(c.x, c.y, R, 0, Math.PI*2); ctx.fill();
+                // 选中圈
+                if (state.selectedId === c.id) { ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 3/view.scale; ctx.beginPath(); ctx.arc(c.x, c.y, R+8, 0, Math.PI*2); ctx.stroke(); }
+                // 符号
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 3/view.scale;
+                ctx.beginPath(); ctx.moveTo(c.x-R*0.35, c.y); ctx.lineTo(c.x+R*0.35, c.y); ctx.stroke();
+                if (isPos) { ctx.beginPath(); ctx.moveTo(c.x, c.y-R*0.35); ctx.lineTo(c.x, c.y+R*0.35); ctx.stroke(); }
+                // 标签
+                ctx.font = `bold ${Math.max(11,12/view.scale)}px sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = color;
+                ctx.fillText((c.q>0?'+':'')+c.q.toFixed(1)+'q', c.x, c.y+R+16/view.scale); ctx.textAlign = 'left';
+            }
+
+            function drawPlate(p) {
+                const isPos = p.q > 0, color = isPos ? '#e74c3c' : '#3498db';
+                ctx.strokeStyle = color; ctx.lineWidth = 14/view.scale; ctx.lineCap = 'round';
+                ctx.beginPath(); ctx.moveTo(p.x1, p.y1); ctx.lineTo(p.x2, p.y2); ctx.stroke();
+                if (state.selectedId === p.id) { ctx.strokeStyle = '#f1c40f'; ctx.lineWidth = 5/view.scale; ctx.stroke(); }
+                ctx.fillStyle = '#2c3e50';
+                for (const [ex,ey] of [[p.x1,p.y1],[p.x2,p.y2]]) { ctx.beginPath(); ctx.arc(ex,ey,6/view.scale,0,Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2/view.scale; ctx.stroke(); }
+                const mx = (p.x1+p.x2)/2, my = (p.y1+p.y2)/2, len = Math.hypot(p.x2-p.x1,p.y2-p.y1) || 1;
+                const ox = -(p.y2-p.y1)/len * 24/view.scale, oy = (p.x2-p.x1)/len * 24/view.scale;
+                ctx.font = `bold ${Math.max(12,12/view.scale)}px sans-serif`; ctx.textAlign = 'center'; ctx.fillStyle = color;
+                ctx.fillText((isPos?'+':'−')+Math.abs(p.q).toFixed(1)+'Q', mx+ox, my+oy); ctx.textAlign = 'left';
+            }
+
+            function drawEquipotential() {
+                if (!state.showEquipotential) return;
+                const resW = 360, resH = 250, cw = W/resW, ch = H/resH;
+                const pot = new Float32Array((resW+1)*(resH+1));
+                for (let j=0; j<=resH; j++) for (let i=0; i<=resW; i++) pot[j*(resW+1)+i] = getV(i*cw, j*ch);
+                let minV = Infinity, maxV = -Infinity;
+                for (let i=0; i<pot.length; i++) { const v=pot[i]; if (Math.abs(v)<80000) { minV=Math.min(minV,v); maxV=Math.max(maxV,v); } }
+                if (!isFinite(minV) || !isFinite(maxV)) return;
+                const nLevel = {1:16,2:24,3:36,4:50,5:70}[state.equipDensity] || 36;
+                const levels = [], centerV = (minV+maxV)/2, span = (maxV-minV)/2;
+                for (let i=1; i<nLevel; i++) { const t = (i/nLevel)-0.5; levels.push(centerV + span*t*0.95); }
+                ctx.strokeStyle = 'rgba(37, 99, 235, 0.7)'; ctx.lineWidth = 1.5/view.scale; ctx.setLineDash([5/view.scale, 4/view.scale]);
+                for (const level of levels) {
+                    ctx.beginPath();
+                    for (let j=0; j<resH; j++) {
+                        for (let i=0; i<resW; i++) {
+                            const idx=j*(resW+1)+i, v00=pot[idx], v10=pot[idx+1], v01=pot[idx+resW+1], v11=pot[idx+resW+2];
+                            if (Math.max(Math.abs(v00),Math.abs(v10),Math.abs(v01),Math.abs(v11))>80000) continue;
+                            const segs=[];
+                            function addInterp(va,vb,ix,iy,jx,jy) { if ((va-level)*(vb-level)>0) return; const t=(level-va)/(vb-va); segs.push({x:ix+t*(jx-ix),y:iy+t*(jy-iy)}); }
+                            addInterp(v00,v10,i*cw,j*ch,(i+1)*cw,j*ch); addInterp(v01,v11,i*cw,(j+1)*ch,(i+1)*cw,(j+1)*ch);
+                            addInterp(v00,v01,i*cw,j*ch,i*cw,(j+1)*ch); addInterp(v10,v11,(i+1)*cw,j*ch,(i+1)*cw,(j+1)*ch);
+                            if (segs.length===2) { ctx.moveTo(segs[0].x,segs[0].y); ctx.lineTo(segs[1].x,segs[1].y); }
+                        }
+                    }
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+            }
+
+            function drawVectors() {
+                if (!state.showVectors) return;
+                const nx = 16, ny = 11;
+                for (let i=1; i<nx; i++) {
+                    for (let j=1; j<ny; j++) {
+                        const x = i*W/nx, y = j*H/ny, E = getE(x,y);
+                        if (E.mag < 0.5) continue;
+                        const len = Math.min(22/view.scale, E.mag*0.1), ang = Math.atan2(E.Ey, E.Ex);
+                        ctx.strokeStyle = 'rgba(52,152,219,0.3)'; ctx.lineWidth = 1/view.scale;
+                        ctx.beginPath(); ctx.moveTo(x-Math.cos(ang)*len*0.5, y-Math.sin(ang)*len*0.5); ctx.lineTo(x+Math.cos(ang)*len*0.5, y+Math.sin(ang)*len*0.5); ctx.stroke();
+                    }
+                }
+            }
+
+            function draw() {
+                ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,W,H);
+                ctx.translate(view.offsetX, view.offsetY); ctx.scale(view.scale, view.scale);
+                ctx.fillStyle = '#e8f2fa';
+                for (let x=0; x<W; x+=40) for (let y=0; y<H; y+=40) { ctx.beginPath(); ctx.arc(x,y,1.2/view.scale,0,Math.PI*2); ctx.fill(); }
+                drawVectors();
+                if (state.needsRecalc) { state.cachedLines = state.showLines ? computeFieldLines() : []; state.needsRecalc = false; }
+                drawEquipotential();
+                if (state.showLines && state.cachedLines.length) {
+                    ctx.strokeStyle = '#111'; ctx.lineWidth = 1.2/view.scale;
+                    for (const line of state.cachedLines) {
+                        const pts = line.pts; if (pts.length < 3) continue;
+                        ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y); for (let i=1; i<pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y); ctx.stroke();
+                        const ai = line.arrowAt; if (ai > 1 && ai < pts.length-1) { const ang = Math.atan2(pts[ai].y-pts[ai-1].y, pts[ai].x-pts[ai-1].x); drawArrowHead(pts[ai].x, pts[ai].y, ang, 6/view.scale); }
+                    }
+                }
+                for (const p of state.plates) drawPlate(p);
+                for (const c of state.charges) drawCharge(c);
+                ctx.setTransform(1,0,0,1,0,0);
+            }
+
+            // 交互
+            function getHit(wx, wy) {
+                for (const c of state.charges) if (dist(wx,wy,c.x,c.y) < R+10) return {type:'charge',id:c.id};
+                for (const p of state.plates) {
+                    if (dist(wx,wy,p.x1,p.y1) < 14) return {type:'plate',id:p.id,handle:'end1'};
+                    if (dist(wx,wy,p.x2,p.y2) < 14) return {type:'plate',id:p.id,handle:'end2'};
+                    const l2 = (p.x2-p.x1)**2+(p.y2-p.y1)**2;
+                    let t = ((wx-p.x1)*(p.x2-p.x1)+(wy-p.y1)*(p.y2-p.y1))/(l2||1);
+                    t = Math.max(0, Math.min(1,t));
+                    const px = p.x1+t*(p.x2-p.x1), py = p.y1+t*(p.y2-p.y1);
+                    if (dist(wx,wy,px,py) < 16) return {type:'plate',id:p.id,handle:'body'};
+                }
+                return null;
+            }
+            let mouseInfo = {time:0,x:0,y:0};
+
+            canvas.addEventListener('contextmenu', e => e.preventDefault());
+            canvas.addEventListener('mousedown', e => {
+                mouseInfo = {time:Date.now(), x:e.clientX, y:e.clientY};
+                const w = screenToWorld(e.clientX, e.clientY), hit = getHit(w.x, w.y);
+                if (e.button === 0 && !hit && !state.tool) { isPanning = true; panStart = {x:e.clientX, y:e.clientY}; panOffset = {x:view.offsetX, y:view.offsetY}; canvas.style.cursor = 'grabbing'; e.preventDefault(); return; }
+                if (e.button === 2) { isPanning = true; panStart = {x:e.clientX, y:e.clientY}; panOffset = {x:view.offsetX, y:view.offsetY}; canvas.style.cursor = 'grabbing'; e.preventDefault(); return; }
+                hideEditor();
+                if (hit) { state.dragging = hit; state.selectedId = hit.id; if (hit.type==='plate' && hit.handle==='body') { const p = state.plates.find(pl=>pl.id===hit.id); state.dragOffset = {w, x1:p.x1, y1:p.y1, x2:p.x2, y2:p.y2}; } updateUI(); state.needsRecalc = true; draw(); return; }
+                if (state.tool) { if (state.tool==='pos') state.charges.push({x:w.x, y:w.y, q:2.5, id:nextId++}); else if (state.tool==='neg') state.charges.push({x:w.x, y:w.y, q:-2.5, id:nextId++}); else if (state.tool.startsWith('plate')) { const len=160, isPos=state.tool==='platePos'; state.plates.push({x1:w.x, y1:w.y-len/2, x2:w.x, y2:w.y+len/2, q:isPos?5:-5, id:nextId++}); } state.selectedId = nextId-1; state.tool = null; state.needsRecalc = true; updateUI(); draw(); }
+                else { state.selectedId = null; updateUI(); draw(); }
+            });
+            window.addEventListener('mousemove', e => {
+                if (isPanning) { view.offsetX = panOffset.x + (e.clientX-panStart.x); view.offsetY = panOffset.y + (e.clientY-panStart.y); clampView(); draw(); return; }
+                const w = screenToWorld(e.clientX, e.clientY);
+                if (!state.dragging) { const hit = getHit(w.x, w.y); canvas.style.cursor = hit ? (hit.handle?.startsWith('end')?'nwse-resize':'move') : (state.tool?'crosshair':'default'); return; }
+                if (state.dragging.type === 'charge') { const c = state.charges.find(ch=>ch.id===state.dragging.id); if (c) { c.x = w.x; c.y = w.y; } }
+                else if (state.dragging.type === 'plate') { const p = state.plates.find(pl=>pl.id===state.dragging.id); if (p) { if (state.dragging.handle==='end1') { p.x1=w.x; p.y1=w.y; } else if (state.dragging.handle==='end2') { p.x2=w.x; p.y2=w.y; } else if (state.dragging.handle==='body' && state.dragOffset) { const dx=w.x-state.dragOffset.w.x, dy=w.y-state.dragOffset.w.y; p.x1=state.dragOffset.x1+dx; p.y1=state.dragOffset.y1+dy; p.x2=state.dragOffset.x2+dx; p.y2=state.dragOffset.y2+dy; } } }
+                state.needsRecalc = true; draw();
+            });
+            window.addEventListener('mouseup', e => {
+                if (isPanning) { isPanning = false; canvas.style.cursor = 'crosshair'; return; }
+                if (!state.dragging) return;
+                const dt = Date.now()-mouseInfo.time, d = Math.hypot(e.clientX-mouseInfo.x, e.clientY-mouseInfo.y);
+                if (dt < 200 && d < 5) { const w = screenToWorld(e.clientX, e.clientY), hit = getHit(w.x, w.y); if (hit && (hit.type==='charge' || hit.type==='plate')) showEditor(hit, w.x, w.y); }
+                state.dragging = null; state.dragOffset = null;
+            });
+            canvas.addEventListener('wheel', e => { e.preventDefault(); const wBefore = screenToWorld(e.clientX, e.clientY), delta = -Math.sign(e.deltaY)*0.1; view.scale = Math.min(3.5, Math.max(0.4, view.scale*(1+delta))); const wAfter = screenToWorld(e.clientX, e.clientY); view.offsetX += (wAfter.x-wBefore.x)*view.scale; view.offsetY += (wAfter.y-wBefore.y)*view.scale; clampView(); draw(); }, {passive:false});
+            window.addEventListener('keydown', e => { if ((e.key==='Delete' || e.key==='Backspace') && !document.getElementById('chargeEditor').classList.contains('show')) delSelected(); });
+            function delSelected() { if (!state.selectedId) return; state.charges = state.charges.filter(c=>c.id!==state.selectedId); state.plates = state.plates.filter(p=>p.id!==state.selectedId); state.selectedId = null; state.needsRecalc = true; updateUI(); draw(); }
+            function updateUI() { document.querySelectorAll('.tool-btn').forEach(btn=>btn.classList.toggle('active', state.tool===btn.dataset.tool)); }
+            function showEditor(obj, wx, wy) { const ed=document.getElementById('chargeEditor'), inp=document.getElementById('chargeInput'); editingObj = obj; if (obj.type==='charge') { const c=state.charges.find(ch=>ch.id===obj.id); if (c) inp.value=c.q.toFixed(1); } else { const p=state.plates.find(pl=>pl.id===obj.id); if (p) inp.value=p.q.toFixed(1); } const s=worldToScreen(wx,wy); ed.style.left=(s.x+20)+'px'; ed.style.top=(s.y-50)+'px'; ed.classList.add('show'); inp.focus(); inp.select(); }
+            function hideEditor() { document.getElementById('chargeEditor').classList.remove('show'); editingObj = null; }
+            window.confirmChargeEdit = function() { if (!editingObj) return; const q=parseFloat(document.getElementById('chargeInput').value); if (isNaN(q)) { hideEditor(); return; } if (editingObj.type==='charge') { const c=state.charges.find(ch=>ch.id===editingObj.id); if (c) c.q = q; } else { const p=state.plates.find(pl=>pl.id===editingObj.id); if (p) p.q = q; } state.needsRecalc = true; draw(); hideEditor(); };
+            window.cancelChargeEdit = hideEditor;
+            document.getElementById('chargeInput').addEventListener('keypress', e=>{ if (e.key==='Enter') window.confirmChargeEdit(); if (e.key==='Escape') hideEditor(); });
+            document.querySelectorAll('.tool-btn').forEach(btn=>btn.addEventListener('click', ()=>{ state.tool = (state.tool===btn.dataset.tool)?null:btn.dataset.tool; updateUI(); }));
+            document.getElementById('btnClear').addEventListener('click', ()=>{ state.charges=[]; state.plates=[]; state.selectedId=null; state.needsRecalc=true; updateUI(); draw(); });
+            document.getElementById('btnDelete').addEventListener('click', delSelected);
+            document.getElementById('showLines').addEventListener('change', e=>{ state.showLines=e.target.checked; state.needsRecalc=true; draw(); });
+            document.getElementById('showEquipotential').addEventListener('change', e=>{ state.showEquipotential=e.target.checked; draw(); });
+            document.getElementById('showVectors').addEventListener('change', e=>{ state.showVectors=e.target.checked; draw(); });
+            document.getElementById('lineDensity').addEventListener('input', e=>{ state.lineDensity=parseFloat(e.target.value); document.getElementById('lineDensityVal').textContent=state.lineDensity.toFixed(1); state.needsRecalc=true; draw(); });
+            document.getElementById('equipDensity').addEventListener('input', e=>{ state.equipDensity=parseInt(e.target.value); document.getElementById('equipDensityVal').textContent={1:'少',2:'较少',3:'中等',4:'较多',5:'多'}[state.equipDensity]; draw(); });
+            document.querySelectorAll('.preset-btn').forEach(btn=>btn.addEventListener('click', ()=>{ presets[btn.dataset.preset](); state.selectedId=null; state.needsRecalc=true; updateUI(); draw(); }));
+            updateUI(); state.needsRecalc = true; draw();
+        })();
+    </script>
+    </body>
+</html>

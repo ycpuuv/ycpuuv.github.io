@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>牛顿环干涉实验 · 等厚干涉 - PhySenLab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 通用面板样式 - 参考目标程序 */
+        .panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid #E1EEF7;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            padding: 18px 22px;
+            z-index: 10;
+            position: absolute;
+            transition: all 0.2s ease;
+        }
+
+        /* 左侧信息面板 */
+        .info-panel {
+            top: 20px;
+            left: 20px;
+            max-width: 280px;
+        }
+
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: #2C3E50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .formula-box {
+            background: linear-gradient(135deg, #E8F4FD, #F8FBFF);
+            padding: 9px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 8px;
+        }
+
+        .formula {
+            font-size: .92rem;
+            color: #000;
+            font-family: 'Times New Roman', Times, serif;
+            font-style: italic;
+        }
+
+        .info-text {
+            font-size: .8rem;
+            color: #5A6C7D;
+            line-height: 1.6;
+        }
+
+        .g-note {
+            background: #FFF3E0;
+            border-left: 3px solid #F39C12;
+            padding: 5px 8px;
+            margin-top: 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #E67E22;
+            font-weight: 600;
+        }
+
+        /* 右侧控制区 */
+        .controls-area {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 330px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        /* 牛顿环显微视图卡片 */
+        .newton-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            border: 1px solid #E1EEF7;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+        }
+
+        .newton-header {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2C3E50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.95rem;
+        }
+
+        #newton-canvas {
+            width: 100%;
+            background: #0a0e1c;
+            border-radius: 50%;
+            border: 2px solid #4A90E2;
+            aspect-ratio: 1/1;
+            display: block;
+            margin: 0 auto;
+            box-shadow: 0 0 12px rgba(74, 144, 226, 0.2);
+        }
+
+        .newton-status {
+            margin-top: 10px;
+            font-size: 11px;
+            color: #E67E22;
+            font-weight: 500;
+            background: #FFF3E0;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* 控制卡片 */
+        .control-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            border: 1px solid #E1EEF7;
+            padding: 18px 20px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+        }
+
+        .control-card h3 {
+            font-size: 1rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #E1EEF7;
+            padding-bottom: 10px;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        .slider-group {
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #F8FBFF;
+            border-radius: 10px;
+            border: 1px solid #E1EEF7;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        .value-badge {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 24px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+
+        /* 模式切换按钮组 */
+        .mode-switch {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: #E1EEF7;
+            border-radius: 40px;
+            padding: 4px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: 0.2s;
+            background: transparent;
+            color: #5A6C7D;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0 4px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #5A6C7D;
+            border: 1px solid #E1EEF7;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            transform: translateY(-1px);
+        }
+
+        /* 图例面板 */
+        .legend-panel {
+            position: absolute;
+            left: 20px;
+            bottom: 100px;
+            width: 180px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 14px;
+            font-size: 0.7rem;
+            pointer-events: none;
+            color: #2C3E50;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+        }
+
+        .legend-color.lens {
+            background: #7ab3c8;
+            opacity: 0.8;
+            box-shadow: 0 0 2px #2c3e50;
+        }
+
+        .legend-color.plate {
+            background: #5f9e8f;
+            opacity: 0.8;
+        }
+
+        .legend-color.ring {
+            background: radial-gradient(circle, #ffaa66, #ff6633);
+            border-radius: 50%;
+        }
+
+        /* 返回按钮 - 参考目标程序样式 */
+        .back-btn {
+            position: absolute;
+            bottom: 24px;
+            left: 20px;
+            background: white;
+            color: #4A90E2;
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.2);
+            transition: all 0.3s;
+            z-index: 30;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.7rem;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #e2e8f0;
+            pointer-events: none;
+            z-index: 20;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* 自定义滚动条 */
+        .controls-area::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .controls-area::-webkit-scrollbar-track {
+            background: #E1EEF7;
+            border-radius: 4px;
+        }
+
+        .controls-area::-webkit-scrollbar-thumb {
+            background: #4A90E2;
+            border-radius: 4px;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"></div>
+
+    <!-- 左侧信息面板 (参考新UI风格) -->
+    <div class="info-panel panel">
+        <h1><span>🌈</span> 牛顿环 · 等厚干涉</h1>
+        <div class="formula-box">
+            <div class="formula">光程差 Δ = 2d + λ/2 &nbsp;&nbsp; </div>
+            <div class="formula" style="font-size:0.8rem;margin-top:4px;">暗纹: 2d = mλ &nbsp;</div>
+            <div class="formula" style="font-size:0.8rem;margin-top:4px;">明纹: 2d = (m+1/2)λ &nbsp; </div>
+        </div>
+        <p class="info-text">
+            <strong>平凸透镜</strong> 与平面玻璃间形成空气薄层，曲率半径 R 变化时凸面动态贴合玻璃板。<br>
+            <strong>白光模式</strong> 呈现彩色牛顿环；<strong>单色模式</strong> 可调波长观察疏密变化。<br>
+        </p>
+    </div>
+
+    <div class="controls-area">
+        <!-- 实时干涉图样卡片 -->
+        <div class="newton-card">
+            <div class="newton-header">🔬 实时干涉图样 (显微视图)</div>
+            <canvas id="newton-canvas" width="400" height="400"></canvas>
+            <div class="newton-status" id="newton-info">白光模式 | 彩色干涉条纹</div>
+        </div>
+
+        <!-- 实验调控卡片 -->
+        <div class="control-card">
+            <h3>🎚️ 实验调控</h3>
+            <div class="mode-switch" id="modeSwitch">
+                <div class="mode-btn active" data-mode="white">💡 白光干涉</div>
+                <div class="mode-btn" data-mode="mono">🔆 单色光</div>
+            </div>
+            
+            <div id="sliderContainer">
+                <div class="slider-group" id="intensityGroup">
+                    <div class="slider-label"><span>✨ 干涉光强</span><span id="intensityValue" class="value-badge">1.00</span></div>
+                    <input type="range" id="intensitySlider" min="0.3" max="1.6" step="0.01" value="1.0">
+                </div>
+                <div class="slider-group" id="wavelengthGroup" style="display:none;">
+                    <div class="slider-label"><span>🌈 波长 λ (nm)</span><span id="lambdaValue" class="value-badge">550</span></div>
+                    <input type="range" id="lambdaSlider" min="380" max="700" step="1" value="550">
+                </div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label"><span>🔘 透镜曲率半径 R (m)</span><span id="radiusValue" class="value-badge">1.00</span></div>
+                <input type="range" id="radiusSlider" min="0.5" max="3.2" step="0.01" value="1.00">
+                <div style="font-size:0.7rem; color:#5A6C7D; margin-top:6px;">R 减小 → 条纹变密集，透镜更鼓；</div>
+                <div style="font-size:0.7rem; color:#5A6C7D; margin-top:6px;">R 增大 → 条纹稀疏，透镜趋近平坦；</div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" id="resetBtn">🔄 重置实验参数</button>
+                <button class="btn btn-secondary" id="infoBtn">📖 牛顿环原理</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图例面板 -->
+    <div class="legend-panel">
+        <div style="font-weight:600; margin-bottom:6px; color:#2C3E50;">📐 实验图例</div>
+        <div class="legend-item"><div class="legend-color lens"></div> 平凸透镜</div>
+        <div class="legend-item"><div class="legend-color plate"></div> 光学平面玻璃</div>
+        <div class="legend-item"><div class="legend-color ring"></div> 等厚干涉条纹</div>
+    </div>
+
+    <!-- 返回按钮 (目标程序风格) -->
+    <div class="back-btn" id="backBtn">← 返回实验列表</div>
+    <div class="hint-text">🖱️ 鼠标拖拽自由旋转视角 | 滚动缩放 | 调节R观察干涉环变化</div>
+</div>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // --- 场景初始化 ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0a1428); // 深色科技感背景
+    scene.fog = new THREE.FogExp2(0x0a1428, 0.006);
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(2.9, 2.0, 3.6);
+    camera.lookAt(0, 0.55, 0);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+    
+    // CSS2渲染文字标签
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.getElementById('canvas-container').appendChild(labelRenderer.domElement);
+    
+    // ========== 关键：添加自由旋转控制 (OrbitControls) ==========
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;          // 惯性效果
+    controls.dampingFactor = 0.05;
+    controls.rotateSpeed = 1.5;             // 旋转灵敏度
+    controls.zoomSpeed = 1.2;
+    controls.panSpeed = 0.8;
+    controls.target.set(0, 0.55, 0);        // 看向透镜中心区域
+    controls.update();
+    
+    // 辅助: 轻微的环境光与主光源 (使透镜材质更立体)
+    const ambientLight = new THREE.AmbientLight(0x3c5e7a, 0.65);
+    scene.add(ambientLight);
+    const mainLight = new THREE.DirectionalLight(0xffffff, 1.1);
+    mainLight.position.set(2.5, 4, 1.8);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+    const fillLight = new THREE.PointLight(0x88aacc, 0.55);
+    fillLight.position.set(1.2, 1.2, 1.5);
+    scene.add(fillLight);
+    const backLight = new THREE.PointLight(0x6688aa, 0.4);
+    backLight.position.set(-1, 1.2, -1.5);
+    scene.add(backLight);
+    
+    // 星空背景 (装饰)
+    const starField = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0xaaccff, size: 0.022 }));
+    const starPositions = [];
+    for(let i=0;i<600;i++) starPositions.push((Math.random()-0.5)*180, (Math.random()-0.5)*40+1, (Math.random()-0.5)*80-35);
+    starField.geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(starPositions), 3));
+    scene.add(starField);
+    
+    // 实验器材常量
+    const GLASS_RADIUS = 1.68;
+    
+    // 平面玻璃板 (半透明)
+    const glassPlateMat = new THREE.MeshPhysicalMaterial({ color: 0xb8d4f0, metalness: 0.2, roughness: 0.1, transparent: true, opacity: 0.5 });
+    const glassPlate = new THREE.Mesh(new THREE.CylinderGeometry(GLASS_RADIUS, GLASS_RADIUS, 0.08, 96), glassPlateMat);
+    glassPlate.position.set(0, 0.0, 0);
+    glassPlate.receiveShadow = true;
+    scene.add(glassPlate);
+    
+    // 干涉条纹显示平面 (空气薄膜接触面，展示牛顿环纹理)
+    const ringPlaneMat = new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, transparent: true, opacity: 0.98 });
+    const ringPlane = new THREE.Mesh(new THREE.CircleGeometry(GLASS_RADIUS, 256), ringPlaneMat);
+    ringPlane.position.set(0, 0.045, 0);
+    ringPlane.rotation.x = -Math.PI / 2;
+    scene.add(ringPlane);
+    
+    // 透镜组
+    let lensGroup = new THREE.Group();
+    scene.add(lensGroup);
+    const lensMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xcceeff,
+        metalness: 0.35,
+        roughness: 0.2,
+        transparent: true,
+        opacity: 0.85,
+        emissive: 0x112233,
+        clearcoat: 0.85,
+        side: THREE.DoubleSide
+    });
+    
+    // 重建透镜 (基于曲率半径的球冠)
+    function rebuildLens(curvatureRadiusM) {
+        while(lensGroup.children.length) lensGroup.remove(lensGroup.children[0]);
+        let visualR = curvatureRadiusM + 2.0;
+        let R_curv = Math.max(0.25, visualR) * 1.22;
+        let R_sq = R_curv * R_curv;
+        let r_sq = GLASS_RADIUS * GLASS_RADIUS;
+        let sqrtArg = Math.max(0, R_sq - r_sq);
+        let h = R_curv - Math.sqrt(sqrtArg);
+        h = Math.min(h, 0.78);
+        h = Math.max(h, 0.035);
+        const lowestY = 0.045;
+        const domeTopY = lowestY + h;
+        const sphereCenterY = lowestY + R_curv;
+        const topY_rel = domeTopY - sphereCenterY;
+        let thetaMax = Math.acos(Math.min(0.999, Math.max(-0.999, topY_rel / R_curv)));
+        const phiStart = thetaMax;
+        const phiLength = Math.PI - thetaMax;
+        const sphereGeo = new THREE.SphereGeometry(R_curv, 128, 128, 0, Math.PI * 2, phiStart, phiLength);
+        const dome = new THREE.Mesh(sphereGeo, lensMaterial);
+        dome.position.y = sphereCenterY;
+        dome.castShadow = true;
+        lensGroup.add(dome);
+        // 装饰线框
+        const edgesGeo = new THREE.EdgesGeometry(sphereGeo);
+        const edgesMat = new THREE.LineBasicMaterial({ color: 0xaaddff, transparent: true, opacity: 0.2 });
+        const wireframe = new THREE.LineSegments(edgesGeo, edgesMat);
+        wireframe.position.copy(dome.position);
+        lensGroup.add(wireframe);
+        if(lensLabel) lensLabel.position.set(0, domeTopY + 0.12, 0);
+    }
+    
+    // CSS2D 标签
+    const lensLabel = new CSS2DObject(document.createElement('div'));
+    lensLabel.element.textContent = '🔍 平凸透镜 (球冠)';
+    lensLabel.element.style.cssText = 'color:#e2f0ff;font-size:10px;background:rgba(0,0,0,0.55);padding:2px 12px;border-radius:20px;backdrop-filter:blur(4px);white-space:nowrap;';
+    lensLabel.position.set(0, 1.2, 0);
+    scene.add(lensLabel);
+    const plateLabel = new CSS2DObject(document.createElement('div'));
+    plateLabel.element.textContent = '📀 平面玻璃板 (光学平面)';
+    plateLabel.element.style.cssText = 'color:#bbf0e6;font-size:10px;background:rgba(0,0,0,0.5);padding:2px 10px;border-radius:16px;';
+    plateLabel.position.set(0, -0.26, 1.45);
+    scene.add(plateLabel);
+    
+    // ========== 牛顿环核心物理引擎 ==========
+    let currentMode = 'white';     
+    let currentLambda = 550;       
+    let currentIntensity = 1.0;    
+    let currentRadius = 1.00;      
+    const MAX_R = GLASS_RADIUS;
+    
+    function monoIntensity(r, lambdaNm, Rm) {
+        if (r < 0.002) return 0.03;
+        const lambdaM = lambdaNm * 1e-9;
+        const scale = 0.00125;
+        const rPhys = r * scale;
+        const d = (rPhys * rPhys) / (2 * Rm);
+        const delta = (2*d)/lambdaM + 0.5;
+        let I = 0.55 + 0.45 * Math.cos(2*Math.PI*delta);
+        return Math.min(0.97, Math.max(0.03, I));
+    }
+    
+    function whiteColorAtRadius(r, Rm, intensityMult) {
+        if (r < 0.002) return {r:0,g:0,b:0};
+        const scale = 0.00125;
+        const rPhys = r * scale;
+        const d = (rPhys * rPhys) / (2 * Rm);
+        const lambdaR = 650e-9, lambdaG = 550e-9, lambdaB = 450e-9;
+        const phaseR = (2*d)/lambdaR + 0.5;
+        const phaseG = (2*d)/lambdaG + 0.5;
+        const phaseB = (2*d)/lambdaB + 0.5;
+        let IR = 0.55 + 0.45 * Math.cos(2*Math.PI*phaseR);
+        let IG = 0.55 + 0.45 * Math.cos(2*Math.PI*phaseG);
+        let IB = 0.55 + 0.45 * Math.cos(2*Math.PI*phaseB);
+        IR = Math.min(0.94, Math.max(0.05, IR)) * intensityMult;
+        IG = Math.min(0.94, Math.max(0.05, IG)) * intensityMult;
+        IB = Math.min(0.94, Math.max(0.05, IB)) * intensityMult;
+        return {r: IR, g: IG, b: IB};
+    }
+    
+    function wavelengthToRGB(wl) {
+        let r,g,b;
+        if (wl>=380 && wl<440) { r=(440-wl)/60; g=0; b=1; }
+        else if (wl<490) { r=0; g=(wl-440)/50; b=1; }
+        else if (wl<510) { r=0; g=1; b=1-(wl-490)/20; }
+        else if (wl<580) { r=(wl-510)/70; g=1; b=0; }
+        else if (wl<645) { r=1; g=1-(wl-580)/65; b=0; }
+        else { r=1; g=0; b=0; }
+        let factor = (wl>680)?0.72:((wl<450)?0.68:0.93);
+        return {r: r*factor, g: g*factor, b: b*factor};
+    }
+    
+    let currentTexture = null;
+    function generateTexture() {
+        const size = 1024;
+        const canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        const imgData = ctx.getImageData(0,0,size,size);
+        const data = imgData.data;
+        const center = size/2;
+        const maxRpx = size/2;
+        
+        for (let y=0; y<size; y++) {
+            for (let x=0; x<size; x++) {
+                const dx = x-center, dy = y-center;
+                const rpx = Math.sqrt(dx*dx+dy*dy);
+                let r_norm = (rpx/maxRpx) * MAX_R;
+                const idx = (y*size + x)*4;
+                if (rpx <= maxRpx) {
+                    if (currentMode === 'mono') {
+                        let I = monoIntensity(r_norm, currentLambda, currentRadius);
+                        I = Math.pow(I, 0.9);
+                        const rgb = wavelengthToRGB(currentLambda);
+                        data[idx] = rgb.r * 255 * I;
+                        data[idx+1] = rgb.g * 255 * I;
+                        data[idx+2] = rgb.b * 255 * I;
+                    } else {
+                        const col = whiteColorAtRadius(r_norm, currentRadius, currentIntensity);
+                        data[idx] = col.r * 255;
+                        data[idx+1] = col.g * 255;
+                        data[idx+2] = col.b * 255;
+                    }
+                    data[idx+3] = 255;
+                } else {
+                    data[idx]=12; data[idx+1]=18; data[idx+2]=40; data[idx+3]=255;
+                }
+            }
+        }
+        ctx.putImageData(imgData,0,0);
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        return tex;
+    }
+    
+    function updateAll() {
+        if (currentTexture) currentTexture.dispose();
+        const newTex = generateTexture();
+        ringPlaneMat.map = newTex;
+        ringPlaneMat.needsUpdate = true;
+        currentTexture = newTex;
+        drawMicroscopeView();
+        rebuildLens(currentRadius);
+    }
+    
+    // 显微视图绘制
+    const microCanvas = document.getElementById('newton-canvas');
+    const microCtx = microCanvas.getContext('2d');
+    microCanvas.width = 400; microCanvas.height = 400;
+    function drawMicroscopeView() {
+        const w=400, h=400;
+        microCtx.clearRect(0,0,w,h);
+        microCtx.fillStyle = '#0a0e1c';
+        microCtx.fillRect(0,0,w,h);
+        const cx=w/2, cy=h/2, maxRpx = w/2-4;
+        const imgData = microCtx.getImageData(0,0,w,h);
+        const data = imgData.data;
+        for (let y=0; y<h; y++) {
+            for (let x=0; x<w; x++) {
+                const dx=x-cx, dy=y-cy;
+                const dist = Math.sqrt(dx*dx+dy*dy);
+                const idx = (y*w + x)*4;
+                if (dist <= maxRpx) {
+                    const r_norm = (dist/maxRpx)*MAX_R;
+                    if (currentMode === 'mono') {
+                        let I = monoIntensity(r_norm, currentLambda, currentRadius);
+                        I = Math.pow(I,0.9);
+                        const rgb = wavelengthToRGB(currentLambda);
+                        data[idx] = rgb.r*255*I;
+                        data[idx+1] = rgb.g*255*I;
+                        data[idx+2] = rgb.b*255*I;
+                    } else {
+                        const col = whiteColorAtRadius(r_norm, currentRadius, currentIntensity);
+                        data[idx] = col.r*255;
+                        data[idx+1] = col.g*255;
+                        data[idx+2] = col.b*255;
+                    }
+                    data[idx+3]=255;
+                } else {
+                    data[idx]=20; data[idx+1]=28; data[idx+2]=55; data[idx+3]=255;
+                }
+            }
+        }
+        microCtx.putImageData(imgData,0,0);
+        microCtx.beginPath();
+        microCtx.arc(cx,cy,maxRpx,0,Math.PI*2);
+        microCtx.strokeStyle = '#4A90E2';
+        microCtx.lineWidth = 1.8;
+        microCtx.stroke();
+        microCtx.fillStyle = '#F39C12';
+        microCtx.font = 'bold 11px "Segoe UI"';
+        if(currentMode==='white') microCtx.fillText(`白光模式 | 光强 ${currentIntensity.toFixed(2)}`, cx-70, cy-maxRpx-5);
+        else microCtx.fillText(`单色光 λ=${currentLambda} nm`, cx-65, cy-maxRpx-5);
+        microCtx.fillStyle = '#4A90E2';
+        microCtx.fillText(`曲率半径 R = ${currentRadius.toFixed(2)} m`, cx-70, cy-maxRpx+12);
+        const ringEst = Math.floor(Math.sqrt((MAX_R*MAX_R*1e6)/(Math.max(400,currentLambda)*currentRadius))/10)+3;
+        document.getElementById('newton-info').innerHTML = currentMode==='white' ? `🌈 彩色牛顿环 | 光强 ${currentIntensity.toFixed(2)}` : `🔵 单色 λ=${currentLambda}nm | 可见环数 ≈ ${Math.min(22,ringEst)}`;
+    }
+    
+    // UI 事件绑定
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const intensityGroup = document.getElementById('intensityGroup');
+    const wavelengthGroup = document.getElementById('wavelengthGroup');
+    const intensitySlider = document.getElementById('intensitySlider');
+    const intensityVal = document.getElementById('intensityValue');
+    const lambdaSlider = document.getElementById('lambdaSlider');
+    const lambdaVal = document.getElementById('lambdaValue');
+    const radiusSlider = document.getElementById('radiusSlider');
+    const radiusVal = document.getElementById('radiusValue');
+    const resetBtn = document.getElementById('resetBtn');
+    const infoBtn = document.getElementById('infoBtn');
+    const backBtn = document.getElementById('backBtn');
+    
+    function setMode(mode) {
+        currentMode = mode;
+        if(mode === 'white') {
+            intensityGroup.style.display = 'block';
+            wavelengthGroup.style.display = 'none';
+            modeBtns.forEach(btn => {
+                if(btn.dataset.mode === 'white') btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        } else {
+            intensityGroup.style.display = 'none';
+            wavelengthGroup.style.display = 'block';
+            modeBtns.forEach(btn => {
+                if(btn.dataset.mode === 'mono') btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+        updateAll();
+    }
+    
+    modeBtns.forEach(btn => btn.addEventListener('click', () => setMode(btn.dataset.mode)));
+    intensitySlider.addEventListener('input', (e) => { currentIntensity = parseFloat(e.target.value); intensityVal.innerText = currentIntensity.toFixed(2); updateAll(); });
+    lambdaSlider.addEventListener('input', (e) => { currentLambda = parseInt(e.target.value); lambdaVal.innerText = currentLambda; updateAll(); });
+    radiusSlider.addEventListener('input', (e) => { currentRadius = parseFloat(e.target.value); radiusVal.innerText = currentRadius.toFixed(2); updateAll(); });
+    resetBtn.addEventListener('click', () => {
+        currentMode = 'white';
+        currentIntensity = 1.0;
+        currentLambda = 550;
+        currentRadius = 1.00;
+        intensitySlider.value = '1.0';
+        lambdaSlider.value = '550';
+        radiusSlider.value = '1.00';
+        intensityVal.innerText = '1.00';
+        lambdaVal.innerText = '550';
+        radiusVal.innerText = '1.00';
+        setMode('white');
+        updateAll();
+    });
+    infoBtn.addEventListener('click', () => alert("牛顿环原理：平凸透镜与平面玻璃间空气薄膜产生等厚干涉。光程差 Δ = 2d + λ/2，明暗条纹对应不同厚度。"));
+    backBtn.addEventListener('click', () => { window.location.href = '../index.html'; });
+    
+    rebuildLens(currentRadius);
+    updateAll();
+    setMode('white');
+    
+    // 动画循环
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update(); // 持续更新轨道控制，确保自由旋转生效
+        renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
+    }
+    animate();
+    
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>
+    </body>
+</html>

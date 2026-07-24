@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>托里拆利实验 · 高中物理仿真实验</title>
+ <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .simulation-container { position: relative; width: 100vw; height: 100vh; }
+        #canvas-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center; z-index: 1;
+        }
+        #mainCanvas {
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+        }
+        .panel {
+            background: rgba(255, 255, 255, 0.92); backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color); border-radius: var(--radius);
+            box-shadow: var(--shadow); padding: 16px 20px; z-index: 10; position: absolute;
+            transition: var(--transition);
+        }
+        .panel:hover { box-shadow: var(--shadow-hover); }
+
+        .info-panel { top: 16px; left: 16px; max-width: 280px; }
+        .info-panel h1 { font-size: 1.1rem; color: var(--text-primary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px; border-radius: 8px; border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px; font-size: .85rem; font-family: 'Times New Roman', serif; color: var(--text-primary);
+        }
+        .info-text { font-size: .78rem; color: var(--text-secondary); line-height: 1.55; }
+
+        .physics-panel { bottom: 16px; left: 16px; width: 260px; }
+        .physics-panel h3 { font-size: .92rem; color: var(--text-primary); margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid var(--border-color); }
+        .param-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: .8rem; color: var(--text-secondary); }
+        .param-value { font-family: Consolas, monospace; font-weight: 600; color: var(--primary-color); }
+        .param-value.highlight { color: #E65100; font-size: 1rem; }
+
+        .controls-panel { top: 16px; right: 16px; width: 320px; max-height: calc(100vh - 32px); overflow-y: auto; }
+        .controls-panel h3 { font-size: 1rem; color: var(--text-primary); margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid var(--border-color); }
+        
+        /* 汞元素外部展示卡片 */
+        .mercury-card {
+            background: linear-gradient(115deg, #F0F4FA 0%, #E8EDF5 100%);
+            border-left: 5px solid #7A8BA8;
+            border-radius: 12px;
+            padding: 10px 12px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .mercury-symbol {
+            font-size: 2rem;
+            font-weight: 800;
+            background: #2C3E50;
+            color: #D6E2F0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 30px;
+            box-shadow: inset 0 -1px 0 rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.1);
+            font-family: monospace;
+        }
+        .mercury-info {
+            flex: 1;
+        }
+        .mercury-info h4 {
+            font-size: .9rem;
+            font-weight: 700;
+            color: #1F2A3E;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .mercury-info p {
+            font-size: .7rem;
+            color: #5A6C7D;
+            margin-top: 4px;
+        }
+        .mercury-badge {
+            background: #D32F2F10;
+            color: #B23C1C;
+            font-size: .65rem;
+            padding: 2px 6px;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .section-label { font-size: .72rem; color: var(--text-light); margin: 12px 0 4px; font-weight: 600; letter-spacing: .5px; }
+        .slider-group {
+            margin-bottom: 12px; padding: 10px; background: #F8FBFF; border-radius: 10px; border: 1px solid var(--border-color);
+        }
+        .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: .85rem; }
+        .slider-label .lt { font-weight: 600; color: var(--text-primary); }
+        .vbadge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: #fff;
+            padding: 2px 8px; border-radius: 12px; font-family: monospace; font-size: .78rem; font-weight: 600;
+        }
+        .alt-value {
+            background: #E1EEF7;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: monospace;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+        input[type=range] {
+            width: 100%; height: 6px; border-radius: 3px; background: #E1EEF7; outline: none;
+            -webkit-appearance: none; cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff; box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4); cursor: pointer;
+        }
+        .btn-row { display: flex; gap: 8px; margin: 10px 0; flex-wrap: wrap; }
+        .btn {
+            padding: 9px 16px; border: none; border-radius: 22px; font-weight: 600; font-size: .82rem;
+            cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff; box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 5px 14px rgba(74, 144, 226, 0.4); }
+        .btn-ghost { background: #F0F4F8; color: var(--text-secondary); border: 1px solid var(--border-color); }
+        .btn-ghost:hover { background: #E1EEF7; }
+
+        .back-btn {
+            position: absolute; bottom: 16px; right: 16px; background: #fff; color: var(--primary-color);
+            padding: 9px 18px; border-radius: 22px; text-decoration: none; font-weight: 600;
+            border: 2px solid var(--primary-color); box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            transition: all .3s; z-index: 10; font-size: .82rem;
+        }
+        .back-btn:hover { background: var(--primary-color); color: #fff; }
+
+        .env-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+        .env-btn {
+            padding: 6px 12px; border: 1px solid var(--border-color); border-radius: 16px;
+            background: #fff; color: var(--text-secondary); font-size: .75rem; cursor: pointer;
+            transition: all .2s;
+        }
+        .env-btn:hover { border-color: var(--primary-color); color: var(--primary-color); }
+        .env-btn.active {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff; border-color: var(--primary-color);
+        }
+
+        @media (max-width: 900px) {
+            .info-panel { max-width: 210px; padding: 12px 14px; }
+            .physics-panel { width: 190px; padding: 12px 14px; }
+            .controls-panel { width: 280px; padding: 12px 14px; }
+            .mercury-symbol { width: 38px; height: 38px; font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container">
+        <canvas id="mainCanvas"></canvas>
+    </div>
+
+    <!-- 左上信息面板 -->
+    <div class="info-panel panel">
+        <h1>🧪 托里拆利实验</h1>
+        <div class="formula-box">
+            <span style="font-style:italic">p</span><sub>0</sub> = <span style="font-style:italic">ρgh</span>
+        </div>
+        <p class="info-text">
+            将装满水银的玻璃管倒置于水银槽中，管内水银柱下降后稳定，上方形成托里拆利真空。水银柱高度反映了外界大气压强的大小。<br>
+        </p>
+    </div>
+
+    <!-- 左下物理数据面板 -->
+    <div class="physics-panel panel">
+        <h3>📊 实时数据</h3>
+        <div class="param-row">
+            <span>水银柱高度</span>
+            <span id="h-display" class="param-value highlight">760 mm</span>
+        </div>
+        <div class="param-row">
+            <span>大气压强</span>
+            <span id="p-display" class="param-value">101325 Pa</span>
+        </div>
+        <div class="param-row">
+            <span>标准大气压比值</span>
+            <span id="ratio-display" class="param-value">1.000</span>
+        </div>
+        <div class="param-row">
+            <span>对应海拔高度</span>
+            <span id="alt-display" class="param-value">0 m</span>
+        </div>
+        <div class="param-row">
+            <span>水银密度 ρ</span>
+            <span class="param-value">13600 kg/m³</span>
+        </div>
+        <div class="param-row">
+            <span>重力加速度 g</span>
+            <span class="param-value">9.8 m/s²</span>
+        </div>
+    </div>
+
+    <!-- 右上控制面板 -->
+    <div class="controls-panel panel">
+        <h3>🔧 实验控制 & 海拔联动</h3>
+
+        <!-- 汞的外部展示卡片：突出显示汞 (Hg) 符号 -->
+        <div class="mercury-card">
+            <div class="mercury-symbol">Hg</div>
+            <div class="mercury-info">
+                <h4>🌊 汞 &nbsp;<span class="mercury-badge">有毒·重液体金属</span></h4>
+                <p>密度 13.6 g/cm³ | 常温液态 | 托里拆利实验核心介质</p>
+                <p style="font-size: 0.65rem;">⚠️ 实验室通风操作，禁止接触</p>
+            </div>
+        </div>
+
+        <!-- 海拔高度滑动条 -->
+        <div class="section-label">⛰️ 海拔高度调节 (联动大气压)</div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span class="lt">🏔️ 海拔高度 h</span>
+                <span id="alt-slider-value" class="alt-value">0 m</span>
+            </div>
+            <input type="range" id="alt-slider" min="-500" max="9000" step="10" value="0">
+        </div>
+
+        <div class="section-label">🌡️ 大气压直接调节</div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span class="lt">🌍 大气压强 p₀</span>
+                <span id="p0-badge" class="vbadge">101.3 kPa</span>
+            </div>
+            <input type="range" id="p0-slider" min="30000" max="110000" step="100" value="101325">
+        </div>
+
+        <div class="section-label">⚡ 快速环境预设</div>
+        <div class="env-buttons">
+            <button class="env-btn active" data-p="101325" data-alt="0">海平面</button>
+            <button class="env-btn" data-p="90000" data-alt="约1000m">高原城市</button>
+            <button class="env-btn" data-p="70000" data-alt="约3000m">高山</button>
+            <button class="env-btn" data-p="54000" data-alt="约5000m">珠峰大本营</button>
+            <button class="env-btn" data-p="33000" data-alt="约9000m">万米高空</button>
+            <button class="env-btn" data-p="120000" data-alt="负压">高压环境</button>
+        </div>
+
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btn-animate">▶ 演示实验过程</button>
+            <button class="btn btn-ghost" id="btn-reset">↺ 重置海平面</button>
+        </div>
+
+        <div class="section-label">显示选项</div>
+        <div style="font-size: .8rem; color: var(--text-secondary); line-height: 1.8;">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="show-scale" checked> 显示刻度尺
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="show-pressure" checked> 显示压强标注
+            </label>
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="show-vacuum" checked> 标注真空区域
+            </label>
+        </div>
+    </div>
+
+    
+</div>
+
+<script>
+/* ===================== 托里拆利实验 · 装置再次下移 + 动态大气压箭头 ===================== */
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+
+// 物理常数
+const RHO_HG = 13600;   // 水银密度 kg/m³
+const G = 9.8;          // 重力加速度 m/s²
+const P0_STD = 101325;  // 标准大气压 Pa
+const MM_TO_M = 0.001;  // mm转m
+const SCALE_HEIGHT = 8400; // 大气标高 (m)
+
+// 画布尺寸
+let W, H, CX, CY;
+function resize() {
+    W = Math.min(window.innerWidth - 40, 900);
+    H = Math.min(window.innerHeight - 40, 700);
+    canvas.width = W * window.devicePixelRatio;
+    canvas.height = H * window.devicePixelRatio;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+    CX = W / 2;
+    // 装置进一步下移：将垂直中心偏移从 120 增加到 180，使整个实验装置更靠下，为上方留出更多空间
+    CY = H / 2 + 180;
+}
+window.addEventListener('resize', resize);
+resize();
+
+// 实验状态
+let currentP0 = 101325;      // 当前大气压 Pa
+let targetHgHeight = 760;    // 目标水银柱高度 mm
+let currentHgHeight = 760;   // 当前显示高度 mm
+let animating = false;
+let animProgress = 0;
+
+// 显示选项
+let showScale = true;
+let showPressure = true;
+let showVacuum = true;
+
+// 场景尺寸参数
+const TUBE_WIDTH = 60;
+const TUBE_HEIGHT = 520;
+const BASIN_WIDTH = 240;
+const BASIN_HEIGHT = 80;
+const PIXELS_PER_MM = 0.6;   // 每毫米对应的像素数
+
+// 获取动态水银槽表面Y坐标（基于下移后的CY）
+function getDynamicMercuryY() {
+    // 使用 CY + 75 作为基准，并确保不超出画布底部
+    let baseY = CY + 75;
+    return Math.min(H - 50, baseY);
+}
+
+// 根据海拔计算大气压
+function pressureFromAltitude(altMeters) {
+    let p = P0_STD * Math.exp(-altMeters / SCALE_HEIGHT);
+    return Math.min(110000, Math.max(30000, p));
+}
+
+// 根据大气压计算海拔
+function altitudeFromPressure(p0) {
+    if (p0 <= 0) return 9000;
+    let alt = -SCALE_HEIGHT * Math.log(p0 / P0_STD);
+    return Math.min(9000, Math.max(-500, alt));
+}
+
+// 计算水银柱高度 (mm)
+function calcHgHeight(p0) {
+    let hMeters = p0 / (RHO_HG * G);
+    return hMeters / MM_TO_M;
+}
+
+// 核心更新: 设置大气压 (联动海拔滑块、压强滑块、目标高度)
+function setPressure(p0, updateAltitudeSlider = true, updateP0Slider = true) {
+    p0 = Math.min(110000, Math.max(30000, p0));
+    currentP0 = p0;
+    targetHgHeight = calcHgHeight(p0);
+    targetHgHeight = Math.max(50, Math.min(780, targetHgHeight));
+    
+    if (updateAltitudeSlider) {
+        const alt = altitudeFromPressure(p0);
+        const altSlider = document.getElementById('alt-slider');
+        if (altSlider && altSlider.valueAsNumber !== Math.round(alt)) {
+            altSlider.value = Math.round(alt);
+            document.getElementById('alt-slider-value').innerText = Math.round(alt) + ' m';
+        }
+        document.getElementById('alt-display').innerText = Math.round(alt) + ' m';
+    }
+    
+    if (updateP0Slider) {
+        const p0Slider = document.getElementById('p0-slider');
+        if (p0Slider && p0Slider.valueAsNumber !== Math.round(p0)) {
+            p0Slider.value = Math.round(p0);
+        }
+        document.getElementById('p0-badge').innerText = (p0 / 1000).toFixed(1) + ' kPa';
+    }
+    
+    updateUI();
+}
+
+// 根据海拔设置大气压
+function setAltitude(altMeters) {
+    let newP = pressureFromAltitude(altMeters);
+    setPressure(newP, false, true);
+    const altSlider = document.getElementById('alt-slider');
+    if (altSlider && altSlider.valueAsNumber !== Math.round(altMeters)) {
+        altSlider.value = Math.round(altMeters);
+    }
+    document.getElementById('alt-slider-value').innerText = Math.round(altMeters) + ' m';
+    document.getElementById('alt-display').innerText = Math.round(altMeters) + ' m';
+    updateEnvButtons(currentP0);
+}
+
+function updateUI() {
+    document.getElementById('h-display').textContent = Math.round(currentHgHeight) + ' mm';
+    document.getElementById('p-display').textContent = Math.round(currentP0) + ' Pa';
+    document.getElementById('ratio-display').textContent = (currentP0 / P0_STD).toFixed(3);
+    const curAlt = altitudeFromPressure(currentP0);
+    document.getElementById('alt-display').innerText = Math.round(curAlt) + ' m';
+    document.getElementById('p0-badge').innerText = (currentP0 / 1000).toFixed(1) + ' kPa';
+    const altSliderDom = document.getElementById('alt-slider');
+    if (altSliderDom && Math.abs(altSliderDom.valueAsNumber - curAlt) > 2) {
+        altSliderDom.value = Math.round(curAlt);
+        document.getElementById('alt-slider-value').innerText = Math.round(curAlt) + ' m';
+    }
+}
+
+function updateEnvButtons(activeP0) {
+    document.querySelectorAll('.env-btn').forEach(btn => {
+        const btnP = parseInt(btn.dataset.p);
+        btn.classList.toggle('active', Math.abs(btnP - activeP0) < 500);
+    });
+}
+
+// ===================== 绘图模块 (动态箭头长度) =====================
+function drawMercuryGradient(x, y, w, h) {
+    const grad = ctx.createLinearGradient(x, y, x + w, y);
+    grad.addColorStop(0, '#8B9DC3');
+    grad.addColorStop(0.15, '#C0C8D8');
+    grad.addColorStop(0.3, '#E8ECF2');
+    grad.addColorStop(0.5, '#B0BCD0');
+    grad.addColorStop(0.7, '#8B9DC3');
+    grad.addColorStop(0.85, '#6B7B9A');
+    grad.addColorStop(1, '#4A5A7A');
+    return grad;
+}
+
+function drawGlassHighlight(x, y, w, h) {
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.fillRect(x + 4, y, 8, h);
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.fillRect(x + w - 14, y, 4, h);
+    ctx.restore();
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    const mercuryY = getDynamicMercuryY();
+    const tubeTop = mercuryY - TUBE_HEIGHT;
+    const tubeLeft = CX - TUBE_WIDTH / 2;
+    const tubeRight = CX + TUBE_WIDTH / 2;
+    
+    // 背景装饰
+    ctx.save();
+    ctx.fillStyle = 'rgba(74, 144, 226, 0.03)';
+    ctx.beginPath();
+    ctx.arc(CX, CY - 50, 200, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+    
+    // 1. 铁架台
+    ctx.fillStyle = '#A0A8B0';
+    ctx.fillRect(CX - 100, mercuryY + 35, 200, 12);
+    ctx.fillStyle = '#9098A0';
+    ctx.fillRect(CX - 80, mercuryY + 20, 160, 15);
+    ctx.fillStyle = '#B0B8C0';
+    ctx.fillRect(CX + TUBE_WIDTH / 2 + 2, mercuryY - 200, 15, 40);
+    ctx.fillRect(CX + TUBE_WIDTH / 2 + 2, mercuryY - 210, 30, 10);
+    
+    // 2. 玻璃管外壁
+    ctx.strokeStyle = 'rgba(180, 200, 220, 0.6)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(tubeLeft, tubeTop);
+    ctx.lineTo(tubeLeft, mercuryY);
+    ctx.moveTo(tubeRight, tubeTop);
+    ctx.lineTo(tubeRight, mercuryY);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(CX, tubeTop, TUBE_WIDTH / 2, Math.PI, 0);
+    ctx.stroke();
+    
+    // 3. 水银槽
+    const basinLeft = CX - BASIN_WIDTH / 2;
+    const basinRight = CX + BASIN_WIDTH / 2;
+    const basinTop = mercuryY - BASIN_HEIGHT;
+    ctx.strokeStyle = 'rgba(160, 180, 200, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(basinLeft, basinTop);
+    ctx.lineTo(basinLeft, mercuryY + 20);
+    ctx.lineTo(basinRight, mercuryY + 20);
+    ctx.lineTo(basinRight, basinTop);
+    ctx.stroke();
+    const basinHgGrad = drawMercuryGradient(basinLeft + 2, mercuryY - 15, BASIN_WIDTH - 4, 35);
+    ctx.fillStyle = basinHgGrad;
+    ctx.fillRect(basinLeft + 2, mercuryY - 15, BASIN_WIDTH - 4, 35);
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    ctx.fillRect(basinLeft + 2, mercuryY - 15, BASIN_WIDTH - 4, 3);
+    ctx.fillStyle = '#5A6C7D';
+    ctx.font = 'bold 12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Hg', CX, mercuryY + 5);
+    
+    // 4. 管内水银柱
+    const hgHeightPx = currentHgHeight * PIXELS_PER_MM;
+    const hgTop = mercuryY - hgHeightPx;
+    const tubeInnerLeft = tubeLeft + 3;
+    const tubeInnerWidth = TUBE_WIDTH - 6;
+    const hgGrad = drawMercuryGradient(tubeInnerLeft, hgTop, tubeInnerWidth, hgHeightPx);
+    ctx.fillStyle = hgGrad;
+    ctx.fillRect(tubeInnerLeft, hgTop, tubeInnerWidth, hgHeightPx);
+    ctx.fillStyle = '#A0B0C8';
+    ctx.beginPath();
+    ctx.ellipse(CX, hgTop, tubeInnerWidth / 2, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(CX - 5, hgTop - 1, tubeInnerWidth / 4, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    drawGlassHighlight(tubeLeft, hgTop, TUBE_WIDTH, hgHeightPx);
+    
+    // 5. 真空区域
+    if (showVacuum) {
+        if (hgTop > tubeTop + 5) {
+            ctx.fillStyle = 'rgba(200, 210, 230, 0.08)';
+            ctx.fillRect(tubeLeft + 3, tubeTop + 3, TUBE_WIDTH - 6, hgTop - tubeTop - 3);
+            ctx.strokeStyle = 'rgba(139, 157, 195, 0.3)';
+            ctx.setLineDash([4, 4]);
+            ctx.strokeRect(tubeLeft + 8, tubeTop + 10, TUBE_WIDTH - 16, hgTop - tubeTop - 15);
+            ctx.setLineDash([]);
+        }
+        ctx.fillStyle = '#8B9DC3';
+        ctx.font = 'italic 13px "Times New Roman", serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('托里拆利真空', CX, tubeTop + 35);
+        ctx.font = '11px sans-serif';
+        ctx.fillText('(近似真空)', CX, tubeTop + 51);
+    }
+    
+    // 6. 刻度尺
+    if (showScale) {
+        const scaleX = CX + TUBE_WIDTH / 2 + 25;
+        const scaleBottom = mercuryY;
+        const scaleTop = mercuryY - 500;
+        ctx.strokeStyle = '#4A90E2';
+        ctx.fillStyle = '#4A90E2';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(scaleX, scaleTop);
+        ctx.lineTo(scaleX, scaleBottom);
+        ctx.stroke();
+        for (let mm = 0; mm <= 760; mm += 10) {
+            const y = scaleBottom - mm * PIXELS_PER_MM;
+            if (y < scaleTop - 5) continue;
+            const isMajor = mm % 50 === 0;
+            const tickLen = isMajor ? 12 : 6;
+            ctx.beginPath();
+            ctx.moveTo(scaleX, y);
+            ctx.lineTo(scaleX + tickLen, y);
+            ctx.stroke();
+            if (isMajor && mm > 0) {
+                ctx.font = '11px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(mm + ' mm', scaleX + tickLen + 4, y);
+            }
+        }
+        const hgY = scaleBottom - currentHgHeight * PIXELS_PER_MM;
+        ctx.strokeStyle = '#E65100';
+        ctx.fillStyle = '#E65100';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(scaleX - 15, hgY);
+        ctx.lineTo(scaleX - 5, hgY - 4);
+        ctx.lineTo(scaleX - 5, hgY + 4);
+        ctx.fill();
+        ctx.font = 'bold 12px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(currentHgHeight) + ' mm', scaleX - 18, hgY);
+    }
+    
+    // 7. 压强标注 (大气压箭头长度 = 当前水银柱高度)
+    if (showPressure) {
+        // 大气压箭头：从水银槽液面向上，长度等于当前水银柱高度对应的像素值
+        const arrowLengthPx = currentHgHeight * PIXELS_PER_MM;
+        const arrowX = CX + TUBE_WIDTH / 2 + 110;
+        const arrowBottom = mercuryY;
+        const arrowTop = arrowBottom - arrowLengthPx;
+        
+        ctx.strokeStyle = '#4A90E2';
+        ctx.fillStyle = '#4A90E2';
+        ctx.lineWidth = 2;
+        // 绘制向下箭头线
+        ctx.beginPath();
+        ctx.moveTo(arrowX, arrowTop);
+        ctx.lineTo(arrowX, arrowBottom - 8);
+        ctx.stroke();
+        // 箭头头部
+        ctx.beginPath();
+        ctx.moveTo(arrowX, arrowBottom);
+        ctx.lineTo(arrowX - 6, arrowBottom - 10);
+        ctx.lineTo(arrowX + 6, arrowBottom - 10);
+        ctx.fill();
+        // 标注文字
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#4A90E2';
+        ctx.fillText('大气压强 p₀', arrowX + 12, (arrowTop + arrowBottom) / 2);
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#5A6C7D';
+        ctx.fillText((currentP0 / 1000).toFixed(1) + ' kPa', arrowX + 12, (arrowTop + arrowBottom) / 2 + 16);
+        
+        // 水银柱压强箭头 (向上)
+        const upArrowX = CX - TUBE_WIDTH / 2 - 60;
+        ctx.strokeStyle = '#E65100';
+        ctx.fillStyle = '#E65100';
+        ctx.beginPath();
+        ctx.moveTo(upArrowX, mercuryY);
+        ctx.lineTo(upArrowX, hgTop + 8);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(upArrowX, hgTop);
+        ctx.lineTo(upArrowX - 6, hgTop + 10);
+        ctx.lineTo(upArrowX + 6, hgTop + 10);
+        ctx.fill();
+        ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#E65100';
+        ctx.fillText('水银柱压强', upArrowX - 10, (mercuryY + hgTop) / 2);
+        ctx.font = '11px sans-serif';
+        ctx.fillStyle = '#5A6C7D';
+        ctx.fillText('ρgh', upArrowX - 10, (mercuryY + hgTop) / 2 + 16);
+        
+        // 平衡标注
+        if (Math.abs(currentHgHeight - targetHgHeight) < 1) {
+            ctx.fillStyle = '#2E7D32';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('✓ 平衡', CX, mercuryY + 45);
+        }
+    }
+}
+
+// 动画循环与平滑过渡
+function animate() {
+    if (animating) {
+        animProgress += 0.015;
+        if (animProgress >= 1) {
+            animProgress = 1;
+            animating = false;
+        }
+        const ease = 1 - Math.pow(1 - animProgress, 3);
+        currentHgHeight = 760 - (760 - targetHgHeight) * ease;
+    } else {
+        const diff = targetHgHeight - currentHgHeight;
+        if (Math.abs(diff) > 0.5) {
+            currentHgHeight += diff * 0.08;
+        } else {
+            currentHgHeight = targetHgHeight;
+        }
+    }
+    draw();
+    updateUI();
+    requestAnimationFrame(animate);
+}
+
+// 事件绑定
+const p0Slider = document.getElementById('p0-slider');
+const altSlider = document.getElementById('alt-slider');
+const btnAnimate = document.getElementById('btn-animate');
+const btnReset = document.getElementById('btn-reset');
+const showScaleCheck = document.getElementById('show-scale');
+const showPressureCheck = document.getElementById('show-pressure');
+const showVacuumCheck = document.getElementById('show-vacuum');
+
+p0Slider.addEventListener('input', (e) => {
+    const p0 = parseInt(e.target.value);
+    setPressure(p0, true, false);
+    updateEnvButtons(p0);
+});
+
+altSlider.addEventListener('input', (e) => {
+    const altVal = parseInt(e.target.value);
+    document.getElementById('alt-slider-value').innerText = altVal + ' m';
+    setAltitude(altVal);
+    updateEnvButtons(currentP0);
+});
+
+document.querySelectorAll('.env-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const p0 = parseInt(btn.dataset.p);
+        p0Slider.value = p0;
+        setPressure(p0, true, true);
+        const newAlt = altitudeFromPressure(p0);
+        altSlider.value = Math.round(newAlt);
+        document.getElementById('alt-slider-value').innerText = Math.round(newAlt) + ' m';
+        animating = true;
+        animProgress = 0;
+    });
+});
+
+btnAnimate.addEventListener('click', () => {
+    currentHgHeight = 760;
+    setPressure(currentP0, false, false);
+    animating = true;
+    animProgress = 0;
+});
+
+btnReset.addEventListener('click', () => {
+    setPressure(P0_STD, true, true);
+    altSlider.value = 0;
+    document.getElementById('alt-slider-value').innerText = '0 m';
+    currentHgHeight = targetHgHeight;
+    animating = false;
+    updateEnvButtons(P0_STD);
+});
+
+showScaleCheck.addEventListener('change', (e) => showScale = e.target.checked);
+showPressureCheck.addEventListener('change', (e) => showPressure = e.target.checked);
+showVacuumCheck.addEventListener('change', (e) => showVacuum = e.target.checked);
+
+// 启动仿真
+setPressure(P0_STD, true, true);
+altSlider.value = 0;
+document.getElementById('alt-slider-value').innerText = '0 m';
+animate();
+</script>
+</body>
+</html>

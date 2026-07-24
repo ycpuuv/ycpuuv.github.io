@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>示波器模拟 · 透明屏电子偏转</title>
+    <style>
+        :root {
+            --bg: #0a0a14;
+            --panel-bg: rgba(16, 18, 28, 0.94);
+            --text: #c8d6e5;
+            --text-secondary: #8899aa;
+            --accent: #4da6ff;
+            --green: #4cdf80;
+            --border: #1e2a3a;
+            --slider-track: #1a2535;
+            --card-bg: #111827;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #mainCanvas {
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(60, 200, 140, 0.2);
+        }
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            padding: 14px 18px;
+            z-index: 10;
+            position: absolute;
+            color: var(--text);
+        }
+        .info-panel {
+            top: 12px;
+            left: 12px;
+            max-width: 260px;
+        }
+        .info-panel h1 {
+            font-size: 0.95rem;
+            margin-bottom: 6px;
+            color: #e0e8f0;
+        }
+        .formula-box {
+            background: #0f1a28;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            margin-bottom: 6px;
+            font-size: 0.72rem;
+            font-family: serif;
+            font-style: italic;
+            color: #bcc8d6;
+        }
+        .info-text {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .legend-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+            font-size: 0.65rem;
+        }
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .controls-panel {
+            top: 12px;
+            right: 12px;
+            width: 290px;
+            max-height: calc(100vh - 24px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border);
+        }
+        .section-label {
+            font-size: 0.65rem;
+            color: #6b8098;
+            margin: 10px 0 4px;
+            font-weight: 600;
+        }
+        .signal-preview-row {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .signal-preview-box {
+            flex: 1;
+            background: #0a0f18;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            padding: 4px;
+            text-align: center;
+        }
+        .signal-preview-box .label {
+            font-size: 0.6rem;
+            color: #6b8098;
+            margin-bottom: 2px;
+        }
+        .signal-preview-box canvas {
+            width: 100%;
+            height: 50px;
+            border-radius: 4px;
+            background: #050810;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 3px;
+            margin-bottom: 8px;
+            padding: 3px;
+            background: #0f1a28;
+            border-radius: 10px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 6px 3px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: #8899aa;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #3a7bd5, #5b9cf5);
+            color: #fff;
+        }
+        .slider-group {
+            margin-bottom: 6px;
+            padding: 8px;
+            background: var(--card-bg);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3px;
+            font-size: 0.75rem;
+        }
+        .vbadge {
+            background: linear-gradient(135deg, #3a7bd5, #5b9cf5);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: 0.68rem;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 4px;
+            border-radius: 3px;
+            background: var(--slider-track);
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #4da6ff;
+            border: 2px solid #fff;
+            cursor: pointer;
+        }
+        .btn-row {
+            display: flex;
+            gap: 5px;
+            margin: 6px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 18px;
+            font-weight: 600;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-primary {
+            background: #3a7bd5;
+            color: #fff;
+        }
+        .btn-ghost {
+            background: #1a2535;
+            color: #b0bec5;
+            border: 1px solid var(--border);
+        }
+        .btn.active {
+            background: #3a7bd5;
+            color: #fff;
+        }
+        .physics-panel {
+            bottom: 12px;
+            left: 12px;
+            width: 220px;
+        }
+        .physics-panel h3 {
+            font-size: 0.78rem;
+            margin-bottom: 4px;
+            padding-bottom: 3px;
+            border-bottom: 2px solid var(--border);
+        }
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+        .param-value {
+            font-family: monospace;
+            font-weight: 600;
+            color: #4da6ff;
+        }
+        .param-value.orange {
+            color: #ff7043;
+        }
+        .back-btn {
+            position: absolute;
+            bottom: 12px;
+            right: 12px;
+            background: #1a2535;
+            color: #4da6ff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #3a5070;
+            transition: 0.3s;
+            z-index: 10;
+            font-size: 0.72rem;
+        }
+        .back-btn:hover {
+            background: #4da6ff;
+            color: #fff;
+        }
+        /* 自定义滚动条 */
+        .controls-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+        .controls-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .controls-panel::-webkit-scrollbar-thumb {
+            background: #3a5070;
+            border-radius: 4px;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <!-- 信息面板 -->
+        <div class="info-panel panel">
+            <h1>📗 示波器 · 透明屏电子偏转</h1>
+            <div class="formula-box">
+                Y偏转: Δy ∝ V<sub>YY'</sub> · 开关<br>
+                X偏转: Δx ∝ V<sub>XX'</sub> · 开关
+            </div>
+            <p class="info-text">电子从枪口发射，经半透明偏转板，打在透明网格屏上。可独立关闭偏转。</p>
+            <div class="legend-row">
+                <span style="display:flex;align-items:center;gap:4px;"><span class="legend-dot" style="background:#ff5555;"></span>YY'板</span>
+                <span style="display:flex;align-items:center;gap:4px;"><span class="legend-dot" style="background:#5588cc;"></span>XX'板</span>
+                <span style="display:flex;align-items:center;gap:4px;"><span class="legend-dot" style="background:#ffe066;"></span>电子</span>
+                <span style="display:flex;align-items:center;gap:4px;"><span class="legend-dot" style="background:#4cdf80;"></span>荧屏</span>
+            </div>
+        </div>
+
+        <!-- 物理参数面板 -->
+        <div class="physics-panel panel">
+            <h3>📊 实时参数</h3>
+            <div class="param-row"><span>时间</span><span id="pTime" class="param-value">0.000 s</span></div>
+            <div class="param-row"><span>V<sub>YY'</sub></span><span id="pVyy" class="param-value orange">—</span></div>
+            <div class="param-row"><span>V<sub>XX'</sub></span><span id="pVxx" class="param-value">—</span></div>
+            <div class="param-row"><span>屏 X</span><span id="pScrX" class="param-value">—</span></div>
+            <div class="param-row"><span>屏 Y</span><span id="pScrY" class="param-value orange">—</span></div>
+            <div class="param-row"><span>飞行粒子</span><span id="pParticles" class="param-value" style="color:#4cdf80;">0</span></div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls-panel panel">
+            <h3>🔧 控制</h3>
+
+            <div class="section-label">YY' 信号</div>
+            <div class="mode-switch" id="signalTypeSwitch">
+                <button class="mode-btn active" data-sig="sine">正弦</button>
+                <button class="mode-btn" data-sig="square">方波</button>
+                <button class="mode-btn" data-sig="triangle">三角</button>
+                <button class="mode-btn" data-sig="sawtooth">锯齿</button>
+            </div>
+            <div class="signal-preview-row">
+                <div class="signal-preview-box"><div class="label">YY' 垂直信号</div><canvas id="previewYY" width="280" height="50"></canvas></div>
+                <div class="signal-preview-box"><div class="label">XX' 扫描</div><canvas id="previewXX" width="280" height="50"></canvas></div>
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label"><span>频率</span><span id="vFreq" class="vbadge" style="background:#ff7043;">2.0 Hz</span></div>
+                <input type="range" id="sFreq" min="0.5" max="8.0" step="0.1" value="2.0">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span>幅度</span><span id="vAmp" class="vbadge" style="background:#ff7043;">1.0</span></div>
+                <input type="range" id="sAmp" min="0.2" max="1.5" step="0.05" value="1.0">
+            </div>
+
+            <div class="section-label">XX' 扫描</div>
+            <div class="slider-group">
+                <div class="slider-label"><span>扫描频率</span><span id="vScanFreq" class="vbadge">1.0 Hz</span></div>
+                <input type="range" id="sScanFreq" min="0.2" max="5.0" step="0.1" value="1.0">
+            </div>
+
+            <div class="section-label">偏转开关</div>
+            <div class="btn-row" style="margin-bottom:8px;">
+                <button class="btn btn-ghost active" id="btnYYEnable">YY' 偏转 ✓</button>
+                <button class="btn btn-ghost active" id="btnXXEnable">XX' 扫描 ✓</button>
+            </div>
+
+            <div class="section-label">电子枪</div>
+            <div class="slider-group">
+                <div class="slider-label"><span>速度</span><span id="vSpeed" class="vbadge" style="background:#4cdf80;">5.0 u/s</span></div>
+                <input type="range" id="sSpeed" min="2.0" max="10.0" step="0.25" value="5.0">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span>发射率</span><span id="vEmitRate" class="vbadge" style="background:#4cdf80;">150 /s</span></div>
+                <input type="range" id="sEmitRate" min="40" max="300" step="10" value="150">
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btnReset">🔄 重置</button>
+                <button class="btn btn-ghost active" id="btnFieldBox">🔲 电场</button>
+                <button class="btn btn-ghost" id="btnSlowMo">⏸ 慢动</button>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ===== 状态 =====
+        const state = {
+            signalType: 'sine',
+            freqSig: 2.0,
+            ampSig: 1.0,
+            freqScan: 1.0,
+            vz: 5.0,
+            emitRate: 150,
+            showFieldBox: true,
+            slowMo: false,
+            timeScale: 1.0,
+            yyEnabled: true,
+            xxEnabled: true,
+            t: 0,
+            particles: [],
+            maxParticles: 400,
+        };
+
+        // ===== 几何常量 =====
+        const GEO = {
+            zEmit: -3.0,
+            zYYStart: -1.5,
+            zYYEnd: -0.35,
+            zXXStart: 0.2,
+            zXXEnd: 1.35,
+            zScreen: 3.0,
+            yHalf: 1.05,
+            xHalf: 1.05,
+            screenHalfW: 1.25,
+            screenHalfH: 1.25,
+        };
+
+        // ===== 渲染器 =====
+        const canvas = document.getElementById('mainCanvas');
+        const container = document.getElementById('canvas-container');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+
+        // ===== 场景 & 相机 =====
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x0a0e18);
+        scene.fog = new THREE.Fog(0x0a0e18, 8, 30);
+
+        const camera = new THREE.PerspectiveCamera(40, container.clientWidth / Math.max(container.clientHeight, 1), 0.1, 60);
+        camera.position.set(3.5, 2.2, 7.5);
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.target.set(0, 0, 0.3);
+        controls.update();
+
+        // ===== 光照 =====
+        scene.add(new THREE.AmbientLight(0x334466, 0.7));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(6, 8, 5);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+        scene.add(new THREE.DirectionalLight(0x8899cc, 0.35).position.set(-3, 2, -3));
+        scene.add(new THREE.DirectionalLight(0x445566, 0.4).position.set(0, -0.5, 4));
+
+        // ===== 地面 =====
+        const gridHelper = new THREE.GridHelper(16, 32, 0x1a2a3a, 0x0f1a28);
+        gridHelper.position.y = -GEO.yHalf - 0.5;
+        scene.add(gridHelper);
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(16, 16),
+            new THREE.MeshStandardMaterial({ color: 0x0a0f18, roughness: 0.8, transparent: true, opacity: 0.5,
+                depthWrite: false })
+        );
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -GEO.yHalf - 0.55;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        // ===== 组 =====
+        const fieldGroup = new THREE.Group();
+        scene.add(fieldGroup);
+        const particleGroup = new THREE.Group();
+        scene.add(particleGroup);
+        const screenGroup = new THREE.Group();
+        scene.add(screenGroup);
+
+        // ===== 辅助：边框线 =====
+        function addEdgeLines(mesh, color = 0x000000) {
+            const edges = new THREE.EdgesGeometry(mesh.geometry);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color, linewidth: 1, transparent: true,
+                    opacity: 0.6 }));
+            mesh.add(line);
+        }
+
+        // ===== 构建场景结构 =====
+        function createStructure() {
+            while (fieldGroup.children.length) fieldGroup.remove(fieldGroup.children[0]);
+            while (screenGroup.children.length) screenGroup.remove(screenGroup.children[0]);
+            const { zEmit, zYYStart, zYYEnd, zXXStart, zXXEnd, zScreen, yHalf, xHalf, screenHalfW, screenHalfH } = GEO;
+
+            // ---- 电子枪 ----
+            const gun = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.25, 0.3, 1.2, 32),
+                new THREE.MeshStandardMaterial({ color: 0x3a4048, roughness: 0.35, metalness: 0.7 })
+            );
+            body.position.set(0, 0, zEmit - 0.55);
+            body.rotation.x = Math.PI / 2;
+            body.castShadow = true;
+            gun.add(body);
+            const tip = new THREE.Mesh(
+                new THREE.ConeGeometry(0.22, 0.6, 32),
+                new THREE.MeshStandardMaterial({ color: 0x2a3038, roughness: 0.3, metalness: 0.8 })
+            );
+            tip.position.set(0, 0, zEmit + 0.15);
+            tip.rotation.x = -Math.PI / 2;
+            gun.add(tip);
+            fieldGroup.add(gun);
+
+            // ---- YY' 偏转板（水平放置，上下各一块） ----
+            const yyLen = zYYEnd - zYYStart;
+            const yyW = xHalf * 1.6;
+            const yyMid = (zYYStart + zYYEnd) / 2;
+            const plateThick = 0.12;
+
+            const matYYTop = new THREE.MeshStandardMaterial({
+                color: 0xff4444,
+                roughness: 0.3,
+                metalness: 0.2,
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false
+            });
+            const plateYYTop = new THREE.Mesh(new THREE.BoxGeometry(yyW, plateThick, yyLen), matYYTop);
+            plateYYTop.position.set(0, yHalf, yyMid);
+            addEdgeLines(plateYYTop, 0x330000);
+            fieldGroup.add(plateYYTop);
+
+            const matYYBottom = new THREE.MeshStandardMaterial({
+                color: 0xff4444,
+                roughness: 0.3,
+                metalness: 0.2,
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false
+            });
+            const plateYYBottom = new THREE.Mesh(new THREE.BoxGeometry(yyW, plateThick, yyLen), matYYBottom);
+            plateYYBottom.position.set(0, -yHalf, yyMid);
+            addEdgeLines(plateYYBottom, 0x330000);
+            fieldGroup.add(plateYYBottom);
+
+            // ---- XX' 偏转板（垂直放置，左右各一块） ----
+            const xxLen = zXXEnd - zXXStart;
+            const xxH = yHalf * 1.6;
+            const xxMid = (zXXStart + zXXEnd) / 2;
+
+            const matXXLeft = new THREE.MeshStandardMaterial({
+                color: 0x5588cc,
+                roughness: 0.3,
+                metalness: 0.2,
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false
+            });
+            const plateXXLeft = new THREE.Mesh(new THREE.BoxGeometry(plateThick, xxH, xxLen), matXXLeft);
+            plateXXLeft.position.set(-xHalf, 0, xxMid);
+            addEdgeLines(plateXXLeft, 0x001122);
+            fieldGroup.add(plateXXLeft);
+
+            const matXXRight = new THREE.MeshStandardMaterial({
+                color: 0x336699,
+                roughness: 0.3,
+                metalness: 0.2,
+                transparent: true,
+                opacity: 0.7,
+                depthWrite: false
+            });
+            const plateXXRight = new THREE.Mesh(new THREE.BoxGeometry(plateThick, xxH, xxLen), matXXRight);
+            plateXXRight.position.set(xHalf, 0, xxMid);
+            addEdgeLines(plateXXRight, 0x001122);
+            fieldGroup.add(plateXXRight);
+
+            // ---- 电场示意盒 ----
+            const yyBox = new THREE.Mesh(
+                new THREE.BoxGeometry(yyW, yHalf * 2, yyLen),
+                new THREE.MeshBasicMaterial({ color: 0xff6644, transparent: true, opacity: 0.08, side: THREE
+                        .DoubleSide, depthWrite: false })
+            );
+            yyBox.position.set(0, 0, yyMid);
+            yyBox.name = 'yyBox';
+            fieldGroup.add(yyBox);
+
+            const xxBox = new THREE.Mesh(
+                new THREE.BoxGeometry(xHalf * 2, xxH, xxLen),
+                new THREE.MeshBasicMaterial({ color: 0x4488cc, transparent: true, opacity: 0.08, side: THREE
+                        .DoubleSide, depthWrite: false })
+            );
+            xxBox.position.set(0, 0, xxMid);
+            xxBox.name = 'xxBox';
+            fieldGroup.add(xxBox);
+
+            // ---- 电场箭头 ----
+            const yyArrows = new THREE.Group();
+            yyArrows.name = 'yyArrows';
+            for (let ix = 0; ix < 3; ix++) {
+                for (let iz = 0; iz < 3; iz++) {
+                    yyArrows.add(new THREE.ArrowHelper(
+                        new THREE.Vector3(0, -1, 0),
+                        new THREE.Vector3((ix - 1) * xHalf * 0.2, 0.2, zYYStart + yyLen * (iz + 0.5) / 3),
+                        0.45, 0xff5533, 0.12, 0.06
+                    ));
+                }
+            }
+            fieldGroup.add(yyArrows);
+
+            const xxArrows = new THREE.Group();
+            xxArrows.name = 'xxArrows';
+            for (let iy = 0; iy < 3; iy++) {
+                for (let iz = 0; iz < 3; iz++) {
+                    xxArrows.add(new THREE.ArrowHelper(
+                        new THREE.Vector3(1, 0, 0),
+                        new THREE.Vector3(-0.2, (iy - 1) * yHalf * 0.2, zXXStart + xxLen * (iz + 0.5) / 3),
+                        0.45, 0x5599dd, 0.12, 0.06
+                    ));
+                }
+            }
+            fieldGroup.add(xxArrows);
+
+            // ---- 透明荧光屏 ----
+            const screenCanvas = document.createElement('canvas');
+            screenCanvas.width = 512;
+            screenCanvas.height = 512;
+            const ctx = screenCanvas.getContext('2d');
+            // 初始绘制网格
+            drawScreenGrid(ctx);
+            const texture = new THREE.CanvasTexture(screenCanvas);
+            const screenMesh = new THREE.Mesh(
+                new THREE.PlaneGeometry(screenHalfW * 2, screenHalfH * 2),
+                new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide,
+                    depthWrite: false })
+            );
+            screenMesh.position.set(0, 0, zScreen);
+            screenGroup.add(screenMesh);
+            state.screenCanvas = screenCanvas;
+            state.screenCtx = ctx;
+            state.screenTexture = texture;
+        }
+
+        function drawScreenGrid(ctx) {
+            const w = 512,
+                h = 512;
+            ctx.clearRect(0, 0, w, h);
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(0, 0, w, h);
+            ctx.strokeStyle = 'rgba(60,180,80,0.5)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= w; i += 64) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, h);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(w, i);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(100,220,130,0.7)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(w / 2, 0);
+            ctx.lineTo(w / 2, h);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2);
+            ctx.lineTo(w, h / 2);
+            ctx.stroke();
+        }
+
+        // ===== 信号函数 =====
+        function getYYSignal(t) {
+            const p = t * state.freqSig * Math.PI * 2;
+            switch (state.signalType) {
+                case 'sine':
+                    return state.ampSig * Math.sin(p);
+                case 'square':
+                    return state.ampSig * (Math.sin(p) >= 0 ? 1 : -1);
+                case 'triangle':
+                    return state.ampSig * (2 / Math.PI) * Math.asin(Math.sin(p));
+                case 'sawtooth':
+                    return state.ampSig * (2 * ((t * state.freqSig) % 1) - 1);
+                default:
+                    return state.ampSig * Math.sin(p);
+            }
+        }
+
+        function getXXSignal(t) {
+            const period = 1 / state.freqScan;
+            return 2 * ((t % period) / period) - 1;
+        }
+
+        // ===== 粒子系统 =====
+        function createParticles() {
+            const pos = new Float32Array(state.maxParticles * 3);
+            const col = new Float32Array(state.maxParticles * 3);
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+            const mat = new THREE.PointsMaterial({
+                size: 0.06,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+            });
+            const pts = new THREE.Points(geo, mat);
+            particleGroup.add(pts);
+            state.points = pts;
+            state.posArr = pos;
+            state.colArr = col;
+            state.geo = geo;
+        }
+
+        function emitParticle(t) {
+            const p = {
+                tEmit: t,
+                vYY: getYYSignal(t),
+                vXX: getXXSignal(t),
+                z: GEO.zEmit,
+                x: 0,
+                y: 0,
+                reached: false,
+                sx: 0,
+                sy: 0
+            };
+            state.particles.push(p);
+            while (state.particles.length > state.maxParticles) state.particles.shift();
+        }
+
+        function updateParticle(p, t) {
+            const dt = t - p.tEmit;
+            p.z = GEO.zEmit + state.vz * dt;
+            if (p.z >= GEO.zScreen) {
+                p.z = GEO.zScreen;
+                if (!p.reached) {
+                    p.reached = true;
+                    p.sx = state.xxEnabled ? p.vXX * GEO.screenHalfW * 0.95 : 0;
+                    p.sy = state.yyEnabled ? p.vYY * GEO.screenHalfH * 0.95 : 0;
+                    p.x = p.sx;
+                    p.y = p.sy;
+                    // 在屏幕上画点
+                    const ctx = state.screenCtx;
+                    const w = 512,
+                        h = 512;
+                    const px = ((p.sx / GEO.screenHalfW) + 1) * w / 2;
+                    const py = (1 - (p.sy / GEO.screenHalfH)) * h / 2;
+                    const grad = ctx.createRadialGradient(px, py, 0, px, py, 6);
+                    grad.addColorStop(0, 'rgba(180,255,180,1)');
+                    grad.addColorStop(0.3, 'rgba(100,255,100,0.8)');
+                    grad.addColorStop(1, 'rgba(20,150,30,0)');
+                    ctx.fillStyle = grad;
+                    ctx.fillRect(px - 6, py - 6, 12, 12);
+                }
+                return;
+            }
+            const yyD = state.yyEnabled ? p.vYY * GEO.screenHalfH * 0.95 : 0;
+            const xxD = state.xxEnabled ? p.vXX * GEO.screenHalfW * 0.95 : 0;
+            if (p.z < GEO.zYYStart) p.y = 0;
+            else if (p.z <= GEO.zYYEnd) p.y = ((p.z - GEO.zYYStart) / (GEO.zYYEnd - GEO.zYYStart)) * yyD;
+            else p.y = yyD;
+
+            if (p.z < GEO.zXXStart) p.x = 0;
+            else if (p.z <= GEO.zXXEnd) p.x = ((p.z - GEO.zXXStart) / (GEO.zXXEnd - GEO.zXXStart)) * xxD;
+            else p.x = xxD;
+        }
+
+        // ===== 更新屏幕（余辉 + 网格） =====
+        function updateScreen() {
+            const ctx = state.screenCtx;
+            const w = 512,
+                h = 512;
+            // 半透明覆盖实现余辉
+            ctx.fillStyle = 'rgba(0,0,0,0.04)';
+            ctx.fillRect(0, 0, w, h);
+            // 网格
+            ctx.strokeStyle = 'rgba(60,180,80,0.4)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= w; i += 64) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, h);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(w, i);
+                ctx.stroke();
+            }
+            ctx.strokeStyle = 'rgba(100,220,130,0.6)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(w / 2, 0);
+            ctx.lineTo(w / 2, h);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2);
+            ctx.lineTo(w, h / 2);
+            ctx.stroke();
+            state.screenTexture.needsUpdate = true;
+        }
+
+        // ===== UI 更新 =====
+        function updateUI() {
+            document.getElementById('pTime').textContent = state.t.toFixed(3) + ' s';
+            document.getElementById('pVyy').textContent = getYYSignal(state.t).toFixed(3) + ' V';
+            document.getElementById('pVxx').textContent = getXXSignal(state.t).toFixed(3) + ' V';
+            const flying = state.particles.filter(p => !p.reached).length;
+            document.getElementById('pParticles').textContent = flying;
+            const hit = [...state.particles].reverse().find(p => p.reached);
+            if (hit) {
+                document.getElementById('pScrX').textContent = hit.sx.toFixed(3);
+                document.getElementById('pScrY').textContent = hit.sy.toFixed(3);
+            } else {
+                document.getElementById('pScrX').textContent = '—';
+                document.getElementById('pScrY').textContent = '—';
+            }
+        }
+
+        function updateFieldVis() {
+            const v = state.showFieldBox;
+            ['yyBox', 'xxBox', 'yyArrows', 'xxArrows'].forEach(name => {
+                const obj = fieldGroup.getObjectByName(name);
+                if (obj) obj.visible = v;
+            });
+        }
+
+        function resetAll() {
+            state.t = 0;
+            state.particles = [];
+            const ctx = state.screenCtx;
+            drawScreenGrid(ctx);
+            state.screenTexture.needsUpdate = true;
+        }
+
+        // ===== 预览波形 =====
+        function updatePreview() {
+            const yyCanvas = document.getElementById('previewYY');
+            const xxCanvas = document.getElementById('previewXX');
+            if (!yyCanvas || !xxCanvas) return;
+            const yc = yyCanvas.getContext('2d');
+            const xc = xxCanvas.getContext('2d');
+            const w = 280,
+                h = 50;
+
+            // YY'
+            yc.fillStyle = '#050810';
+            yc.fillRect(0, 0, w, h);
+            yc.strokeStyle = '#ff7043';
+            yc.lineWidth = 1.5;
+            yc.beginPath();
+            const tw = 2 / Math.max(state.freqSig, 0.5);
+            for (let i = 0; i < w; i++) {
+                const t = state.t - tw + (i / w) * tw;
+                const v = getYYSignal(t);
+                const py = h / 2 - (v / 1.2) * (h / 2.2);
+                i === 0 ? yc.moveTo(i, py) : yc.lineTo(i, py);
+            }
+            yc.stroke();
+
+            // XX'
+            xc.fillStyle = '#050810';
+            xc.fillRect(0, 0, w, h);
+            xc.strokeStyle = '#4da6ff';
+            xc.lineWidth = 1.5;
+            xc.beginPath();
+            const twx = 2 / Math.max(state.freqScan, 0.2);
+            for (let i = 0; i < w; i++) {
+                const t = state.t - twx + (i / w) * twx;
+                const v = getXXSignal(t);
+                const py = h / 2 - v * (h / 2.2);
+                i === 0 ? xc.moveTo(i, py) : xc.lineTo(i, py);
+            }
+            xc.stroke();
+        }
+
+        // ===== 绑定 UI 控件 =====
+        // 频率
+        document.getElementById('sFreq').addEventListener('input', e => {
+            state.freqSig = +e.target.value;
+            document.getElementById('vFreq').textContent = state.freqSig.toFixed(1) + ' Hz';
+        });
+        // 幅度
+        document.getElementById('sAmp').addEventListener('input', e => {
+            state.ampSig = +e.target.value;
+            document.getElementById('vAmp').textContent = state.ampSig.toFixed(2);
+        });
+        // 扫描频率
+        document.getElementById('sScanFreq').addEventListener('input', e => {
+            state.freqScan = +e.target.value;
+            document.getElementById('vScanFreq').textContent = state.freqScan.toFixed(1) + ' Hz';
+        });
+        // 速度
+        document.getElementById('sSpeed').addEventListener('input', e => {
+            state.vz = +e.target.value;
+            document.getElementById('vSpeed').textContent = state.vz.toFixed(2) + ' u/s';
+        });
+        // 发射率
+        document.getElementById('sEmitRate').addEventListener('input', e => {
+            state.emitRate = +e.target.value;
+            document.getElementById('vEmitRate').textContent = Math.round(state.emitRate) + ' /s';
+        });
+
+        // 信号类型切换
+        document.querySelectorAll('#signalTypeSwitch .mode-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#signalTypeSwitch .mode-btn').forEach(b => b.classList.remove(
+                'active'));
+                this.classList.add('active');
+                state.signalType = this.dataset.sig;
+            });
+        });
+
+        // 重置
+        document.getElementById('btnReset').addEventListener('click', resetAll);
+
+        // 电场显示切换
+        document.getElementById('btnFieldBox').addEventListener('click', function() {
+            state.showFieldBox = !state.showFieldBox;
+            this.classList.toggle('active', state.showFieldBox);
+            updateFieldVis();
+        });
+
+        // 慢动切换
+        document.getElementById('btnSlowMo').addEventListener('click', function() {
+            state.slowMo = !state.slowMo;
+            state.timeScale = state.slowMo ? 0.2 : 1.0;
+            this.classList.toggle('active', state.slowMo);
+            this.textContent = state.slowMo ? '▶ 正常' : '⏸ 慢动';
+        });
+
+        // YY' 偏转开关
+        const btnYY = document.getElementById('btnYYEnable');
+        btnYY.addEventListener('click', function() {
+            state.yyEnabled = !state.yyEnabled;
+            this.classList.toggle('active', state.yyEnabled);
+            this.textContent = state.yyEnabled ? 'YY\' 偏转 ✓' : 'YY\' 偏转 ✗';
+        });
+
+        // XX' 扫描开关
+        const btnXX = document.getElementById('btnXXEnable');
+        btnXX.addEventListener('click', function() {
+            state.xxEnabled = !state.xxEnabled;
+            this.classList.toggle('active', state.xxEnabled);
+            this.textContent = state.xxEnabled ? 'XX\' 扫描 ✓' : 'XX\' 扫描 ✗';
+        });
+
+        // ===== 窗口自适应 =====
+        window.addEventListener('resize', () => {
+            const w = container.clientWidth;
+            const h = container.clientHeight;
+            camera.aspect = w / Math.max(h, 1);
+            camera.updateProjectionMatrix();
+            renderer.setSize(w, h);
+        });
+
+        // ===== 初始化场景 =====
+        createStructure();
+        createParticles();
+        updateFieldVis();
+
+        // ===== 主循环 =====
+        let lastTime = performance.now();
+        let emitAcc = 0;
+        let screenCounter = 0;
+        let uiCounter = 0;
+
+        function animate(now) {
+            requestAnimationFrame(animate);
+
+            let dt = (now - lastTime) / 1000;
+            if (dt <= 0) dt = 0.016;
+            if (dt > 0.1) dt = 0.1;
+            lastTime = now;
+
+            const eDt = dt * state.timeScale;
+            state.t += eDt;
+
+            // 发射粒子
+            emitAcc += eDt * state.emitRate;
+            while (emitAcc >= 1) {
+                emitAcc--;
+                emitParticle(state.t);
+            }
+
+            // 更新所有粒子
+            for (const p of state.particles) {
+                if (!p.reached) updateParticle(p, state.t);
+            }
+
+            // 清理过期粒子（已到达的保留 0.8 秒）
+            state.particles = state.particles.filter(p => !p.reached || (state.t - p.tEmit) < 0.8);
+
+            // 更新粒子几何体
+            const flying = state.particles.filter(p => !p.reached);
+            for (let i = 0; i < flying.length; i++) {
+                const idx = i * 3;
+                state.posArr[idx] = flying[i].x;
+                state.posArr[idx + 1] = flying[i].y;
+                state.posArr[idx + 2] = flying[i].z;
+                state.colArr[idx] = 0.9;
+                state.colArr[idx + 1] = 0.8;
+                state.colArr[idx + 2] = 0.3;
+            }
+            state.geo.attributes.position.needsUpdate = true;
+            state.geo.attributes.color.needsUpdate = true;
+            state.geo.setDrawRange(0, flying.length);
+
+            // 屏幕更新（每3帧）
+            screenCounter++;
+            if (screenCounter >= 3) {
+                screenCounter = 0;
+                updateScreen();
+            }
+
+            // UI 更新（每5帧）
+            uiCounter++;
+            if (uiCounter >= 5) {
+                uiCounter = 0;
+                updateUI();
+                updatePreview();
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 启动
+        updatePreview();
+        animate(performance.now());
+    </script>
+    </body>
+</html>

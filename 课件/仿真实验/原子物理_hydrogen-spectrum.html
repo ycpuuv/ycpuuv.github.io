@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>氢原子光谱 · 高中物理 - PhySenLab</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#E8F4FD 0%,#F8FBFF 50%,#E1EEF7 100%);min-height:100vh;overflow:hidden;}
+        .simulation-container{position:relative;width:100vw;height:100vh;}
+        #canvas-container{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:flex;justify-content:center;align-items:center;}
+        #mainCanvas{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);}
+        .panel{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid #E1EEF7;border-radius:14px;box-shadow:0 4px 20px rgba(74,144,226,.12);padding:16px 20px;z-index:10;position:absolute;}
+        .info-panel{top:16px;left:16px;max-width:260px;}
+        .info-panel h1{font-size:1.1rem;color:#2C3E50;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+        .formula-box{background:linear-gradient(135deg,#E8F4FD,#F8FBFF);padding:8px 12px;border-radius:8px;border-left:4px solid #4A90E2;margin-bottom:8px;font-size:.85rem;font-family:'Times New Roman',serif;font-style:italic;color:#2C3E50;}
+        .info-text{font-size:.78rem;color:#5A6C7D;line-height:1.55;}
+        .physics-panel{bottom:16px;left:16px;width:240px;}
+        .physics-panel h3{font-size:.92rem;color:#2C3E50;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E1EEF7;}
+        .param-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.8rem;color:#5A6C7D;}
+        .param-value{font-family:Consolas,monospace;font-weight:600;color:#4A90E2;}
+        .controls-panel{top:16px;right:16px;width:300px;max-height:calc(100vh - 32px);overflow-y:auto;}
+        .controls-panel h3{font-size:1rem;color:#2C3E50;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #E1EEF7;}
+        .section-label{font-size:.72rem;color:#8B9DC3;margin:12px 0 4px;font-weight:600;letter-spacing:.5px;}
+        .series-group{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+        .series-btn{padding:6px 12px;border:1px solid #E1EEF7;border-radius:18px;background:#F8FBFF;font-size:.76rem;cursor:pointer;transition:all .2s;color:#2C3E50;font-weight:500;}
+        .series-btn:hover{background:#4A90E2;color:#fff;border-color:#4A90E2;}
+        .series-btn.active{background:#4A90E2;color:#fff;border-color:#4A90E2;}
+        .trans-list{max-height:180px;overflow-y:auto;border:1px solid #E1EEF7;border-radius:8px;background:#F8FBFF;}
+        .trans-item{padding:6px 10px;font-size:.78rem;border-bottom:1px solid #E1EEF7;cursor:pointer;transition:background .2s;display:flex;justify-content:space-between;}
+        .trans-item:hover{background:#E8F4FD;}
+        .trans-item:last-child{border-bottom:none;}
+        .trans-item.active{background:#4A90E2;color:#fff;}
+        .trans-item .wl{color:#8B9DC3;}
+        .trans-item.active .wl{color:#fff;}
+        .btn{padding:9px 16px;border:none;border-radius:22px;font-weight:600;font-size:.82rem;cursor:pointer;transition:all .2s;background:#F0F4F8;color:#5A6C7D;border:1px solid #E1EEF7;}
+        .btn:hover{background:#E1EEF7;}
+        .btn-primary{background:linear-gradient(135deg,#4A90E2,#6BB6FF);color:#fff;border:none;box-shadow:0 3px 10px rgba(74,144,226,.3);}
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(74,144,226,.4);}
+        .back-btn{position:absolute;bottom:16px;right:16px;background:#fff;color:#4A90E2;padding:9px 18px;border-radius:22px;text-decoration:none;font-weight:600;border:2px solid #4A90E2;box-shadow:0 2px 10px rgba(74,144,226,.15);transition:all .3s;z-index:10;font-size:.82rem;}
+        .back-btn:hover{background:#4A90E2;color:#fff;}
+    </style>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"><canvas id="mainCanvas"></canvas></div>
+
+    <div class="info-panel panel">
+        <h1>🌈 氢原子光谱</h1>
+        <div class="formula-box">
+            1/λ = R(1/n² − 1/m²)  (m > n)
+        </div>
+        <p class="info-text">
+            氢原子只能发出特定波长的光，形成<strong>线状光谱</strong>。不同谱线对应电子在不同能级间的跃迁。里德伯常数 R ≈ 1.097×10⁷ m⁻¹。
+        </p>
+    </div>
+
+    <div class="physics-panel panel">
+        <h3>📊 谱线参数</h3>
+        <div class="param-row"><span>波长 λ:</span><span id="pWL" class="param-value">—</span></div>
+        <div class="param-row"><span>频率 f:</span><span id="pFreq" class="param-value">—</span></div>
+        <div class="param-row"><span>能量差 ΔE:</span><span id="pDE" class="param-value">—</span></div>
+        <div class="param-row"><span>跃迁:</span><span id="pTrans" class="param-value">—</span></div>
+        <div class="param-row"><span>谱线数:</span><span id="pCount" class="param-value">0</span></div>
+    </div>
+
+    <div class="controls-panel panel">
+        <h3>🔧 谱系选择</h3>
+        <div class="section-label">谱系（终态 n）</div>
+        <div class="series-group">
+            <button class="series-btn" data-n="1">莱曼系<br><small>n=1 (紫外)</small></button>
+            <button class="series-btn active" data-n="2">巴尔末系<br><small>n=2 (可见)</small></button>
+            <button class="series-btn" data-n="3">帕邢系<br><small>n=3 (红外)</small></button>
+            <button class="series-btn" data-n="4">布拉开系<br><small>n=4 (远红外)</small></button>
+        </div>
+        <div class="section-label">跃迁选择（高亮谱线）</div>
+        <div class="trans-list" id="transList"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;">
+            <button class="btn btn-primary" id="btnShowAll">显示全部</button>
+            <button class="btn" id="btnClear">清除</button>
+        </div>
+    </div>
+
+    
+</div>
+
+<script>
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+    const vw = innerWidth, vh = innerHeight;
+    W = canvas.width = Math.min(vw * 0.55, vh * 0.92, 860);
+    H = canvas.height = Math.min(vh * 0.88, W * 0.75, 600);
+}
+resize();
+window.addEventListener('resize', () => { resize(); draw(); });
+
+// ============ 物理常量 ============
+const R = 1.097e7; // 里德伯常数 m⁻¹
+const c = 3e8; // 光速
+
+let currentN = 2; // 当前谱系终态
+let shownLines = []; // {n, m, wavelength(nm), color, active}
+
+// 能级能量 E_n = -13.6/n² eV
+function getEnergy(n) { return -13.6 / (n * n); }
+
+// 计算波长 nm
+function getWavelength(n, m) {
+    const inv = R * (1/(n*n) - 1/(m*m));
+    return (1 / inv) * 1e9; // nm
+}
+
+// 波长→颜色
+function nmToColor(nm) {
+    if (nm < 380) return '#8a2be2';
+    if (nm < 450) return '#6600cc';
+    if (nm < 495) return '#0000ff';
+    if (nm < 570) return '#00ff00';
+    if (nm < 590) return '#ffff00';
+    if (nm < 620) return '#ff8c00';
+    if (nm < 750) return '#ff0000';
+    return '#800000';
+}
+
+// ============ 绘制 ============
+function drawSpectrumBar() {
+    const sx = 40, sy = 60, sw = W - 80, sh = 50;
+    const grad = ctx.createLinearGradient(sx, 0, sx + sw, 0);
+    grad.addColorStop(0, '#6600cc');
+    grad.addColorStop(0.15, '#0000ff');
+    grad.addColorStop(0.3, '#00ff00');
+    grad.addColorStop(0.45, '#ffff00');
+    grad.addColorStop(0.6, '#ff8c00');
+    grad.addColorStop(0.8, '#ff0000');
+    grad.addColorStop(1, '#800000');
+    ctx.fillStyle = grad;
+    ctx.fillRect(sx, sy, sw, sh);
+
+    ctx.strokeStyle = 'rgba(44,62,80,0.3)'; ctx.lineWidth = 1;
+    for (let wl = 400; wl <= 700; wl += 50) {
+        const x = sx + (wl - 380) / (750 - 380) * sw;
+        ctx.beginPath(); ctx.moveTo(x, sy + sh); ctx.lineTo(x, sy + sh + 8); ctx.stroke();
+        ctx.fillStyle = '#5A6C7D'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+        ctx.fillText(wl + 'nm', x, sy + sh + 18);
+    }
+    ctx.fillStyle = '#2C3E50'; ctx.font = 'bold 12px "PingFang SC"'; ctx.textAlign = 'center';
+    ctx.fillText('氢原子可见光谱（380-750nm）', sx + sw/2, sy - 10);
+}
+
+function drawSpectralLines() {
+    const sx = 40, sy = 60, sw = W - 80;
+    for (const line of shownLines) {
+        const x = sx + (line.wl - 380) / (750 - 380) * sw;
+        if (x < sx || x > sx + sw) continue;
+        const isActive = line.active;
+        const h = isActive ? 72 : 58;
+        const lineW = isActive ? 4 : 2.5;
+        ctx.strokeStyle = line.color;
+        ctx.lineWidth = lineW;
+        ctx.globalAlpha = isActive ? 1 : 0.7;
+        ctx.beginPath(); ctx.moveTo(x, 50); ctx.lineTo(x, 50 - h); ctx.stroke();
+        ctx.globalAlpha = 1;
+
+        if (isActive || shownLines.length <= 15) {
+            ctx.fillStyle = line.color;
+            ctx.font = isActive ? 'bold 11px sans-serif' : '9px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(line.m + '→' + line.n, x, 40 - h);
+            if (line.wl >= 380 && line.wl <= 750) {
+                ctx.fillStyle = '#5A6C7D'; ctx.font = '9px sans-serif';
+                ctx.fillText(line.wl.toFixed(0) + 'nm', x, 50 - h - 14);
+            }
+        }
+    }
+}
+
+// 能级图：优化比例，跃迁线整体左移，避免与右侧能量标签重叠
+function drawEnergyLevels() {
+    const levels = [1, 2, 3, 4, 5, 6, 7, 8];
+    const maxN = 8;
+    const p = 0.6;
+    const denominator = 1 - 1 / Math.pow(maxN, p);
+    
+    const topMargin = 140;
+    const bottomMargin = 70;
+    const yTop = topMargin;
+    const yBottom = H - bottomMargin;
+    
+    function getYFromN(n) {
+        const t = (1 - 1 / Math.pow(n, p)) / denominator;
+        return yTop + (yBottom - yTop) * (1 - t);
+    }
+    
+    const levelY = {};
+    // 绘制能级横线
+    for (const n of levels) {
+        const y = getYFromN(n);
+        levelY[n] = y;
+        
+        ctx.beginPath();
+        ctx.moveTo(55 + 40, y);
+        ctx.lineTo(W - 60, y);
+        if (n === 1) {
+            ctx.strokeStyle = '#e74c3c';
+            ctx.lineWidth = 5;
+        } else {
+            ctx.strokeStyle = '#4A90E2';
+            ctx.lineWidth = 4.5;
+        }
+        ctx.stroke();
+        
+        // 左侧标签
+        ctx.fillStyle = '#2C3E50';
+        ctx.font = 'bold 14px "Segoe UI", "PingFang SC"';
+        ctx.textAlign = 'right';
+        ctx.fillText('n = ' + n, 50, y + 5);
+        
+        // 右侧能量标签
+        const energyVal = getEnergy(n).toFixed(2);
+        const labelText = energyVal + ' eV';
+        const rightX = W - 68;
+        ctx.font = '500 12px "Consolas", monospace';
+        ctx.textAlign = 'right';
+        const metrics = ctx.measureText(labelText);
+        const textWidth = metrics.width;
+        ctx.fillStyle = 'rgba(255, 248, 225, 0.85)';
+        ctx.fillRect(rightX - textWidth - 8, y - 10, textWidth + 14, 20);
+        ctx.fillStyle = '#1F6392';
+        ctx.fillText(labelText, rightX - 4, y + 5);
+        
+        if (n === 1) {
+            ctx.fillStyle = '#e67e22';
+            ctx.font = 'italic 10px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('基态', 100, y - 8);
+        }
+    }
+    
+    // 跃迁线：按波长排序后均匀排列，整体左移，避免与右侧能量标签重叠
+    if (shownLines.length > 0) {
+        const sortedLines = [...shownLines].sort((a, b) => a.wl - b.wl);
+        // 起始位置向左移动更多，确保所有线条远离右侧能量标签
+        const startX = W - 260;
+        const step = 12;
+        // 确保线条不超出左边界（但 startX 通常大于 100，不会与左侧标签重叠）
+        sortedLines.forEach((line, idx) => {
+            if (!levelY[line.n] || !levelY[line.m]) return;
+            const yHigh = levelY[line.m];
+            const yLow  = levelY[line.n];
+            const midX = startX + idx * step;
+            const lineWidthVal = line.active ? 5 : 3.2;
+            ctx.strokeStyle = line.color;
+            ctx.lineWidth = lineWidthVal;
+            ctx.globalAlpha = line.active ? 0.95 : 0.7;
+            ctx.beginPath();
+            ctx.moveTo(midX, yHigh);
+            ctx.lineTo(midX, yLow);
+            ctx.stroke();
+            
+            // 箭头
+            ctx.fillStyle = line.color;
+            ctx.beginPath();
+            ctx.moveTo(midX - 4, yLow + 6);
+            ctx.lineTo(midX, yLow);
+            ctx.lineTo(midX + 4, yLow + 6);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        });
+    }
+}
+
+function draw() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fafcff';
+    ctx.fillRect(0, 0, W, H);
+    drawSpectrumBar();
+    drawSpectralLines();
+    drawEnergyLevels();
+}
+
+// ============ 更新跃迁列表 ============
+function updateTransList() {
+    const list = document.getElementById('transList');
+    list.innerHTML = '';
+    const n = currentN;
+    for (let m = n + 1; m <= 12; m++) {
+        const wl = getWavelength(n, m);
+        const item = document.createElement('div');
+        item.className = 'trans-item';
+        item.innerHTML = `<span>${m} → ${n}</span><span class="wl">${wl.toFixed(1)} nm</span>`;
+        item.addEventListener('click', () => selectTransition(n, m, item));
+        list.appendChild(item);
+    }
+}
+
+function selectTransition(n, m, el) {
+    document.querySelectorAll('.trans-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    const wl = getWavelength(n, m);
+    const freq = c / (wl * 1e-9);
+    const dE = Math.abs(getEnergy(m) - getEnergy(n));
+
+    document.getElementById('pWL').textContent = wl.toFixed(2) + ' nm';
+    document.getElementById('pFreq').textContent = (freq / 1e14).toFixed(2) + ' ×10¹⁴ Hz';
+    document.getElementById('pDE').textContent = dE.toFixed(3) + ' eV';
+    document.getElementById('pTrans').textContent = m + ' → ' + n;
+    document.getElementById('pCount').textContent = shownLines.length;
+
+    const color = nmToColor(wl);
+    shownLines.forEach(l => l.active = false);
+    const exists = shownLines.some(l => l.n === n && l.m === m);
+    if (!exists) {
+        shownLines.push({ n, m, wl, color, active: true });
+    } else {
+        const line = shownLines.find(l => l.n === n && l.m === m);
+        if (line) line.active = true;
+    }
+    document.getElementById('pCount').textContent = shownLines.length;
+    draw();
+}
+
+function showAllSeries() {
+    shownLines = [];
+    for (let m = currentN + 1; m <= 10; m++) {
+        const wl = getWavelength(currentN, m);
+        shownLines.push({ n: currentN, m, wl, color: nmToColor(wl), active: false });
+    }
+    document.getElementById('pCount').textContent = shownLines.length;
+    document.querySelectorAll('.trans-item').forEach(i => i.classList.remove('active'));
+    document.getElementById('pWL').textContent = '—';
+    document.getElementById('pFreq').textContent = '—';
+    document.getElementById('pDE').textContent = '—';
+    document.getElementById('pTrans').textContent = '—';
+    draw();
+}
+
+// ============ UI 绑定 ============
+document.querySelectorAll('.series-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.series-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentN = +btn.dataset.n;
+        shownLines = [];
+        updateTransList();
+        document.getElementById('pWL').textContent = '—';
+        document.getElementById('pFreq').textContent = '—';
+        document.getElementById('pDE').textContent = '—';
+        document.getElementById('pTrans').textContent = '—';
+        document.getElementById('pCount').textContent = '0';
+        draw();
+    });
+});
+
+document.getElementById('btnShowAll').addEventListener('click', showAllSeries);
+document.getElementById('btnClear').addEventListener('click', () => {
+    shownLines = [];
+    document.querySelectorAll('.trans-item').forEach(i => i.classList.remove('active'));
+    document.getElementById('pWL').textContent = '—';
+    document.getElementById('pFreq').textContent = '—';
+    document.getElementById('pDE').textContent = '—';
+    document.getElementById('pTrans').textContent = '—';
+    document.getElementById('pCount').textContent = '0';
+    draw();
+});
+
+// 初始化
+updateTransList();
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>薄膜干涉仿真 · 白光/单色光可调 | PhySenLab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #1e2f4e;
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* 通用面板样式 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid #E1EEF7;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            transition: all 0.2s ease;
+            z-index: 10;
+        }
+
+        /* 左上角：薄膜截面卡片 */
+        .film-card {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 340px;
+            padding: 18px 20px;
+            z-index: 20;
+        }
+        .film-card h1 {
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #2C3E50;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, #E8F4FD, #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 10px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 12px;
+        }
+        .formula {
+            font-size: 0.85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: #2C3E50;
+        }
+        .info-text {
+            font-size: 0.8rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+        .highlight {
+            background: rgba(74, 144, 226, 0.15);
+            border-radius: 4px;
+            padding: 0 2px;
+            font-weight: 500;
+            color: #2C3E50;
+        }
+        .thickness-values {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            font-size: 0.8rem;
+        }
+        .thickness-item {
+            background: #E8F4FD;
+            padding: 6px 12px;
+            border-radius: 24px;
+            color: #2C3E50;
+        }
+        .thickness-value {
+            font-weight: bold;
+            color: #4A90E2;
+            font-family: monospace;
+        }
+        .curve-preview {
+            width: 100%;
+            height: 320px;
+            background: white;
+            border-radius: 12px;
+            margin: 12px 0;
+            border: 1px solid #CFDFE8;
+            overflow: hidden;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02);
+        }
+        .curve-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: white;
+        }
+
+        /* 右上角控制区 */
+        .controls-area {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+        }
+
+        .control-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid #E1EEF7;
+            padding: 18px 20px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+        }
+        .control-card h3 {
+            font-size: 1rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 2px solid #E1EEF7;
+            padding-bottom: 8px;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+        .slider-group {
+            margin-bottom: 20px;
+            padding: 8px 0;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: #5A6C7D;
+            font-weight: 500;
+        }
+        .value-badge {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 24px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 3px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        
+        .mode-switch {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            background: #E1EEF7;
+            border-radius: 40px;
+            padding: 4px;
+        }
+        .mode-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: 0.2s;
+            background: transparent;
+            color: #5A6C7D;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin: 16px 0 8px;
+        }
+        .btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+        }
+        
+        /* 图例面板 - 右侧中间偏下 */
+        .legend-panel {
+            position: absolute;
+            right: 20px;
+            bottom: 100px;
+            width: 180px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid #E1EEF7;
+            font-size: 0.75rem;
+            z-index: 20;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+            color: #5A6C7D;
+        }
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 2px;
+        }
+        .legend-color.film { background: linear-gradient(45deg, #ff99cc, #66ccff); border-radius: 50%; }
+        .legend-color.curve { background: #222; }
+        .legend-color.gravity { background: #4A90E2; }
+
+        /* 返回按钮 - 右下角 */
+        .back-btn {
+            position: absolute;
+            bottom: 24px;
+            right: 20px;
+            background: white;
+            color: #4A90E2;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.2);
+            transition: all 0.3s;
+            z-index: 30;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .hint-text {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 0.65rem;
+            background: rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(8px);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #e2e8f0;
+            pointer-events: none;
+            z-index: 20;
+        }
+        @media (max-width: 700px) {
+            .film-card { width: 280px; }
+            .controls-area { width: 280px; }
+            .legend-panel { width: 160px; bottom: 80px; }
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"></div>
+
+    <!-- 左上角：薄膜截面卡片 -->
+    <div class="film-card glass-panel">
+        <h1>🫧薄膜干涉 </h1>
+        <div class="formula-box">
+            <div class="formula">Δ = 2n·d·cosθ | 等厚干涉 · 半波损失</div>
+        </div>
+        <p class="info-text">
+            调节弯曲度改变厚度分布，切换光源模式观察干涉条纹变化。<br>
+                   </p>
+        <div class="thickness-values">
+            <div class="thickness-item">🔝 顶部厚度<br><span id="topThickVal" class="thickness-value">0.12</span> μm</div>
+            <div class="thickness-item">🔻 底部厚度<br><span id="bottomThickVal" class="thickness-value">1.20</span> μm</div>
+        </div>
+        <div class="curve-preview">
+            <canvas id="curvePreviewCanvas" width="400" height="320" style="width:100%; height:100%; background:white;"></canvas>
+        </div>
+    </div>
+
+    <!-- 右上角控制区 -->
+    <div class="controls-area">
+        <div class="control-card">
+            <h3>🎛️ 薄膜参数调节</h3>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>📐 弯曲度 </span>
+                    <span id="curvatureValue" class="value-badge">0.00</span>
+                </div>
+                <input type="range" id="curvatureSlider" min="-0.9" max="0.9" step="0.01" value="0.0">
+                <div style="font-size:0.7rem; margin-top:4px; color:#7C93B0;">负值: 外凸(∪) | 正值: 内凹(∩)</div>
+            </div>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>⬆️ 顶部厚度 (μm)</span>
+                    <span id="topThickSliderVal" class="value-badge">0.12</span>
+                </div>
+                <input type="range" id="topThickSlider" min="0.01" max="0.80" step="0.005" value="0.12">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>⬇️ 底部厚度 (μm)</span>
+                    <span id="bottomThickSliderVal" class="value-badge">1.20</span>
+                </div>
+                <input type="range" id="bottomThickSlider" min="0.20" max="3.0" step="0.01" value="1.20">
+            </div>
+            
+            <h3 style="margin-top: 12px;">💡 光源类型</h3>
+            <div class="mode-switch" id="modeSwitch">
+                <div class="mode-btn active" data-mode="white">🌈 白光干涉</div>
+                <div class="mode-btn" data-mode="mono">🔆 单色光</div>
+            </div>
+            
+            <div class="slider-group" id="wavelengthGroup" style="display:none;">
+                <div class="slider-label">
+                    <span>⚡ 波长 λ (nm)</span>
+                    <span id="lambdaValue" class="value-badge">550</span>
+                </div>
+                <input type="range" id="lambdaSlider" min="380" max="700" step="1" value="550">
+                <div style="font-size:0.7rem; margin-top:4px; color:#7C93B0;">改变波长 → 干涉条纹间距与颜色变化</div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn btn-primary" id="resetBtn">🔄 重置默认</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 图例面板 -->
+    <div class="legend-panel">
+        <div style="font-weight:600; margin-bottom:6px; color:#2C3E50;">📖 图例</div>
+        <div class="legend-item"><div class="legend-color film"></div> 干涉条纹</div>
+        <div class="legend-item"><div class="legend-color curve"></div> 薄膜截面</div>
+    </div>
+
+    <div class="back-btn" id="backBtn">← 返回实验列表</div>
+    <div class="hint-text">🖱️ 鼠标拖拽旋转视角 | 切换白光/单色光，调节波长与弯曲度</div>
+</div>
+
+<script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+    // --- 场景初始化 ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x071a2b);
+    scene.fog = new THREE.FogExp2(0x071a2b, 0.008);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(4.2, 3.2, 6.0);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+    const labelRenderer = new CSS2DRenderer();
+    labelRenderer.setSize(window.innerWidth, window.innerHeight);
+    labelRenderer.domElement.style.position = 'absolute';
+    labelRenderer.domElement.style.top = '0px';
+    labelRenderer.domElement.style.left = '0px';
+    labelRenderer.domElement.style.pointerEvents = 'none';
+    document.getElementById('canvas-container').appendChild(labelRenderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.autoRotate = false;
+    controls.enableZoom = true;
+    controls.target.set(0, 0, 0);
+    controls.rotateSpeed = 1.2;
+
+    // --- 灯光系统 ---
+    const ambientLight = new THREE.AmbientLight(0x404060);
+    scene.add(ambientLight);
+    const mainLight = new THREE.DirectionalLight(0xfff5e0, 1.0);
+    mainLight.position.set(3, 5, 2);
+    mainLight.castShadow = true;
+    scene.add(mainLight);
+    const fillLight = new THREE.PointLight(0x6688ff, 0.5);
+    fillLight.position.set(-2, 2, 3);
+    scene.add(fillLight);
+    const backLight = new THREE.PointLight(0xffaa66, 0.4);
+    backLight.position.set(1, 1.5, -3);
+    scene.add(backLight);
+    const rimLight = new THREE.PointLight(0xffaa88, 0.5);
+    rimLight.position.set(2, 1, 2.5);
+    scene.add(rimLight);
+    
+    // ========== 肥皂膜: 圆形平面 ShaderMaterial ==========
+    const filmRadius = 2.58;
+    const filmGeometry = new THREE.CircleGeometry(filmRadius, 320);
+    
+    const uniforms = {
+        u_time: { value: 0 },
+        u_topThick: { value: 0.12 },
+        u_bottomThick: { value: 1.20 },
+        u_curvature: { value: 0.0 },
+        u_isWhiteMode: { value: 1 },
+        u_wavelength: { value: 550.0 },
+        u_radius: { value: filmRadius },
+        u_glow: { value: 0.5 }
+    };
+    
+    const vertexShader = `
+        varying vec2 vUv;
+        varying float vY;
+        void main() {
+            vUv = uv;
+            vY = position.y;
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `;
+    
+    const fragmentShader = `
+        uniform float u_time;
+        uniform float u_topThick;
+        uniform float u_bottomThick;
+        uniform float u_curvature;
+        uniform int u_isWhiteMode;
+        uniform float u_wavelength;
+        uniform float u_radius;
+        uniform float u_glow;
+        varying float vY;
+        
+        const float n = 1.33;
+        const float lambda_r = 650.0;
+        const float lambda_g = 550.0;
+        const float lambda_b = 450.0;
+        const float umToNm = 1000.0;
+        
+        vec3 wavelengthToRGB(float wl) {
+            vec3 color;
+            if (wl < 440.0) {
+                color = vec3((440.0 - wl) / 60.0, 0.0, 1.0);
+            } else if (wl < 490.0) {
+                color = vec3(0.0, (wl - 440.0) / 50.0, 1.0);
+            } else if (wl < 510.0) {
+                color = vec3(0.0, 1.0, 1.0 - (wl - 490.0) / 20.0);
+            } else if (wl < 580.0) {
+                color = vec3((wl - 510.0) / 70.0, 1.0, 0.0);
+            } else if (wl < 645.0) {
+                color = vec3(1.0, 1.0 - (wl - 580.0) / 65.0, 0.0);
+            } else {
+                color = vec3(1.0, 0.0, 0.0);
+            }
+            float factor = (wl > 680.0) ? 0.72 : ((wl < 450.0) ? 0.68 : 0.93);
+            return color * factor;
+        }
+        
+        // 干涉强度：包含半波损失 (相位差 +π)，严格满足零厚度处暗纹
+        float interferenceIntensity(float thickness_nm, float lambda_nm, float phaseShift) {
+            float delta = 2.0 * n * thickness_nm;
+            // 半波损失引入π相移，暗纹条件: 2nd = mλ
+            float phase = (2.0 * 3.1415926 * delta) / lambda_nm + phaseShift + 3.1415926;
+            return 0.5 + 0.5 * cos(phase);
+        }
+        
+        float computeThickness(float yNorm) {
+            // 修正上下颠倒：原始vY范围[-radius, radius]，底部为负，顶部为正
+            // rawY: 底部0 → 顶部1
+            float rawY = (vY + u_radius) / (2.0 * u_radius);
+            // 反转：使底部对应1 (厚区)，顶部对应0 (薄区)
+            float y = 1.0 - rawY;  // 现在 y: 顶部0，底部1
+            
+            float linearThick = mix(u_topThick, u_bottomThick, y);
+            if (abs(u_curvature) < 0.001) return linearThick;
+            
+            float t = y;
+            if (u_curvature > 0.0) {
+                float power = 1.0 + u_curvature * 1.5;
+                t = y / (power - (power - 1.0) * y);
+            } else {
+                float power = 1.0 - u_curvature * 1.2;
+                t = power * y / (1.0 + (power - 1.0) * y);
+            }
+            t = clamp(t, 0.0, 1.0);
+            return mix(u_topThick, u_bottomThick, t);
+        }
+        
+        void main() {
+            // 直接使用computeThickness，内部已完成坐标反转
+            float thickness_um = computeThickness(0.0); // 参数无用，内部基于vY计算
+            thickness_um = max(0.006, thickness_um);
+            float thickness_nm = thickness_um * umToNm;
+            
+            float flowPhase = u_time * 0.25;
+            
+            vec3 color;
+            if (u_isWhiteMode == 1) {
+                float rInt = interferenceIntensity(thickness_nm, lambda_r, flowPhase);
+                float gInt = interferenceIntensity(thickness_nm, lambda_g, flowPhase);
+                float bInt = interferenceIntensity(thickness_nm, lambda_b, flowPhase);
+                color = vec3(rInt, gInt, bInt);
+                color = pow(color, vec3(0.92)) * 1.1;
+            } else {
+                float intensity = interferenceIntensity(thickness_nm, u_wavelength, flowPhase);
+                intensity = clamp(intensity * 0.9 + 0.2, 0.2, 1.0);
+                vec3 monoColor = wavelengthToRGB(u_wavelength);
+                color = monoColor * intensity;
+            }
+            
+            float alpha = 0.85;
+            float glowIntensity = u_glow * (0.5 + 0.5 * sin(thickness_nm * 0.025));
+            gl_FragColor = vec4(color + vec3(glowIntensity * 0.1), alpha);
+        }
+    `;
+    
+    const filmMaterial = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader,
+        transparent: true,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        depthTest: true
+    });
+    
+    const soapFilm = new THREE.Mesh(filmGeometry, filmMaterial);
+    soapFilm.position.set(0, 0, 0.0);
+    scene.add(soapFilm);
+    
+    // ========== UI 控制逻辑 ==========
+    const curvatureSlider = document.getElementById('curvatureSlider');
+    const curvatureValueSpan = document.getElementById('curvatureValue');
+    const topThickSlider = document.getElementById('topThickSlider');
+    const topThickSliderVal = document.getElementById('topThickSliderVal');
+    const bottomThickSlider = document.getElementById('bottomThickSlider');
+    const bottomThickSliderVal = document.getElementById('bottomThickSliderVal');
+    const topThickDisplay = document.getElementById('topThickVal');
+    const bottomThickDisplay = document.getElementById('bottomThickVal');
+    const resetBtn = document.getElementById('resetBtn');
+    const backBtn = document.getElementById('backBtn');
+    
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const wavelengthGroup = document.getElementById('wavelengthGroup');
+    const lambdaSlider = document.getElementById('lambdaSlider');
+    const lambdaValue = document.getElementById('lambdaValue');
+    
+    const previewCanvas = document.getElementById('curvePreviewCanvas');
+    const ctxPreview = previewCanvas.getContext('2d');
+    
+    // 计算厚度函数 (与shader保持一致，修正上下颠倒)
+    // yNorm: 0 顶部, 1 底部 (与预览绘制一致)
+    function computeThickness(yNorm, curvature, topThick, bottomThick) {
+        // 转换为shader内部使用的坐标 (顶部0,底部1)
+        let y = yNorm;  // 预览传入已经是0顶1底
+        
+        if (Math.abs(curvature) < 0.001) {
+            return topThick + (bottomThick - topThick) * y;
+        }
+        
+        let t = y;
+        if (curvature > 0.0) {
+            const power = 1.0 + curvature * 1.5;
+            t = y / (power - (power - 1.0) * y);
+        } else {
+            const power = 1.0 - curvature * 1.2;
+            t = power * y / (1.0 + (power - 1.0) * y);
+        }
+        t = Math.max(0.0, Math.min(1.0, t));
+        return topThick + (bottomThick - topThick) * t;
+    }
+    
+    // 绘制薄膜截面预览 (宽度正比于厚度)
+    function drawTrapezoidPreview() {
+        const w = previewCanvas.clientWidth;
+        const h = previewCanvas.clientHeight;
+        previewCanvas.width = w;
+        previewCanvas.height = h;
+        
+        ctxPreview.fillStyle = '#FFFFFF';
+        ctxPreview.fillRect(0, 0, w, h);
+        
+        const curvature = parseFloat(curvatureSlider.value);
+        const topThick = parseFloat(topThickSlider.value);
+        const bottomThick = parseFloat(bottomThickSlider.value);
+        
+        const maxThickRef = 3.0;
+        const maxWidth = w * 0.70;
+        const minWidth = 4;
+        
+        const topY = 5;
+        const bottomY = h - 5;
+        const centerX = w / 2;
+        
+        const steps = 80;
+        const leftCurve = [];
+        const rightCurve = [];
+        
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;  // 0 顶部 → 1 底部
+            const y = topY + (bottomY - topY) * t;
+            
+            const thick = computeThickness(t, curvature, topThick, bottomThick);
+            let width = (thick / maxThickRef) * maxWidth;
+            width = Math.max(minWidth, Math.min(maxWidth, width));
+            
+            leftCurve.push({ x: centerX - width / 2, y });
+            rightCurve.push({ x: centerX + width / 2, y });
+        }
+        
+        // 绘制填充
+        ctxPreview.beginPath();
+        ctxPreview.moveTo(leftCurve[0].x, leftCurve[0].y);
+        for (let i = 1; i < leftCurve.length; i++) ctxPreview.lineTo(leftCurve[i].x, leftCurve[i].y);
+        ctxPreview.lineTo(rightCurve[rightCurve.length-1].x, rightCurve[rightCurve.length-1].y);
+        for (let i = rightCurve.length - 2; i >= 0; i--) ctxPreview.lineTo(rightCurve[i].x, rightCurve[i].y);
+        ctxPreview.closePath();
+        ctxPreview.fillStyle = '#111111';
+        ctxPreview.fill();
+        ctxPreview.strokeStyle = '#333333';
+        ctxPreview.lineWidth = 1.5;
+        ctxPreview.stroke();
+        
+        // 标注
+        ctxPreview.fillStyle = '#4A6A8A';
+        ctxPreview.font = '10px monospace';
+        const topW = Math.max(minWidth, Math.min(maxWidth, (topThick / maxThickRef) * maxWidth));
+        const bottomW = Math.max(minWidth, Math.min(maxWidth, (bottomThick / maxThickRef) * maxWidth));
+        ctxPreview.fillText('薄区 (暗纹)', centerX - topW / 2 - 30, topY + 4);
+        ctxPreview.fillText('厚区', centerX - bottomW / 2 - 20, bottomY);
+    }
+    
+    function updateShaderParams() {
+        const curvature = parseFloat(curvatureSlider.value);
+        const topThick = parseFloat(topThickSlider.value);
+        const bottomThick = parseFloat(bottomThickSlider.value);
+        
+        uniforms.u_curvature.value = curvature;
+        uniforms.u_topThick.value = topThick;
+        uniforms.u_bottomThick.value = bottomThick;
+        
+        curvatureValueSpan.innerText = curvature.toFixed(2);
+        topThickSliderVal.innerText = topThick.toFixed(3);
+        bottomThickSliderVal.innerText = bottomThick.toFixed(3);
+        topThickDisplay.innerText = topThick.toFixed(3);
+        bottomThickDisplay.innerText = bottomThick.toFixed(3);
+        
+        drawTrapezoidPreview();
+    }
+    
+    function setLightMode(isWhite) {
+        if (isWhite) {
+            uniforms.u_isWhiteMode.value = 1;
+            wavelengthGroup.style.display = 'none';
+            modeBtns.forEach(btn => {
+                if (btn.dataset.mode === 'white') btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        } else {
+            uniforms.u_isWhiteMode.value = 0;
+            wavelengthGroup.style.display = 'block';
+            modeBtns.forEach(btn => {
+                if (btn.dataset.mode === 'mono') btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            const wl = parseFloat(lambdaSlider.value);
+            uniforms.u_wavelength.value = wl;
+            lambdaValue.innerText = wl;
+        }
+    }
+    
+    function updateWavelength() {
+        const wl = parseFloat(lambdaSlider.value);
+        uniforms.u_wavelength.value = wl;
+        lambdaValue.innerText = wl;
+    }
+    
+    function resetDefaults() {
+        curvatureSlider.value = '0.0';
+        topThickSlider.value = '0.12';
+        bottomThickSlider.value = '1.20';
+        setLightMode(true);
+        lambdaSlider.value = '550';
+        updateWavelength();
+        updateShaderParams();
+        
+        const flashMat = new THREE.MeshStandardMaterial({ color: 0x88aaff, emissive: 0x4488ff, transparent: true });
+        const flashSphere = new THREE.Mesh(new THREE.SphereGeometry(0.25, 8, 8), flashMat);
+        flashSphere.position.set(0, 0.3, 0.2);
+        scene.add(flashSphere);
+        setTimeout(() => scene.remove(flashSphere), 300);
+    }
+    
+    curvatureSlider.addEventListener('input', updateShaderParams);
+    topThickSlider.addEventListener('input', updateShaderParams);
+    bottomThickSlider.addEventListener('input', updateShaderParams);
+    lambdaSlider.addEventListener('input', updateWavelength);
+    
+    document.querySelector('.mode-btn[data-mode="white"]').addEventListener('click', () => setLightMode(true));
+    document.querySelector('.mode-btn[data-mode="mono"]').addEventListener('click', () => setLightMode(false));
+    
+    resetBtn.addEventListener('click', resetDefaults);
+    backBtn.addEventListener('click', () => { window.location.href = '../index.html'; });
+    
+    let glowTime = 0;
+    function updateGlow(delta) {
+        glowTime += delta;
+        uniforms.u_glow.value = 0.45 + Math.sin(glowTime * 1.2) * 0.1;
+    }
+    
+    updateShaderParams();
+    setLightMode(true);
+    
+    let lastTime = performance.now() / 1000;
+    function animate() {
+        const now = performance.now() / 1000;
+        let delta = Math.min(0.033, now - lastTime);
+        if (delta < 0.005) delta = 0.016;
+        lastTime = now;
+        
+        uniforms.u_time.value += delta * 0.6;
+        updateGlow(delta);
+        
+        controls.update();
+        renderer.render(scene, camera);
+        labelRenderer.render(scene, camera);
+        requestAnimationFrame(animate);
+    }
+    
+    lastTime = performance.now() / 1000;
+    animate();
+    
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        drawTrapezoidPreview();
+    });
+</script>
+    </body>
+</html>

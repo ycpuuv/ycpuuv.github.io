@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>波的叠加 · 高中物理</title>
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .canvas-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+        .ctrl-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d0dae8;
+            border-radius: 10px;
+            padding: 6px 12px;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+        .ctrl-bar>* {
+            margin-left: 6px;
+        }
+        .ctrl-bar>*:first-child {
+            margin-left: 0;
+        }
+        .cbtn {
+            background: #ffffff;
+            color: #5a7a9a;
+            border: 1.5px solid #d0dae8;
+            border-radius: 7px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cbtn:hover {
+            border-color: #2979ff;
+            color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.15);
+        }
+        .cbtn.active {
+            background: #2979ff;
+            color: #ffffff;
+            border-color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.3);
+        }
+        .cbtn svg {
+            display: block;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            z-index: 20;
+            position: absolute;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 260px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .formula-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+        .f-label {
+            color: #5a7a9a;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-right: 6px;
+            min-width: 50px;
+        }
+        .f-expr {
+            color: #1a2b42;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+        .legend-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            font-size: .72rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .color-box {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+        }
+
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 300px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-label {
+            font-size: .72rem;
+            color: var(--text-light);
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .param-item {
+            margin-bottom: 10px;
+        }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .param-name {
+            font-size: .85rem;
+            color: var(--text-primary);
+        }
+        .param-value {
+            font-size: .85rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: .85rem;
+        }
+        .checkbox-row input {
+            width: 16px;
+            height: 16px;
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: var(--primary-color);
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            transition: all .3s;
+            z-index: 30;
+            font-size: .82rem;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 200px;
+                padding: 10px 12px;
+            }
+            .controls-panel {
+                width: 260px;
+                padding: 10px 12px;
+            }
+            .back-btn {
+                bottom: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div class="canvas-section">
+            <div class="canvas-wrap" id="cvWrap">
+                <canvas id="simCanvas"></canvas>
+            </div>
+            <div class="ctrl-bar">
+                <button class="cbtn" id="btnPlay" onclick="togglePlay()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="4,2.5 13,8 4,13.5" fill="currentColor"/></svg>
+                </button>
+                <button class="cbtn" onclick="resetAll()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 2.5V6H6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 10A5.5 5.5 0 1 0 4.05 5.5L2.5 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                </button>
+                <span style="width:1px;height:18px;background:#d0dae8;margin:0 4px"></span>
+                <button class="cbtn active" id="btnLoop" onclick="toggleLoop()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12.5 3.5A5.5 5.5 0 0 0 3.05 5.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><polyline points="5,3.5 3,5.5 1,3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 12.5A5.5 5.5 0 0 0 12.95 10.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><polyline points="11,12.5 13,10.5 15,12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="cbtn" data-spd="0.25" onclick="setSpd(0.25)">¼×</button>
+                <button class="cbtn" data-spd="0.5" onclick="setSpd(0.5)">½×</button>
+                <button class="cbtn active" data-spd="1" onclick="setSpd(1)">1×</button>
+                <button class="cbtn" data-spd="2" onclick="setSpd(2)">2×</button>
+            </div>
+        </div>
+
+        <!-- 左上公式面板 -->
+        <div class="info-panel glass-panel">
+            <h1>〰️ 波的叠加</h1>
+            <div class="formula-box">
+                <div class="formula-row"><span class="f-label">波动方程</span><span class="f-expr">y = A sin(ωt − kx + φ)</span></div>
+                <div class="formula-row"><span class="f-label">叠加原理</span><span class="f-expr">y = y₁ + y₂</span></div>
+            </div>
+            <p class="info-text">两列波在同一介质中相遇时，每一点的位移等于各列波单独引起的位移的矢量和。</p>
+            <div class="legend-row">
+                <div class="legend-item"><div class="color-box" style="background:rgba(255,99,71,0.7)"></div>波1</div>
+                <div class="legend-item"><div class="color-box" style="background:rgba(30,144,255,0.7)"></div>波2</div>
+                <div class="legend-item"><div class="color-box" style="background:rgba(128,0,128,0.9)"></div>合成</div>
+            </div>
+        </div>
+
+        <!-- 右上控制面板 -->
+        <div class="controls-panel glass-panel">
+            <h3>🔧 参数调节</h3>
+            <div class="section-label">波1 (向右)</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">振幅 A₁</span><span class="param-value" id="valA1">50 px</span></div>
+                <input type="range" id="slA1" min="0" max="100" value="50" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">频率 f₁</span><span class="param-value" id="valF1">1.0 Hz</span></div>
+                <input type="range" id="slF1" min="0.1" max="5" step="0.1" value="1" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">波速 v₁</span><span class="param-value" id="valV1">150 px/s</span></div>
+                <input type="range" id="slV1" min="10" max="300" value="150" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">相位 φ₁</span><span class="param-value" id="valP1">0°</span></div>
+                <input type="range" id="slP1" min="0" max="360" value="0" oninput="updateParams()">
+            </div>
+
+            <div class="section-label">波2 (向左)</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">振幅 A₂</span><span class="param-value" id="valA2">50 px</span></div>
+                <input type="range" id="slA2" min="0" max="100" value="50" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">频率 f₂</span><span class="param-value" id="valF2">1.0 Hz</span></div>
+                <input type="range" id="slF2" min="0.1" max="5" step="0.1" value="1" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">波速 v₂</span><span class="param-value" id="valV2">150 px/s</span></div>
+                <input type="range" id="slV2" min="10" max="300" value="150" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">相位 φ₂</span><span class="param-value" id="valP2">0°</span></div>
+                <input type="range" id="slP2" min="0" max="360" value="0" oninput="updateParams()">
+            </div>
+
+            <div class="section-label">显示控制</div>
+            <div class="checkbox-row"><input type="checkbox" id="chkW1" checked onchange="updateParams()"><span>显示 波1</span></div>
+            <div class="checkbox-row"><input type="checkbox" id="chkW2" checked onchange="updateParams()"><span>显示 波2</span></div>
+            <div class="checkbox-row"><input type="checkbox" id="chkSum" checked onchange="updateParams()"><span>显示合成</span></div>
+
+            <div class="section-label">操作控制</div>
+            <div class="param-item" style="display:flex; gap:8px;">
+                <button class="cbtn" id="btnPanelPlay" onclick="togglePlay()" style="flex:1; justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="4,2.5 13,8 4,13.5" fill="currentColor"/></svg>
+                    <span style="margin-left:4px">开启</span>
+                </button>
+                <button class="cbtn" onclick="resetAll()" style="flex:1; justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 2.5V6H6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 10A5.5 5.5 0 1 0 4.05 5.5L2.5 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    <span style="margin-left:4px">重置</span>
+                </button>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <script>
+        const SVG_PLAY = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="4,2.5 13,8 4,13.5" fill="currentColor"/></svg>';
+        const SVG_PAUSE = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/><rect x="9.5" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/></svg>';
+
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const cvWrap = document.getElementById('cvWrap');
+        let W, H, cx, cy;
+
+        let params = {
+            a1: 50,
+            f1: 1,
+            v1: 150,
+            p1: 0,
+            a2: 50,
+            f2: 1,
+            v2: 150,
+            p2: 0,
+            showW1: true,
+            showW2: true,
+            showSum: true
+        };
+
+        let t = 0,
+            animId, lastTs = null;
+        const S = { playing: false, loop: true, speed: 1.0 };
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const cw = cvWrap.clientWidth;
+            const ch = cvWrap.clientHeight || Math.round(cw * 0.5);
+            const RATIO = 1;
+            if (cw / ch > RATIO) {
+                H = Math.max(ch, 300);
+                W = Math.round(H * RATIO);
+            } else {
+                W = cw;
+                H = Math.max(Math.round(W / RATIO), 300);
+            }
+            W = Math.round(W * 0.85);
+            H = Math.round(H * 0.85);
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            cx = W / 2;
+            cy = H / 2;
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function updateParams() {
+            params.a1 = parseInt(document.getElementById('slA1').value);
+            params.f1 = parseFloat(document.getElementById('slF1').value);
+            params.v1 = parseInt(document.getElementById('slV1').value);
+            params.p1 = parseInt(document.getElementById('slP1').value);
+            params.a2 = parseInt(document.getElementById('slA2').value);
+            params.f2 = parseFloat(document.getElementById('slF2').value);
+            params.v2 = parseInt(document.getElementById('slV2').value);
+            params.p2 = parseInt(document.getElementById('slP2').value);
+            params.showW1 = document.getElementById('chkW1').checked;
+            params.showW2 = document.getElementById('chkW2').checked;
+            params.showSum = document.getElementById('chkSum').checked;
+
+            document.getElementById('valA1').textContent = params.a1 + ' px';
+            document.getElementById('valF1').textContent = params.f1.toFixed(1) + ' Hz';
+            document.getElementById('valV1').textContent = params.v1 + ' px/s';
+            document.getElementById('valP1').textContent = params.p1 + '°';
+            document.getElementById('valA2').textContent = params.a2 + ' px';
+            document.getElementById('valF2').textContent = params.f2.toFixed(1) + ' Hz';
+            document.getElementById('valV2').textContent = params.v2 + ' px/s';
+            document.getElementById('valP2').textContent = params.p2 + '°';
+        }
+
+        function resetAll() {
+            t = 0;
+            S.playing = false;
+            document.getElementById('btnPlay').innerHTML = SVG_PLAY;
+            var btnPanel = document.getElementById('btnPanelPlay');
+            if (btnPanel) btnPanel.innerHTML = SVG_PLAY + '<span style="margin-left:4px">开启</span>';
+            document.getElementById('slA1').value = 50;
+            document.getElementById('slF1').value = 1;
+            document.getElementById('slV1').value = 150;
+            document.getElementById('slP1').value = 0;
+            document.getElementById('slA2').value = 50;
+            document.getElementById('slF2').value = 1;
+            document.getElementById('slV2').value = 150;
+            document.getElementById('slP2').value = 0;
+            updateParams();
+            draw();
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#e0e8f0';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= W; x += 40) { ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, H);
+                ctx.stroke(); }
+            for (let y = 0; y <= H; y += 40) { ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+                ctx.stroke(); }
+            ctx.strokeStyle = '#c0d0e0';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(0, cy);
+            ctx.lineTo(W, cy);
+            ctx.stroke();
+        }
+
+        function calculateY(x, t, a, f, v, p, sourceX, direction) {
+            const omega = 2 * Math.PI * f;
+            const phi = p * Math.PI / 180;
+            let dist = (direction === 1) ? (x - sourceX) : (sourceX - x);
+            if (dist < 0) return 0;
+            const timeLag = dist / v;
+            const effectiveTime = t - timeLag;
+            if (effectiveTime < 0) return 0;
+            return a * Math.sin(omega * effectiveTime + phi);
+        }
+
+        function drawWave() {
+            const srcX1 = 0;
+            const srcX2 = W;
+
+            const data1 = new Array(W).fill(0);
+            const data2 = new Array(W).fill(0);
+            const dataSum = new Array(W).fill(0);
+
+            for (let x = 0; x < W; x++) {
+                if (params.showW1) {
+                    data1[x] = calculateY(x, t, params.a1, params.f1, params.v1, params.p1, srcX1, 1);
+                }
+                if (params.showW2) {
+                    data2[x] = calculateY(x, t, params.a2, params.f2, params.v2, params.p2, srcX2, -1);
+                }
+                dataSum[x] = data1[x] + data2[x];
+            }
+
+            if (params.showW1) {
+                ctx.strokeStyle = 'rgba(255, 99, 71, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let x = 0; x < W; x++) {
+                    const y = cy - data1[x];
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            if (params.showW2) {
+                ctx.strokeStyle = 'rgba(30, 144, 255, 0.7)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                for (let x = 0; x < W; x++) {
+                    const y = cy - data2[x];
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            if (params.showSum) {
+                ctx.strokeStyle = 'rgba(128, 0, 128, 0.9)';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                for (let x = 0; x < W; x++) {
+                    const y = cy - dataSum[x];
+                    if (x === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function draw() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+            drawGrid();
+            drawWave();
+
+            ctx.fillStyle = 'rgba(255, 99, 71, 0.9)';
+            ctx.beginPath();
+            ctx.arc(0, cy, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.fillText('S₁', 8, cy - 10);
+
+            ctx.fillStyle = 'rgba(30, 144, 255, 0.9)';
+            ctx.beginPath();
+            ctx.arc(W, cy, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#333';
+            ctx.fillText('S₂', W - 24, cy - 10);
+        }
+
+        function togglePlay() {
+            S.playing = !S.playing;
+            var icon = S.playing ? SVG_PAUSE : SVG_PLAY;
+            document.getElementById('btnPlay').innerHTML = icon;
+            var btnPanel = document.getElementById('btnPanelPlay');
+            if (btnPanel) btnPanel.innerHTML = icon + '<span style="margin-left:4px">' + (S.playing ? '暂停' : '开启') +
+                '</span>';
+        }
+
+        function toggleLoop() {
+            S.loop = !S.loop;
+            document.getElementById('btnLoop').classList.toggle('active', S.loop);
+        }
+
+        function setSpd(s) {
+            S.speed = s;
+            document.querySelectorAll('.ctrl-bar .cbtn[data-spd]').forEach(function(b) {
+                b.classList.toggle('active', parseFloat(b.getAttribute('data-spd')) === s);
+            });
+        }
+
+        function loop(ts) {
+            if (S.playing && lastTs !== null) {
+                const dt = Math.min((ts - lastTs) / 1000, 0.05) * S.speed;
+                t += dt;
+            }
+            lastTs = ts;
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        resizeCanvas();
+        updateParams();
+        requestAnimationFrame(loop);
+    </script>
+    </body>
+</html>

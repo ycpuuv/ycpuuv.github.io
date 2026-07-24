@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>仿真实验 · 物理课件</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:#0b0b14;color:#d4d4dc;min-height:100vh;
+    background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),
+                     radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%);
+  }
+  .header{
+    text-align:center;padding:40px 20px 20px;position:relative;
+  }
+  .header h1{
+    font-size:1.6em;font-weight:700;
+    background:linear-gradient(135deg,#d4a373 0%,#e6b17e 40%,#f4a261 100%);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    letter-spacing:3px;
+  }
+  .header .sub{color:#5c5c72;font-size:.82em;margin-top:6px;}
+  .header .back{color:#4a4a60;font-size:.75em;margin-top:10px;display:inline-block;text-decoration:none;}
+  .header .back:hover{color:#d4a373;}
+  .container{max-width:480px;margin:0 auto;padding:0 16px 40px;}
+  .cat{margin-top:24px;}
+  .cat-title{
+    font-size:.85em;font-weight:600;color:#6a6a80;
+    padding:0 4px 10px;border-bottom:1px solid #18182a;
+    display:flex;align-items:center;gap:8px;
+  }
+  .cat-title .count{font-size:.7em;color:#3a3a50;font-weight:400;}
+  .grid{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+  .item{
+    display:flex;align-items:center;padding:10px 14px;
+    background:#0e0e1e;border-radius:8px;border:1px solid #18182a;
+    text-decoration:none;color:inherit;
+    transition:all .2s;cursor:pointer;
+  }
+  .item:hover{background:#131328;border-color:#2a2a48;transform:translateX(3px);}
+  .item .icon{font-size:1em;margin-right:10px;flex-shrink:0;}
+  .item .name{font-size:.78em;color:#c8c8d4;flex:1;}
+  .item .arrow{color:#2a2a40;font-size:.65em;transition:.2s;}
+  .item:hover .arrow{color:#d4a373;transform:translateX(3px);}
+  .footer{text-align:center;padding:30px;color:#3a3a50;font-size:.65em;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="../../index.html" class="back">← 返回首页</a>
+  <h1>🎮 仿真实验</h1>
+  <p class="sub">交互式物理仿真 · 共43个实验</p>
+</div>
+
+<div class="container">
+
+  <!-- 力学 -->
+  <div class="cat">
+    <div class="cat-title">📐 力学 <span class="count">23个</span></div>
+    <div class="grid">
+      <a href="力学_reference-frame.html" class="item"><span class="icon">🛥️</span><span class="name">参考系 · 相对运动</span><span class="arrow">→</span></a>
+      <a href="力学_average-instantaneous-velocity.html" class="item"><span class="icon">📊</span><span class="name">平均速度与瞬时速度</span><span class="arrow">→</span></a>
+      <a href="力学_boat-crossing.html" class="item"><span class="icon">🚤</span><span class="name">小船渡河</span><span class="arrow">→</span></a>
+      <a href="力学_stopwatch.html" class="item"><span class="icon">⏱️</span><span class="name">停表（机械秒表）</span><span class="arrow">→</span></a>
+      <a href="力学_timer.html" class="item"><span class="icon">⏱️</span><span class="name">打点计时器</span><span class="arrow">→</span></a>
+      <a href="力学_timer-manual.html" class="item"><span class="icon">✋</span><span class="name">打点计时器（手动版）</span><span class="arrow">→</span></a>
+      <a href="力学_photogate-velocity.html" class="item"><span class="icon">🚪</span><span class="name">光电门测速</span><span class="arrow">→</span></a>
+      <a href="力学_infinitesimal.html" class="item"><span class="icon">📐</span><span class="name">微元法推导x-t关系</span><span class="arrow">→</span></a>
+      <a href="力学_force-composition.html" class="item"><span class="icon">⚙️</span><span class="name">合力与分力关系</span><span class="arrow">→</span></a>
+      <a href="力学_force-balance.html" class="item"><span class="icon">⚖️</span><span class="name">共点力平衡</span><span class="arrow">→</span></a>
+      <a href="力学_projectile-motion.html" class="item"><span class="icon">🎯</span><span class="name">斜抛运动</span><span class="arrow">→</span></a>
+      <a href="力学_conical-pendulum.html" class="item"><span class="icon">🔘</span><span class="name">圆锥摆</span><span class="arrow">→</span></a>
+      <a href="力学_vertical-circular.html" class="item"><span class="icon">🔄</span><span class="name">竖直平面圆周运动</span><span class="arrow">→</span></a>
+      <a href="力学_kepler-laws.html" class="item"><span class="icon">🪐</span><span class="name">开普勒三大定律</span><span class="arrow">→</span></a>
+      <a href="力学_gravity-latitude.html" class="item"><span class="icon">🌍</span><span class="name">重力与万有引力</span><span class="arrow">→</span></a>
+      <a href="力学_satellite.html" class="item"><span class="icon">🛰️</span><span class="name">人造卫星轨道</span><span class="arrow">→</span></a>
+      <a href="力学_analemma-satellite.html" class="item"><span class="icon">🛰️</span><span class="name">倾斜同步卫星投影</span><span class="arrow">→</span></a>
+      <a href="力学_isochronous-circle.html" class="item"><span class="icon">⭕</span><span class="name">等时圆模型</span><span class="arrow">→</span></a>
+      <a href="力学_galton-board.html" class="item"><span class="icon">🔽</span><span class="name">道尔顿板（正态分布）</span><span class="arrow">→</span></a>
+      <a href="力学_newtons-cradle.html" class="item"><span class="icon">⚖️</span><span class="name">牛顿摆</span><span class="arrow">→</span></a>
+      <a href="力学_spring-oscillator.html" class="item"><span class="icon">〰️</span><span class="name">弹簧振子</span><span class="arrow">→</span></a>
+      <a href="力学_wave-motion.html" class="item"><span class="icon">〰️</span><span class="name">横波与纵波形成原理</span><span class="arrow">→</span></a>
+      <a href="力学_wave-superposition.html" class="item"><span class="icon">〰️</span><span class="name">波的叠加</span><span class="arrow">→</span></a>
+    </div>
+  </div>
+
+  <!-- 电磁学 -->
+  <div class="cat">
+    <div class="cat-title">⚡ 电磁学 <span class="count">8个</span></div>
+    <div class="grid">
+      <a href="电磁学_coulomb-law.html" class="item"><span class="icon">⚡</span><span class="name">探究库仑定律</span><span class="arrow">→</span></a>
+      <a href="电磁学_electric-field-lines.html" class="item"><span class="icon">⚡</span><span class="name">电荷电场线仿真</span><span class="arrow">→</span></a>
+      <a href="电磁学_charged-particle-electric.html" class="item"><span class="icon">⚡</span><span class="name">带电粒子在电场中的运动（3D）</span><span class="arrow">→</span></a>
+      <a href="电磁学_charged-particle-magnetic.html" class="item"><span class="icon">⚡</span><span class="name">带电粒子斜入磁场</span><span class="arrow">→</span></a>
+      <a href="电磁学_cyclotron.html" class="item"><span class="icon">⚡</span><span class="name">回旋加速器</span><span class="arrow">→</span></a>
+      <a href="电磁学_cathode-ray-tube.html" class="item"><span class="icon">⚛️</span><span class="name">阴极射线管实验</span><span class="arrow">→</span></a>
+      <a href="电磁学_oscilloscope.html" class="item"><span class="icon">📺</span><span class="name">示波器仿真</span><span class="arrow">→</span></a>
+      <a href="电磁学_earth-magnetic-field.html" class="item"><span class="icon">🧲</span><span class="name">地球磁场可视化（3D）</span><span class="arrow">→</span></a>
+    </div>
+  </div>
+
+  <!-- 光学 -->
+  <div class="cat">
+    <div class="cat-title">🔦 光学 <span class="count">4个</span></div>
+    <div class="grid">
+      <a href="光学_light-interference.html" class="item"><span class="icon">🔦</span><span class="name">光的干涉实验（3D）</span><span class="arrow">→</span></a>
+      <a href="光学_soap-film-interference.html" class="item"><span class="icon">🫧</span><span class="name">薄膜干涉</span><span class="arrow">→</span></a>
+      <a href="光学_wedge-interference.html" class="item"><span class="icon">🔺</span><span class="name">劈尖干涉</span><span class="arrow">→</span></a>
+      <a href="光学_newton-rings.html" class="item"><span class="icon">🔬</span><span class="name">牛顿环干涉实验</span><span class="arrow">→</span></a>
+    </div>
+  </div>
+
+  <!-- 热学 -->
+  <div class="cat">
+    <div class="cat-title">🔥 热学 <span class="count">4个</span></div>
+    <div class="grid">
+      <a href="热学_brownian-motion.html" class="item"><span class="icon">⭕</span><span class="name">布朗运动（3D）</span><span class="arrow">→</span></a>
+      <a href="热学_gas-pressure.html" class="item"><span class="icon">⚛️</span><span class="name">气体压强的微观解释</span><span class="arrow">→</span></a>
+      <a href="热学_wetting-contact.html" class="item"><span class="icon">💧</span><span class="name">浸润现象（3D）</span><span class="arrow">→</span></a>
+      <a href="热学_torricelli.html" class="item"><span class="icon">🧪</span><span class="name">托里拆利实验</span><span class="arrow">→</span></a>
+    </div>
+  </div>
+
+  <!-- 原子物理 -->
+  <div class="cat">
+    <div class="cat-title">⚛️ 原子物理 <span class="count">4个</span></div>
+    <div class="grid">
+      <a href="原子物理_photoelectric-effect-3d.html" class="item"><span class="icon">💡</span><span class="name">光电效应实验（3D）</span><span class="arrow">→</span></a>
+      <a href="原子物理_alpha-scattering.html" class="item"><span class="icon">⚛️</span><span class="name">α粒子散射实验</span><span class="arrow">→</span></a>
+      <a href="原子物理_alpha-scattering-3d.html" class="item"><span class="icon">⚛️</span><span class="name">α粒子散射实验（3D）</span><span class="arrow">→</span></a>
+      <a href="原子物理_hydrogen-spectrum.html" class="item"><span class="icon">🌈</span><span class="name">氢原子光谱</span><span class="arrow">→</span></a>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">启明 · 物理教学</div>
+
+</body>
+</html>

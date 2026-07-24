@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>回旋加速器 · 高中物理</title>
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .canvas-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+        .ctrl-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d0dae8;
+            border-radius: 10px;
+            padding: 6px 12px;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+        .ctrl-bar>* {
+            margin-left: 6px;
+        }
+        .ctrl-bar>*:first-child {
+            margin-left: 0;
+        }
+        .cbtn {
+            background: #ffffff;
+            color: #5a7a9a;
+            border: 1.5px solid #d0dae8;
+            border-radius: 7px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cbtn:hover {
+            border-color: #2979ff;
+            color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.15);
+        }
+        .cbtn.active {
+            background: #2979ff;
+            color: #ffffff;
+            border-color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.3);
+        }
+        .cbtn svg {
+            display: block;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            z-index: 20;
+            position: absolute;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 240px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .formula-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+        .f-label {
+            color: #5a7a9a;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-right: 6px;
+            min-width: 50px;
+        }
+        .f-expr {
+            color: #1a2b42;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        .physics-panel {
+            bottom: 16px;
+            left: 16px;
+            width: 230px;
+        }
+        .physics-panel h3 {
+            font-size: .92rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .readout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .readout-item {
+            background: #f0f5fa;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+        .readout-item .r-label {
+            font-size: 11px;
+            color: #5a7a9a;
+            margin-bottom: 2px;
+        }
+        .readout-item .r-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 280px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-label {
+            font-size: .72rem;
+            color: var(--text-light);
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .param-item {
+            margin-bottom: 10px;
+        }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .param-name {
+            font-size: .85rem;
+            color: var(--text-primary);
+        }
+        .param-value {
+            font-size: .85rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: var(--primary-color);
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            transition: all .3s;
+            z-index: 30;
+            font-size: .82rem;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .credit-tag {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            z-index: 30;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+            font-weight: 400;
+            pointer-events: none;
+        }
+
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 200px;
+                padding: 10px 12px;
+            }
+            .controls-panel {
+                width: 240px;
+                padding: 10px 12px;
+            }
+            .physics-panel {
+                width: 180px;
+                padding: 10px 12px;
+            }
+            .credit-tag {
+                bottom: 52px;
+                right: 10px;
+                font-size: 0.65rem;
+                padding: 3px 10px;
+            }
+            .back-btn {
+                bottom: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div class="canvas-section">
+            <div class="canvas-wrap" id="cvWrap">
+                <canvas id="simCanvas"></canvas>
+            </div>
+            <div class="ctrl-bar">
+                <button class="cbtn" id="btnPlay" onclick="togglePlay()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/><rect x="9.5" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/></svg>
+                </button>
+                <button class="cbtn active" id="btnLoop" onclick="toggleLoop()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12.5 3.5A5.5 5.5 0 0 0 3.05 5.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><polyline points="5,3.5 3,5.5 1,3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 12.5A5.5 5.5 0 0 0 12.95 10.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><polyline points="11,12.5 13,10.5 15,12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+                <button class="cbtn" onclick="resetAll()">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 2.5V6H6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 10A5.5 5.5 0 1 0 4.05 5.5L2.5 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                </button>
+                <span style="width:1px;height:18px;background:#d0dae8;margin:0 4px"></span>
+                <button class="cbtn" data-spd="0.25" onclick="setSpd(0.25)">¼×</button>
+                <button class="cbtn active" data-spd="1" onclick="setSpd(1)">1×</button>
+                <button class="cbtn" data-spd="2" onclick="setSpd(2)">2×</button>
+                <button class="cbtn" data-spd="4" onclick="setSpd(4)">4×</button>
+            </div>
+        </div>
+
+        <!-- 左上公式面板 -->
+        <div class="info-panel glass-panel">
+            <h1>⚡回旋加速器</h1>
+            <div class="formula-box">
+                <div class="formula-row"><span class="f-label">电场加速</span><span class="f-expr">qU = ΔEₖ</span></div>
+                <div class="formula-row"><span class="f-label">洛伦兹力</span><span class="f-expr">F = qvB</span></div>
+                <div class="formula-row"><span class="f-label">轨道半径</span><span class="f-expr">r = mv/(qB)</span></div>
+                <div class="formula-row"><span class="f-label">运动周期</span><span class="f-expr">T = 2πm/(qB)</span></div>
+            </div>
+            <p class="info-text">带电粒子在D形盒间的狭缝中被电场加速，进入D形盒后在匀强磁场中做圆周运动。每当粒子穿过狭缝时，电场方向恰好反转，使粒子持续加速。</p>
+        </div>
+
+        <!-- 左下实时数据面板 -->
+        <div class="physics-panel glass-panel">
+            <h3>📊 实时数据</h3>
+            <div class="readout">
+                <div class="readout-item"><div class="r-label">粒子速度 v</div><div class="r-value" id="roV">--</div></div>
+                <div class="readout-item"><div class="r-label">动能 Eₖ</div><div class="r-value" id="roEk">--</div></div>
+                <div class="readout-item"><div class="r-label">轨道半径 r</div><div class="r-value" id="roR">--</div></div>
+                <div class="readout-item"><div class="r-label">周期 T</div><div class="r-value" id="roT">--</div></div>
+            </div>
+        </div>
+
+        <!-- 右上控制面板 -->
+        <div class="controls-panel glass-panel">
+            <h3>🔧 参数调节</h3>
+            <div class="section-label">物理参数</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">加速电压 U</span><span class="param-value" id="valU">2000 V</span></div>
+                <input type="range" id="slU" min="500" max="5000" value="2000" step="100" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">磁感应强度 B</span><span class="param-value" id="valB">1.0 T</span></div>
+                <input type="range" id="slB" min="0.1" max="3.0" value="1.0" step="0.1" oninput="updateParams()">
+            </div>
+            <div class="param-item" style="display:flex; align-items:center; justify-content: space-between;">
+                <span class="param-name">显示轨迹</span>
+                <input type="checkbox" id="chkTrail" checked onchange="updateParams()" style="width:16px;height:16px;">
+            </div>
+            <div class="param-item" style="display:flex; align-items:center; justify-content: space-between;">
+                <span class="param-name">显示网格</span>
+                <input type="checkbox" id="chkGrid" checked onchange="updateParams()" style="width:16px;height:16px;">
+            </div>
+            <div class="section-label">操作控制</div>
+            <div class="param-item" style="display:flex; gap:8px;">
+                <button class="cbtn" id="btnPanelPlay" onclick="togglePlay()" style="flex:1; justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="4,2.5 13,8 4,13.5" fill="currentColor"/></svg>
+                    <span style="margin-left:4px">开始</span>
+                </button>
+                <button class="cbtn" onclick="resetAll()" style="flex:1; justify-content:center;">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 2.5V6H6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 10A5.5 5.5 0 1 0 4.05 5.5L2.5 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+                    <span style="margin-left:4px">重置</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <a class="back-btn" href="javascript:history.back()" title="返回上一页">← 返回</a>
+        <!-- 制作标签 -->
+        <div class="credit-tag">高中物理 · 回旋加速器模拟</div>
+    </div>
+
+    <script>
+        const SVG_PLAY = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="4,2.5 13,8 4,13.5" fill="currentColor"/></svg>';
+        const SVG_PAUSE =
+            '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/><rect x="9.5" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/></svg>';
+
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+        const cvWrap = document.getElementById('cvWrap');
+        let W, H, cx, cy;
+
+        const CONFIG = {
+            q: 1,
+            m: 1,
+            gap: 40,
+            radius: 260,
+            baseTimeStep: 0.05
+        };
+
+        let state = {
+            x: 0,
+            y: 0,
+            vx: 0,
+            vy: 0,
+            active: false,
+            path: [],
+            params: { B: 1.0, U: 2000 },
+            phase: 'GAP',
+            finished: false
+        };
+
+        let animId, electricFieldDir = 0;
+        let trailPts = [];
+
+        const S = {
+            playing: false,
+            loop: true,
+            speed: 1.0,
+            showTrail: true,
+            showGrid: true
+        };
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const cw = cvWrap.clientWidth;
+            const ch = cvWrap.clientHeight || Math.round(cw * 0.75);
+            const RATIO = 1;
+            if (cw / ch > RATIO) {
+                H = Math.max(ch, 300);
+                W = Math.round(H * RATIO);
+            } else {
+                W = cw;
+                H = Math.max(Math.round(W / RATIO), 300);
+            }
+            W = Math.round(W * 0.85);
+            H = Math.round(H * 0.85);
+            canvas.width = W * dpr;
+            canvas.height = H * dpr;
+            canvas.style.width = W + 'px';
+            canvas.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            cx = W / 2;
+            cy = H / 2;
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        document.getElementById('btnPlay').innerHTML = SVG_PAUSE;
+
+        function updateParams() {
+            state.params.U = parseInt(document.getElementById('slU').value);
+            state.params.B = parseFloat(document.getElementById('slB').value);
+            S.showTrail = document.getElementById('chkTrail').checked;
+            S.showGrid = document.getElementById('chkGrid').checked;
+            document.getElementById('valU').textContent = state.params.U + ' V';
+            document.getElementById('valB').textContent = state.params.B.toFixed(1) + ' T';
+            updateReadout();
+            draw();
+        }
+
+        function resetAll() {
+            state.active = false;
+            state.finished = false;
+            state.x = -CONFIG.gap / 2;
+            state.y = 0;
+            state.vx = 15;
+            state.vy = 0;
+            state.path = [];
+            state.phase = 'GAP';
+            trailPts = [];
+            electricFieldDir = 0;
+            S.playing = false;
+            document.getElementById('btnPlay').innerHTML = SVG_PLAY;
+            var btnPanel = document.getElementById('btnPanelPlay');
+            if (btnPanel) btnPanel.innerHTML = SVG_PLAY + '<span style="margin-left:4px">开始</span>';
+            updateReadout();
+            draw();
+        }
+
+        function physicsStep() {
+            const iterations = Math.ceil(S.speed);
+            for (let i = 0; i < iterations; i++) {
+                if (!state.active) break;
+                updateSingleStep();
+            }
+        }
+
+        function updateSingleStep() {
+            const dt = CONFIG.baseTimeStep;
+            const halfGap = CONFIG.gap / 2;
+
+            if (Math.abs(state.x) < halfGap) {
+                state.phase = 'GAP';
+                state.vy = 0;
+                state.x += state.vx * dt;
+                const dir = state.vx > 0 ? 1 : -1;
+                electricFieldDir = dir;
+                const acc = (state.params.U * 0.004) * dir;
+                state.vx += acc * dt;
+            } else {
+                if (state.phase === 'GAP') {
+                    state.phase = 'DEE';
+                    state.x = state.x > 0 ? halfGap + 0.01 : -halfGap - 0.01;
+                    state.vy = 0;
+                }
+                electricFieldDir = 0;
+                const omega = (CONFIG.q * state.params.B / CONFIG.m);
+                const theta = omega * dt * 0.5;
+                const cos = Math.cos(theta),
+                    sin = Math.sin(theta);
+                state.x += state.vx * dt;
+                state.y += state.vy * dt;
+                const nextVx = state.vx * cos + state.vy * sin;
+                const nextVy = -state.vx * sin + state.vy * cos;
+                state.vx = nextVx;
+                state.vy = nextVy;
+                const isCrossingBack = (state.x > 0 && state.x < halfGap) || (state.x < 0 && state.x > -halfGap);
+                if (isCrossingBack) {
+                    state.x = state.x > 0 ? halfGap - 0.01 : -halfGap + 0.01;
+                }
+            }
+
+            const r = Math.sqrt(state.x ** 2 + state.y ** 2);
+            if (r > CONFIG.radius) {
+                finish();
+            }
+
+            if (state.path.length === 0 || distSq(state.x, state.y, state.path[state.path.length - 1]) > 10) {
+                state.path.push({ x: state.x, y: state.y });
+                if (state.path.length > 2000) state.path.shift();
+            }
+        }
+
+        function distSq(x, y, p) {
+            return (x - p.x) ** 2 + (y - p.y) ** 2;
+        }
+
+        function finish() {
+            state.active = false;
+            state.finished = true;
+            const lastX = state.x,
+                lastY = state.y;
+            state.path.push({ x: lastX + state.vx * 25, y: lastY + state.vy * 25 });
+        }
+
+        function updateReadout() {
+            const v = Math.sqrt(state.vx ** 2 + state.vy ** 2);
+            const ek = 0.5 * CONFIG.m * v * v * 0.001;
+            const r_orbit = (state.params.B > 0.01) ? (CONFIG.m * v / (CONFIG.q * state.params.B)) : 0;
+            const T = (2 * Math.PI * CONFIG.m) / (CONFIG.q * state.params.B);
+            document.getElementById('roV').textContent = v.toFixed(0);
+            document.getElementById('roEk').textContent = ek.toFixed(2) + ' MeV';
+            document.getElementById('roR').textContent = (state.params.B > 0.01) ? r_orbit.toFixed(0) + ' mm' : '--';
+            document.getElementById('roT').textContent = T.toFixed(2) + ' μs';
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#e0e8f0';
+            ctx.lineWidth = 1;
+            for (let x = 0; x <= W; x += 40) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, H);
+                ctx.stroke();
+            }
+            for (let y = 0; y <= H; y += 40) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawDees() {
+            const r = CONFIG.radius;
+            const w = CONFIG.gap / 2;
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            let gradLeft = ctx.createLinearGradient(-r, -r, 0, r);
+            gradLeft.addColorStop(0, '#e0e0e0');
+            gradLeft.addColorStop(1, '#f0f0f0');
+            let gradRight = ctx.createLinearGradient(0, -r, r, r);
+            gradRight.addColorStop(0, '#e0e0e0');
+            gradRight.addColorStop(1, '#f0f0f0');
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(74, 144, 226, 0.3)';
+
+            ctx.fillStyle = gradRight;
+            ctx.beginPath();
+            ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2);
+            ctx.lineTo(w, r);
+            ctx.lineTo(w, -r);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = gradLeft;
+            ctx.beginPath();
+            ctx.arc(0, 0, r, Math.PI / 2, 3 * Math.PI / 2);
+            ctx.lineTo(-w, -r);
+            ctx.lineTo(-w, r);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = 'rgba(74, 144, 226, 0.15)';
+            const step = 30;
+            for (let y = -r; y < r; y += step) {
+                for (let x = 0; x < r; x += step) {
+                    let px = x + w + 10;
+                    if (px * px + y * y < r * r - 100) {
+                        ctx.beginPath();
+                        ctx.arc(px, y, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    let px2 = -x - w - 10;
+                    if (px2 * px2 + y * y < r * r - 100) {
+                        ctx.beginPath();
+                        ctx.arc(px2, y, 1.5, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawEField() {
+            if (Math.abs(state.x) >= CONFIG.gap / 2 || !state.active) return;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.strokeStyle = 'rgba(74, 144, 226, 0.8)';
+            ctx.lineWidth = 2;
+            const w = CONFIG.gap / 2 - 5;
+            ctx.beginPath();
+            for (let y = -180; y <= 180; y += 40) {
+                if (Math.abs(y) < 10) continue;
+                if (electricFieldDir > 0) drawArrow(-w, y, w, y);
+                else drawArrow(w, y, -w, y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawArrow(x1, y1, x2, y2) {
+            const head = 5,
+                angle = Math.atan2(y2 - y1, x2 - x1);
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2 - head * Math.cos(angle - Math.PI / 6), y2 - head * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - head * Math.cos(angle + Math.PI / 6), y2 - head * Math.sin(angle + Math.PI / 6));
+        }
+
+        function draw() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+            if (S.showGrid) drawGrid();
+            drawDees();
+            drawEField();
+
+            ctx.save();
+            ctx.translate(cx, cy);
+
+            if (S.showTrail && state.path.length > 1) {
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#FF6600';
+                ctx.strokeStyle = '#FF6600';
+                ctx.lineWidth = 3;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(state.path[0].x, state.path[0].y);
+                for (let i = 1; i < state.path.length; i++) ctx.lineTo(state.path[i].x, state.path[i].y);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#FFCC99';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#FF8C00';
+            ctx.fillStyle = '#FF8C00';
+            if (Math.abs(state.x) < CONFIG.gap / 2 && state.active) {
+                ctx.shadowBlur = 25;
+                ctx.shadowColor = '#FF6600';
+                ctx.fillStyle = '#FFA500';
+            }
+            ctx.beginPath();
+            ctx.arc(state.x, state.y, 5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle = '#ffcc00';
+            ctx.beginPath();
+            ctx.arc(0, 0, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        function togglePlay() {
+            S.playing = !S.playing;
+            var icon = S.playing ? SVG_PAUSE : SVG_PLAY;
+            document.getElementById('btnPlay').innerHTML = icon;
+            document.getElementById('btnPanelPlay').innerHTML = icon + '<span style="margin-left:4px">' + (S.playing ?
+                '暂停' : '开始') + '</span>';
+            if (S.playing && !state.active && !state.finished) {
+                state.active = true;
+            }
+        }
+
+        function toggleLoop() {
+            S.loop = !S.loop;
+            document.getElementById('btnLoop').classList.toggle('active', S.loop);
+        }
+
+        function setSpd(s) {
+            S.speed = s;
+            document.querySelectorAll('.ctrl-bar .cbtn[data-spd]').forEach(function(b) {
+                b.classList.toggle('active', parseFloat(b.getAttribute('data-spd')) === s);
+            });
+        }
+
+        let lastTs = null;
+
+        function loop(ts) {
+            if (S.playing) {
+                if (lastTs !== null) {
+                    if (state.active && !state.finished) {
+                        physicsStep();
+                        updateReadout();
+                    }
+                }
+                lastTs = ts;
+            } else {
+                lastTs = null;
+            }
+            draw();
+
+            // 自动循环重置：粒子跑完后自动重新开始
+            if (S.loop && state.finished && S.playing) {
+                resetAll();
+                state.active = true;
+                S.playing = true;
+                document.getElementById('btnPlay').innerHTML = SVG_PAUSE;
+                document.getElementById('btnPanelPlay').innerHTML = SVG_PAUSE +
+                    '<span style="margin-left:4px">暂停</span>';
+                lastTs = ts;
+            }
+
+            requestAnimationFrame(loop);
+        }
+
+        resizeCanvas();
+        resetAll();
+        requestAnimationFrame(loop);
+    </script>
+    </body>
+</html>

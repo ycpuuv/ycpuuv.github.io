@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+	<link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打点计时器 - PhySenLab仿真实验</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2C3E50;
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #canvas-wrapper {
+            position: relative;
+            width: 950px;
+            height: 420px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+            border-radius: 24px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+            border: 1px solid #E1EEF7;
+        }
+
+        #simCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            background: #ffffffd0;
+            cursor: default;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E1EEF7;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            padding: 16px 22px;
+            color: #2C3E50;
+            transition: all 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+        }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 30;
+            max-width: 280px;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid #E1EEF7;
+        }
+
+        .info-panel h1 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #357ABD;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .formula-box {
+            background: #E8F4FD;
+            padding: 4px 10px;
+            border-radius: 30px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4A90E2;
+        }
+
+        .formula {
+            font-size: 1.0rem;
+            font-family: 'Times New Roman', serif;
+        }
+
+        .principle-text {
+            font-size: 0.8rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+            border-top: 1px dashed #E1EEF7;
+            padding-top: 8px;
+            margin-top: 6px;
+        }
+
+        .stats-box {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            min-width: 200px;
+            text-align: right;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .stat-item { margin-bottom: 10px; }
+        .stat-item:last-child { margin-bottom: 0; }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #5A6C7D;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-family: 'Consolas', monospace;
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #4A90E2;
+            line-height: 1.1;
+        }
+
+        .stats-note {
+            font-size: 0.75rem;
+            color: #8B9DC3;
+            border-top: 1px dashed #E1EEF7;
+            margin-top: 12px;
+            padding-top: 8px;
+            text-align: left;
+        }
+
+        .legend-panel {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-40%);
+            z-index: 30;
+            width: 150px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+            color: #5A6C7D;
+            font-size: 0.85rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        .legend-color.car { background: #e67e22; }
+        .legend-color.tape { background: #ecf0f1; border: 1px solid #aaa; }
+        .legend-color.dot { background: #2c3e50; border-radius: 50%; }
+        .legend-color.needle { background: #e74c3c; }
+
+        .bottom-controls {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 950px;
+            z-index: 40;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            border-radius: 60px;
+            padding: 18px 28px;
+            border: 1px solid #E1EEF7;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .mode-group {
+            display: flex;
+            gap: 6px;
+            background: rgba(200,220,250,0.3);
+            padding: 4px;
+            border-radius: 40px;
+        }
+
+        .mode-btn {
+            padding: 8px 18px;
+            border: none;
+            background: transparent;
+            color: #5A6C7D;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: white;
+            box-shadow: 0 2px 10px rgba(74,144,226,0.4);
+        }
+
+        .sliders {
+            display: flex;
+            gap: 20px;
+            flex: 2;
+            min-width: 280px;
+        }
+
+        .slider-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            font-size: 0.8rem;
+            color: #5A6C7D;
+        }
+
+        .slider-item input {
+            width: 100%;
+            margin-top: 4px;
+            accent-color: #4A90E2;
+        }
+
+        .slider-values {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #357ABD;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            white-space: nowrap;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+        }
+        .btn-start:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(46,204,113,0.4); }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            color: white;
+        }
+        .btn-stop:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(230,126,34,0.4); }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #3498db, #5dade2);
+            color: white;
+        }
+        .btn-reset:hover { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(52,152,219,0.4); }
+
+        .back-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #4A90E2;
+            padding: 12px 28px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            transition: all 0.3s ease;
+            z-index: 50;
+        }
+
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #8B9DC3;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+            padding: 4px 18px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            z-index: 20;
+            border: 1px solid #E1EEF7;
+        }
+
+        @media (max-width: 1000px) {
+            #canvas-wrapper { width: 90vw; height: 350px; }
+            .bottom-controls { width: 90vw; flex-direction: column; border-radius: 20px; }
+            .info-panel { max-width: 200px; font-size: 0.8rem; }
+            .legend-panel { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-wrapper">
+            <canvas id="simCanvas" width="950" height="420"></canvas>
+        </div>
+
+        <div class="info-panel glass-panel">
+            <h1>⚡ 打点计时器 </h1>
+            <div class="formula-box">
+                <div class="formula">v = Δx / Δt</div>
+            </div>
+            <div class="principle-text">
+                <strong>实验原理：</strong>振针每0.02s击打纸带一次，点迹间距正比于瞬时速度。通过分析点迹可研究匀变速运动。
+            </div>
+        </div>
+
+        <div class="stats-box glass-panel">
+            <div class="stat-item">
+                <div class="stat-label">速度 (cm/s)</div>
+                <div class="stat-value" id="speedDisplay">0.0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">打点数</div>
+                <div class="stat-value" id="dotCountDisplay">0</div>
+            </div>
+            <div class="stats-note">
+                ⏱️ 50Hz 打点 · 每点间隔 0.02s<br>
+                📏 1 px = 1 cm
+            </div>
+        </div>
+
+        <div class="legend-panel glass-panel">
+            <div style="margin-bottom: 8px; font-weight:600;">📖 图例</div>
+            <div class="legend-item"><div class="legend-color car"></div> 小车</div>
+            <div class="legend-item"><div class="legend-color tape"></div> 纸带</div>
+            <div class="legend-item"><div class="legend-color dot"></div> 打点</div>
+            <div class="legend-item"><div class="legend-color needle"></div> 振针</div>
+        </div>
+
+        <div class="bottom-controls">
+            <div class="mode-group">
+                <button class="mode-btn active" data-mode="uniform">匀速</button>
+                <button class="mode-btn" data-mode="accelerate">匀加速</button>
+                <button class="mode-btn" data-mode="decelerate">匀减速</button>
+            </div>
+
+            <div class="sliders">
+                <div class="slider-item">
+                    <span>初速度 (cm/s)</span>
+                    <input type="range" id="v0Slider" min="0" max="3000" value="600" step="10">
+                    <div class="slider-values">
+                        <span>0</span>
+                        <span id="v0Value">600</span>
+                        <span>3000</span>
+                    </div>
+                </div>
+                <div class="slider-item">
+                    <span>加速度 (cm/s²)</span>
+                    <input type="range" id="aSlider" min="-10000" max="10000" value="0" step="100">
+                    <div class="slider-values">
+                        <span>-10000</span>
+                        <span id="aValue">0</span>
+                        <span>10000</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn btn-start" id="startBtn">▶ 开始打点</button>
+                <button class="action-btn btn-stop" id="stopBtn">⏸️ 停止打点</button>
+                <button class="action-btn btn-reset" id="newTapeBtn">🔄 换新纸带</button>
+            </div>
+        </div>
+
+        
+        <div class="hint-text">滑块实时调节 | 停止即暂停 | 加速度范围 ±10000 cm/s²</div>
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('simCanvas');
+            const ctx = canvas.getContext('2d');
+
+            const NEEDLE_X = 180;
+            const TAPE_Y = 260;
+            const FREQ = 50;
+            const TIME_SCALE = 0.05;
+            const PX_PER_CM = 1;
+
+            const DEFAULT_CONFIG = {
+                uniform:    { v0_cmps: 600,   a_cmps2: 0.0 },
+                accelerate: { v0_cmps: 200,   a_cmps2: 8000.0 },
+                decelerate: { v0_cmps: 2500,  a_cmps2: -7000.0 }
+            };
+
+            let mode = 'uniform';
+            let currentV0_cmps = DEFAULT_CONFIG.uniform.v0_cmps;
+            let currentA_cmps2 = DEFAULT_CONFIG.uniform.a_cmps2;
+
+            let isRunning = false;
+            let isPaused = false;
+            let simTime = 0;
+            let lastRealTime = 0;
+            let velocity_px = currentV0_cmps * PX_PER_CM;
+            let tapeOffset_px = 0;
+            let dots = [];
+            let needleY = TAPE_Y - 25;
+            let hasDottedCycle = false;
+            let impactAlpha = 0;
+
+            const speedDisplay = document.getElementById('speedDisplay');
+            const dotCountDisplay = document.getElementById('dotCountDisplay');
+            const modeBtns = document.querySelectorAll('.mode-btn');
+            const v0Slider = document.getElementById('v0Slider');
+            const aSlider = document.getElementById('aSlider');
+            const v0Value = document.getElementById('v0Value');
+            const aValue = document.getElementById('aValue');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const newTapeBtn = document.getElementById('newTapeBtn');
+
+            function updateSliderDisplay() {
+                v0Value.textContent = currentV0_cmps.toFixed(0);
+                aValue.textContent = currentA_cmps2.toFixed(0);
+                v0Slider.value = currentV0_cmps;
+                aSlider.value = currentA_cmps2;
+            }
+
+            function setModeDefaults() {
+                const def = DEFAULT_CONFIG[mode];
+                currentV0_cmps = def.v0_cmps;
+                currentA_cmps2 = def.a_cmps2;
+                updateSliderDisplay();
+            }
+
+            function switchMode(newMode) {
+                if (isRunning && !isPaused) {
+                    alert('请先停止打点再切换模式');
+                    return;
+                }
+                mode = newMode;
+                modeBtns.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.mode === mode);
+                });
+                setModeDefaults();
+            }
+
+            modeBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    switchMode(e.target.dataset.mode);
+                });
+            });
+
+            v0Slider.addEventListener('input', (e) => {
+                currentV0_cmps = parseFloat(e.target.value);
+                v0Value.textContent = currentV0_cmps.toFixed(0);
+            });
+            aSlider.addEventListener('input', (e) => {
+                currentA_cmps2 = parseFloat(e.target.value);
+                aValue.textContent = currentA_cmps2.toFixed(0);
+            });
+
+            function updatePhysics(dtSim) {
+                const a_px = currentA_cmps2 * PX_PER_CM;
+                velocity_px += a_px * dtSim;
+
+                if (mode === 'decelerate' && velocity_px < 0) velocity_px = 0;
+
+                tapeOffset_px += velocity_px * dtSim;
+
+                const amp = 25;
+                const phase = simTime * FREQ * 2 * Math.PI;
+                needleY = (TAPE_Y - amp) + amp * Math.sin(phase);
+
+                if (needleY > TAPE_Y - 2) {
+                    if (!hasDottedCycle) {
+                        dots.push({ pos: tapeOffset_px });
+                        hasDottedCycle = true;
+                        impactAlpha = 1;
+                        dotCountDisplay.innerText = dots.length;
+                    }
+                } else if (needleY < TAPE_Y - 15) {
+                    hasDottedCycle = false;
+                }
+
+                if (tapeOffset_px > canvas.width * 2.5 && mode !== 'decelerate') {
+                    isPaused = true;
+                }
+            }
+
+            function loop(timestamp) {
+                if (!isRunning) return;
+                if (!lastRealTime) lastRealTime = timestamp;
+
+                const dtReal = (timestamp - lastRealTime) / 1000;
+                lastRealTime = timestamp;
+                const dtSim = dtReal * TIME_SCALE;
+
+                if (!isPaused) {
+                    simTime += dtSim;
+                    updatePhysics(dtSim);
+                }
+
+                const speed_cmps = velocity_px / PX_PER_CM;
+                speedDisplay.innerText = speed_cmps.toFixed(0);
+
+                if (impactAlpha > 0) impactAlpha -= 0.15;
+
+                draw();
+                requestAnimationFrame(loop);
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                ctx.save();
+                const headX = NEEDLE_X + tapeOffset_px;
+                ctx.translate(headX, TAPE_Y);
+
+                ctx.save();
+                ctx.translate(5, -20);
+                ctx.fillStyle = '#e67e22';
+                ctx.beginPath();
+                ctx.moveTo(0, 30); ctx.lineTo(0, 10); ctx.lineTo(20, 0);
+                ctx.lineTo(80, 0); ctx.lineTo(100, 20); ctx.lineTo(100, 30);
+                ctx.closePath(); ctx.fill();
+                ctx.fillStyle = '#333';
+                ctx.beginPath(); ctx.arc(25, 30, 9, 0, 2*Math.PI); ctx.fill();
+                ctx.beginPath(); ctx.arc(80, 30, 9, 0, 2*Math.PI); ctx.fill();
+                ctx.restore();
+
+                ctx.fillStyle = '#ecf0f1';
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = "rgba(0,0,0,0.2)";
+                ctx.fillRect(-20000, -10, 20000, 20);
+                ctx.shadowBlur = 0;
+
+                ctx.fillStyle = '#2c3e50';
+                for (let dot of dots) {
+                    ctx.beginPath();
+                    ctx.arc(-dot.pos, 0, 4, 0, 2*Math.PI);
+                    ctx.fill();
+                }
+                ctx.restore();
+
+                ctx.beginPath();
+                ctx.fillStyle = '#2980b9';
+                ctx.arc(NEEDLE_X, TAPE_Y, 13, 0, 2*Math.PI);
+                ctx.fill();
+
+                ctx.fillStyle = '#7f8c8d';
+                ctx.fillRect(NEEDLE_X - 12, TAPE_Y - 100, 24, 90);
+                ctx.fillStyle = '#34495e';
+                ctx.fillRect(NEEDLE_X - 40, TAPE_Y - 150, 80, 60);
+
+                ctx.beginPath();
+                ctx.moveTo(NEEDLE_X, TAPE_Y - 100);
+                ctx.lineTo(NEEDLE_X, needleY);
+                ctx.strokeStyle = '#e74c3c';
+                ctx.lineWidth = 4;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(NEEDLE_X, needleY, 3, 0, 2*Math.PI);
+                ctx.fillStyle = '#c0392b';
+                ctx.fill();
+
+                if (impactAlpha > 0) {
+                    ctx.beginPath();
+                    ctx.arc(NEEDLE_X, TAPE_Y, 5 + (1-impactAlpha)*25, 0, 2*Math.PI);
+                    ctx.strokeStyle = `rgba(241, 196, 15, ${impactAlpha})`;
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = 'rgba(52, 73, 94, 0.6)';
+                ctx.fillRect(NEEDLE_X - 18, TAPE_Y - 15, 36, 30);
+            }
+
+            function start() {
+                if (!isRunning) {
+                    isRunning = true;
+                    isPaused = false;
+                    simTime = 0;
+                    lastRealTime = performance.now();
+                    velocity_px = currentV0_cmps * PX_PER_CM;
+                    requestAnimationFrame(loop);
+                } else if (isPaused) {
+                    isPaused = false;
+                    lastRealTime = performance.now();
+                }
+            }
+
+            function stop() {
+                if (isRunning) isPaused = true;
+            }
+
+            function newTape() {
+                isRunning = false;
+                isPaused = false;
+                simTime = 0;
+                tapeOffset_px = 0;
+                dots = [];
+                velocity_px = currentV0_cmps * PX_PER_CM;
+                needleY = TAPE_Y - 25;
+                impactAlpha = 0;
+                hasDottedCycle = false;
+                speedDisplay.innerText = currentV0_cmps.toFixed(0);
+                dotCountDisplay.innerText = '0';
+                draw();
+            }
+
+            startBtn.addEventListener('click', start);
+            stopBtn.addEventListener('click', stop);
+            newTapeBtn.addEventListener('click', newTape);
+
+            switchMode('uniform');
+            newTape();
+
+            v0Slider.addEventListener('change', () => {
+                if (!isRunning) velocity_px = currentV0_cmps * PX_PER_CM;
+                speedDisplay.innerText = currentV0_cmps.toFixed(0);
+            });
+        })();
+    </script>
+    </body>
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打点计时器(手动版) - PhySenLab仿真实验</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2C3E50;
+        }
+
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        #main-canvas-wrapper {
+            position: relative;
+            width: 950px;
+            height: 320px;
+            box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2);
+            border-radius: 24px;
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(2px);
+            border: 1px solid #E1EEF7;
+            overflow: hidden;
+        }
+
+        #mainCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            background: #ffffff;
+            cursor: default;
+        }
+
+        #zoom-canvas-wrapper {
+            position: relative;
+            width: 950px;
+            height: 180px;
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.15);
+            border-radius: 16px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(4px);
+            border: 1px solid #E1EEF7;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        #zoom-canvas-wrapper::-webkit-scrollbar { height: 10px; }
+        #zoom-canvas-wrapper::-webkit-scrollbar-thumb { background: #aaa; border-radius: 5px; }
+        #zoom-canvas-wrapper::-webkit-scrollbar-thumb:hover { background: #888; }
+
+        #zoomCanvas {
+            display: block;
+            background: #ffffff;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E1EEF7;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            padding: 16px 22px;
+            color: #2C3E50;
+            transition: all 0.3s ease;
+        }
+        .glass-panel:hover { box-shadow: 0 8px 24px rgba(74, 144, 226, 0.2); }
+
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 30;
+            max-width: 300px;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+            border-radius: 20px;
+            border: 1px solid #E1EEF7;
+        }
+
+        .info-panel h1 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #357ABD;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .formula-box {
+            background: #E8F4FD;
+            padding: 4px 10px;
+            border-radius: 30px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4A90E2;
+        }
+        .formula { font-size: 1.0rem; font-family: 'Times New Roman', serif; }
+
+        .principle-text {
+            font-size: 0.8rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+            border-top: 1px dashed #E1EEF7;
+            padding-top: 8px;
+            margin-top: 6px;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 30;
+            min-width: 220px;
+            text-align: center;
+            padding: 14px 18px;
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(8px);
+        }
+
+        .control-row { margin-bottom: 12px; }
+        .control-row:last-child { margin-bottom: 0; }
+
+        .status-text {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #d9534f;
+            text-align: center;
+            transition: color .3s;
+        }
+        .status-text.active { color: #5cb85c; }
+        .status-text.warning { color: #f39c12; }
+
+        .action-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            white-space: nowrap;
+            color: white;
+        }
+        .action-btn:hover { transform: translateY(-2px); }
+
+        .btn-power {
+            background: linear-gradient(135deg, #d9534f, #c9302c);
+            box-shadow: 0 2px 8px rgba(217, 83, 79, 0.3);
+        }
+        .btn-power:hover { box-shadow: 0 8px 18px rgba(217, 83, 79, 0.4); }
+        .btn-power.active {
+            background: linear-gradient(135deg, #5cb85c, #4cae4c);
+            box-shadow: 0 2px 8px rgba(92, 184, 92, 0.3);
+        }
+        .btn-power.active:hover { box-shadow: 0 8px 18px rgba(92, 184, 92, 0.4); }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #3498db, #5dade2);
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+        }
+        .btn-reset:hover { box-shadow: 0 8px 18px rgba(52, 152, 219, 0.4); }
+
+        .back-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            color: #4A90E2;
+            padding: 12px 28px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 12px rgba(74, 144, 226, 0.1);
+            transition: all 0.3s ease;
+            z-index: 50;
+        }
+        .back-btn:hover {
+            background: #4A90E2;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #8B9DC3;
+            background: rgba(255,255,255,0.5);
+            backdrop-filter: blur(4px);
+            padding: 4px 18px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            z-index: 20;
+            border: 1px solid #E1EEF7;
+        }
+
+        @media (max-width: 1000px) {
+            #main-canvas-wrapper, #zoom-canvas-wrapper { width: 90vw; }
+            .info-panel { max-width: 200px; font-size: 0.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="main-canvas-wrapper">
+            <canvas id="mainCanvas" width="950" height="320"></canvas>
+        </div>
+        <div id="zoom-canvas-wrapper">
+            <canvas id="zoomCanvas" width="3000" height="150"></canvas>
+        </div>
+
+        <div class="info-panel glass-panel">
+            <h1>⚡ 打点计时器（手动版）</h1>
+            <div class="formula-box">
+                <div class="formula">T = 1 / f = 0.02s</div>
+            </div>
+            <div class="principle-text">
+                <strong>操作说明：</strong><br>
+                1. 点击"打开电源"开启50Hz打点。<br>
+                2. 电源开启后，将鼠标移动到纸带上，按住左键向左拉动。<br>
+                3. 纸带只能单向向左，不可向右推回。<br>
+                4. 在下方的放大测量区读取点迹数据，可左右拖动滚动条查看。
+            </div>
+        </div>
+
+        <div class="control-panel glass-panel">
+            <div class="control-row">
+                <div id="statusText" class="status-text">电源已关闭</div>
+            </div>
+            <div class="control-row">
+                <button id="powerBtn" class="action-btn btn-power">打开电源 (50Hz)</button>
+            </div>
+            <div class="control-row">
+                <button id="resetBtn" class="action-btn btn-reset">换新纸带</button>
+            </div>
+        </div>
+
+        
+        <div class="hint-text">开启电源后，在纸带上按住鼠标左键向左拉动</div>
+    </div>
+
+    <script>
+    (function() {
+        const mainCanvas = document.getElementById('mainCanvas');
+        const mainCtx = mainCanvas.getContext('2d');
+        const zoomCanvas = document.getElementById('zoomCanvas');
+        const zoomCtx = zoomCanvas.getContext('2d');
+        const powerBtn = document.getElementById('powerBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const statusText = document.getElementById('statusText');
+        const zoomWrapper = document.getElementById('zoom-canvas-wrapper');
+
+        let isPowerOn = false;
+        let isDragging = false;
+        let dragOffsetX = 0;
+
+        const TAPE_WIDTH = 1500;
+        const TAPE_HEIGHT = 30;
+        let tapeX = 450;
+        const tapeY = 180;
+        const NEEDLE_X = 650;
+        const NEEDLE_Y = 100;
+        const DOT_INTERVAL = 20; // 50Hz = 20ms per dot
+        let lastDotTime = 0;
+        const dots = [];
+        const originalTapeX = tapeX;
+
+        function getPos(evt) {
+            const rect = mainCanvas.getBoundingClientRect();
+            let cx, cy;
+            if (evt.touches && evt.touches.length > 0) {
+                cx = evt.touches[0].clientX;
+                cy = evt.touches[0].clientY;
+            } else {
+                cx = evt.clientX;
+                cy = evt.clientY;
+            }
+            return { x: cx - rect.left, y: cy - rect.top };
+        }
+
+        function onPointerDown(evt) {
+            const p = getPos(evt);
+            if (p.x >= tapeX && p.x <= tapeX + TAPE_WIDTH && p.y >= tapeY && p.y <= tapeY + TAPE_HEIGHT) {
+                if (evt.type === 'touchstart') evt.preventDefault();
+                if (isPowerOn) {
+                    isDragging = true;
+                    dragOffsetX = p.x - tapeX;
+                    mainCanvas.style.cursor = 'grabbing';
+                } else {
+                    statusText.className = 'status-text warning';
+                    statusText.textContent = '⚠️ 请先打开电源！';
+                    setTimeout(() => {
+                        if (!isPowerOn) {
+                            statusText.className = 'status-text';
+                            statusText.textContent = '电源已关闭';
+                        }
+                    }, 2000);
+                }
+            }
+        }
+
+        function onPointerMove(evt) {
+            const p = getPos(evt);
+            if (isDragging) {
+                if (evt.type === 'touchmove' && evt.cancelable) evt.preventDefault();
+                let newX = p.x - dragOffsetX;
+                // Only allow pulling left (decreasing X)
+                if (newX < tapeX) {
+                    if (newX < NEEDLE_X - TAPE_WIDTH + 20) {
+                        newX = NEEDLE_X - TAPE_WIDTH + 20;
+                    }
+                    tapeX = newX;
+                }
+                dragOffsetX = p.x - tapeX;
+            } else {
+                if (p.x >= tapeX && p.x <= tapeX + TAPE_WIDTH && p.y >= tapeY && p.y <= tapeY + TAPE_HEIGHT) {
+                    mainCanvas.style.cursor = isPowerOn ? 'grab' : 'not-allowed';
+                } else {
+                    mainCanvas.style.cursor = 'default';
+                }
+            }
+        }
+
+        function onPointerUp() {
+            isDragging = false;
+            mainCanvas.style.cursor = 'default';
+        }
+
+        mainCanvas.addEventListener('mousedown', onPointerDown);
+        window.addEventListener('mousemove', onPointerMove);
+        window.addEventListener('mouseup', onPointerUp);
+        mainCanvas.addEventListener('touchstart', onPointerDown, { passive: false });
+        window.addEventListener('touchmove', onPointerMove, { passive: false });
+        window.addEventListener('touchend', onPointerUp);
+        window.addEventListener('touchcancel', onPointerUp);
+
+        function drawMain() {
+            mainCtx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+
+            // Background table
+            mainCtx.fillStyle = '#cfd8dc';
+            mainCtx.fillRect(0, 200, mainCanvas.width, 120);
+
+            // Paper tape
+            mainCtx.fillStyle = '#ffffff';
+            mainCtx.shadowColor = 'rgba(0,0,0,0.2)';
+            mainCtx.shadowBlur = 4;
+            mainCtx.shadowOffsetY = 2;
+            mainCtx.fillRect(tapeX, tapeY, TAPE_WIDTH, TAPE_HEIGHT);
+            mainCtx.shadowColor = 'transparent';
+
+            // Draw dots
+            mainCtx.fillStyle = '#000000';
+            for (const dot of dots) {
+                const dx = tapeX + dot.pos;
+                if (dx >= tapeX && dx <= tapeX + TAPE_WIDTH) {
+                    mainCtx.beginPath();
+                    mainCtx.arc(dx, tapeY + TAPE_HEIGHT / 2, 2.5, 0, 2 * Math.PI);
+                    mainCtx.fill();
+                }
+            }
+
+            // Draw timer device
+            drawTimerDevice(mainCtx);
+        }
+
+        function drawTimerDevice(ctx) {
+            const baseX = NEEDLE_X;
+            const baseY = NEEDLE_Y;
+
+            // Timer body
+            ctx.fillStyle = '#2c3e50';
+            ctx.fillRect(baseX - 40, baseY - 30, 80, 90);
+
+            // Coils
+            ctx.fillStyle = '#bdc3c7';
+            ctx.fillRect(baseX - 35, baseY - 5, 10, 40);
+            ctx.fillRect(baseX + 25, baseY - 5, 10, 40);
+
+            // Top plate
+            ctx.fillStyle = '#ecf0f1';
+            ctx.fillRect(baseX - 20, baseY - 40, 40, 30);
+
+            // Vibrating needle
+            ctx.fillStyle = '#e74c3c';
+            let needleOffset = 0;
+            if (isPowerOn) {
+                needleOffset = Math.random() > 0.5 ? 2 : 0;
+            }
+            ctx.fillRect(baseX - 3, baseY + 10 + needleOffset, 6, 20);
+
+            // Terminals
+            ctx.fillStyle = '#c0392b';
+            ctx.beginPath();
+            ctx.arc(baseX - 25, baseY - 45, 5, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.fillStyle = '#27ae60';
+            ctx.beginPath();
+            ctx.arc(baseX + 25, baseY - 45, 5, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Label
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.font = '12px Arial';
+            ctx.fillText('打点计时器', baseX - 30, baseY + 80);
+        }
+
+        function drawZoom() {
+            zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
+
+            if (dots.length === 0) {
+                zoomCtx.fillStyle = '#999';
+                zoomCtx.font = '16px "Microsoft YaHei", sans-serif';
+                zoomCtx.fillText('请先打开电源并在上方【向左拖动纸带】，此处将生成放大测量图。', 230, 80);
+                return;
+            }
+
+            const firstDotPos = dots[0].pos;
+            const scale = 3; // pixels per unit
+            const centerY = 50;
+            const rulerY = 100;
+
+            // Paper tape background
+            zoomCtx.fillStyle = '#f8f9fa';
+            zoomCtx.fillRect(0, 20, zoomCanvas.width, 60);
+
+            // Draw dots
+            zoomCtx.fillStyle = '#000000';
+            for (let i = 0; i < dots.length; i++) {
+                const dot = dots[i];
+                const dx = 50 + (dot.pos - firstDotPos) * scale;
+                if (dx < zoomCanvas.width) {
+                    zoomCtx.beginPath();
+                    zoomCtx.arc(dx, centerY, 4, 0, 2 * Math.PI);
+                    zoomCtx.fill();
+
+                    // Labels
+                    zoomCtx.font = '12px Arial';
+                    if (i === 0) {
+                        zoomCtx.fillStyle = '#e74c3c';
+                        zoomCtx.fillText('起始点', dx - 15, 15);
+                        zoomCtx.fillStyle = '#000000';
+                    } else if (i % 5 === 0) {
+                        zoomCtx.fillStyle = '#e74c3c';
+                        zoomCtx.fillText(i / 5, dx - 4, 15);
+                        zoomCtx.fillStyle = '#000000';
+                    }
+                }
+            }
+
+            // Ruler
+            zoomCtx.beginPath();
+            zoomCtx.moveTo(50, rulerY);
+            zoomCtx.lineTo(zoomCanvas.width, rulerY);
+            zoomCtx.strokeStyle = '#333';
+            zoomCtx.lineWidth = 1.5;
+            zoomCtx.stroke();
+
+            zoomCtx.fillStyle = '#333';
+            zoomCtx.font = '12px Arial';
+            for (let t = 0; t <= 300; t++) {
+                const rx = 50 + 10 * t;
+                if (rx > zoomCanvas.width) break;
+                zoomCtx.beginPath();
+                zoomCtx.moveTo(rx, rulerY);
+                if (t % 10 === 0) {
+                    zoomCtx.lineTo(rx, rulerY + 15);
+                    zoomCtx.fillText(t / 10 + ' cm', rx - 12, rulerY + 30);
+                } else if (t % 5 === 0) {
+                    zoomCtx.lineTo(rx, rulerY + 10);
+                } else {
+                    zoomCtx.lineTo(rx, rulerY + 5);
+                }
+                zoomCtx.stroke();
+            }
+        }
+
+        function updateDots(timestamp) {
+            if (!isPowerOn) return;
+            if (!lastDotTime) lastDotTime = timestamp;
+
+            if (timestamp - lastDotTime >= DOT_INTERVAL) {
+                // Check if needle is over the tape area
+                if (NEEDLE_X >= tapeX && NEEDLE_X <= tapeX + TAPE_WIDTH) {
+                    const pos = NEEDLE_X - tapeX;
+                    // Avoid duplicate dots at same position
+                    if (dots.length === 0 || Math.abs(dots[dots.length - 1].pos - pos) > 0.1) {
+                        dots.push({ pos: pos });
+                    }
+                }
+                lastDotTime = timestamp;
+            }
+
+            drawMain();
+            drawZoom();
+            requestAnimationFrame(updateDots);
+        }
+
+        powerBtn.addEventListener('click', () => {
+            isPowerOn = !isPowerOn;
+            if (isPowerOn) {
+                powerBtn.textContent = '关闭电源';
+                powerBtn.classList.add('active');
+                statusText.className = 'status-text active';
+                statusText.textContent = '电源已开启 - 正在打点...';
+                lastDotTime = performance.now();
+                requestAnimationFrame(updateDots);
+            } else {
+                powerBtn.textContent = '打开电源 (50Hz)';
+                powerBtn.classList.remove('active');
+                statusText.className = 'status-text';
+                statusText.textContent = '电源已关闭';
+                isDragging = false;
+                mainCanvas.style.cursor = 'default';
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            tapeX = originalTapeX;
+            dots.length = 0;
+            if (isPowerOn) {
+                isPowerOn = false;
+                powerBtn.textContent = '打开电源 (50Hz)';
+                powerBtn.classList.remove('active');
+                statusText.className = 'status-text';
+                statusText.textContent = '电源已关闭';
+            }
+            zoomWrapper.scrollLeft = 0;
+            drawMain();
+            drawZoom();
+        });
+
+        drawMain();
+        drawZoom();
+    })();
+    </script>
+    </body>
+</html>

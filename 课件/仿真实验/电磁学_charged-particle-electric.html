@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>带电粒子在电场中的运动 · 高中物理 - PhySenLab</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: #2C3E50;
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #mainCanvas {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, .08);
+        }
+        .panel {
+            background: rgba(255, 255, 255, .92);
+            backdrop-filter: blur(10px);
+            border: 1px solid #E1EEF7;
+            border-radius: 14px;
+            box-shadow: 0 4px 20px rgba(74, 144, 226, .12);
+            padding: 16px 20px;
+            z-index: 10;
+            position: absolute;
+        }
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 280px;
+        }
+        .info-panel h1 {
+            font-size: 1.05rem;
+            color: #2C3E50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, #E8F4FD, #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4A90E2;
+            margin-bottom: 8px;
+            font-size: .82rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: #2C3E50;
+            line-height: 1.5;
+        }
+        .info-text {
+            font-size: .76rem;
+            color: #5A6C7D;
+            line-height: 1.5;
+        }
+        .legend-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: .73rem;
+            color: #5A6C7D;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        .physics-panel {
+            bottom: 16px;
+            left: 16px;
+            width: 250px;
+        }
+        .physics-panel h3 {
+            font-size: .9rem;
+            color: #2C3E50;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #E1EEF7;
+        }
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: .78rem;
+            color: #5A6C7D;
+        }
+        .param-value {
+            font-family: Consolas, monospace;
+            font-weight: 600;
+            color: #4A90E2;
+        }
+        .param-value.red {
+            color: #e74c3c;
+        }
+        .param-value.green {
+            color: #27ae60;
+        }
+        .param-value.orange {
+            color: #e67e22;
+        }
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 320px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: .95rem;
+            color: #2C3E50;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E1EEF7;
+        }
+        .section-label {
+            font-size: .7rem;
+            color: #8B9DC3;
+            margin: 10px 0 4px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 3px;
+            margin-bottom: 8px;
+            padding: 3px;
+            background: #E8F4FD;
+            border-radius: 10px;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            flex: 1;
+            min-width: 55px;
+            padding: 7px 4px;
+            border: none;
+            border-radius: 8px;
+            font-size: .72rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            color: #5A6C7D;
+            transition: all .2s;
+            white-space: nowrap;
+        }
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, .3);
+        }
+        .slider-group {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #F8FBFF;
+            border-radius: 10px;
+            border: 1px solid #E1EEF7;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            font-size: .82rem;
+        }
+        .slider-label .lt {
+            font-weight: 600;
+            color: #2C3E50;
+        }
+        .vbadge {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: .75rem;
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, .4);
+            cursor: pointer;
+        }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin: 8px 0;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: .78rem;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4A90E2, #6BB6FF);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(74, 144, 226, .3);
+        }
+        .btn-ghost {
+            background: #F0F4F8;
+            color: #5A6C7D;
+            border: 1px solid #E1EEF7;
+        }
+        .btn.active {
+            background: #4A90E2;
+            color: #fff;
+            border-color: #4A90E2;
+        }
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: #4A90E2;
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid #4A90E2;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, .15);
+            transition: all .3s;
+            z-index: 10;
+            font-size: .8rem;
+        }
+        .back-btn:hover {
+            background: #4A90E2;
+            color: #fff;
+        }
+    </style>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+<base target="_blank">
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-container"><canvas id="mainCanvas"></canvas></div>
+        <div class="info-panel panel">
+            <h1>⚡ 带电粒子在电场中的运动</h1>
+            <div class="formula-box" id="formulaDisplay">E₁ = U₁/d₁&nbsp;&nbsp;E₂ = U₂/d₂</div>
+            <p class="info-text" id="modeDescription">模式①：粒子在加速电场中做匀加速直线运动。</p>
+            <div class="legend-row">
+                <div class="legend-item"><div class="legend-dot" style="background:#e74c3c;"></div>正极板</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#2c3e50;"></div>负极板</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#f0a040;"></div>粒子</div>
+                <div class="legend-item"><div class="legend-dot" style="background:#27ae60;"></div>速度</div>
+            </div>
+        </div>
+        <div class="physics-panel panel">
+            <h3>📊 实时参数</h3>
+            <div class="param-row"><span>时间 t</span><span id="pTime" class="param-value">0.000 s</span></div>
+            <div class="param-row"><span>位置 (x,y)</span><span id="pPos" class="param-value">—</span></div>
+            <div class="param-row"><span>速度 (vₓ,vᵧ)</span><span id="pVel" class="param-value">—</span></div>
+            <div class="param-row"><span>加速度 (aₓ,aᵧ)</span><span id="pAcc" class="param-value">—</span></div>
+            <div class="param-row"><span>动能 Eₖ</span><span id="pEk" class="param-value green">—</span></div>
+        </div>
+        <div class="controls-panel panel">
+            <h3>🎛️ 实验控制</h3>
+            <div class="section-label">运动模式</div>
+            <div class="mode-switch">
+                <button class="mode-btn active" id="mode1">① 匀加速直线</button>
+                <button class="mode-btn" id="mode2">② 类平抛偏转</button>
+                <button class="mode-btn" id="mode3">③ 加速+偏转</button>
+            </div>
+            <div class="section-label" id="labelAccel">加速电场参数</div>
+            <div class="slider-group" id="groupU1">
+                <div class="slider-label"><span class="lt">🔋 电压 U₁</span><span id="vU1" class="vbadge">8.0 V</span></div>
+                <input type="range" id="sU1" min="1.0" max="20.0" step="0.2" value="8.0">
+            </div>
+            <div class="slider-group" id="groupD1">
+                <div class="slider-label"><span class="lt">📐 板间距 d₁</span><span id="vD1" class="vbadge">4.0 m</span></div>
+                <input type="range" id="sD1" min="1.0" max="6.0" step="0.1" value="4.0">
+            </div>
+            <div class="section-label" id="labelDeflect">偏转电场参数</div>
+            <div class="slider-group" id="groupU2">
+                <div class="slider-label"><span class="lt">🔋 电压 U₂</span><span id="vU2" class="vbadge">5.0 V</span></div>
+                <input type="range" id="sU2" min="1.0" max="20.0" step="0.2" value="5.0">
+            </div>
+            <div class="slider-group" id="groupD2">
+                <div class="slider-label"><span class="lt">📐 板间距 d₂</span><span id="vD2" class="vbadge">3.2 m</span></div>
+                <input type="range" id="sD2" min="1.0" max="5.0" step="0.1" value="3.2">
+            </div>
+            <div class="slider-group" id="groupL">
+                <div class="slider-label"><span class="lt">📏 极板长度 l</span><span id="vL" class="vbadge">4.5 m</span></div>
+                <input type="range" id="sL" min="1.5" max="7.0" step="0.1" value="4.5">
+            </div>
+            <div class="section-label">粒子属性</div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">⚡ 电荷 q</span><span id="vQ" class="vbadge">0.60 C</span></div>
+                <input type="range" id="sQ" min="0.1" max="3.0" step="0.05" value="0.6">
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">⚖️ 质量 m</span><span id="vM" class="vbadge">0.40 kg</span></div>
+                <input type="range" id="sM" min="0.1" max="2.0" step="0.05" value="0.4">
+            </div>
+            <div class="slider-group" id="groupV0">
+                <div class="slider-label"><span class="lt">🚀 初速度 v₀</span><span id="vV0" class="vbadge">2.50 m/s</span></div>
+                <input type="range" id="sV0" min="0.0" max="8.0" step="0.1" value="2.5">
+            </div>
+            <div class="section-label">显示控制</div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">⏱️ 时间倍率</span><span id="vSpeed" class="vbadge">1.0×</span></div>
+                <input type="range" id="sSpeed" min="0.1" max="4.0" step="0.1" value="1.0">
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btnReset">🔄 重置</button>
+                <button class="btn btn-ghost" id="btnPause">⏸️ 暂停</button>
+                <button class="btn btn-ghost active" id="btnTrail">📏 轨迹</button>
+                <button class="btn btn-ghost active" id="btnField">🎆 电场</button>
+                <button class="btn btn-ghost active" id="btnVel">💨 速度</button>
+            </div>
+            <div style="font-size:0.7rem; color:#8B9DC3; margin-top:6px;">
+                ⌨️ 按键：1/2/3 模式 | R 重置 | 空格 暂停 | T 轨迹 | F 电场 | V 速度
+            </div>
+        </div>
+        
+    </div>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // ---------- 动态边界 ----------
+        let accelXMin, accelXMax, deflectXMax;
+        const ACCEL_Y_HALF = 1.6;
+        let deflectYHalf = 1.6;
+        const STOP_DIST = 0.6;
+        const HOLE_RADIUS = 0.15;
+        const CENTER_X = 0;
+
+        // ---------- 状态 ----------
+        const state = {
+            mode: 1,
+            U1: 8.0,
+            d1: 4.0,
+            U2: 5.0,
+            d2: 3.2,
+            lDeflect: 4.5,
+            v0x: 2.5,
+            q: 0.6,
+            m: 0.4,
+            timeScale: 1.0,
+            showTrail: true,
+            showFieldBox: true,
+            showVelocity: true,
+            isPaused: false,
+            stopped: false,
+            t: 0,
+            posX: 0,
+            posY: 0,
+            velX: 0,
+            velY: 0,
+            phase: 'accel',
+            trailPoints: [],
+            maxTrailPoints: 800,
+        };
+
+        // ---------- Three.js 初始化 ----------
+        const container = document.getElementById('canvas-container');
+        const canvas = document.getElementById('mainCanvas');
+        const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.shadowMap.enabled = true;
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf5f7fa);
+        const camera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.1, 80);
+        camera.position.set(0, 2.2, 8.5);
+        camera.lookAt(0, 0, 0);
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.target.set(0, 0, 0);
+        controls.update();
+
+        scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+        dirLight.position.set(6, 12, 8);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.set(1024, 1024);
+        scene.add(dirLight);
+        scene.add(new THREE.DirectionalLight(0xffffff, 0.25).position.set(-4, 2, -4));
+
+        const gridHelper = new THREE.GridHelper(14, 28, 0xcccccc, 0xe8e8e8);
+        gridHelper.position.y = -ACCEL_Y_HALF - 0.3;
+        scene.add(gridHelper);
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshStandardMaterial({ color: 0xf0f0f0,
+            roughness: 0.7, transparent: true, opacity: 0.45, depthWrite: false }));
+        floor.rotation.x = -Math.PI / 2;
+        floor.position.y = -ACCEL_Y_HALF - 0.35;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const fieldGroup = new THREE.Group();
+        scene.add(fieldGroup);
+        const particleGroup = new THREE.Group();
+        scene.add(particleGroup);
+        const trailGroup = new THREE.Group();
+        scene.add(trailGroup);
+
+        // ---------- 粒子 ----------
+        const bob = new THREE.Mesh(new THREE.SphereGeometry(0.12, 36, 36), new THREE.MeshStandardMaterial({ color: 0xf0a040,
+            roughness: 0.25, metalness: 0.3, emissive: 0xf08020, emissiveIntensity: 0.6 }));
+        bob.castShadow = true;
+        particleGroup.add(bob);
+        const glowTex = (() => {
+            const c = document.createElement('canvas');
+            c.width = c.height = 64;
+            const ctx = c.getContext('2d');
+            const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+            g.addColorStop(0, 'rgba(255,220,140,1)');
+            g.addColorStop(0.4, 'rgba(255,180,60,0.6)');
+            g.addColorStop(1, 'rgba(255,80,10,0)');
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, 64, 64);
+            return new THREE.CanvasTexture(c);
+        })();
+        const glowSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffcc66, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.6 }));
+        glowSprite.scale.set(0.55, 0.55, 1);
+        particleGroup.add(glowSprite);
+        const velocityArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(), 0.5, 0x27ae60, 0.12, 0.06);
+        velocityArrow.visible = state.showVelocity;
+        particleGroup.add(velocityArrow);
+
+        // ---------- 轨迹 ----------
+        const trailPositionsArr = new Float32Array(state.maxTrailPoints * 3);
+        const trailGeo = new THREE.BufferGeometry();
+        trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPositionsArr, 3));
+        trailGeo.setDrawRange(0, 0);
+        const trailLine = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0xf0a040, transparent: true, opacity: 0.8 }));
+        trailGroup.add(trailLine);
+        const dashMarkersGroup = new THREE.Group();
+        trailGroup.add(dashMarkersGroup);
+        const dashMarkerGeo = new THREE.SphereGeometry(0.03, 6, 6);
+        const dashMarkerMat = new THREE.MeshBasicMaterial({ color: 0xf08030, transparent: true, opacity: 0.5, depthWrite: false });
+
+        function updateTrail() {
+            const pts = state.trailPoints;
+            const n = Math.min(pts.length, state.maxTrailPoints);
+            for (let i = 0; i < n; i++) {
+                const idx = i * 3;
+                trailPositionsArr[idx] = pts[i].x;
+                trailPositionsArr[idx + 1] = pts[i].y;
+                trailPositionsArr[idx + 2] = pts[i].z;
+            }
+            trailGeo.attributes.position.needsUpdate = true;
+            trailGeo.setDrawRange(0, n);
+            while (dashMarkersGroup.children.length) dashMarkersGroup.remove(dashMarkersGroup.children[0]);
+            const step = Math.max(1, Math.floor(n / 50));
+            for (let i = 0; i < n; i += step) {
+                const m = new THREE.Mesh(dashMarkerGeo, dashMarkerMat);
+                m.position.set(pts[i].x, pts[i].y, pts[i].z);
+                dashMarkersGroup.add(m);
+            }
+        }
+
+        // ---------- 几何体创建 ----------
+        function createPlate(w, h, d, color, pos) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshStandardMaterial({ color,
+                roughness: 0.35, metalness: 0.5 }));
+            mesh.position.copy(pos);
+            mesh.castShadow = mesh.receiveShadow = true;
+            return mesh;
+        }
+
+        function createHolePlate(width, height, depth, holeR, color, pos) {
+            const shape = new THREE.Shape();
+            shape.moveTo(-depth / 2, -height / 2);
+            shape.lineTo(depth / 2, -height / 2);
+            shape.lineTo(depth / 2, height / 2);
+            shape.lineTo(-depth / 2, height / 2);
+            shape.closePath();
+            const hole = new THREE.Path();
+            hole.absarc(0, 0, holeR, 0, Math.PI * 2, true);
+            shape.holes.push(hole);
+            const geo = new THREE.ExtrudeGeometry(shape, { steps: 1, depth: width, bevelEnabled: false });
+            geo.rotateY(-Math.PI / 2);
+            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.5 }));
+            mesh.position.copy(pos);
+            mesh.castShadow = mesh.receiveShadow = true;
+            return mesh;
+        }
+
+        function rebuildFieldGeometry() {
+            while (fieldGroup.children.length) fieldGroup.remove(fieldGroup.children[0]);
+
+            const totalLen = state.d1 + state.lDeflect;
+            accelXMin = CENTER_X - totalLen / 2;
+            accelXMax = accelXMin + state.d1;
+            deflectXMax = accelXMax + state.lDeflect;
+            deflectYHalf = state.d2 / 2;
+
+            const showAccel = (state.mode === 1 || state.mode === 3);
+            const showDeflect = (state.mode === 2 || state.mode === 3);
+
+            // 加速电场极板（模式①/③才显示）
+            if (showAccel) {
+                fieldGroup.add(createPlate(0.06, ACCEL_Y_HALF * 2, 1.4, 0xe74c3c, new THREE.Vector3(accelXMin, 0, 0)));
+                fieldGroup.add(createHolePlate(0.06, ACCEL_Y_HALF * 2, 1.4, HOLE_RADIUS, 0x2c3e50, new THREE.Vector3(accelXMax, 0, 0)));
+            }
+
+            // 偏转电场极板（模式②/③才显示）
+            if (showDeflect) {
+                const defMidX = (accelXMax + deflectXMax) / 2;
+                fieldGroup.add(createPlate(state.lDeflect, 0.06, 1.4, 0xe74c3c, new THREE.Vector3(defMidX, deflectYHalf, 0)));
+                fieldGroup.add(createPlate(state.lDeflect, 0.06, 1.4, 0x2c3e50, new THREE.Vector3(defMidX, -deflectYHalf, 0)));
+            }
+
+            // 半透明盒子（受模式与全局开关控制）
+            if (state.showFieldBox) {
+                if (showAccel) {
+                    const geo = new THREE.BoxGeometry(state.d1, ACCEL_Y_HALF * 2, 1.4);
+                    const box = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xe74c3c, transparent: true,
+                        opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));
+                    box.position.set((accelXMin + accelXMax) / 2, 0, 0);
+                    fieldGroup.add(box);
+                }
+                if (showDeflect) {
+                    const geo = new THREE.BoxGeometry(state.lDeflect, deflectYHalf * 2, 1.4);
+                    const box = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x4A90E2, transparent: true,
+                        opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));
+                    box.position.set((accelXMax + deflectXMax) / 2, 0, 0);
+                    fieldGroup.add(box);
+                }
+            }
+
+            // 电场箭头（模式+全局开关）
+            const arrowLen = 0.45, headLen = 0.12, headW = 0.06;
+            if (showAccel && state.showFieldBox) {
+                for (let i = 0; i < 6; i++) {
+                    const fx = accelXMin + state.d1 * (i + 0.5) / 6;
+                    for (let j = 0; j < 4; j++) {
+                        const fy = -ACCEL_Y_HALF + ACCEL_Y_HALF * 2 * (j + 0.5) / 4;
+                        fieldGroup.add(new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(fx, fy, 0),
+                            arrowLen, 0xd44a3a, headLen, headW));
+                    }
+                }
+            }
+            if (showDeflect && state.showFieldBox) {
+                for (let i = 0; i < 8; i++) {
+                    const fx = accelXMax + state.lDeflect * (i + 0.5) / 8;
+                    for (let j = 0; j < 4; j++) {
+                        const fy = -deflectYHalf + deflectYHalf * 2 * (j + 0.5) / 4;
+                        fieldGroup.add(new THREE.ArrowHelper(new THREE.Vector3(0, -1, 0), new THREE.Vector3(fx, fy, 0),
+                            arrowLen, 0x3a7bd4, headLen, headW));
+                    }
+                }
+            }
+        }
+
+        // ---------- 物理 ----------
+        function getE1() { return state.U1 / state.d1; }
+        function getE2() { return state.U2 / state.d2; }
+
+        function getAccel(posX, posY, phase) {
+            let ax = 0, ay = 0;
+            const inAccel = posX >= accelXMin - 0.01 && posX <= accelXMax + 0.01 && Math.abs(posY) <= ACCEL_Y_HALF + 0.01;
+            const inDeflect = posX >= accelXMax - 0.01 && posX <= deflectXMax + 0.01 && Math.abs(posY) <= deflectYHalf + 0.01;
+            if (state.mode === 1 && inAccel) ax = state.q * getE1() / state.m;
+            else if (state.mode === 2 && inDeflect) ay = -state.q * getE2() / state.m;
+            else if (state.mode === 3) {
+                if (phase === 'accel' && inAccel) ax = state.q * getE1() / state.m;
+                else if (phase === 'deflect' && inDeflect) ay = -state.q * getE2() / state.m;
+            }
+            return { ax, ay };
+        }
+
+        function resetParticle() {
+            state.stopped = false;
+            state.t = 0;
+            state.phase = 'accel';
+            if (state.mode === 1) {
+                state.posX = accelXMin + 0.6;
+                state.posY = 0;
+                state.velX = state.v0x;
+                state.velY = 0;
+            } else if (state.mode === 2) {
+                state.posX = accelXMax + 0.15;
+                state.posY = 0;
+                state.velX = state.v0x;
+                state.velY = 0;
+                state.phase = 'deflect';
+            } else {
+                state.posX = accelXMin + 0.6;
+                state.posY = 0;
+                state.velX = Math.max(state.v0x, 0.05);
+                state.velY = 0;
+                state.phase = 'accel';
+            }
+            state.trailPoints = [];
+            updateTrail();
+            updateParticleVisual();
+        }
+
+        function updateParticleVisual() {
+            bob.position.set(state.posX, state.posY, 0);
+            glowSprite.position.copy(bob.position);
+            if (state.showVelocity) {
+                const sp = Math.sqrt(state.velX ** 2 + state.velY ** 2);
+                if (sp > 0.001) {
+                    velocityArrow.setDirection(new THREE.Vector3(state.velX, state.velY, 0).normalize());
+                    velocityArrow.setLength(Math.min(sp * 0.15, 1.2), 0.12, 0.06);
+                } else velocityArrow.setLength(0);
+                velocityArrow.position.copy(bob.position);
+            }
+        }
+
+        function stepPhysics(dt) {
+            if (state.isPaused || state.stopped) return;
+            const eDt = dt * state.timeScale;
+            if (eDt <= 0) return;
+
+            if (state.mode === 3) {
+                if (state.phase === 'accel' && state.posX >= accelXMax) state.phase = 'deflect';
+                if (state.phase === 'deflect' && state.posX >= deflectXMax) state.phase = 'free';
+            } else if (state.mode === 1) {
+                state.phase = state.posX >= accelXMax ? 'free' : 'accel';
+            } else if (state.mode === 2) {
+                if (state.posX >= deflectXMax) state.phase = 'free';
+                else if (state.posX >= accelXMax) state.phase = 'deflect';
+                else state.phase = 'free';
+            }
+
+            const { ax, ay } = getAccel(state.posX, state.posY, state.phase);
+            state.velX += ax * eDt;
+            state.velY += ay * eDt;
+            state.posX += state.velX * eDt;
+            state.posY += state.velY * eDt;
+            state.t += eDt;
+
+            const stopX = (state.mode === 1) ? accelXMax + STOP_DIST : deflectXMax + STOP_DIST;
+            if (state.posX >= stopX) {
+                state.posX = stopX;
+                state.velX = state.velY = 0;
+                state.stopped = true;
+            }
+            if (state.posX < accelXMin - 2) state.posX = accelXMin - 2;
+            if (Math.abs(state.posY) > Math.max(ACCEL_Y_HALF, deflectYHalf) + 3)
+                state.posY = Math.sign(state.posY) * (Math.max(ACCEL_Y_HALF, deflectYHalf) + 3);
+
+            state.trailPoints.push({ x: state.posX, y: state.posY, z: 0 });
+            if (state.trailPoints.length > state.maxTrailPoints) state.trailPoints.shift();
+            updateParticleVisual();
+        }
+
+        function updateUI() {
+            const { ax, ay } = getAccel(state.posX, state.posY, state.phase);
+            document.getElementById('pTime').textContent = state.t.toFixed(3) + ' s';
+            document.getElementById('pPos').textContent = `${state.posX.toFixed(2)}, ${state.posY.toFixed(2)} m`;
+            document.getElementById('pVel').textContent = `${state.velX.toFixed(2)}, ${state.velY.toFixed(2)} m/s`;
+            document.getElementById('pAcc').textContent = `${ax.toFixed(2)}, ${ay.toFixed(2)} m/s²`;
+            const sp = Math.sqrt(state.velX ** 2 + state.velY ** 2);
+            document.getElementById('pEk').textContent = (0.5 * state.m * sp * sp).toFixed(3) + ' J';
+        }
+
+        function updateModeUI() {
+            const isMode1 = state.mode === 1;
+            const isMode2 = state.mode === 2;
+            const isMode3 = state.mode === 3;
+            document.getElementById('mode1').classList.toggle('active', isMode1);
+            document.getElementById('mode2').classList.toggle('active', isMode2);
+            document.getElementById('mode3').classList.toggle('active', isMode3);
+            document.getElementById('groupU1').style.display = (isMode1 || isMode3) ? 'block' : 'none';
+            document.getElementById('groupD1').style.display = (isMode1 || isMode3) ? 'block' : 'none';
+            document.getElementById('groupU2').style.display = (isMode2 || isMode3) ? 'block' : 'none';
+            document.getElementById('groupD2').style.display = (isMode2 || isMode3) ? 'block' : 'none';
+            document.getElementById('groupL').style.display = (isMode2 || isMode3) ? 'block' : 'none';
+            document.getElementById('labelAccel').style.display = (isMode1 || isMode3) ? 'block' : 'none';
+            document.getElementById('labelDeflect').style.display = (isMode2 || isMode3) ? 'block' : 'none';
+            const desc = document.getElementById('modeDescription');
+            if (isMode1) desc.innerHTML = '模式①：粒子在加速电场中做<strong>匀加速直线运动</strong>，速度均匀增大。';
+            else if (isMode2) desc.innerHTML = '模式②：粒子以初速度v₀进入偏转电场，做<strong>类平抛运动</strong>，轨迹为抛物线。';
+            else desc.innerHTML = '模式③：粒子先经加速电场<strong>加速</strong>，再进入偏转电场做<strong>类平抛运动</strong>，最后匀速飞出。';
+        }
+
+        function onParameterChange() {
+            rebuildFieldGeometry();
+            resetParticle();
+            updateUI();
+        }
+
+        // ---------- 事件绑定 ----------
+        function bindSlider(id, dispId, key, fmt, onChange) {
+            const s = document.getElementById(id);
+            const d = document.getElementById(dispId);
+            s.addEventListener('input', () => {
+                state[key] = parseFloat(s.value);
+                d.textContent = fmt(state[key]);
+                if (onChange) onChange();
+            });
+        }
+        bindSlider('sU1', 'vU1', 'U1', v => v.toFixed(1) + ' V', onParameterChange);
+        bindSlider('sD1', 'vD1', 'd1', v => v.toFixed(1) + ' m', onParameterChange);
+        bindSlider('sU2', 'vU2', 'U2', v => v.toFixed(1) + ' V', onParameterChange);
+        bindSlider('sD2', 'vD2', 'd2', v => v.toFixed(1) + ' m', onParameterChange);
+        bindSlider('sL', 'vL', 'lDeflect', v => v.toFixed(1) + ' m', onParameterChange);
+        bindSlider('sV0', 'vV0', 'v0x', v => v.toFixed(2) + ' m/s', resetParticle);
+        bindSlider('sQ', 'vQ', 'q', v => v.toFixed(2) + ' C', resetParticle);
+        bindSlider('sM', 'vM', 'm', v => v.toFixed(2) + ' kg', resetParticle);
+        bindSlider('sSpeed', 'vSpeed', 'timeScale', v => v.toFixed(1) + '×');
+
+        document.getElementById('mode1').onclick = () => { state.mode = 1; updateModeUI(); onParameterChange(); };
+        document.getElementById('mode2').onclick = () => { state.mode = 2; updateModeUI(); onParameterChange(); };
+        document.getElementById('mode3').onclick = () => { state.mode = 3; updateModeUI(); onParameterChange(); };
+        document.getElementById('btnReset').onclick = () => { resetParticle(); updateUI(); };
+        const btnPause = document.getElementById('btnPause');
+        btnPause.onclick = () => {
+            state.isPaused = !state.isPaused;
+            btnPause.textContent = state.isPaused ? '▶️ 播放' : '⏸️ 暂停';
+            btnPause.classList.toggle('active', state.isPaused);
+        };
+        const btnTrail = document.getElementById('btnTrail');
+        btnTrail.onclick = () => {
+            state.showTrail = !state.showTrail;
+            btnTrail.classList.toggle('active', state.showTrail);
+            trailLine.visible = state.showTrail;
+            dashMarkersGroup.visible = state.showTrail;
+            if (!state.showTrail) { state.trailPoints = []; updateTrail(); }
+        };
+        const btnField = document.getElementById('btnField');
+        btnField.onclick = () => {
+            state.showFieldBox = !state.showFieldBox;
+            btnField.classList.toggle('active', state.showFieldBox);
+            rebuildFieldGeometry();
+        };
+        const btnVel = document.getElementById('btnVel');
+        btnVel.onclick = () => {
+            state.showVelocity = !state.showVelocity;
+            btnVel.classList.toggle('active', state.showVelocity);
+            velocityArrow.visible = state.showVelocity;
+            if (!state.showVelocity) velocityArrow.setLength(0);
+        };
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === '1') { state.mode = 1; updateModeUI(); onParameterChange(); }
+            else if (e.key === '2') { state.mode = 2; updateModeUI(); onParameterChange(); }
+            else if (e.key === '3') { state.mode = 3; updateModeUI(); onParameterChange(); }
+            else if (e.key === 'r' || e.key === 'R') { resetParticle(); updateUI(); }
+            else if (e.key === ' ') { e.preventDefault(); state.isPaused = !state.isPaused; btnPause.textContent = state.isPaused ? '▶️ 播放' : '⏸️ 暂停'; }
+            else if (e.key === 't' || e.key === 'T') { state.showTrail = !state.showTrail; btnTrail.classList.toggle('active', state.showTrail); trailLine.visible = state.showTrail; dashMarkersGroup.visible = state.showTrail; }
+            else if (e.key === 'f' || e.key === 'F') { state.showFieldBox = !state.showFieldBox; btnField.classList.toggle('active', state.showFieldBox); rebuildFieldGeometry(); }
+            else if (e.key === 'v' || e.key === 'V') { state.showVelocity = !state.showVelocity; btnVel.classList.toggle('active', state.showVelocity); velocityArrow.visible = state.showVelocity; }
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        });
+
+        // ---------- 动画循环 ----------
+        let lastTime = performance.now();
+        let trailCounter = 0;
+
+        function animate(now) {
+            requestAnimationFrame(animate);
+            let dt = (now - lastTime) / 1000;
+            if (dt <= 0 || dt > 0.1) dt = 0.016;
+            lastTime = now;
+            stepPhysics(dt);
+            updateUI();
+            if (++trailCounter >= 2 && state.showTrail) { trailCounter = 0; updateTrail(); }
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // 启动
+        updateModeUI();
+        rebuildFieldGeometry();
+        resetParticle();
+        updateUI();
+        animate(performance.now());
+    </script>
+    </body>
+</html>

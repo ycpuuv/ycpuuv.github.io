@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>探究库仑定律演示 · 高中物理</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #DDE5ED;
+            --shadow: 0 2px 12px rgba(74, 144, 226, 0.08);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.15);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+            --bg-body: #f0f4f9;
+            --bg-panel: rgba(255, 255, 255, 0.88);
+            --accent-red: #e05540;
+            --warning-bg: rgba(255, 80, 80, 0.06);
+            --warning-border: #ff5555;
+            --warning-text: #c0392b;
+            --safe-bg: rgba(46, 204, 113, 0.06);
+            --safe-text: #1e8449;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg-body);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glass-panel {
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 22px;
+            color: var(--text-primary);
+            transition: var(--transition);
+            z-index: 20;
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* ========== 左上：信息面板 ========== */
+        .info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            max-width: 300px;
+            z-index: 30;
+        }
+        .info-panel h1 {
+            font-size: 1.15rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+        .formula-box {
+            background: var(--primary-light);
+            padding: 8px 14px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 6px;
+        }
+        .formula {
+            font-size: 0.95rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--primary-dark);
+        }
+        .info-text {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+ .back-btn {
+            position: absolute; bottom: 30px; left: 20px; background: white; color: var(--primary-color);
+            padding: 8px 18px; border-radius: 30px; text-decoration: none; font-weight: 600;
+            border: 2px solid var(--primary-color); box-shadow: var(--shadow); transition: var(--transition); z-index: 30; font-size: 0.85rem;
+        }
+        .back-btn:hover { background: var(--primary-color); color: white; }
+        .hint-text {
+            position: absolute; bottom: 100px; left: 20px; color: var(--text-light); font-size: 0.7rem;
+            background: rgba(255,255,255,0.6); padding: 4px 12px; border-radius: 20px; z-index: 20;
+        }
+
+        /* ========== 左上：物理参数面板 ========== */
+        .physics-panel {
+            position: absolute;
+            top: 210px;
+            left: 20px;
+            width: 260px;
+            z-index: 30;
+            padding: 14px 18px;
+        }
+        .physics-panel h3 {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 6px;
+            color: var(--text-primary);
+        }
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.84rem;
+            color: var(--text-secondary);
+            align-items: center;
+        }
+        .param-value {
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-weight: 600;
+            color: var(--primary-color);
+            background: var(--primary-light);
+            padding: 3px 10px;
+            border-radius: 16px;
+            font-size: 0.8rem;
+        }
+
+        /* ========== 右上：控制面板 ========== */
+        .controls-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            z-index: 30;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 16px 20px;
+        }
+        .controls-panel h3 {
+            font-size: 1.05rem;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            color: var(--text-primary);
+        }
+        .section-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin: 14px 0 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .slider-group {
+            margin-bottom: 14px;
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.84rem;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+            align-items: center;
+        }
+        .value-badge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid white;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .range-hint {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            color: var(--text-light);
+            margin-top: 3px;
+        }
+        .range-limit {
+            font-size: 0.72rem;
+            color: var(--accent-red);
+            text-align: center;
+            margin-top: 2px;
+        }
+        .warning-message {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: 8px;
+            color: var(--warning-text);
+            font-size: 0.78rem;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+        .safety-note {
+            margin-top: 6px;
+            padding: 6px 10px;
+            background: var(--safe-bg);
+            border-radius: 6px;
+            color: var(--safe-text);
+            font-size: 0.74rem;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* ========== 右下：图例 ========== */
+        .legend-panel {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 30;
+            font-size: 0.75rem;
+            width: 185px;
+            padding: 12px 15px;
+        }
+        .legend-panel .legend-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 7px 0;
+            color: var(--text-secondary);
+            font-size: 0.74rem;
+        }
+        .legend-color {
+            width: 16px;
+            height: 4px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        /* ========== 底部栏 ========== */
+        .bottom-bar {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 40;
+            display: flex;
+            gap: 16px;
+            background: var(--bg-panel);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 10px 22px;
+            border-radius: 60px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-hover);
+        }
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.84rem;
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(74, 144, 226, 0.4);
+        }
+        .btn-outline {
+            background: white;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
+        }
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(74, 144, 226, 0.3);
+        }
+
+        .hint-text {
+            position: absolute;
+            bottom: 95px;
+            left: 20px;
+            color: var(--text-light);
+            font-size: 0.72rem;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 4px 12px;
+            border-radius: 20px;
+            z-index: 30;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            pointer-events: none;
+        }
+
+        /* 响应式保持紧凑 */
+        @media (max-width: 1100px) {
+            .controls-panel { width: 260px; padding: 12px 15px; }
+            .physics-panel { width: 230px; top: 200px; }
+            .info-panel { max-width: 250px; }
+            .legend-panel { width: 160px; padding: 10px 12px; }
+        }
+        @media (max-width: 800px) {
+            .info-panel { top: 10px; left: 8px; max-width: 220px; padding: 10px 14px; }
+            .physics-panel { top: 155px; left: 8px; width: 200px; padding: 10px 12px; }
+            .controls-panel { top: 10px; right: 8px; width: 220px; padding: 10px 12px; }
+            .legend-panel { bottom: 10px; right: 8px; width: 140px; }
+        }
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 左上：标题信息面板 -->
+    <div class="info-panel glass-panel">
+        <h1>⚡ 探究库仑定律演示</h1>
+        <div class="formula-box">
+            <div class="formula">F = k·q₁·q₂ / r²</div>
+        </div>
+        <p class="info-text">
+            两带电小球均带<strong>正电荷</strong>，同号相斥。
+            左侧小球固定于绝缘支架，右侧小球由细绳悬挂。
+            调节电荷量或支架位置，观察库仑力与偏角变化。
+        </p>
+    </div>
+
+    <!-- 左上：物理参数面板 -->
+    <div class="physics-panel glass-panel">
+        <h3>📊 实时数据</h3>
+        <div class="param-row">
+            <span>📏 两球距离</span>
+            <span id="distance-display" class="param-value">8.00 m</span>
+        </div>
+        <div class="param-row">
+            <span>📐 偏角 θ</span>
+            <span id="angle-display" class="param-value">0.0°</span>
+        </div>
+        <div class="param-row">
+            <span>⚡ 相对库仑力</span>
+            <span id="force-display" class="param-value">0.12</span>
+        </div>
+    </div>
+
+    <!-- 右上：控制面板 -->
+    <div class="controls-panel glass-panel">
+        <h3>🔧 电荷控制面板</h3>
+
+        <div class="section-label">电荷量调节</div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>左侧小球电荷量 q₁</span>
+                <span id="q1-value" class="value-badge">1.00</span>
+            </div>
+            <input type="range" id="q1-slider" min="0.2" max="2.0" step="0.05" value="1.0">
+        </div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>右侧小球电荷量 q₂</span>
+                <span id="q2-value" class="value-badge">1.00</span>
+            </div>
+            <input type="range" id="q2-slider" min="0.2" max="2.0" step="0.05" value="1.0">
+        </div>
+
+        <div class="section-label">支架位置调节</div>
+        <div class="slider-group">
+            <div class="slider-label">
+                <span>左侧支架水平坐标 x</span>
+                <span id="pos-value" class="value-badge">-4.50</span>
+            </div>
+            <input type="range" id="pos-slider" min="-6.5" max="0" step="0.05" value="-4.5">
+            <div class="range-hint">
+                <span>← 远离 (-6.5)</span>
+                <span>悬点正下方 (0) →</span>
+            </div>
+            <div class="range-limit">⚠ 最大允许位置：悬点正下方 x = 0</div>
+        </div>
+
+        <div id="warning-message" class="warning-message">
+            ⚠️ 已达到最大允许位置 (x = 0)
+        </div>
+        <div class="safety-note">
+            ✓ 安全保护：最小球心距离 = 0.825 m
+        </div>
+    </div>
+
+    <!-- 右下：图例 -->
+    <div class="legend-panel glass-panel">
+        <div class="legend-title">📖 图例</div>
+        <div class="legend-item">
+            <div class="legend-dot" style="background:#ff6633;"></div> 带正电小球 (+q)
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#ff5533;"></div> 库仑力方向 (斥力)
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#88aaff;"></div> 水平参考线
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background:#b0b0d0;"></div> 绝缘悬挂绳
+        </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="bottom-bar">
+        <button class="btn btn-primary" id="resetViewBtn">🎥 重置视角</button>
+        <button class="btn btn-outline" id="resetParamsBtn">🔄 重置参数</button>
+    </div>
+    
+    <div class="hint-text">🖱️ 鼠标拖拽旋转 | 滚轮缩放 | 右键平移</div>
+
+    <!-- 引入 Three.js 核心库和辅助库 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- 初始化场景（浅色背景） ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xf5f7fb); // 浅灰白背景
+        scene.fog = new THREE.Fog(0xf5f7fb, 15, 35);
+
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        if (isLandscape) {
+            camera.position.set(7, 5, 14);
+        } else {
+            camera.position.set(6, 5, 12);
+        }
+        camera.lookAt(0, 3.3, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none';
+        labelRenderer.domElement.style.zIndex = '5';
+        document.body.appendChild(labelRenderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = false;
+        controls.enableZoom = true;
+        controls.target.set(0, 3.3, 0);
+        controls.maxPolarAngle = Math.PI / 2;
+
+        // --- 灯光系统（适配浅色背景） ---
+        const ambientLight = new THREE.AmbientLight(0x8899bb);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1.1);
+        dirLight.position.set(4, 10, 6);
+        dirLight.castShadow = true;
+        dirLight.receiveShadow = true;
+        dirLight.shadow.mapSize.width = 1024;
+        dirLight.shadow.mapSize.height = 1024;
+        const d = 12;
+        dirLight.shadow.camera.left = -d;
+        dirLight.shadow.camera.right = d;
+        dirLight.shadow.camera.top = d;
+        dirLight.shadow.camera.bottom = -d;
+        dirLight.shadow.camera.near = 2;
+        dirLight.shadow.camera.far = 25;
+        scene.add(dirLight);
+
+        const backLight = new THREE.PointLight(0x7799cc, 0.4);
+        backLight.position.set(-4, 5, -6);
+        scene.add(backLight);
+
+        const fillLight = new THREE.PointLight(0xaaccff, 0.3);
+        fillLight.position.set(3, 4, 5);
+        scene.add(fillLight);
+
+        // --- 地面和网格（浅色风格） ---
+        const gridHelper = new THREE.GridHelper(18, 20, 0x99aacc, 0xdde4ee);
+        gridHelper.position.y = 0;
+        scene.add(gridHelper);
+
+        const groundPlane = new THREE.Mesh(
+            new THREE.PlaneGeometry(18, 18),
+            new THREE.ShadowMaterial({ opacity: 0.2, color: 0x334466 })
+        );
+        groundPlane.rotation.x = -Math.PI / 2;
+        groundPlane.position.y = 0.01;
+        groundPlane.receiveShadow = true;
+        scene.add(groundPlane);
+
+        // ========== 左侧：绝缘支架 ==========
+        const centerY = 3.3;
+        const leftSphereRadius = 0.55;
+        const rightSphereRadius = 0.275;
+        const minDistance = leftSphereRadius + rightSphereRadius;
+
+        const leftGroup = new THREE.Group();
+
+        const leftBaseMat = new THREE.MeshStandardMaterial({ color: 0x8899bb, metalness: 0.1, roughness: 0.7 });
+        const leftBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.0, 1.2, 0.2, 24),
+            leftBaseMat
+        );
+        leftBase.position.set(0, 0.1, 0);
+        leftBase.castShadow = true;
+        leftBase.receiveShadow = true;
+        leftGroup.add(leftBase);
+
+        const leftRodTopY = centerY - leftSphereRadius;
+        const leftRodHeight = leftRodTopY - 0.1;
+        const leftRodMat = new THREE.MeshStandardMaterial({ color: 0xaabbdd, metalness: 0.1, roughness: 0.6 });
+        const leftRod = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.25, 0.3, leftRodHeight, 16),
+            leftRodMat
+        );
+        leftRod.position.set(0, 0.1 + leftRodHeight / 2, 0);
+        leftRod.castShadow = true;
+        leftRod.receiveShadow = true;
+        leftGroup.add(leftRod);
+
+        const leftRingMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, metalness: 0.2, roughness: 0.5 });
+        const leftRing = new THREE.Mesh(
+            new THREE.TorusGeometry(0.35, 0.05, 16, 24),
+            leftRingMat
+        );
+        leftRing.rotation.x = Math.PI / 2;
+        leftRing.position.set(0, leftRodTopY, 0);
+        leftRing.castShadow = true;
+        leftGroup.add(leftRing);
+
+        const leftSphereGeo = new THREE.SphereGeometry(leftSphereRadius, 32, 32);
+        const leftSphereMat = new THREE.MeshStandardMaterial({
+            color: 0xff6633,
+            emissive: 0x331100,
+            metalness: 0.1,
+            roughness: 0.3
+        });
+        const leftSphere = new THREE.Mesh(leftSphereGeo, leftSphereMat);
+        leftSphere.position.set(0, centerY, 0);
+        leftSphere.castShadow = true;
+        leftSphere.receiveShadow = true;
+        leftGroup.add(leftSphere);
+
+        leftGroup.position.set(-4.5, 0, 0);
+        scene.add(leftGroup);
+
+        const leftSphereLight = new THREE.PointLight(0xff6633, 0.3);
+        scene.add(leftSphereLight);
+
+        // ========== 右侧：金属杆 + 水平杆 + 悬挂小球 ==========
+        const rightBaseMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.6, roughness: 0.4 });
+        const rightBase = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.0, 1.2, 0.2, 24),
+            rightBaseMat
+        );
+        rightBase.position.set(3.5, 0.1, 0);
+        rightBase.receiveShadow = true;
+        rightBase.castShadow = true;
+        scene.add(rightBase);
+
+        const metalMaterial = new THREE.MeshStandardMaterial({
+            color: 0xc0c0d8,
+            metalness: 0.9,
+            roughness: 0.25
+        });
+
+        const rightRodHeight = 5.6;
+        const rightRodCenterY = 0.1 + rightRodHeight / 2;
+        const hangY = 0.1 + rightRodHeight;
+
+        const rightVerticalRod = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.28, 0.35, rightRodHeight, 16),
+            metalMaterial
+        );
+        rightVerticalRod.position.set(3.5, rightRodCenterY, 0);
+        rightVerticalRod.castShadow = true;
+        rightVerticalRod.receiveShadow = true;
+        scene.add(rightVerticalRod);
+
+        const rightRing = new THREE.Mesh(
+            new THREE.TorusGeometry(0.38, 0.06, 16, 24),
+            new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.6, roughness: 0.3 })
+        );
+        rightRing.rotation.x = Math.PI / 2;
+        rightRing.position.set(3.5, hangY, 0);
+        rightRing.castShadow = true;
+        scene.add(rightRing);
+
+        const horizontalRod = new THREE.Mesh(
+            new THREE.BoxGeometry(4.0, 0.22, 0.22),
+            metalMaterial
+        );
+        horizontalRod.position.set(1.5, hangY, 0);
+        horizontalRod.castShadow = true;
+        horizontalRod.receiveShadow = true;
+        scene.add(horizontalRod);
+
+        const capMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.5, roughness: 0.4 });
+        const leftCap = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16), capMat);
+        leftCap.position.set(-0.5, hangY, 0);
+        leftCap.castShadow = true;
+        scene.add(leftCap);
+
+        const rightCap = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16), capMat);
+        rightCap.position.set(3.5, hangY, 0);
+        rightCap.castShadow = true;
+        scene.add(rightCap);
+
+        const connector = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.4, 0.4, 0.25, 6),
+            new THREE.MeshStandardMaterial({ color: 0xbbbbbb, metalness: 0.7, roughness: 0.3 })
+        );
+        connector.rotation.z = Math.PI / 2;
+        connector.position.set(2.3, hangY, 0);
+        connector.castShadow = true;
+        scene.add(connector);
+
+        const hangX = 0.5;
+
+        const tiePoint = new THREE.Mesh(
+            new THREE.TorusGeometry(0.12, 0.03, 8, 16),
+            new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.2, roughness: 0.7 })
+        );
+        tiePoint.position.set(hangX, hangY - 0.05, 0);
+        tiePoint.rotation.x = Math.PI / 2;
+        tiePoint.castShadow = true;
+        scene.add(tiePoint);
+
+        const rightSphereGeo = new THREE.SphereGeometry(rightSphereRadius, 32, 32);
+        const rightSphereMat = new THREE.MeshStandardMaterial({
+            color: 0xff5533,
+            emissive: 0x331100,
+            metalness: 0.1,
+            roughness: 0.3
+        });
+        const rightSphere = new THREE.Mesh(rightSphereGeo, rightSphereMat);
+        rightSphere.castShadow = true;
+        rightSphere.receiveShadow = true;
+        scene.add(rightSphere);
+
+        const rightSphereLight = new THREE.PointLight(0xff5533, 0.2);
+        scene.add(rightSphereLight);
+
+        // 细绳
+        let rope;
+
+        function createRope(start, end) {
+            if (rope) scene.remove(rope);
+            const ropeVector = new THREE.Vector3().subVectors(end, start);
+            const ropeLength = ropeVector.length();
+            const ropeCenter = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+            const ropeGeo = new THREE.CylinderGeometry(0.03, 0.03, ropeLength, 6);
+            const ropeMat = new THREE.MeshStandardMaterial({ color: 0xc0c0d0, roughness: 0.8 });
+            const newRope = new THREE.Mesh(ropeGeo, ropeMat);
+            newRope.position.copy(ropeCenter);
+            newRope.quaternion.setFromUnitVectors(
+                new THREE.Vector3(0, 1, 0),
+                ropeVector.clone().normalize()
+            );
+            newRope.castShadow = true;
+            newRope.receiveShadow = true;
+            return newRope;
+        }
+
+        // 箭头
+        let arrowHelper;
+
+        function createArrow(pos, direction) {
+            if (arrowHelper) scene.remove(arrowHelper);
+            const arrowDir = direction.clone().normalize();
+            const arrowPos = pos.clone().add(arrowDir.clone().multiplyScalar(0.8));
+            const newArrow = new THREE.ArrowHelper(arrowDir, arrowPos, 0.8, 0xff5533, 0.25, 0.15);
+            return newArrow;
+        }
+
+        // 水平参考线（浅色）
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x99aacc, transparent: true, opacity: 0.3 });
+        const points = [
+            new THREE.Vector3(-7, centerY, 0),
+            new THREE.Vector3(7, centerY, 0)
+        ];
+        const lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
+        const line = new THREE.Line(lineGeometry, lineMaterial);
+        scene.add(line);
+
+        // 移除星空背景，浅色背景不需要
+
+        // ========== 添加正号标签 ==========
+        function createPlusLabel() {
+            const div = document.createElement('div');
+            div.textContent = '+';
+            div.style.color = '#ffffff';
+            div.style.fontSize = '28px';
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '1px 1px 2px rgba(0,0,0,0.8)';
+            div.style.background = 'none';
+            div.style.width = 'auto';
+            div.style.height = 'auto';
+            div.style.padding = '0';
+            div.style.margin = '0';
+            div.style.lineHeight = '1';
+            div.style.display = 'inline';
+            return new CSS2DObject(div);
+        }
+
+        const leftPlusLabel = createPlusLabel();
+        leftPlusLabel.position.set(0, 0, 0);
+        leftSphere.add(leftPlusLabel);
+
+        const rightPlusLabel = createPlusLabel();
+        rightPlusLabel.position.set(0, 0, 0);
+        rightSphere.add(rightPlusLabel);
+
+        // --- 物理参数 ---
+        const lineLength = 2.2;
+        const forceSign = 1;
+        const maxPosX = hangX;
+
+        // 获取DOM元素
+        const q1Slider = document.getElementById('q1-slider');
+        const q2Slider = document.getElementById('q2-slider');
+        const posSlider = document.getElementById('pos-slider');
+        const q1Value = document.getElementById('q1-value');
+        const q2Value = document.getElementById('q2-value');
+        const posValue = document.getElementById('pos-value');
+        const distanceDisplay = document.getElementById('distance-display');
+        const angleDisplay = document.getElementById('angle-display');
+        const forceDisplay = document.getElementById('force-display');
+        const warningMessage = document.getElementById('warning-message');
+
+        rightSphere.position.set(hangX, hangY - lineLength, 0);
+        rightSphereLight.position.copy(rightSphere.position);
+
+        const startPoint = new THREE.Vector3(hangX, hangY - 0.05, 0);
+        const endPoint = rightSphere.position.clone().add(new THREE.Vector3(0, rightSphereRadius, 0));
+        rope = createRope(startPoint, endPoint);
+        scene.add(rope);
+
+        function enforceNoOverlap(leftX, rightPos, leftSphereWorldPos) {
+            let horizontalDistance = Math.abs(rightPos.x - leftSphereWorldPos.x);
+            if (horizontalDistance < minDistance) {
+                if (leftSphereWorldPos.x < rightPos.x) {
+                    leftX = rightPos.x - minDistance;
+                } else {
+                    leftX = rightPos.x + minDistance;
+                }
+                if (leftX > maxPosX) {
+                    leftX = maxPosX;
+                }
+                posSlider.value = leftX;
+                warningMessage.style.display = 'block';
+            } else {
+                warningMessage.style.display = 'none';
+            }
+            return leftX;
+        }
+
+        function updateScene() {
+            const q1 = parseFloat(q1Slider.value);
+            const q2 = parseFloat(q2Slider.value);
+            let leftX = parseFloat(posSlider.value);
+
+            if (leftX > maxPosX) {
+                leftX = maxPosX;
+                posSlider.value = maxPosX;
+            }
+
+            leftGroup.position.x = leftX;
+            const rightPos = rightSphere.position.clone();
+            const leftSphereWorldPos = leftSphere.getWorldPosition(new THREE.Vector3());
+
+            leftX = enforceNoOverlap(leftX, rightPos, leftSphereWorldPos);
+
+            if (Math.abs(leftGroup.position.x - leftX) > 0.001) {
+                leftGroup.position.x = leftX;
+                leftSphereWorldPos.copy(leftSphere.getWorldPosition(new THREE.Vector3()));
+            }
+
+            const rVector = new THREE.Vector3().subVectors(rightPos, leftSphereWorldPos);
+            const actualDistance = Math.max(rVector.length(), minDistance);
+
+            if (rVector.length() < minDistance) {
+                rVector.normalize().multiplyScalar(actualDistance);
+            }
+
+            q1Value.textContent = q1.toFixed(2);
+            q2Value.textContent = q2.toFixed(2);
+            posValue.textContent = leftX.toFixed(2);
+
+            leftSphereLight.position.copy(leftSphereWorldPos);
+
+            const forceMagnitude = (q1 * q2) / (actualDistance * actualDistance + 0.1);
+            const forceDirection = rVector.clone().normalize().multiplyScalar(forceSign);
+
+            const gravityDir = new THREE.Vector3(0, -1, 0);
+            const scaleFactor = 0.8;
+            const netForceDir = new THREE.Vector3().addVectors(
+                forceDirection.clone().multiplyScalar(forceMagnitude * scaleFactor),
+                gravityDir
+            ).normalize();
+
+            const hangPoint = new THREE.Vector3(hangX, hangY, 0);
+            const rightSphereNewPos = hangPoint.clone().add(netForceDir.clone().multiplyScalar(lineLength));
+
+            rightSphere.position.copy(rightSphereNewPos);
+            rightSphereLight.position.copy(rightSphere.position);
+
+            const newStartPoint = new THREE.Vector3(hangX, hangY - 0.05, 0);
+            const newEndPoint = rightSphere.position.clone().add(new THREE.Vector3(0, rightSphereRadius, 0));
+
+            if (rope) scene.remove(rope);
+            rope = createRope(newStartPoint, newEndPoint);
+            scene.add(rope);
+
+            if (arrowHelper) scene.remove(arrowHelper);
+            arrowHelper = createArrow(rightSphere.position, forceDirection);
+            scene.add(arrowHelper);
+
+            distanceDisplay.textContent = actualDistance.toFixed(2) + ' m';
+            const verticalAngle = Math.acos(Math.max(-1, Math.min(1, netForceDir.dot(new THREE.Vector3(0, -1,
+                0))))) * 180 / Math.PI;
+            angleDisplay.textContent = verticalAngle.toFixed(1) + '°';
+            forceDisplay.textContent = forceMagnitude.toFixed(2);
+        }
+
+        // 初始调用
+        leftGroup.position.x = -4.5;
+        updateScene();
+
+        q1Slider.addEventListener('input', updateScene);
+        q2Slider.addEventListener('input', updateScene);
+        posSlider.addEventListener('input', updateScene);
+
+        // --- 重置参数按钮 ---
+        document.getElementById('resetParamsBtn').addEventListener('click', () => {
+            q1Slider.value = 1.0;
+            q2Slider.value = 1.0;
+            posSlider.value = -4.5;
+            leftGroup.position.x = -4.5;
+            warningMessage.style.display = 'none';
+            updateScene();
+        });
+
+        // --- 重置视角按钮 ---
+        document.getElementById('resetViewBtn').addEventListener('click', () => {
+            if (window.innerWidth > window.innerHeight) {
+                camera.position.set(7, 5, 14);
+            } else {
+                camera.position.set(6, 5, 12);
+            }
+            controls.target.set(0, 3.3, 0);
+            controls.update();
+        });
+
+        window.addEventListener('resize', onWindowResize, false);
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            if (window.innerWidth > window.innerHeight) {
+                camera.position.set(7, 5, 14);
+            } else {
+                camera.position.set(6, 5, 12);
+            }
+            camera.lookAt(0, 3.3, 0);
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+
+        animate();
+    </script>
+    </body>
+</html>

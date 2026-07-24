@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="/looogo.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>α粒子散射实验 - PhySenLab</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#E8F4FD 0%,#F8FBFF 50%,#E1EEF7 100%);min-height:100vh;overflow:hidden;}
+        .simulation-container{position:relative;width:100vw;height:100vh;}
+        #canvas-container{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;display:flex;justify-content:center;align-items:center;}
+        #mainCanvas{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);image-rendering: crisp-edges;}
+        .panel{background:rgba(255,255,255,.92);backdrop-filter:blur(10px);border:1px solid #E1EEF7;border-radius:14px;box-shadow:0 4px 20px rgba(74,144,226,.12);padding:16px 20px;z-index:10;position:absolute;}
+        .info-panel{top:16px;left:16px;max-width:260px;}
+        .info-panel h1{font-size:1.1rem;color:#2C3E50;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+        .formula-box{background:linear-gradient(135deg,#E8F4FD,#F8FBFF);padding:8px 12px;border-radius:8px;border-left:4px solid #4A90E2;margin-bottom:8px;font-size:.85rem;font-family:'Times New Roman',serif;font-style:italic;color:#2C3E50;}
+        .info-text{font-size:.78rem;color:#5A6C7D;line-height:1.55;}
+        .physics-panel{bottom:16px;left:16px;width:240px;}
+        .physics-panel h3{font-size:.92rem;color:#2C3E50;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #E1EEF7;}
+        .param-row{display:flex;justify-content:space-between;margin-bottom:5px;font-size:.8rem;color:#5A6C7D;}
+        .param-value{font-family:Consolas,monospace;font-weight:600;color:#4A90E2;}
+        .controls-panel{top:16px;right:16px;width:300px;max-height:calc(100vh - 32px);overflow-y:auto;}
+        .controls-panel h3{font-size:1rem;color:#2C3E50;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #E1EEF7;}
+        .section-label{font-size:.72rem;color:#8B9DC3;margin:12px 0 4px;font-weight:600;letter-spacing:.5px;}
+        .slider-group{margin-bottom:12px;padding:10px;background:#F8FBFF;border-radius:10px;border:1px solid #E1EEF7;}
+        .slider-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:.85rem;}
+        .slider-label .lt{font-weight:600;color:#2C3E50;}
+        .vbadge{background:linear-gradient(135deg,#4A90E2,#6BB6FF);color:#fff;padding:2px 8px;border-radius:12px;font-family:monospace;font-size:.78rem;font-weight:600;}
+        input[type=range]{width:100%;height:6px;border-radius:3px;background:#E1EEF7;outline:none;-webkit-appearance:none;cursor:pointer;}
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:linear-gradient(135deg,#4A90E2,#6BB6FF);border:2px solid #fff;box-shadow:0 2px 8px rgba(74,144,226,.4);cursor:pointer;}
+        .btn-row{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap;}
+        .btn{padding:9px 16px;border:none;border-radius:22px;font-weight:600;font-size:.82rem;cursor:pointer;transition:all .2s;}
+        .btn-primary{background:linear-gradient(135deg,#4A90E2,#6BB6FF);color:#fff;box-shadow:0 3px 10px rgba(74,144,226,.3);}
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 5px 14px rgba(74,144,226,.4);}
+        .btn-warn{background:linear-gradient(135deg,#e74c3c,#ff6b6b);color:#fff;}
+        .btn-ghost{background:#F0F4F8;color:#5A6C7D;border:1px solid #E1EEF7;}
+        .btn-ghost:hover{background:#E1EEF7;}
+        .back-btn{position:absolute;bottom:16px;right:16px;background:#fff;color:#4A90E2;padding:9px 18px;border-radius:22px;text-decoration:none;font-weight:600;border:2px solid #4A90E2;box-shadow:0 2px 10px rgba(74,144,226,.15);transition:all .3s;z-index:10;font-size:.82rem;}
+        .back-btn:hover{background:#4A90E2;color:#fff;}
+    </style>
+</head>
+<body>
+<div class="simulation-container">
+    <div id="canvas-container"><canvas id="mainCanvas"></canvas></div>
+
+    <div class="info-panel panel">
+        <h1>⚛️ α粒子散射实验</h1>
+        <div class="formula-box">
+            cot(θ/2) = 2Eb / (kZe·2e)<br>
+            d<sub>min</sub> = (kZe·2e) / (½mv²)
+        </div>
+        <p class="info-text">
+            1911年卢瑟福用α粒子轰击金箔，发现绝大多数α粒子穿过，少数发生大角度偏转，极少数被反弹。由此提出<strong>核式结构模型</strong>。<br>
+            ✨ 蓝色α粒子 | 散射分布在画布右侧
+        </p>
+    </div>
+
+    <div class="physics-panel panel">
+        <h3>📊 实时参数 (累积统计)</h3>
+        <div class="param-row"><span>🎯 最后散射角 θ:</span><span id="pAngle" class="param-value">—</span></div>
+        <div class="param-row"><span>📏 最近距离:</span><span id="pDmin" class="param-value">—</span></div>
+        <div class="param-row"><span>🎯 当前瞄准距 b:</span><span id="pB" class="param-value">0</span></div>
+        <div class="param-row"><span>📊 累计发射粒子:</span><span id="pCount" class="param-value">0</span></div>
+        <div class="param-row"><span>⚠️ 大角散射(&gt;90°):</span><span id="pLarge" class="param-value">0</span></div>
+        <div class="param-row"><span>📈 大角比例:</span><span id="pRatio" class="param-value">0%</span></div>
+    </div>
+
+    <div class="controls-panel panel">
+        <h3>🔧 实验控制</h3>
+        <div class="section-label">发射参数</div>
+        <div class="slider-group">
+            <div class="slider-label"><span class="lt">📐 瞄准距离 b (px)</span><span id="vB" class="vbadge">0 px</span></div>
+            <input type="range" id="sB" min="-120" max="120" step="1" value="0">
+        </div>
+        <div class="slider-group">
+            <div class="slider-label"><span class="lt">🚀 初速度 (相对标度)</span><span id="vV" class="vbadge">3.0</span></div>
+            <input type="range" id="sV" min="1" max="6" step="0.2" value="3">
+        </div>
+        <div class="slider-group">
+            <div class="slider-label"><span class="lt">💛 核电荷数 Z</span><span id="vZ" class="vbadge">79 (Au)</span></div>
+            <input type="range" id="sZ" min="10" max="100" step="1" value="79">
+        </div>
+        
+        <div class="section-label">操作</div>
+        <div class="btn-row">
+            <button class="btn btn-primary" id="btnFire">🎯 发射</button>
+            <button class="btn btn-primary" id="btnBatch">🔥 批量发射</button>
+        </div>
+        <div class="btn-row">
+            <button class="btn btn-ghost" id="btnClear">🗑️ 重置全部数据</button>
+            <button class="btn btn-ghost" id="btnAuto">▶️ 连续发射</button>
+        </div>
+        <div class="info-text" style="margin-top:8px; font-size:0.7rem;">
+            💡 散射分布图位于右侧，角度从下到上递增
+        </div>
+    </div>
+
+    
+</div>
+
+<script>
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+let W, H, cx, cy;
+
+function resize() {
+    const vw = innerWidth, vh = innerHeight;
+    const canvasWidth = Math.min(vw * 0.55, vh * 0.92, 860);
+    const canvasHeight = Math.min(vh * 0.88, canvasWidth * 0.72, 620);
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    canvas.style.width = canvasWidth + 'px';
+    canvas.style.height = canvasHeight + 'px';
+    W = canvasWidth;
+    H = canvasHeight;
+    cx = W * 0.48;
+    cy = H / 2;
+}
+resize();
+window.addEventListener('resize', () => { resize(); drawStatic(); drawAllParticles(); });
+
+// ============ 物理参数 ============
+let impactB = 0;
+let v0 = 3;
+let Znum = 79;
+const K_BASE = 6.8;
+
+let particles = [];
+let trails = [];
+let scatterRecords = [];
+let autoMode = false;
+let autoTimer = null;
+
+const PARTICLE_COLOR = '#3498db';
+const TRAIL_COLOR_ACTIVE = 'rgba(52,152,219,0.8)';
+const TRAIL_COLOR_INACTIVE = 'rgba(52,152,219,0.35)';
+
+function getK() { return K_BASE * Znum; }
+
+function recordScatter(p) {
+    if (p.recorded) return;
+    p.recorded = true;
+    let angle = p.finalAngle;
+    if (angle === undefined || angle === null) angle = 0;
+    if (angle > 180) angle = 180;
+    if (angle < 0) angle = 0;
+    scatterRecords.push({
+        angle: angle,
+        dmin: p.dmin === Infinity ? 999 : p.dmin,
+        b: p.b,
+        timestamp: Date.now()
+    });
+}
+
+function fire(b) {
+    const p = new Particle(b);
+    particles.push(p);
+}
+
+function fireBatch() {
+    for (let b = -110; b <= 110; b += 7) {
+        setTimeout(() => fire(b), Math.abs(b) * 3);
+    }
+}
+
+class Particle {
+    constructor(b) {
+        this.x = -W * 0.42;
+        this.y = b;
+        this.vx = v0;
+        this.vy = 0;
+        this.trail = [{x: this.x + cx, y: this.y + cy}];
+        this.active = true;
+        this.dmin = Infinity;
+        this.b = b;
+        this.finalAngle = null;
+        this.recorded = false;
+    }
+}
+
+function stepParticle(p, dt) {
+    const r2 = p.x * p.x + p.y * p.y;
+    const r = Math.sqrt(r2);
+    if (r < 5.5) {
+        p.active = false;
+        p.finalAngle = 180;
+        if (!p.recorded) recordScatter(p);
+        return;
+    }
+    if (r < p.dmin) p.dmin = r;
+    const r3 = r2 * r;
+    const KK = getK();
+    const ax = KK * p.x / r3;
+    const ay = KK * p.y / r3;
+    p.vx += ax * dt;
+    p.vy += ay * dt;
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.trail.push({x: p.x + cx, y: p.y + cy});
+    
+    if (p.x + cx < -40 || p.x + cx > W + 40 || p.y + cy < -40 || p.y + cy > H + 40) {
+        p.active = false;
+        // 修正散射角计算：入射方向与出射方向的夹角
+        // 入射方向为 +x (0°)，计算速度向量与 -x 方向的夹角即为散射角
+        let angle = Math.atan2(p.vy, p.vx) * 180 / Math.PI;
+        // 转换为与 +x 轴正方向的夹角 (0~360)
+        if (angle < 0) angle += 360;
+        // 散射角 = 180° - 与+x轴的夹角（取绝对值保证正值）
+        angle = Math.abs(180 - angle);
+        
+        p.finalAngle = angle;
+        if (!p.recorded) recordScatter(p);
+    }
+}
+
+function updatePhysics() {
+    const substeps = 8;
+    const dt = 0.58;
+    for (const p of particles) {
+        if (!p.active) continue;
+        for (let i = 0; i < substeps; i++) stepParticle(p, dt);
+    }
+}
+
+// ============ 绘图模块 ============
+// 简化金箔：单一加宽长方形，无分层
+function drawGoldFoil() {
+    const foilLeft = cx - 40;   // 加宽
+    const foilRight = cx + 40;
+    const foilTop = 20;
+    const foilBottom = H - 30;
+    const foilWidth = foilRight - foilLeft;
+    const foilHeight = foilBottom - foilTop;
+    
+    // 半透金箔底色
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.12)';
+    ctx.fillRect(foilLeft, foilTop, foilWidth, foilHeight);
+    // 金色边框虚线
+    ctx.strokeStyle = 'rgba(218, 165, 32, 0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 8]);
+    ctx.strokeRect(foilLeft, foilTop, foilWidth, foilHeight);
+    ctx.setLineDash([]);
+    
+    // 金箔文字标识
+    ctx.fillStyle = 'rgba(180, 130, 30, 0.9)';
+    ctx.font = 'bold 12px "PingFang SC", "Segoe UI"';
+    ctx.textAlign = 'center';
+    ctx.fillText('金箔', cx, foilTop + 22);
+    // 简要说明
+    ctx.font = '9px "PingFang SC"';
+    ctx.fillStyle = '#B8860B';
+    ctx.fillText('原子核位于中心', cx, foilBottom - 12);
+}
+
+function drawNucleus() {
+    const r = Math.max(7, Znum / 9);
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r * 4.5);
+    grad.addColorStop(0, 'rgba(52,152,219,0.3)');
+    grad.addColorStop(1, 'rgba(52,152,219,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.arc(cx, cy, r * 4.2, 0, Math.PI * 2); ctx.fill();
+    
+    const ng = ctx.createRadialGradient(cx - 1, cy - 1, 0, cx, cy, r);
+    ng.addColorStop(0, '#FFD966');
+    ng.addColorStop(0.7, '#DAA520');
+    ng.addColorStop(1, '#B87C0E');
+    ctx.fillStyle = ng;
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = '#AA7A2C';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = 'white';
+    ctx.font = `bold ${Math.max(9, r)}px "Segoe UI"`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('+', cx, cy);
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillStyle = '#B8860B';
+    ctx.font = '11px "PingFang SC"';
+    ctx.fillText(`原子核 (Z=${Znum})`, cx, cy + r + 15);
+}
+
+function drawTrailsAndParticles() {
+    for (const trail of trails) {
+        if (!trail.length) continue;
+        ctx.beginPath();
+        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(52,152,219,0.2)';
+        for (let i = 0; i < trail.length; i++) {
+            if (i === 0) ctx.moveTo(trail[i].x, trail[i].y);
+            else ctx.lineTo(trail[i].x, trail[i].y);
+        }
+        ctx.stroke();
+    }
+    
+    for (const p of particles) {
+        if (p.trail.length < 2) continue;
+        const isActive = p.active;
+        ctx.beginPath();
+        ctx.strokeStyle = isActive ? TRAIL_COLOR_ACTIVE : TRAIL_COLOR_INACTIVE;
+        ctx.lineWidth = isActive ? 2.2 : 1.5;
+        for (let i = 0; i < p.trail.length; i++) {
+            if (i === 0) ctx.moveTo(p.trail[i].x, p.trail[i].y);
+            else ctx.lineTo(p.trail[i].x, p.trail[i].y);
+        }
+        ctx.stroke();
+        
+        if (isActive && p.trail.length) {
+            const last = p.trail[p.trail.length - 1];
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = PARTICLE_COLOR;
+            ctx.fillStyle = PARTICLE_COLOR;
+            ctx.beginPath(); ctx.arc(last.x, last.y, 5, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 8px "Segoe UI"';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('α', last.x, last.y);
+            ctx.shadowBlur = 0;
+            ctx.textBaseline = 'alphabetic';
+        }
+    }
+}
+
+function drawAimLine() {
+    const y = cy + impactB;
+    ctx.setLineDash([5, 6]);
+    ctx.strokeStyle = 'rgba(52,152,219,0.6)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(12, y); ctx.lineTo(cx - 28, y); ctx.stroke();
+    ctx.setLineDash([]);
+    if (Math.abs(impactB) > 4) {
+        ctx.strokeStyle = '#2980b9';
+        ctx.lineWidth = 0.8;
+        ctx.beginPath(); ctx.moveTo(32, cy); ctx.lineTo(32, y); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(28, cy); ctx.lineTo(36, cy); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(28, y); ctx.lineTo(36, y); ctx.stroke();
+        ctx.fillStyle = '#2980b9';
+        ctx.font = '11px sans-serif';
+        ctx.fillText('b', 38, (cy + y)/2 + 3);
+    }
+}
+
+// 右侧竖长直方图：角度从底部(0°)到顶部(180°)，柱状水平向右延伸
+function drawScatterHist() {
+    const histWidth = 140;        // 宽度
+    const histHeight = Math.min(H * 0.65, 320); // 高度拉长
+    const marginRight = 12;
+    const histX = W - histWidth - marginRight;
+    const histY = (H - histHeight) / 2;  // 垂直居中
+    
+    // 圆角背景
+    ctx.save();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+    ctx.strokeStyle = '#4A90E2';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(histX, histY, histWidth, histHeight, 8);
+    ctx.fill();
+    ctx.stroke();
+    
+    // 标题
+    ctx.fillStyle = '#2C3E50';
+    ctx.font = 'bold 12px "PingFang SC", "Segoe UI"';
+    ctx.textAlign = 'center';
+    ctx.fillText('散射角分布', histX + histWidth/2, histY - 6);
+    
+    // 角度刻度 (垂直方向)
+    ctx.font = '10px sans-serif';
+    ctx.fillStyle = '#5A6C7D';
+    ctx.textAlign = 'right';
+    for (let ang = 0; ang <= 180; ang += 30) {
+        const y = histY + histHeight - (ang / 180) * histHeight;
+        ctx.fillText(ang + '°', histX - 6, y + 3);
+    }
+    ctx.fillStyle = '#e74c3c';
+    ctx.font = 'bold 9px sans-serif';
+    ctx.fillText('大角区', histX + histWidth - 30, histY + 30);
+    
+    if (!scatterRecords.length) {
+        ctx.fillStyle = '#CDE5F5';
+        ctx.fillRect(histX + 8, histY + 8, histWidth - 16, histHeight - 16);
+        ctx.restore();
+        return;
+    }
+    
+    // 分组：每10度一组，共18组 (0-10, 10-20, ..., 170-180)
+    const bins = new Array(18).fill(0);
+    for (const rec of scatterRecords) {
+        let ang = rec.angle;
+        if (ang > 180) ang = 180;
+        const idx = Math.min(17, Math.floor(ang / 10));
+        bins[idx]++;
+    }
+    const maxBin = Math.max(1, ...bins);
+    const barMaxWidth = histWidth - 20;  // 左右留白各10px
+    const barHeight = histHeight / 18;    // 每个bin的高度
+    
+    for (let i = 0; i < 18; i++) {
+        const barWidth = (bins[i] / maxBin) * barMaxWidth;
+        if (barWidth < 1) continue;
+        const yTop = histY + i * barHeight;
+        const xStart = histX + 10;
+        // 颜色：大角度区 (i >= 9 即 >=90°) 用红色调，否则蓝色调
+        if (i >= 9) {
+            ctx.fillStyle = 'rgba(231,76,60,0.75)';
+        } else {
+            ctx.fillStyle = 'rgba(52,152,219,0.7)';
+        }
+        ctx.fillRect(xStart, yTop, barWidth, barHeight - 1);
+    }
+    
+    // 添加边框分隔线（可选）
+    ctx.strokeStyle = 'rgba(74,144,226,0.3)';
+    ctx.lineWidth = 0.5;
+    for (let i = 1; i < 18; i++) {
+        const yLine = histY + i * barHeight;
+        ctx.beginPath();
+        ctx.moveTo(histX + 8, yLine);
+        ctx.lineTo(histX + histWidth - 8, yLine);
+        ctx.stroke();
+    }
+    
+    ctx.restore();
+}
+
+// 工具：圆角矩形
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+        if (w < 2 * r) r = w / 2;
+        if (h < 2 * r) r = h / 2;
+        this.moveTo(x+r, y);
+        this.lineTo(x+w-r, y);
+        this.quadraticCurveTo(x+w, y, x+w, y+r);
+        this.lineTo(x+w, y+h-r);
+        this.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+        this.lineTo(x+r, y+h);
+        this.quadraticCurveTo(x, y+h, x, y+h-r);
+        this.lineTo(x, y+r);
+        this.quadraticCurveTo(x, y, x+r, y);
+        return this;
+    };
+}
+
+function drawSource() {
+    ctx.fillStyle = '#3A5F8F';
+    ctx.font = '11px "PingFang SC"';
+    ctx.fillText('α 放射源 →', 10, cy - 12);
+    ctx.beginPath();
+    ctx.moveTo(28, cy-3); ctx.lineTo(38, cy); ctx.lineTo(28, cy+3); ctx.fill();
+}
+
+function drawStatic() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#fefef7';
+    ctx.fillRect(0, 0, W, H);
+    drawGoldFoil();
+    drawAimLine();
+    drawNucleus();
+    drawSource();
+    drawScatterHist();   // 右侧竖长直方图
+}
+
+function drawAllParticles() {
+    drawTrailsAndParticles();
+}
+
+function render() {
+    drawStatic();
+    drawAllParticles();
+}
+
+// ============ 数据统计 ============
+function updateStatisticsAndPanel() {
+    const completedCount = scatterRecords.length;
+    const largeAngleCount = scatterRecords.filter(r => r.angle > 90).length;
+    const ratio = completedCount === 0 ? 0 : ((largeAngleCount / completedCount) * 100).toFixed(1);
+    
+    document.getElementById('pCount').textContent = completedCount;
+    document.getElementById('pLarge').textContent = largeAngleCount;
+    document.getElementById('pRatio').textContent = ratio + '%';
+    document.getElementById('pB').textContent = impactB + ' px';
+    
+    if (scatterRecords.length > 0) {
+        const last = scatterRecords[scatterRecords.length - 1];
+        document.getElementById('pAngle').textContent = last.angle.toFixed(1) + '°';
+        document.getElementById('pDmin').textContent = last.dmin.toFixed(1) + ' px';
+    } else {
+        document.getElementById('pAngle').textContent = '—';
+        document.getElementById('pDmin').textContent = '—';
+    }
+}
+
+function resetAll() {
+    particles = [];
+    trails = [];
+    scatterRecords = [];
+    if (autoMode) {
+        clearInterval(autoTimer);
+        autoMode = false;
+        const autoBtn = document.getElementById('btnAuto');
+        if(autoBtn) autoBtn.textContent = '▶️ 连续发射';
+    }
+    updateStatisticsAndPanel();
+    render();
+}
+
+function archiveFinishedParticles() {
+    for (let i = particles.length-1; i >= 0; i--) {
+        if (!particles[i].active) {
+            if (particles[i].trail && particles[i].trail.length > 1) {
+                trails.push(particles[i].trail);
+            }
+            particles.splice(i,1);
+        }
+    }
+    while (trails.length > 180) trails.shift();
+}
+
+let animFrame;
+function animate() {
+    updatePhysics();
+    archiveFinishedParticles();
+    render();
+    updateStatisticsAndPanel();
+    animFrame = requestAnimationFrame(animate);
+}
+animate();
+
+// ============ UI 绑定 ============
+document.getElementById('sB').addEventListener('input', e => {
+    impactB = +e.target.value;
+    document.getElementById('vB').textContent = impactB + ' px';
+    render();
+});
+document.getElementById('sV').addEventListener('input', e => {
+    v0 = +e.target.value;
+    document.getElementById('vV').textContent = v0.toFixed(1);
+});
+document.getElementById('sZ').addEventListener('input', e => {
+    Znum = +e.target.value;
+    let label = Znum + (Znum === 79 ? ' (Au)' : Znum === 29 ? ' (Cu)' : Znum === 47 ? ' (Ag)' : '');
+    document.getElementById('vZ').textContent = label;
+    render();
+});
+document.getElementById('btnFire').addEventListener('click', () => {
+    fire(impactB);
+});
+document.getElementById('btnBatch').addEventListener('click', fireBatch);
+document.getElementById('btnClear').addEventListener('click', () => {
+    resetAll();
+});
+document.getElementById('btnAuto').addEventListener('click', function() {
+    autoMode = !autoMode;
+    this.textContent = autoMode ? '⏸️ 停止' : '▶️ 连续发射';
+    if (autoMode) {
+        autoTimer = setInterval(() => {
+            const randomB = (Math.random() - 0.5) * 220;
+            fire(randomB);
+        }, 280);
+    } else {
+        clearInterval(autoTimer);
+    }
+});
+
+resize();
+render();
+</script>
+</body>
+</html>

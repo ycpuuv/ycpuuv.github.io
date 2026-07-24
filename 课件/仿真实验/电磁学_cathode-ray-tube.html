@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>阴极射线管实验 · 高中物理</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .canvas-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        canvas {
+            display: block;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+        }
+        .ctrl-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d0dae8;
+            border-radius: 10px;
+            padding: 6px 12px;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 2px;
+        }
+        .ctrl-bar>* {
+            margin-left: 4px;
+        }
+        .ctrl-bar>*:first-child {
+            margin-left: 0;
+        }
+        .cbtn {
+            background: #ffffff;
+            color: #5a7a9a;
+            border: 1.5px solid #d0dae8;
+            border-radius: 7px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            min-width: 32px;
+        }
+        .cbtn:hover {
+            border-color: #2979ff;
+            color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.15);
+        }
+        .cbtn.active {
+            background: #2979ff;
+            color: #ffffff;
+            border-color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.3);
+        }
+        .cbtn.recording {
+            background: #c62828;
+            color: #fff;
+            border-color: #c62828;
+            animation: rec-pulse 1s ease-in-out infinite;
+        }
+        .cbtn.encoding {
+            background: #9e9e9e;
+            color: #fff;
+            border-color: #9e9e9e;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+        .cbtn svg {
+            display: block;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+        @keyframes rec-pulse {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            z-index: 20;
+            position: absolute;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 240px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .formula-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 4px;
+        }
+        .f-label {
+            color: #5a7a9a;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-right: 6px;
+            min-width: 50px;
+        }
+        .f-expr {
+            color: #1a2b42;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        .physics-panel {
+            bottom: 16px;
+            left: 16px;
+            width: 230px;
+        }
+        .physics-panel h3 {
+            font-size: .92rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .readout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .readout-item {
+            background: #f0f5fa;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+        .readout-item .r-label {
+            font-size: 11px;
+            color: #5a7a9a;
+            margin-bottom: 2px;
+        }
+        .readout-item .r-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 280px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-label {
+            font-size: .72rem;
+            color: var(--text-light);
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .param-item {
+            margin-bottom: 10px;
+        }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .param-name {
+            font-size: .85rem;
+            color: var(--text-primary);
+        }
+        .param-value {
+            font-size: .85rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .layer-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .layer-btn {
+            background: #ffffff;
+            color: #5a7a9a;
+            border: 1.5px solid #d0dae8;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .layer-btn.active {
+            background: #e8f0ff;
+            color: #2979ff;
+            border-color: #2979ff;
+            box-shadow: 0 1px 6px rgba(41, 121, 255, 0.15);
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: var(--primary-color);
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            transition: all .3s;
+            z-index: 30;
+            font-size: .82rem;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .credit-tag {
+            position: absolute;
+            bottom: 60px;
+            right: 20px;
+            z-index: 30;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(6px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.7rem;
+            color: var(--text-light);
+            letter-spacing: 0.5px;
+            font-weight: 400;
+            pointer-events: none;
+        }
+
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 180px;
+                padding: 10px 12px;
+            }
+            .controls-panel {
+                width: 220px;
+                padding: 10px 12px;
+                top: 12px;
+                right: 12px;
+                max-height: calc(100vh - 24px);
+            }
+            .physics-panel {
+                width: 160px;
+                padding: 10px 12px;
+            }
+            .credit-tag {
+                bottom: 52px;
+                right: 10px;
+                font-size: 0.6rem;
+                padding: 3px 10px;
+            }
+            .back-btn {
+                bottom: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+            .ctrl-bar {
+                padding: 4px 8px;
+                gap: 2px;
+            }
+            .cbtn {
+                font-size: 12px;
+                padding: 4px 7px;
+                min-height: 28px;
+                min-width: 28px;
+            }
+            .info-panel h1 {
+                font-size: 0.95rem;
+            }
+            .formula-box {
+                font-size: .75rem;
+                padding: 6px 10px;
+            }
+            .readout-item .r-value {
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .info-panel {
+                display: none;
+            }
+            .physics-panel {
+                bottom: 70px;
+                left: 8px;
+                width: 140px;
+                padding: 8px 10px;
+            }
+            .controls-panel {
+                width: 180px;
+                padding: 8px 10px;
+                top: 8px;
+                right: 8px;
+            }
+            .controls-panel h3 {
+                font-size: .85rem;
+                margin-bottom: 8px;
+            }
+            .param-name {
+                font-size: .75rem;
+            }
+            .param-value {
+                font-size: .75rem;
+            }
+            .layer-btn {
+                font-size: 11px;
+                padding: 4px 10px;
+            }
+            .credit-tag {
+                display: none;
+            }
+            .back-btn {
+                bottom: 8px;
+                right: 8px;
+                padding: 4px 10px;
+                font-size: 0.65rem;
+            }
+            .ctrl-bar {
+                bottom: 6px;
+                padding: 4px 6px;
+                border-radius: 8px;
+            }
+            .cbtn {
+                font-size: 10px;
+                padding: 3px 5px;
+                min-height: 24px;
+                min-width: 24px;
+                border-radius: 5px;
+            }
+            .cbtn svg {
+                width: 14px;
+                height: 14px;
+            }
+            .physics-panel .readout {
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+            }
+            .physics-panel .readout-item {
+                padding: 4px 6px;
+            }
+            .physics-panel .readout-item .r-value {
+                font-size: 11px;
+            }
+            .physics-panel .readout-item .r-label {
+                font-size: 9px;
+            }
+        }
+    </style>
+    <script src="https://lsbtta-cdn.laoshibang.com/aiteacher/h5_optimized/0716618065a82e51642b9cf6e76c4ef1.js">
+    </script>
+    <script src="https://lsbtta-cdn.laoshibang.com/aiteacher/h5_optimized/88b5e08b15de620d5295f5bb799bcb1a.js">
+    </script>
+</head>
+<body>
+    <div class="simulation-container">
+        <div class="canvas-section">
+            <div class="canvas-wrap" id="cvWrap">
+                <canvas id="cv"></canvas>
+            </div>
+            <div class="ctrl-bar">
+                <button class="cbtn" id="btnPlay" onclick="togglePlay()"></button>
+                <button class="cbtn active" id="btnLoop" onclick="toggleLoop()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12.5 3.5A5.5 5.5 0 0 0 3.05 5.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><polyline points="5,3.5 3,5.5 1,3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 12.5A5.5 5.5 0 0 0 12.95 10.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/><polyline points="11,12.5 13,10.5 15,12.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+                <button class="cbtn" onclick="resetAll()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2.5 2.5V6H6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M3.5 10A5.5 5.5 0 1 0 4.05 5.5L2.5 6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg></button>
+                <span style="width:1px;height:18px;background:#d0dae8;margin:0 4px"></span>
+                <button class="cbtn" data-spd="0.25" onclick="setSpd(0.25)">¼×</button>
+                <button class="cbtn active" data-spd="1" onclick="setSpd(1)">1×</button>
+                <button class="cbtn" data-spd="2" onclick="setSpd(2)">2×</button>
+                <button class="cbtn" data-spd="4" onclick="setSpd(4)">4×</button>
+                <span id="recSep" style="width:1px;height:18px;background:#d0dae8;margin:0 4px"></span>
+                <button class="cbtn" id="btnRec" onclick="toggleRec()">📹 录制</button>
+            </div>
+        </div>
+
+        <!-- 左上公式面板（仅显示公式，不计算） -->
+        <div class="info-panel glass-panel">
+            <h1>⚡️阴极射线管实验</h1>
+            <div class="formula-box">
+                <div class="formula-row"><span class="f-label">电子速度</span><span class="f-expr">v₀ = √(2eU/m)</span></div>
+                <div class="formula-row"><span class="f-label">洛伦兹力</span><span class="f-expr">F = ev₀B</span></div>
+                <div class="formula-row"><span class="f-label">运动半径</span><span class="f-expr">R = mv₀/(eB)</span></div>
+            </div>
+            <p class="info-text">观察洛伦兹力如何改变电子的运动轨迹，验证左手定则。</p>
+        </div>
+
+        <!-- 左下实时数据面板 -->
+        <div class="physics-panel glass-panel">
+            <h3>📊 实时数据</h3>
+            <div class="readout">
+                <div class="readout-item"><div class="r-label">电子速度 v</div><div class="r-value" id="roV">--</div></div>
+                <div class="readout-item"><div class="r-label">磁场 B</div><div class="r-value" id="roB">--</div></div>
+                <div class="readout-item"><div class="r-label">偏转距离 y</div><div class="r-value" id="roY">--</div></div>
+                <div class="readout-item"><div class="r-label">偏转半径 R</div><div class="r-value" id="roR">--</div></div>
+            </div>
+        </div>
+
+        <!-- 右上控制面板 -->
+        <div class="controls-panel glass-panel">
+            <h3>🔧 参数调节</h3>
+            <div class="section-label">物理参数</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">磁场强度 B</span><span class="param-value" id="valB">5.0 mT</span></div>
+                <input type="range" id="slB" min="-10" max="10" value="5" step="0.5" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">加速电压 U</span><span class="param-value" id="valU">4.0 kV</span></div>
+                <input type="range" id="slU" min="1" max="9" value="4" step="0.5" oninput="updateParams()">
+            </div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">电子光晕强度</span><span class="param-value" id="valGlow">15</span></div>
+                <input type="range" id="slGlow" min="0" max="30" value="15" step="1" oninput="updateParams()">
+            </div>
+            <div class="param-item" style="display:flex; align-items:center; justify-content: space-between;">
+                <span class="param-name">显示完整轨迹</span>
+                <input type="checkbox" id="chkTrail" checked onchange="updateParams()" style="width:16px;height:16px;">
+            </div>
+            <div class="param-item" style="display:flex; align-items:center; justify-content: space-between;">
+                <span class="param-name">显示背景网格</span>
+                <input type="checkbox" id="chkGrid" checked onchange="updateParams()" style="width:16px;height:16px;">
+            </div>
+            <div class="section-label">教学层</div>
+            <div class="layer-group">
+                <button class="layer-btn" id="btnL1" onclick="toggleLayer(1)">📐 几何与坐标</button>
+                <button class="layer-btn" id="btnL2" onclick="toggleLayer(2)">⚡ 物理量向量</button>
+                <button class="layer-btn" id="btnL3" onclick="toggleLayer(3)">✋ 左手定则</button>
+            </div>
+        </div>
+
+        <!-- 右下署名致谢 -->
+        <div class="credit-tag">致谢：本程序由无为一中 · 刘洋提供</div>
+        
+    </div>
+
+    <script>
+        var SVG_PLAY = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="4,2.5 13,8 4,13.5" fill="currentColor"/></svg>';
+        var SVG_PAUSE = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/><rect x="9.5" y="2.5" width="3.5" height="11" rx="0.8" fill="currentColor"/></svg>';
+
+        var urlParams = new URLSearchParams(window.location.search);
+        var showRec = urlParams.get('rec') !== '0';
+
+        const cv = document.getElementById('cv');
+        const ctx = cv.getContext('2d');
+        const cvWrap = document.getElementById('cvWrap');
+        let W, H;
+
+        // 日志 SDK（安全加载）
+        let logger = null;
+        try {
+            if (typeof XesLoggerSDK !== 'undefined') {
+                logger = new XesLoggerSDK({
+                    disableAgif: true,
+                    appid: '1005974',
+                    common: { eventid: 'jzlsb_physics_h5' },
+                    clickMsg: { open: false }
+                });
+            }
+        } catch (e) {
+            console.warn('XesLoggerSDK 加载失败，日志功能不可用');
+        }
+
+        const S = {
+            B: 5.0,
+            U: 4.0,
+            glow: 15,
+            showTrail: true,
+            showGrid: true,
+            playing: true,
+            loop: true,
+            speed: 1.0,
+            t: 0,
+            showLayer1: false,
+            showLayer2: false,
+            showLayer3: false,
+            recording: false,
+            encoding: false,
+            recFrames: 0,
+            gifEncoder: null,
+            workerUrl: null,
+            lastCaptureTs: 0,
+        };
+
+        let trailPts = [];
+        let v0_disp = 0,
+            B_disp = 0,
+            y_disp = 0,
+            R_disp = 0;
+
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const cw = cvWrap.clientWidth;
+            const ch = cvWrap.clientHeight || Math.round(cw * 0.75);
+            const RATIO = 4 / 3;
+            if (cw / ch > RATIO) {
+                H = Math.max(ch, 300);
+                W = Math.round(H * RATIO);
+            } else {
+                W = cw;
+                H = Math.max(Math.round(W / RATIO), 300);
+            }
+            W = Math.round(W * 0.8);
+            H = Math.round(H * 0.8);
+            cv.width = W * dpr;
+            cv.height = H * dpr;
+            cv.style.width = W + 'px';
+            cv.style.height = H + 'px';
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            var gifW = Math.min(W, 1200);
+            offCv.width = gifW;
+            offCv.height = Math.round(gifW * H / W);
+            recalcPhysics();
+            draw();
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        if (!showRec) {
+            document.getElementById('btnRec').style.display = 'none';
+            document.getElementById('recSep').style.display = 'none';
+        }
+        document.getElementById('btnPlay').innerHTML = SVG_PAUSE;
+
+        function updateParams() {
+            S.B = parseFloat(document.getElementById('slB').value);
+            S.U = parseFloat(document.getElementById('slU').value);
+            S.glow = parseInt(document.getElementById('slGlow').value);
+            S.showTrail = document.getElementById('chkTrail').checked;
+            S.showGrid = document.getElementById('chkGrid').checked;
+            var bText = S.B > 0 ? '向外' : (S.B < 0 ? '向里' : '为零');
+            document.getElementById('valB').textContent = S.B.toFixed(1) + ' mT  ' + bText;
+            document.getElementById('valU').textContent = S.U.toFixed(1) + ' kV';
+            document.getElementById('valGlow').textContent = S.glow;
+            recalcPhysics();
+            draw();
+        }
+
+        function toggleLayer(n) {
+            S['showLayer' + n] = !S['showLayer' + n];
+            document.getElementById('btnL' + n).classList.toggle('active', S['showLayer' + n]);
+            draw();
+        }
+
+        function recalcPhysics() {
+            if (!W || !H) return;
+            const cx = W / 2,
+                cy = H / 2 + 10;
+            const tubeHalfW = W * 0.35,
+                tubeHalfH = Math.min(70, H * 0.15);
+            const startX = cx - tubeHalfW + 30;
+            const limitX = cx + tubeHalfW - 30;
+            const limitY = tubeHalfH - 5;
+            const v0 = 120 * Math.sqrt(S.U);
+            const w = 0.035 * S.B;
+            trailPts = [];
+            var t_local = 0,
+                dt = 0.01;
+            while (true) {
+                var lx, ly, vx, vy;
+                if (Math.abs(w) < 0.001) {
+                    lx = v0 * t_local;
+                    ly = 0;
+                    vx = v0;
+                    vy = 0;
+                } else {
+                    lx = (v0 / w) * Math.sin(w * t_local);
+                    ly = (v0 / w) * (1 - Math.cos(w * t_local));
+                    vx = v0 * Math.cos(w * t_local);
+                    vy = v0 * Math.sin(w * t_local);
+                }
+                var px = startX + lx,
+                    py = cy - ly;
+                trailPts.push({ x: px, y: py, t: t_local, vx: vx, vy: vy, lx: lx, ly: ly });
+                if (px >= limitX) break;
+                if (Math.abs(py - cy) >= limitY) break;
+                t_local += dt;
+                if (t_local > 15) break;
+            }
+            v0_disp = (1.5 * Math.sqrt(S.U)).toFixed(1);
+            B_disp = Math.abs(S.B).toFixed(1);
+            if (trailPts.length > 0) {
+                const lastP = trailPts[trailPts.length - 1];
+                y_disp = Math.abs(lastP.ly).toFixed(1);
+                R_disp = (Math.abs(S.B) < 0.1) ? '∞' : Math.abs(v0 / w).toFixed(0);
+            }
+        }
+
+        function drawGrid() {
+            ctx.strokeStyle = '#e0e8f0';
+            ctx.lineWidth = 1;
+            for (var x = 0; x <= W; x += 40) { ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, H);
+                ctx.stroke(); }
+            for (var y = 0; y <= H; y += 40) { ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(W, y);
+                ctx.stroke(); }
+        }
+
+        function drawStand(cx, cy) {
+            var btmY = cy + 140;
+            ctx.fillStyle = 'rgba(0,0,0,0.1)';
+            ctx.beginPath();
+            ctx.ellipse(cx, btmY + 5, 80, 20, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1a2b42';
+            ctx.beginPath();
+            ctx.ellipse(cx, btmY, 70, 18, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillRect(cx - 70, btmY - 10, 140, 10);
+            ctx.beginPath();
+            ctx.ellipse(cx, btmY - 10, 70, 18, 0, 0, Math.PI * 2);
+            ctx.fillStyle = '#2c3e50';
+            ctx.fill();
+            ctx.fillStyle = '#1a2b42';
+            ctx.beginPath();
+            ctx.moveTo(cx - 15, btmY - 10);
+            ctx.lineTo(cx + 15, btmY - 10);
+            ctx.lineTo(cx + 8, cy + 40);
+            ctx.lineTo(cx - 8, cy + 40);
+            ctx.fill();
+            ctx.fillStyle = '#8a9ba8';
+            ctx.fillRect(cx - 20, cy + 30, 40, 12);
+            ctx.fillStyle = '#5a7a9a';
+            ctx.fillRect(cx - 8, cy + 15, 16, 15);
+        }
+
+        function drawTube(cx, cy, hw, hh) {
+            ctx.strokeStyle = '#a0b0c0';
+            ctx.lineWidth = 2;
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+            ctx.beginPath();
+            ctx.moveTo(cx - hw - 30, cy - 8);
+            ctx.lineTo(cx - hw, cy - 8);
+            ctx.bezierCurveTo(cx - hw + 20, cy - 8, cx - hw + 40, cy - hh, cx - hw + 80, cy - hh);
+            ctx.lineTo(cx + hw - 80, cy - hh);
+            ctx.bezierCurveTo(cx + hw - 40, cy - hh, cx + hw - 20, cy - 8, cx + hw, cy - 8);
+            ctx.lineTo(cx + hw + 30, cy - 8);
+            ctx.lineTo(cx + hw + 30, cy + 8);
+            ctx.lineTo(cx + hw, cy + 8);
+            ctx.bezierCurveTo(cx + hw - 20, cy + 8, cx + hw - 40, cy + hh, cx + hw - 80, cy + hh);
+            ctx.lineTo(cx - hw + 80, cy + hh);
+            ctx.bezierCurveTo(cx - hw + 40, cy + hh, cx - hw + 20, cy + 8, cx - hw, cy + 8);
+            ctx.lineTo(cx - hw - 30, cy + 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = '#e8eff5';
+            ctx.fillRect(cx - hw + 60, cy - hh + 10, hw * 2 - 120, hh * 2 - 20);
+            ctx.beginPath();
+            ctx.moveTo(cx - hw + 80, cy - hh + 12);
+            ctx.lineTo(cx + hw - 80, cy - hh + 12);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.fillStyle = '#37474f';
+            ctx.fillRect(cx - hw - 30, cy - 12, 10, 24);
+            ctx.fillRect(cx + hw + 20, cy - 12, 10, 24);
+            ctx.fillStyle = '#cfd8dc';
+            ctx.fillRect(cx - hw - 20, cy - 4, 15, 8);
+            ctx.beginPath();
+            ctx.arc(cx - hw - 5, cy, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#c62828';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cx + hw + 30, cy);
+            ctx.lineTo(cx + hw + 60, cy + 20);
+            ctx.stroke();
+            ctx.strokeStyle = '#1a2b42';
+            ctx.beginPath();
+            ctx.moveTo(cx - hw - 30, cy);
+            ctx.lineTo(cx - hw - 60, cy + 30);
+            ctx.stroke();
+        }
+
+        function drawMagneticField(startX, endX, startY, height, B) {
+            if (Math.abs(B) < 0.5) return;
+            ctx.save();
+            var alpha = Math.min(Math.abs(B) / 10 * 0.5 + 0.1, 0.6);
+            var color = B > 0 ? 'rgba(21, 101, 192, ' + alpha + ')' : 'rgba(230, 81, 0, ' + alpha + ')';
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 1.5;
+            var step = 40,
+                x0 = startX + 20,
+                y0 = startY + 15;
+            for (var x = x0; x <= endX; x += step) {
+                for (var y = y0; y <= startY + height; y += step) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 8, 0, Math.PI * 2);
+                    ctx.stroke();
+                    if (B > 0) { ctx.beginPath();
+                        ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+                        ctx.fill(); } else { ctx.beginPath();
+                        ctx.moveTo(x - 5, y - 5);
+                        ctx.lineTo(x + 5, y + 5);
+                        ctx.moveTo(x + 5, y - 5);
+                        ctx.lineTo(x - 5, y + 5);
+                        ctx.stroke(); }
+                }
+            }
+            ctx.restore();
+        }
+
+        function drawArrow(x, y, dx, dy, color, label) {
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + dx, y + dy);
+            ctx.stroke();
+            var angle = Math.atan2(dy, dx);
+            ctx.beginPath();
+            ctx.moveTo(x + dx, y + dy);
+            ctx.lineTo(x + dx - 10 * Math.cos(angle - Math.PI / 6), y + dy - 10 * Math.sin(angle - Math.PI / 6));
+            ctx.lineTo(x + dx - 10 * Math.cos(angle + Math.PI / 6), y + dy - 10 * Math.sin(angle + Math.PI / 6));
+            ctx.closePath();
+            ctx.fill();
+            if (label) { ctx.font = 'bold 14px sans-serif';
+                ctx.fillText(label, x + dx + 10 * Math.cos(angle), y + dy + 10 * Math.sin(angle) + 5); }
+        }
+
+        function draw() {
+            if (!W || !H || trailPts.length === 0) return;
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, W, H);
+            if (S.showGrid) drawGrid();
+            const cx = W / 2,
+                cy = H / 2 + 10;
+            const tubeHalfW = W * 0.35,
+                tubeHalfH = Math.min(70, H * 0.15);
+            drawStand(cx, cy);
+            drawTube(cx, cy, tubeHalfW, tubeHalfH);
+            const fieldStartX = cx - tubeHalfW + 60;
+            const fieldWidth = tubeHalfW * 2 - 120;
+            drawMagneticField(fieldStartX, fieldStartX + fieldWidth, cy - tubeHalfH + 10, tubeHalfH * 2 - 20, S.B);
+
+            if (S.showLayer1) {
+                ctx.strokeStyle = '#5a7a9a';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(cx - tubeHalfW, cy);
+                ctx.lineTo(cx + tubeHalfW, cy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                var lastP = trailPts[trailPts.length - 1];
+                var endX = lastP.x,
+                    endY = lastP.y;
+                if (Math.abs(endY - cy) > 5) {
+                    ctx.strokeStyle = '#2e7d32';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(endX, cy);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(endX - 4, cy);
+                    ctx.lineTo(endX + 4, cy);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(endX - 4, endY);
+                    ctx.lineTo(endX + 4, endY);
+                    ctx.stroke();
+                    ctx.fillStyle = '#2e7d32';
+                    ctx.font = 'italic 14px serif';
+                    ctx.textAlign = 'left';
+                    ctx.fillText('y', endX + 8, (cy + endY) / 2 + 4);
+                }
+            }
+
+            // 绘制轨迹线
+            if (S.showTrail && trailPts.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(trailPts[0].x, trailPts[0].y);
+                for (var i = 1; i < trailPts.length; i++) ctx.lineTo(trailPts[i].x, trailPts[i].y);
+                ctx.strokeStyle = '#00C853';
+                ctx.lineWidth = 2;
+                if (S.glow > 0) { ctx.shadowColor = '#00C853';
+                    ctx.shadowBlur = S.glow * 1.2; }
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // 流动电子（深蓝光晕，白色中心）
+            var t_max = trailPts[trailPts.length - 1].t;
+            var T_emit = 0.3;
+            var numElectrons = Math.ceil((t_max + 1) / T_emit);
+            for (var i = 0; i < numElectrons; i++) {
+                var t_e = (S.t - i * T_emit) % (t_max + 1.0);
+                if (t_e < 0) t_e += (t_max + 1.0);
+                if (t_e <= t_max) {
+                    var dt = 0.01;
+                    var idx = Math.floor(t_e / dt);
+                    if (idx >= 0 && idx < trailPts.length) {
+                        var p = trailPts[idx];
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffffff';
+                        if (S.glow > 0) { ctx.shadowColor = '#00E676';
+                            ctx.shadowBlur = S.glow; }
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(0, 200, 83, 0.35)';
+                        ctx.fill();
+                    }
+                }
+            }
+
+            if (S.showLayer2 && trailPts.length > 10) {
+                var midIdx = Math.floor(trailPts.length * 0.4);
+                var p = trailPts[midIdx];
+                var v_scale = 0.2;
+                drawArrow(p.x, p.y, p.vx * v_scale, -p.vy * v_scale, '#c62828', 'v');
+                if (Math.abs(S.B) > 0.5) {
+                    var F_len = 60;
+                    var v_mag = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                    var dir = S.B > 0 ? -1 : 1;
+                    var Fx_disp = (p.vy / v_mag) * F_len * dir;
+                    var Fy_disp = -(p.vx / v_mag) * F_len * dir;
+                    drawArrow(p.x, p.y, Fx_disp, Fy_disp, '#e65100', 'F');
+                }
+            }
+
+            if (S.showLayer3) {
+                var rx = cx + tubeHalfW - 140,
+                    ry = cy + tubeHalfH + 15;
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.strokeStyle = '#2979ff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                roundRect(ctx, rx, ry, 260, 80, 8);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#1a2b42';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('✋ 左手定则判断电子偏转', rx + 12, ry + 22);
+                ctx.font = '12px sans-serif';
+                ctx.fillStyle = '#5a7a9a';
+                ctx.fillText('1. 电子带负电，等效电流向左', rx + 12, ry + 42);
+                var b_text = S.B > 0 ? '向外 (⊙)' : (S.B < 0 ? '向里 (⊗)' : '为零');
+                ctx.fillText('2. 磁场 B 方向：' + b_text, rx + 12, ry + 58);
+                var f_text = S.B > 0 ? '向上 (轨迹上弯)' : (S.B < 0 ? '向下 (轨迹下弯)' : '受力为零');
+                ctx.fillText('3. 受力 F 方向：' + f_text, rx + 12, ry + 74);
+            }
+
+            // 只更新实时数据，不再更新公式面板
+            document.getElementById('roV').textContent = v0_disp + ' ×10⁶ m/s';
+            var bSign = S.B > 0 ? '向外' : (S.B < 0 ? '向里' : '为零');
+            document.getElementById('roB').textContent = S.B.toFixed(1) + ' mT ' + bSign;
+            document.getElementById('roY').textContent = y_disp + ' mm';
+            document.getElementById('roR').textContent = R_disp + (R_disp === '∞' ? '' : ' mm');
+
+            if (showRec && S.recording) {
+                if (Math.sin(Date.now() / 300) > 0) {
+                    ctx.fillStyle = '#c62828';
+                    ctx.beginPath();
+                    ctx.arc(22, 22, 7, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#c62828';
+                ctx.font = 'bold 13px monospace';
+                ctx.textAlign = 'left';
+                ctx.fillText('REC ' + S.recFrames + 'f', 34, 26);
+            }
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            if (r > w / 2) r = w / 2;
+            if (r > h / 2) r = h / 2;
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function togglePlay() {
+            S.playing = !S.playing;
+            document.getElementById('btnPlay').innerHTML = S.playing ? SVG_PAUSE : SVG_PLAY;
+        }
+
+        function toggleLoop() {
+            S.loop = !S.loop;
+            document.getElementById('btnLoop').classList.toggle('active', S.loop);
+        }
+
+        function resetAll() {
+            S.t = 0;
+            S.playing = true;
+            document.getElementById('btnPlay').innerHTML = SVG_PAUSE;
+            draw();
+        }
+
+        function setSpd(s) {
+            S.speed = s;
+            document.querySelectorAll('.ctrl-bar .cbtn[data-spd]').forEach(function(b) {
+                b.classList.toggle('active', parseFloat(b.getAttribute('data-spd')) === s);
+            });
+        }
+
+        const REC_FPS = 15;
+        const REC_INTERVAL = 1000 / REC_FPS;
+        const REC_MAX_FRAMES = 300;
+        const offCv = document.createElement('canvas');
+        const offCtx = offCv.getContext('2d', { alpha: false, willReadFrequently: true });
+
+        // 检查 GIF 类是否可用
+        function isGifAvailable() {
+            return typeof GIF !== 'undefined';
+        }
+
+        async function ensureWorkerUrl() {
+            if (S.workerUrl) return S.workerUrl;
+            try {
+                const resp = await fetch('https://static0.xesimg.com/bcc-fe/libs/gif/gif.worker.js');
+                S.workerUrl = URL.createObjectURL(new Blob([await resp.text()], { type: 'application/javascript' }));
+                return S.workerUrl;
+            } catch (e) {
+                console.warn('无法加载 GIF worker，录制功能不可用');
+                return null;
+            }
+        }
+
+        function captureFrame() {
+            if (!S.gifEncoder) return;
+            offCtx.clearRect(0, 0, offCv.width, offCv.height);
+            offCtx.drawImage(cv, 0, 0, cv.width, cv.height, 0, 0, offCv.width, offCv.height);
+            S.gifEncoder.addFrame(offCtx, { copy: true, delay: REC_INTERVAL });
+            S.recFrames++;
+        }
+
+        async function startRecording() {
+            if (!isGifAvailable()) {
+                alert('GIF 编码库未加载，请检查网络连接后刷新页面重试。');
+                return;
+            }
+            const workerUrl = await ensureWorkerUrl();
+            if (!workerUrl) {
+                alert('无法加载 GIF 编码器，请检查网络连接后重试。');
+                return;
+            }
+            const btn = document.getElementById('btnRec');
+            try {
+                S.gifEncoder = new GIF({
+                    workers: 2,
+                    quality: 10,
+                    width: offCv.width,
+                    height: offCv.height,
+                    workerScript: workerUrl,
+                    dither: false,
+                });
+            } catch (e) {
+                alert('GIF 编码器初始化失败: ' + e.message);
+                return;
+            }
+            S.gifEncoder.on('progress', function(p) {
+                btn.textContent = '⏳' + Math.round(p * 100) + '%';
+            });
+            S.gifEncoder.on('finished', function(blob) {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = 'electron_beam_' + Date.now() + '.gif';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                S.encoding = false;
+                S.gifEncoder = null;
+                btn.textContent = '📹 录制';
+                btn.className = 'cbtn';
+            });
+            S.recording = true;
+            S.encoding = false;
+            S.recFrames = 0;
+            S.lastCaptureTs = 0;
+            btn.textContent = '⏹ 停止';
+            btn.className = 'cbtn recording';
+            if (!S.playing) togglePlay();
+        }
+
+        function stopRecording() {
+            if (!S.gifEncoder) {
+                S.recording = false;
+                S.encoding = false;
+                document.getElementById('btnRec').textContent = '📹 录制';
+                document.getElementById('btnRec').className = 'cbtn';
+                return;
+            }
+            S.recording = false;
+            S.encoding = true;
+            const btn = document.getElementById('btnRec');
+            btn.textContent = '⏳ 0%';
+            btn.className = 'cbtn encoding';
+            S.gifEncoder.render();
+        }
+
+        function toggleRec() {
+            if (S.encoding) return;
+            if (!isGifAvailable()) {
+                alert('GIF 编码库未加载，无法录制。请检查网络连接后刷新页面。');
+                return;
+            }
+            if (S.recording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        }
+
+        let lastTs = null;
+
+        function loop(ts) {
+            if (S.playing) {
+                if (lastTs !== null) {
+                    const dt = Math.min((ts - lastTs) / 1000, 0.05);
+                    S.t += dt * S.speed;
+                    if (S.t > 1000) S.t = 0;
+                }
+                lastTs = ts;
+            } else {
+                lastTs = null;
+            }
+            draw();
+            if (S.recording && S.playing && ts != null) {
+                if (!S.lastCaptureTs || ts - S.lastCaptureTs >= REC_INTERVAL) {
+                    S.lastCaptureTs = ts;
+                    captureFrame();
+                    if (S.recFrames >= REC_MAX_FRAMES) stopRecording();
+                }
+            }
+            requestAnimationFrame(loop);
+        }
+
+        // 初始化
+        resizeCanvas();
+        // 默认1倍速按钮保持active，S.speed已为1.0
+        requestAnimationFrame(loop);
+    </script>
+    <script async src="https://cn.vercount.one/js">
+    </script>
+</body>
+</html>

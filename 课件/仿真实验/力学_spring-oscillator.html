@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>弹簧振子 · 简谐运动与圆周运动</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #E8F4FD 0%, #F8FBFF 50%, #E1EEF7 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 75%;
+            max-width: 780px;
+            height: 70%;
+            max-height: 600px;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            z-index: 1;
+        }
+        #mainCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px 20px;
+            z-index: 10;
+            position: absolute;
+            transition: var(--transition);
+        }
+        .panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 260px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+        }
+
+        .physics-panel {
+            bottom: 16px;
+            left: 16px;
+            width: 240px;
+        }
+        .physics-panel h3 {
+            font-size: .92rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .param-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: .8rem;
+            color: var(--text-secondary);
+        }
+        .param-value {
+            font-family: Consolas, monospace;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 300px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-label {
+            font-size: .72rem;
+            color: var(--text-light);
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .5px;
+        }
+        .slider-group {
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #F8FBFF;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: .85rem;
+        }
+        .slider-label .lt {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .vbadge {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-family: monospace;
+            font-size: .78rem;
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .toggle-group {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toggle-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .82rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            user-select: none;
+        }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 9px 16px;
+            border: none;
+            border-radius: 22px;
+            font-weight: 600;
+            font-size: .82rem;
+            cursor: pointer;
+            transition: all .2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(74, 144, 226, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(74, 144, 226, 0.4);
+        }
+        .btn-ghost {
+            background: #F0F4F8;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-ghost:hover {
+            background: #E1EEF7;
+        }
+        .btn-warning {
+            background: linear-gradient(135deg, #8B6914, #A67B1E);
+            color: #fff;
+        }
+        .btn-warning:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 105, 20, 0.4);
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #A52A2A, #8B1A1A);
+            color: #fff;
+        }
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(165, 42, 42, 0.4);
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: var(--primary-color);
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            transition: all .3s;
+            z-index: 10;
+            font-size: .82rem;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        .author-info {
+            position: absolute;
+            bottom: 70px;
+            right: 16px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            color: var(--text-primary);
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            z-index: 10;
+            border: 1px solid var(--border-color);
+            white-space: nowrap;
+        }
+
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 200px;
+                padding: 12px;
+            }
+            .physics-panel {
+                width: 180px;
+                padding: 12px;
+            }
+            .controls-panel {
+                width: 250px;
+                padding: 12px;
+            }
+            #canvas-container {
+                width: 90%;
+                height: 65%;
+                padding: 12px;
+            }
+            .author-info {
+                bottom: 65px;
+                right: 10px;
+                font-size: 0.8rem;
+            }
+            .back-btn {
+                bottom: 12px;
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="simulation-container">
+        <div id="canvas-container">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+
+        <!-- 信息面板 -->
+        <div class="info-panel panel">
+            <h1>🔧 弹簧振子</h1>
+            <div class="formula-box">ω = √(k/m) &nbsp; T = 2π/ω</div>
+            <p class="info-text">
+                简谐运动与圆周运动投影的直观演示。红球做圆周运动，绿球为水平投影，金色方块为弹簧振子，三者同步。
+            </p>
+        </div>
+
+        <!-- 物理量面板 -->
+        <div class="physics-panel panel">
+            <h3>📊 实时物理</h3>
+            <div class="param-row"><span>📏 周期 T</span><span id="periodValue" class="param-value">0.00 s</span></div>
+            <div class="param-row"><span>〰️ 频率 f</span><span id="frequencyValue" class="param-value">0.00 Hz</span></div>
+            <div class="param-row"><span>📐 角频率 ω</span><span id="angularFrequencyValue" class="param-value">0.00 rad/s</span></div>
+            <div class="param-row"><span>📈 最大速度</span><span id="maxVelocityValue" class="param-value">0.00 m/s</span></div>
+            <div class="param-row"><span>📈 最大加速度</span><span id="maxAccelerationValue" class="param-value">0.00 m/s²</span></div>
+            <div class="param-row"><span>🔋 总机械能</span><span id="totalEnergyValue" class="param-value">0.00 J</span></div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls-panel panel">
+            <h3>🔧 控制面板</h3>
+            <div class="section-label">物理参数</div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">质量 (kg)</span><span id="massValue" class="vbadge">1.0</span></div>
+                <input type="range" id="massSlider" min="0.1" max="5" step="0.1" value="1.0" />
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">劲度系数 (N/m)</span><span id="stiffnessValue" class="vbadge">50</span></div>
+                <input type="range" id="stiffnessSlider" min="10" max="200" step="5" value="50" />
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">振幅 (m)</span><span id="amplitudeValue" class="vbadge">2.0</span></div>
+                <input type="range" id="amplitudeSlider" min="0.5" max="4.0" step="0.1" value="2.0" />
+            </div>
+            <div class="slider-group">
+                <div class="slider-label"><span class="lt">模拟速度</span><span id="speedValue" class="vbadge">1.0x</span></div>
+                <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1.0" />
+            </div>
+
+            <div class="section-label">显示选项</div>
+            <div class="toggle-group">
+                <label class="toggle-item"><input type="checkbox" id="showReference" checked /> 显示参考圆与投影</label>
+                <label class="toggle-item"><input type="checkbox" id="showSpring" checked /> 显示弹簧</label>
+                <label class="toggle-item"><input type="checkbox" id="showTrace" checked /> 显示运动轨迹</label>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" id="startBtn">▶ 开始</button>
+                <button class="btn btn-warning" id="pauseBtn">❚❚ 暂停</button>
+                <button class="btn btn-danger" id="resetBtn">⟳ 重置</button>
+            </div>
+        </div>
+
+        <div class="author-info">山东省邹城市第一中学 陈霞</div>
+        
+    </div>
+
+    <script>
+        (function() {
+            const canvas = document.getElementById('mainCanvas');
+            const ctx = canvas.getContext('2d');
+            const container = document.getElementById('canvas-container');
+
+            function resizeCanvas() {
+                const w = container.clientWidth - 30;
+                const h = container.clientHeight - 30;
+                canvas.width = w > 0 ? w : 800;
+                canvas.height = h > 0 ? h : 500;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            let mass = 1.0;
+            let stiffness = 50;
+            let amplitude = 2.0;
+            let speedFactor = 1.0;
+            let angularFrequency, period, frequency, maxVelocity, maxAcceleration, totalEnergy;
+            let time = 0;
+            let isRunning = false;
+            let animationId = null;
+            let dataPoints = [];
+            const maxDataPoints = 500;
+
+            function calculatePhysics() {
+                angularFrequency = Math.sqrt(stiffness / mass);
+                period = 2 * Math.PI / angularFrequency;
+                frequency = 1 / period;
+                maxVelocity = amplitude * angularFrequency;
+                maxAcceleration = amplitude * angularFrequency * angularFrequency;
+                totalEnergy = 0.5 * stiffness * amplitude * amplitude;
+            }
+
+            function updateDisplays() {
+                document.getElementById('periodValue').textContent = period.toFixed(2) + ' s';
+                document.getElementById('frequencyValue').textContent = frequency.toFixed(2) + ' Hz';
+                document.getElementById('angularFrequencyValue').textContent = angularFrequency.toFixed(2) + ' rad/s';
+                document.getElementById('maxVelocityValue').textContent = maxVelocity.toFixed(2) + ' m/s';
+                document.getElementById('maxAccelerationValue').textContent = maxAcceleration.toFixed(2) + ' m/s²';
+                document.getElementById('totalEnergyValue').textContent = totalEnergy.toFixed(2) + ' J';
+            }
+
+            function drawSpring(ctx, x1, y1, x2, y2, coils) {
+                const dx = x2 - x1,
+                    dy = y2 - y1;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+                ctx.save();
+                ctx.translate(x1, y1);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                const springAmplitude = 10;
+                const totalPoints = coils * 30;
+                for (let i = 0; i <= totalPoints; i++) {
+                    const t = i / totalPoints;
+                    const x = t * distance;
+                    const y = springAmplitude * Math.sin(t * coils * 2 * Math.PI);
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.strokeStyle = '#8B5E3C';
+                ctx.lineWidth = 3.5;
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            function drawBlock(ctx, x, y, size) {
+                const grad = ctx.createLinearGradient(x - size / 2, y - size / 2, x + size / 2, y + size / 2);
+                grad.addColorStop(0, '#B8860B');
+                grad.addColorStop(0.5, '#DAA520');
+                grad.addColorStop(1, '#B8860B');
+                ctx.fillStyle = grad;
+                ctx.fillRect(x - size / 2, y - size / 2, size, size);
+                ctx.strokeStyle = '#8B6914';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x - size / 2, y - size / 2, size, size);
+
+                ctx.save();
+                ctx.strokeStyle = '#2C3E50';
+                ctx.lineWidth = 1.8;
+                ctx.setLineDash([4, 4]);
+                ctx.strokeRect(x - size / 2 - 3, y - size / 2 - 3, size + 6, size + 6);
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+
+            function draw() {
+                const width = canvas.width;
+                const height = canvas.height;
+                ctx.clearRect(0, 0, width, height);
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, width, height);
+
+                const displacement = amplitude * Math.cos(angularFrequency * time);
+                const scale = Math.min(38, (width * 0.8) / (2 * amplitude + 1));
+
+                const topSection = height * 0.27;
+                const middleSection = height * 0.65;
+                const bottomSection = height * 0.78;
+
+                const originX = width / 2;
+                const blockSize = 20;
+
+                // 参考圆与投影
+                if (document.getElementById('showReference').checked) {
+                    const circleCenterX = originX;
+                    const circleCenterY = topSection;
+                    const circleRadius = amplitude * scale;
+                    ctx.strokeStyle = '#4B4B6B';
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.arc(circleCenterX, circleCenterY, circleRadius, 0, 2 * Math.PI);
+                    ctx.stroke();
+
+                    const angle = angularFrequency * time;
+                    const redX = circleCenterX + circleRadius * Math.cos(angle);
+                    const redY = circleCenterY + circleRadius * Math.sin(angle);
+                    const greenX = redX;
+                    const greenY = circleCenterY;
+
+                    ctx.strokeStyle = '#3D5A3D';
+                    ctx.lineWidth = 2.5;
+                    ctx.setLineDash([5, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(redX, redY);
+                    ctx.lineTo(greenX, greenY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    ctx.fillStyle = '#A52A2A';
+                    ctx.beginPath();
+                    ctx.arc(redX, redY, 8, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#2E5E2E';
+                    ctx.beginPath();
+                    ctx.arc(greenX, greenY, 7, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#5A5A7A';
+                    ctx.beginPath();
+                    ctx.arc(circleCenterX, circleCenterY, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+
+                const oscillatorY = middleSection;
+                const currentX = originX + displacement * scale;
+
+                // 平衡位置虚线
+                ctx.strokeStyle = '#5A6C7D';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(originX - amplitude * scale - 30, oscillatorY);
+                ctx.lineTo(originX + amplitude * scale + 30, oscillatorY);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#2C3E50';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.fillText('O', originX - 12, oscillatorY - 8);
+
+                // 弹簧
+                if (document.getElementById('showSpring').checked) {
+                    const springLeftX = originX - amplitude * scale - 60;
+                    drawSpring(ctx, springLeftX, oscillatorY, currentX, oscillatorY, 8);
+                }
+
+                // 振子方块
+                drawBlock(ctx, currentX, oscillatorY, blockSize);
+
+                // 墙壁
+                ctx.fillStyle = '#4B4B6B';
+                ctx.fillRect(originX - amplitude * scale - 80, oscillatorY - 22, 8, 44);
+
+                // 竖直投影连线
+                if (document.getElementById('showReference').checked && document.getElementById('showSpring').checked) {
+                    const greenX = originX + displacement * scale;
+                    ctx.strokeStyle = 'rgba(60, 60, 60, 0.5)';
+                    ctx.lineWidth = 1.8;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(greenX, topSection + 8);
+                    ctx.lineTo(currentX, oscillatorY - blockSize / 2);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                // ---- 轨迹图 ----
+                const graphTop = bottomSection;
+                const graphHeight = height - graphTop - 25;
+                const graphPadding = 45;
+                const graphWidth = width - 2 * graphPadding;
+                dataPoints.push({ t: time, x: displacement });
+                if (dataPoints.length > maxDataPoints) dataPoints.shift();
+
+                // 坐标轴
+                ctx.strokeStyle = '#5A6C7D';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(graphPadding, graphTop);
+                ctx.lineTo(graphPadding, graphTop + graphHeight);
+                ctx.moveTo(graphPadding, graphTop + graphHeight / 2);
+                ctx.lineTo(graphPadding + graphWidth, graphTop + graphHeight / 2);
+                ctx.stroke();
+
+                // 轨迹曲线
+                if (dataPoints.length > 1 && document.getElementById('showTrace').checked) {
+                    ctx.strokeStyle = '#1E3A5F';
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    const timeWindow = 2 * period;
+                    const timeScale = graphHeight / timeWindow;
+                    for (let i = 0; i < dataPoints.length; i++) {
+                        const p = dataPoints[i];
+                        const x = graphPadding + graphWidth / 2 + p.x * scale;
+                        const y = graphTop + (time - p.t) * timeScale;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.stroke();
+                }
+
+                // 当前点
+                if (dataPoints.length) {
+                    const last = dataPoints[dataPoints.length - 1];
+                    const lx = graphPadding + graphWidth / 2 + last.x * scale;
+                    const ly = graphTop;
+
+                    ctx.fillStyle = '#A52A2A';
+                    ctx.beginPath();
+                    ctx.arc(lx, ly, 5, 0, 2 * Math.PI);
+                    ctx.fill();
+
+                    ctx.save();
+                    ctx.strokeStyle = '#2C3E50';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.arc(lx, ly, 8, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.restore();
+                }
+
+                // 时间显示
+                ctx.fillStyle = '#2C3E50';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.fillText(`t = ${time.toFixed(2)} s`, 20, 30);
+            }
+
+            function animate() {
+                if (!isRunning) return;
+                time += 0.016 * speedFactor;
+                updateDisplays();
+                draw();
+                animationId = requestAnimationFrame(animate);
+            }
+
+            function init() {
+                calculatePhysics();
+                time = 0;
+                dataPoints = [];
+                updateDisplays();
+                draw();
+            }
+
+            // ---- 事件绑定 ----
+            document.getElementById('massSlider').addEventListener('input', function() {
+                mass = parseFloat(this.value);
+                document.getElementById('massValue').textContent = mass.toFixed(1);
+                calculatePhysics();
+                updateDisplays();
+                draw();
+            });
+            document.getElementById('stiffnessSlider').addEventListener('input', function() {
+                stiffness = parseFloat(this.value);
+                document.getElementById('stiffnessValue').textContent = stiffness;
+                calculatePhysics();
+                updateDisplays();
+                draw();
+            });
+            document.getElementById('amplitudeSlider').addEventListener('input', function() {
+                amplitude = parseFloat(this.value);
+                document.getElementById('amplitudeValue').textContent = amplitude.toFixed(1);
+                calculatePhysics();
+                updateDisplays();
+                draw();
+            });
+            document.getElementById('speedSlider').addEventListener('input', function() {
+                speedFactor = parseFloat(this.value);
+                document.getElementById('speedValue').textContent = speedFactor.toFixed(1) + 'x';
+            });
+            ['showReference', 'showSpring', 'showTrace'].forEach(id => {
+                document.getElementById(id).addEventListener('change', draw);
+            });
+
+            document.getElementById('startBtn').addEventListener('click', () => {
+                if (!isRunning) { isRunning = true;
+                    animate(); }
+            });
+            document.getElementById('pauseBtn').addEventListener('click', () => {
+                isRunning = false;
+                if (animationId) cancelAnimationFrame(animationId);
+            });
+            document.getElementById('resetBtn').addEventListener('click', () => {
+                isRunning = false;
+                if (animationId) cancelAnimationFrame(animationId);
+                init();
+            });
+
+            init();
+        })();
+    </script>
+    </body>
+</html>
