@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <title>小船渡河</title>
+    <style>
+        /* ===== 全局重置 & 变量 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --accent-color: #FF7A33;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+            --bg-start: #E8F4FD;
+            --bg-end: #F8FBFF;
+            --bg-accent: #E1EEF7;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 50%, var(--bg-accent) 100%);
+            color: var(--text-primary);
+        }
+
+        /* ===== 仿真容器 ===== */
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== 画布区域 ===== */
+        .canvas-wrap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.35);
+            overflow: hidden;
+        }
+        #canvas-svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: transparent;
+        }
+
+        /* ===== 毛玻璃面板 ===== */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            z-index: 20;
+            position: absolute;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* ===== 左上角：信息面板 ===== */
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 280px;
+            min-width: 200px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .formula-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 3px;
+        }
+        .f-label {
+            color: #5a7a9a;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-right: 6px;
+            min-width: 56px;
+        }
+        .f-expr {
+            color: #1a2b42;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .f-expr .hl {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-top: 4px;
+        }
+        .info-text .hl {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        .phys-desc {
+            font-size: .75rem;
+            color: var(--primary-dark);
+            margin-top: 4px;
+            padding: 4px 8px;
+            background: rgba(74, 144, 226, 0.07);
+            border-radius: 6px;
+            border-left: 3px solid var(--primary-color);
+            line-height: 1.5;
+        }
+
+        /* ===== 右上角：控制面板 ===== */
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 300px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+            padding: 14px 16px;
+        }
+        .controls-panel::-webkit-scrollbar {
+            width: 3px;
+        }
+        .controls-panel::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 6px;
+        }
+        .controls-panel h3 {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        /* 收起/展开按钮 */
+        .toggle-btn {
+            border: none;
+            background: transparent;
+            font-size: .9rem;
+            color: var(--text-light);
+            cursor: pointer;
+            padding: 2px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            line-height: 1.2;
+            flex-shrink: 0;
+        }
+        .toggle-btn:hover {
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+        .toggle-btn .chev {
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+        /* 收起状态：只留标题栏 */
+        .controls-panel.collapsed {
+            width: auto;
+            min-width: 0;
+            padding: 10px 14px;
+        }
+        .controls-panel.collapsed h3 {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .controls-panel.collapsed .panel-body {
+            display: none;
+        }
+        .controls-panel.collapsed .toggle-btn .chev {
+            transform: rotate(-90deg);
+        }
+        .section-label {
+            font-size: .70rem;
+            color: var(--text-light);
+            margin: 12px 0 4px;
+            font-weight: 600;
+            letter-spacing: .4px;
+        }
+        .section-label:first-of-type {
+            margin-top: 0;
+        }
+        .param-item {
+            margin-bottom: 10px;
+        }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .param-name {
+            font-size: .82rem;
+            color: var(--text-primary);
+        }
+        .param-value {
+            font-size: .82rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            touch-action: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        input[type=range]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .range-limits {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: var(--text-light);
+            margin-top: 1px;
+        }
+        .angle-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+        }
+        .angle-btn {
+            flex: 1;
+            padding: 4px 0;
+            border: 1.5px solid #d0dae8;
+            background: #ffffff;
+            border-radius: 6px;
+            font-size: .7rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .angle-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .preset-hint {
+            font-size: .7rem;
+            color: var(--text-light);
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        /* 播放控制按钮 */
+        .ctrl-row {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        .ctrl-btn {
+            flex: 1;
+            padding: 7px 0;
+            border: 1.5px solid #d0dae8;
+            background: #ffffff;
+            border-radius: 8px;
+            font-size: .78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            user-select: none;
+            min-height: 34px;
+        }
+        .ctrl-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        .ctrl-btn.primary {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+        .ctrl-btn.primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        .ctrl-btn .icon {
+            font-size: 1rem;
+        }
+
+        /* ===== 左下角：实时数据 ===== */
+        .physics-panel {
+            bottom: 16px;
+            left: 16px;
+            width: 280px;
+            padding: 14px 18px;
+        }
+        .physics-panel h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .readout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 6px;
+        }
+        .readout-item {
+            background: #f0f5fa;
+            border-radius: 8px;
+            padding: 8px 10px;
+        }
+        .readout-item.full {
+            grid-column: span 2;
+        }
+        .readout-item .r-label {
+            font-size: 11px;
+            color: #5a7a9a;
+            margin-bottom: 2px;
+        }
+        .readout-item .r-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .readout-item .r-value.boat-color { color: #e74c3c; }
+        .readout-item .r-value.water-color { color: #e67e22; }
+        .readout-item .r-value.result-color { color: #27ae60; }
+        .readout-item .r-value.time-color { color: #8e44ad; }
+        .readout-item .r-value.dist-color { color: #d35400; }
+
+        /* ===== 返回按钮 ===== */
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            padding: 8px 14px;
+            border: 1.5px solid var(--primary-color);
+            background: #ffffff;
+            border-radius: 8px;
+            font-size: .85rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            z-index: 20;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        /* ===== 响应式 ===== */
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 200px;
+                padding: 10px 12px;
+                top: 12px;
+                left: 12px;
+            }
+            .info-panel h1 { font-size: 0.95rem; }
+            .formula-box { font-size: .75rem; padding: 6px 10px; }
+            .controls-panel {
+                width: 250px;
+                padding: 10px 12px;
+                top: 12px;
+                right: 12px;
+            }
+            .physics-panel {
+                width: 220px;
+                padding: 10px 12px;
+                bottom: 12px;
+                left: 12px;
+            }
+            .readout-item .r-value { font-size: 17px; }
+            .readout-item .r-label { font-size: 10px; }
+            .ctrl-btn { font-size: .7rem; padding: 5px 0; min-height: 30px; }
+            .back-btn { font-size: .75rem; padding: 6px 10px; }
+        }
+        @media (max-width: 600px) {
+            .info-panel { display: none; }
+            .controls-panel {
+                width: 200px;
+                padding: 8px 10px;
+                top: 8px;
+                right: 8px;
+                max-height: calc(100vh - 70px);
+            }
+            .controls-panel h3 {
+                font-size: .8rem;
+                margin-bottom: 6px;
+                padding-bottom: 4px;
+            }
+            .param-name { font-size: .72rem; }
+            .param-value { font-size: .72rem; }
+            .ctrl-btn { font-size: .62rem; padding: 4px 0; min-height: 26px; }
+            .physics-panel {
+                width: 180px;
+                padding: 8px 10px;
+                bottom: 8px;
+                left: 8px;
+            }
+            .physics-panel h3 { font-size: .8rem; padding-bottom: 4px; }
+            .readout { grid-template-columns: 1fr 1fr; gap: 4px; }
+            .readout-item { padding: 4px 6px; }
+            .readout-item .r-value { font-size: 14px; }
+            .readout-item .r-label { font-size: 9px; }
+            .back-btn { font-size: .7rem; padding: 5px 8px; bottom: 8px; right: 8px; }
+        }
+        @media (max-width: 420px) {
+            .controls-panel {
+                width: 170px;
+                padding: 6px 8px;
+                top: 6px;
+                right: 6px;
+            }
+            .controls-panel h3 { font-size: .7rem; }
+            .param-name { font-size: .65rem; }
+            .param-value { font-size: .65rem; }
+            .ctrl-btn { font-size: .55rem; padding: 3px 0; min-height: 22px; }
+            .physics-panel {
+                width: 150px;
+                padding: 6px 8px;
+                bottom: 6px;
+                left: 6px;
+            }
+            .physics-panel h3 { font-size: .7rem; }
+            .readout-item .r-value { font-size: 12px; }
+            .back-btn { font-size: .6rem; padding: 4px 6px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="simulation-container">
+        <!-- ===== SVG 画布 ===== -->
+        <div class="canvas-wrap">
+            <svg id="canvas-svg" viewBox="0 0 1100 600" preserveAspectRatio="xMidYMid slice">
+                <defs>
+                    <!-- 渐变 -->
+                    <linearGradient id="waterGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#4A90D9" />
+                        <stop offset="100%" stop-color="#2E7BC4" />
+                    </linearGradient>
+                    <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="#8BC34A" />
+                        <stop offset="100%" stop-color="#7CB342" />
+                    </linearGradient>
+                    <linearGradient id="boatHull" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#8D6E63" />
+                        <stop offset="100%" stop-color="#6D4C41" />
+                    </linearGradient>
+                    <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stop-color="#FFF7DC" />
+                        <stop offset="60%" stop-color="#FFE066" />
+                        <stop offset="100%" stop-color="#FFD700" stop-opacity="0.2" />
+                    </radialGradient>
+                    <!-- 细长箭头标记 -->
+                    <marker id="arrowRed" markerWidth="7" markerHeight="5" refX="6.5" refY="2.5" orient="auto">
+                        <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#e74c3c" />
+                    </marker>
+                    <marker id="arrowBlue" markerWidth="7" markerHeight="5" refX="6.5" refY="2.5" orient="auto">
+                        <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#2980b9" />
+                    </marker>
+                    <marker id="arrowGreen" markerWidth="7" markerHeight="5" refX="6.5" refY="2.5" orient="auto">
+                        <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#27ae60" />
+                    </marker>
+                    <marker id="arrowOrange" markerWidth="7" markerHeight="5" refX="6.5" refY="2.5" orient="auto">
+                        <path d="M 0 0 L 7 2.5 L 0 5 Z" fill="#e67e22" />
+                    </marker>
+                </defs>
+
+                <!-- 天空 -->
+                <rect width="1100" height="100" fill="#B5D8F7" />
+                <rect y="100" width="1100" height="400" fill="url(#waterGrad)" />
+                <rect y="500" width="1100" height="100" fill="url(#grassGrad)" />
+
+                <!-- 太阳 -->
+                <circle cx="950" cy="60" r="32" fill="url(#sunGrad)" opacity="0.9" />
+
+                <!-- 河流装饰：距离刻度 -->
+                <g id="river-marks">
+                    <line x1="100" y1="100" x2="100" y2="500" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="5,5" />
+                    <line x1="500" y1="100" x2="500" y2="500" stroke="rgba(255,255,255,0.25)" stroke-width="1" stroke-dasharray="5,5" />
+                    <line x1="900" y1="100" x2="900" y2="500" stroke="rgba(255,255,255,0.3)" stroke-width="1" stroke-dasharray="5,5" />
+                    <text x="110" y="125" font-size="12" fill="rgba(255,255,255,0.6)">上游</text>
+                    <text x="910" y="125" font-size="12" fill="rgba(255,255,255,0.6)">下游</text>
+                </g>
+
+                <!-- 水波纹理 (动态) -->
+                <g id="waves-layer"></g>
+
+                <!-- 轨迹线 -->
+                <path id="trajectory" d="" stroke="rgba(230, 126, 34, 0.6)" stroke-width="2.5" fill="none" stroke-dasharray="6,4" />
+
+                <!-- 目标靠岸点标记 -->
+                <g id="target-marker" style="display:none;">
+                    <line x1="0" y1="100" x2="0" y2="115" stroke="#e67e22" stroke-width="2" />
+                    <text x="0" y="95" font-size="12" fill="#e67e22" text-anchor="middle" font-weight="bold">登陆点</text>
+                </g>
+
+                <!-- 河岸文字 -->
+                <text x="20" y="80" font-size="16" fill="rgba(255,255,255,0.8)" font-weight="bold">出发岸</text>
+                <text x="20" y="530" font-size="16" fill="rgba(255,255,255,0.8)" font-weight="bold">对岸</text>
+
+                <!-- 小船组 (船头朝 -y 方向，随航向角旋转) -->
+                <g id="boat-group" transform="translate(550, 500)">
+                    <!-- 船阴影 -->
+                    <ellipse cx="0" cy="22" rx="15" ry="5" fill="rgba(0,0,0,0.15)" />
+                    <!-- 船身：梭形，船头在上方(-y) -->
+                    <path d="M 0 -40 C 10 -30, 16 -14, 16 0 C 16 12, 9 18, 0 18 C -9 18, -16 12, -16 0 C -16 -14, -10 -30, 0 -40 Z"
+                          fill="url(#boatHull)" stroke="#4E342E" stroke-width="1.2" />
+                    <path d="M 0 -33 C 7 -25, 12 -12, 12 0 C 12 9, 6 14, 0 14 C -6 14, -12 9, -12 0 C -12 -12, -7 -25, 0 -33 Z"
+                          fill="#A1887F" />
+                    <!-- 船头标记点 -->
+                    <circle cx="0" cy="-33" r="2.5" fill="#FFEB3B" stroke="#B71C1C" stroke-width="1" />
+                    <!-- 船舱 -->
+                    <rect x="-7" y="-4" width="14" height="12" rx="2" fill="#D7CCC8" stroke="#8D6E63" stroke-width="1" />
+                    <!-- 小人 -->
+                    <circle cx="0" cy="-12" r="4.5" fill="#FFCCBC" stroke="#D7A08A" stroke-width="0.8" />
+                    <path d="M -3.5 -12 L 3.5 -12 L 2.5 -6 L -2.5 -6 Z" fill="#3E2723" />
+                </g>
+
+                <!-- 速度矢量组：三个速度共起点，附平行四边形定则辅助线 -->
+                <g id="vector-group" transform="translate(550, 500)">
+                    <!-- 平行四边形辅助虚线 -->
+                    <line id="para-line-1" x1="0" y1="0" x2="0" y2="0" stroke="#7f8c8d" stroke-width="1.3" stroke-dasharray="5,4" opacity="0.85" />
+                    <line id="para-line-2" x1="0" y1="0" x2="0" y2="0" stroke="#7f8c8d" stroke-width="1.3" stroke-dasharray="5,4" opacity="0.85" />
+                    <!-- 水流速度 v水 (橙色) -->
+                    <line id="arrow-water" x1="0" y1="0" x2="40" y2="0" stroke="#e67e22" stroke-width="2" marker-end="url(#arrowOrange)" />
+                    <!-- 船相对水速度 v船 (方向与船头一致) -->
+                    <line id="arrow-boat" x1="0" y1="0" x2="0" y2="-40" stroke="#e74c3c" stroke-width="2" marker-end="url(#arrowRed)" />
+                    <!-- 合速度 v合 (平行四边形对角线) -->
+                    <line id="arrow-result" x1="0" y1="0" x2="30" y2="-30" stroke="#27ae60" stroke-width="2.6" marker-end="url(#arrowGreen)" />
+                    <text id="label-water" x="30" y="-8" font-size="13" fill="#e67e22" font-weight="bold">v水</text>
+                    <text id="label-boat" x="8" y="-30" font-size="13" fill="#e74c3c" font-weight="bold">v船</text>
+                    <text id="label-result" x="24" y="-24" font-size="13" fill="#27ae60" font-weight="bold">v合</text>
+                </g>
+
+                <!-- 状态提示 -->
+                <text id="status-text" x="550" y="55" font-size="16" font-weight="bold" fill="rgba(255,255,255,0.95)" text-anchor="middle">准备渡河</text>
+            </svg>
+        </div>
+
+        <!-- ===== 左上角：信息面板 ===== -->
+        <div class="glass-panel info-panel">
+            <h1>🚤 小船渡河</h1>
+            <div class="formula-box">
+                <div class="formula-row"><span class="f-label">速度合成</span><span class="f-expr">v<sub>合</sub> = v<sub>船</sub> + v<sub>水</sub>（矢量）</span></div>
+                <div class="formula-row"><span class="f-label">合速度大小</span><span class="f-expr">v<sub>合</sub> = <span class="hl">√[(v<sub>水</sub>+v<sub>船</sub>sinθ)² + (v<sub>船</sub>cosθ)²]</span></span></div>
+                <div class="formula-row"><span class="f-label">渡河时间</span><span class="f-expr">t = d / (v<sub>船</sub> cos θ)</span></div>
+                <div class="formula-row"><span class="f-label">渡河位移</span><span class="f-expr">s = √(d² + x²)</span></div>
+            </div>
+            <p class="info-text">调节船速、航向和水速，观察小船渡河轨迹。<br>θ 为船头与河岸垂线的夹角。</p>
+            <div class="phys-desc" id="phys-desc">调整参数后点击“开始”运行。</div>
+        </div>
+
+        <!-- ===== 右上角：控制面板 ===== -->
+        <div class="glass-panel controls-panel" id="controlsPanel">
+            <h3><span>🔧 控制面板</span><button class="toggle-btn" id="btnToggle" title="收起面板"><span class="chev">▾</span></button></h3>
+
+            <div class="panel-body" id="panelBody">
+            <div class="section-label">船速大小</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">🚤 船速 v<sub>船</sub></span><span class="param-value" id="boat-v-val">5.0</span> m/s</div>
+                <input type="range" id="boat-v" min="0.5" max="15" step="0.1" value="5.0">
+                <div class="range-limits"><span>0.5</span><span>15</span></div>
+            </div>
+
+            <div class="section-label">船头方向 (相对河岸垂线)</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">🧭 偏角 θ</span><span class="param-value" id="angle-val">0°</span></div>
+                <input type="range" id="angle" min="-60" max="60" step="1" value="0">
+                <div class="range-limits"><span>-60°</span><span>+60°</span></div>
+                <div class="angle-row">
+                    <button class="angle-btn" data-angle="-30">偏上游30°</button>
+                    <button class="angle-btn" data-angle="0">正对岸</button>
+                    <button class="angle-btn" data-angle="30">偏下游30°</button>
+                </div>
+                <p class="preset-hint">正角指向下游，负角指向上游</p>
+            </div>
+
+            <div class="section-label">水流速度</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">🌊 水速 v<sub>水</sub></span><span class="param-value" id="water-v-val">3.0</span> m/s</div>
+                <input type="range" id="water-v" min="0" max="10" step="0.1" value="3.0">
+                <div class="range-limits"><span>0</span><span>10</span></div>
+            </div>
+
+            <div class="section-label">播放控制</div>
+            <div class="ctrl-row">
+                <button class="ctrl-btn primary" id="btnPlay"><span class="icon">▶</span> 开始</button>
+                <button class="ctrl-btn" id="btnPause"><span class="icon">⏸</span> 暂停</button>
+                <button class="ctrl-btn" id="btnReset"><span class="icon">⟳</span> 重置</button>
+            </div>
+            </div>
+        </div>
+
+        <!-- ===== 左下角：实时数据 ===== -->
+        <div class="glass-panel physics-panel">
+            <h3>📊 实时数据</h3>
+            <div class="readout">
+                <div class="readout-item"><div class="r-label">🔄 合速度 v合 (m/s)</div><div class="r-value result-color" id="roResult">5.8</div></div>
+                <div class="readout-item"><div class="r-label">⏱️ 渡河时间 t (s)</div><div class="r-value time-color" id="roTime">--</div></div>
+                <div class="readout-item"><div class="r-label">📏 对岸漂移 x (m)</div><div class="r-value dist-color" id="roDrift">--</div></div>
+                <div class="readout-item"><div class="r-label">🛤️ 渡河位移 s (m)</div><div class="r-value dist-color" id="roDist">--</div></div>
+            </div>
+        </div>
+
+        <a href="../index.html" class="back-btn">← 返回实验列表</a>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            //  常量
+            // ============================================================
+            const RIVER_WIDTH_M = 100;      // 河宽 100 m
+            const SVG_Y_TOP = 100;          // 对岸 y 坐标
+            const SVG_Y_BOTTOM = 500;       // 出发岸 y 坐标
+            const SVG_RIVER_WIDTH_PX = SVG_Y_BOTTOM - SVG_Y_TOP; // 400 px
+            const SCALE = RIVER_WIDTH_M / SVG_RIVER_WIDTH_PX;   // 1 px = 0.25 m
+            const INV_SCALE = 1 / SCALE;    // 1 m = 4 px
+            const CENTER_X = 550;           // 河中央 x
+            const START_Y = SVG_Y_BOTTOM;   // 出发位置
+            const TIME_SCALE = 1.0;         // 时间缩放 (模拟秒/真实秒)
+
+            // ============================================================
+            //  DOM 引用
+            // ============================================================
+            const boatSlider = document.getElementById('boat-v');
+            const waterSlider = document.getElementById('water-v');
+            const angleSlider = document.getElementById('angle');
+            const boatVVal = document.getElementById('boat-v-val');
+            const waterVVal = document.getElementById('water-v-val');
+            const angleVal = document.getElementById('angle-val');
+            const roResult = document.getElementById('roResult');
+            const roTime = document.getElementById('roTime');
+            const roDrift = document.getElementById('roDrift');
+            const roDist = document.getElementById('roDist');
+            const physDesc = document.getElementById('phys-desc');
+            const statusText = document.getElementById('status-text');
+            const btnPlay = document.getElementById('btnPlay');
+            const btnPause = document.getElementById('btnPause');
+            const btnReset = document.getElementById('btnReset');
+            const angleBtns = document.querySelectorAll('.angle-btn');
+            const controlsPanel = document.getElementById('controlsPanel');
+            const btnToggle = document.getElementById('btnToggle');
+
+            // SVG 元素
+            const boatGroup = document.getElementById('boat-group');
+            const wavesLayer = document.getElementById('waves-layer');
+            const trajectory = document.getElementById('trajectory');
+            const targetMarker = document.getElementById('target-marker');
+            const vectorGroup = document.getElementById('vector-group');
+            const paraLine1 = document.getElementById('para-line-1');
+            const paraLine2 = document.getElementById('para-line-2');
+            const arrowBoat = document.getElementById('arrow-boat');
+            const arrowWater = document.getElementById('arrow-water');
+            const arrowResult = document.getElementById('arrow-result');
+            const labelBoat = document.getElementById('label-boat');
+            const labelWater = document.getElementById('label-water');
+            const labelResult = document.getElementById('label-result');
+
+            // ============================================================
+            //  状态
+            // ============================================================
+            let boatSpeed = 5.0;
+            let waterSpeed = 3.0;
+            let angleDeg = 0;          // 船头相对河岸垂线的角度，正为下游
+            let boatX = CENTER_X;
+            let boatY = START_Y;
+            let simTime = 0;           // 已渡时间 (s)
+            let paused = true;
+            let finished = false;
+            let animId = null;
+            let lastTs = null;
+            let wavePhase = 0;
+            let pathPoints = [];
+            let predictedDrift = 0;
+            let predictedTime = 0;
+            let predictedDist = 0;
+
+            // ============================================================
+            //  物理计算
+            // ============================================================
+            function computePhysics() {
+                const rad = angleDeg * Math.PI / 180;
+                const vBoatY = boatSpeed * Math.cos(rad);          // 垂直河岸分量
+                const vBoatX = boatSpeed * Math.sin(rad);          // 沿河岸分量 (下游正)
+                const vWaterX = waterSpeed;                         // 水流向下游
+                const vResultX = vBoatX + vWaterX;
+                const vResultY = -vBoatY;                          // SVG 向上为负
+                const resultSpeed = Math.sqrt(vResultX * vResultX + vBoatY * vBoatY);
+
+                // 渡河时间
+                const t = RIVER_WIDTH_M / vBoatY;
+                // 对岸漂移 (m)，正为下游
+                const drift = vResultX * t;
+                // 渡河路程 (m)
+                const dist = Math.sqrt(RIVER_WIDTH_M * RIVER_WIDTH_M + drift * drift);
+
+                return {
+                    rad,
+                    vBoatY,
+                    vBoatX,
+                    vWaterX,
+                    vResultX,
+                    vResultY,
+                    resultSpeed,
+                    t,
+                    drift,
+                    dist
+                };
+            }
+
+            // ============================================================
+            //  坐标转换
+            // ============================================================
+            function mToPx(meters) {
+                return meters * INV_SCALE;
+            }
+
+            function pxToM(px) {
+                return px * SCALE;
+            }
+
+            // ============================================================
+            //  更新显示
+            // ============================================================
+            function updateDisplay() {
+                const phys = computePhysics();
+
+                boatVVal.textContent = boatSpeed.toFixed(1);
+                waterVVal.textContent = waterSpeed.toFixed(1);
+                angleVal.textContent = (angleDeg >= 0 ? '+' : '') + angleDeg.toFixed(0) + '°';
+
+                roResult.textContent = phys.resultSpeed.toFixed(1);
+
+                predictedTime = phys.t;
+                predictedDrift = phys.drift;
+                predictedDist = phys.dist;
+
+                if (!finished && paused) {
+                    roTime.textContent = phys.t.toFixed(1);
+                    roDrift.textContent = phys.drift.toFixed(1);
+                    roDist.textContent = phys.dist.toFixed(1);
+                }
+
+                updateArrows(phys);
+                updateDescription(phys);
+                updateTargetMarker(phys);
+            }
+
+            function updateDescription(phys) {
+                let desc = '';
+                if (phys.vBoatY <= 0.05) {
+                    desc = '⚠️ 船头沿河岸，无法渡河。';
+                } else {
+                    if (Math.abs(phys.drift) < 1) {
+                        desc = `✅ 船头偏${Math.abs(angleDeg).toFixed(0)}°，正好直达对岸。`;
+                    } else if (phys.drift > 0) {
+                        desc = `🌊 船会被冲向下游 ${phys.drift.toFixed(1)} m。`;
+                    } else {
+                        desc = `⬆️ 船头偏向上游，最终到达上游 ${Math.abs(phys.drift).toFixed(1)} m 处。`;
+                    }
+                    desc += ` 预计用时 ${phys.t.toFixed(1)} s。`;
+                }
+                physDesc.textContent = desc;
+            }
+
+            // ============================================================
+            //  更新箭头：三个速度共起点 (船的位置)，严格按比例绘制，
+            //  并画出平行四边形定则辅助虚线
+            // ============================================================
+            const ARROW_SCALE = 9; // px 每 m/s，三个矢量统一比例
+
+            function setLine(el, x1, y1, x2, y2) {
+                el.setAttribute('x1', x1.toFixed(1));
+                el.setAttribute('y1', y1.toFixed(1));
+                el.setAttribute('x2', x2.toFixed(1));
+                el.setAttribute('y2', y2.toFixed(1));
+            }
+
+            // side: -1 放在箭头左侧(上游侧)，1 放在右侧(下游侧)，0 沿箭头延长线
+            function setArrowLabel(label, dx, dy, text, side) {
+                const len = Math.hypot(dx, dy) || 1;
+                const nx = dx / len, ny = dy / len;
+                let lx, ly;
+                if (side === 0) {
+                    lx = dx + nx * 16; ly = dy + ny * 16;
+                    label.setAttribute('text-anchor', 'middle');
+                } else {
+                    // 垂直于箭头方向偏移，文字向外生长，避免相邻标签重叠
+                    const px = -ny * side, py = nx * side;
+                    lx = dx + px * 10 + nx * 4;
+                    ly = dy + py * 10 + ny * 4;
+                    label.setAttribute('text-anchor', side < 0 ? 'end' : 'start');
+                }
+                label.setAttribute('x', lx.toFixed(1));
+                label.setAttribute('y', (ly + 4).toFixed(1));
+                label.textContent = text;
+            }
+
+            function updateArrows(phys) {
+                const rad = phys.rad;
+
+                // v船：方向 = 船头方向 (相对河岸垂线偏 θ，正角向下游)
+                const boatLen = boatSpeed * ARROW_SCALE;
+                const boatDx = Math.sin(rad) * boatLen;
+                const boatDy = -Math.cos(rad) * boatLen;
+
+                // v水：水平指向下游
+                const waterLen = waterSpeed * ARROW_SCALE;
+                const waterDx = waterLen;
+                const waterDy = 0;
+
+                // v合 = v船 + v水 (矢量相加，平行四边形对角线)
+                const resultDx = boatDx + waterDx;
+                const resultDy = boatDy + waterDy;
+
+                // 三个矢量共起点 (0,0)，即船所在位置
+                setLine(arrowBoat, 0, 0, boatDx, boatDy);
+                setLine(arrowWater, 0, 0, waterDx, waterDy);
+                setLine(arrowResult, 0, 0, resultDx, resultDy);
+
+                // 平行四边形辅助虚线：
+                //  一条从 v船 末端沿 v水 方向到 v合 末端
+                //  一条从 v水 末端沿 v船 方向到 v合 末端
+                setLine(paraLine1, boatDx, boatDy, resultDx, resultDy);
+                setLine(paraLine2, waterDx, waterDy, resultDx, resultDy);
+
+                // 水速为 0 时隐藏水箭头和辅助线
+                const showWater = waterLen > 0.5;
+                arrowWater.style.display = showWater ? 'block' : 'none';
+                labelWater.style.display = showWater ? 'block' : 'none';
+                paraLine1.style.display = showWater ? 'block' : 'none';
+                paraLine2.style.display = showWater ? 'block' : 'none';
+
+                setArrowLabel(labelBoat, boatDx, boatDy, `v船=${boatSpeed.toFixed(1)}`, -1);
+                if (showWater) setArrowLabel(labelWater, waterDx, waterDy, `v水=${waterSpeed.toFixed(1)}`, 1);
+                setArrowLabel(labelResult, resultDx, resultDy, `v合=${phys.resultSpeed.toFixed(1)}`, 1);
+
+                positionArrowGroups();
+            }
+
+            function positionArrowGroups() {
+                // 矢量组起点始终跟随船的位置
+                vectorGroup.setAttribute('transform', `translate(${boatX.toFixed(1)}, ${boatY.toFixed(1)})`);
+            }
+
+            // ============================================================
+            //  目标登陆点标记
+            // ============================================================
+            function updateTargetMarker(phys) {
+                if (paused && !finished) {
+                    targetMarker.style.display = 'block';
+                    const landX = CENTER_X + mToPx(phys.drift);
+                    targetMarker.setAttribute('transform', `translate(${landX.toFixed(1)}, 0)`);
+                } else if (finished) {
+                    targetMarker.style.display = 'none';
+                }
+            }
+
+            // ============================================================
+            //  渲染波浪
+            // ============================================================
+            function renderWaves() {
+                let html = '';
+                const waveCount = 12;
+                for (let i = 0; i < waveCount; i++) {
+                    const yBase = SVG_Y_TOP + 10 + i * 32;
+                    if (yBase > SVG_Y_BOTTOM - 10) break;
+                    const amp = 2 + (i % 4) * 1.5;
+                    const freq = 0.015 + (i % 3) * 0.005;
+                    const phase = wavePhase + i * 1.2;
+                    let path = '';
+                    for (let x = 0; x <= 1100; x += 3) {
+                        const y = yBase + Math.sin(x * freq + phase) * amp;
+                        path += (x === 0) ? `M ${x} ${y}` : ` L ${x} ${y}`;
+                    }
+                    html += `<path d="${path}" stroke="rgba(255,255,255,${0.10 + i*0.012})" stroke-width="1.2" fill="none" />`;
+                }
+                wavesLayer.innerHTML = html;
+            }
+
+            // ============================================================
+            //  更新轨迹
+            // ============================================================
+            function updateTrajectory() {
+                if (pathPoints.length < 2) {
+                    trajectory.setAttribute('d', '');
+                    return;
+                }
+                const d = pathPoints.map((p, i) => (i === 0 ? 'M' : 'L') + ` ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+                trajectory.setAttribute('d', d);
+            }
+
+            // ============================================================
+            //  动画循环
+            // ============================================================
+            function animate(ts) {
+                if (!lastTs) lastTs = ts;
+                const dt = Math.min((ts - lastTs) / 1000, 0.05) * TIME_SCALE; // 限制最大步长
+                lastTs = ts;
+
+                if (!paused && !finished) {
+                    const phys = computePhysics();
+                    if (phys.vBoatY > 0) {
+                        // 更新船位置
+                        boatX += mToPx(phys.vResultX * dt);
+                        boatY += mToPx(phys.vResultY * dt);
+                        simTime += dt;
+
+                        // 记录轨迹
+                        if (pathPoints.length === 0 ||
+                            Math.hypot(pathPoints[pathPoints.length-1].x - boatX, pathPoints[pathPoints.length-1].y - boatY) > 3) {
+                            pathPoints.push({x: boatX, y: boatY});
+                        }
+
+                        // 检查是否到达对岸
+                        if (boatY <= SVG_Y_TOP) {
+                            boatY = SVG_Y_TOP;
+                            finished = true;
+                            paused = true;
+                            statusText.textContent = '✅ 已到达对岸';
+                            btnPlay.innerHTML = '<span class="icon">▶</span> 开始';
+                            btnPlay.classList.add('primary');
+                            roTime.textContent = simTime.toFixed(1);
+                            const actualDrift = pxToM(boatX - CENTER_X);
+                            roDrift.textContent = actualDrift.toFixed(1);
+                            roDist.textContent = Math.sqrt(RIVER_WIDTH_M*RIVER_WIDTH_M + actualDrift*actualDrift).toFixed(1);
+                            updateTargetMarker(phys);
+                        }
+                    }
+
+                    if (!finished) {
+                        roTime.textContent = simTime.toFixed(1);
+                        const currentDrift = pxToM(boatX - CENTER_X);
+                        roDrift.textContent = currentDrift.toFixed(1);
+                        roDist.textContent = Math.sqrt(RIVER_WIDTH_M*RIVER_WIDTH_M + currentDrift*currentDrift).toFixed(1);
+                    }
+                }
+
+                // 水波动画 (始终流动)
+                wavePhase += dt * 2 + 0.02;
+                renderWaves();
+
+                // 更新船和箭头位置 (船头方向 = v船 方向，随偏角旋转)
+                boatGroup.setAttribute('transform', `translate(${boatX.toFixed(1)}, ${boatY.toFixed(1)}) rotate(${angleDeg.toFixed(1)})`);
+                positionArrowGroups();
+                updateTrajectory();
+
+                animId = requestAnimationFrame(animate);
+            }
+
+            function startAnimation() {
+                if (animId) cancelAnimationFrame(animId);
+                paused = false;
+                lastTs = null;
+                if (finished) {
+                    resetSimulation();
+                }
+                statusText.textContent = '⛵ 渡河中...';
+                btnPlay.innerHTML = '<span class="icon">▶</span> 运行中';
+                btnPlay.classList.remove('primary');
+                updateDisplay();
+                animId = requestAnimationFrame(animate);
+            }
+
+            function pauseAnimation() {
+                paused = true;
+                statusText.textContent = '⏸ 已暂停';
+                btnPlay.innerHTML = '<span class="icon">▶</span> 继续';
+                btnPlay.classList.add('primary');
+            }
+
+            function resetSimulation() {
+                if (animId) cancelAnimationFrame(animId);
+                animId = null;
+                paused = true;
+                finished = false;
+                lastTs = null;
+                simTime = 0;
+                boatX = CENTER_X;
+                boatY = START_Y;
+                pathPoints = [];
+                statusText.textContent = '准备渡河';
+                btnPlay.innerHTML = '<span class="icon">▶</span> 开始';
+                btnPlay.classList.add('primary');
+                boatGroup.setAttribute('transform', `translate(${boatX}, ${boatY}) rotate(${angleDeg.toFixed(1)})`);
+                trajectory.setAttribute('d', '');
+                targetMarker.style.display = 'block';
+                updateDisplay();
+                renderWaves();
+                positionArrowGroups();
+            }
+
+            // ============================================================
+            //  事件绑定
+            // ============================================================
+            boatSlider.addEventListener('input', function() {
+                boatSpeed = parseFloat(this.value);
+                if (!finished) updateDisplay();
+            });
+
+            waterSlider.addEventListener('input', function() {
+                waterSpeed = parseFloat(this.value);
+                if (!finished) updateDisplay();
+            });
+
+            angleSlider.addEventListener('input', function() {
+                angleDeg = parseFloat(this.value);
+                if (!finished) updateDisplay();
+            });
+
+            angleBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    angleDeg = parseFloat(this.dataset.angle);
+                    angleSlider.value = angleDeg;
+                    if (!finished) updateDisplay();
+                });
+            });
+
+            // 控制面板 收起/展开
+            btnToggle.addEventListener('click', function() {
+                const collapsed = controlsPanel.classList.toggle('collapsed');
+                this.title = collapsed ? '展开面板' : '收起面板';
+            });
+
+            btnPlay.addEventListener('click', function() {
+                if (finished) {
+                    resetSimulation();
+                    startAnimation();
+                } else if (paused) {
+                    startAnimation();
+                }
+            });
+
+            btnPause.addEventListener('click', function() {
+                if (!finished && !paused) {
+                    pauseAnimation();
+                }
+            });
+
+            btnReset.addEventListener('click', function() {
+                resetSimulation();
+                // 重新启动动画循环以渲染波浪
+                if (animId) cancelAnimationFrame(animId);
+                animId = requestAnimationFrame(animate);
+            });
+
+            window.addEventListener('keydown', function(e) {
+                if (e.key === ' ' || e.key === 'Space') {
+                    e.preventDefault();
+                    if (finished) {
+                        resetSimulation();
+                        startAnimation();
+                    } else if (paused) {
+                        startAnimation();
+                    } else {
+                        pauseAnimation();
+                    }
+                }
+                if (e.key === 'r' || e.key === 'R') {
+                    e.preventDefault();
+                    resetSimulation();
+                    if (animId) cancelAnimationFrame(animId);
+                    animId = requestAnimationFrame(animate);
+                }
+            });
+
+            // ============================================================
+            //  初始化
+            // ============================================================
+            function init() {
+                boatSpeed = 5.0;
+                waterSpeed = 3.0;
+                angleDeg = 0;
+                boatSlider.value = 5.0;
+                waterSlider.value = 3.0;
+                angleSlider.value = 0;
+
+                boatX = CENTER_X;
+                boatY = START_Y;
+                simTime = 0;
+                paused = true;
+                finished = false;
+                pathPoints = [];
+
+                boatGroup.setAttribute('transform', `translate(${boatX}, ${boatY}) rotate(${angleDeg.toFixed(1)})`);
+                trajectory.setAttribute('d', '');
+
+                updateDisplay();
+                renderWaves();
+                positionArrowGroups();
+
+                animId = requestAnimationFrame(animate);
+
+                console.log('🚤 小船渡河仿真已启动');
+                console.log('📖 快捷键: [Space] 开始/暂停 [R] 重置');
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
+
+        })();
+    </script>
+    </body>
+</html>
