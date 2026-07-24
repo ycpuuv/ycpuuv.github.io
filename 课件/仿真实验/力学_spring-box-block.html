@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2025江苏高考物理T10：弹簧木箱物块摩擦系统仿真</title>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --panel: #ffffff;
+            --text: #1e293b;
+            --text-sec: #64748b;
+            --border: #e2e8f0;
+            --box: #3b82f6;
+            --block: #f97316;
+            --spring: #64748b;
+            --accent: #8b5cf6;
+            --ok: #10b981;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header { margin-bottom: 20px; }
+        h1 { font-size: 1.5rem; margin: 0 0 8px; }
+        .subtitle { color: var(--text-sec); font-size: 0.95rem; }
+        .card {
+            background: var(--panel);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .card h2 { font-size: 1.1rem; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+        .grid { display: grid; gap: 16px; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+        .controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .control { display: flex; flex-direction: column; gap: 4px; }
+        .control label { font-size: 0.85rem; color: var(--text-sec); }
+        .control input[type="range"] { width: 100%; }
+        .control .value { font-weight: 600; font-size: 0.9rem; }
+        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+        button {
+            border: none; border-radius: 8px; padding: 8px 14px; cursor: pointer;
+            font-size: 0.85rem; font-weight: 500; transition: opacity .2s;
+        }
+        button:hover { opacity: 0.9; }
+        .primary { background: var(--box); color: white; }
+        .secondary { background: #e2e8f0; color: var(--text); }
+        .accent { background: var(--accent); color: white; }
+        .success { background: var(--ok); color: white; }
+        .danger { background: var(--danger); color: white; }
+        .speed-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+        .speed-group .label { font-size: 0.85rem; color: var(--text); margin-right: 2px; }
+        .speed-btn { background: #e2e8f0; color: var(--text); padding: 6px 12px; }
+        .speed-btn.active { background: var(--accent); color: white; font-weight: 700; box-shadow: 0 0 0 2px rgba(99,102,241,0.3); }
+        canvas { width: 100%; height: auto; border-radius: 8px; background: #fff; }
+        .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem; margin-top: 8px; }
+        .legend span { display: inline-flex; align-items: center; gap: 4px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .analysis { font-size: 0.95rem; }
+        .analysis p { margin: 8px 0; }
+        .highlight { background: #fef3c7; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+        .correct { color: var(--ok); font-weight: 700; }
+        .wrong { color: var(--danger); font-weight: 700; }
+        .formula {
+            background: #f1f5f9; border-left: 3px solid var(--accent);
+            padding: 10px 14px; border-radius: 0 8px 8px 0;
+            font-family: "Cambria Math", "Times New Roman", serif;
+            margin: 10px 0;
+        }
+        .status-bar {
+            display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.85rem;
+            color: var(--text-sec); margin-top: 8px;
+        }
+        .status-bar b { color: var(--text); }
+        .answer-box {
+            background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
+            padding: 12px 16px; margin: 10px 0;
+        }
+        .answer-box h3 { margin: 0 0 6px; color: #1e40af; font-size: 1rem; }
+        .scenario-list { margin: 8px 0; padding-left: 20px; }
+        .scenario-list li { margin: 6px 0; }
+        @media (max-width: 600px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .controls { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>2025 江苏高考物理 T10 · 弹簧木箱物块摩擦系统仿真</h1>
+        <div class="subtitle">重点分析选项 C：木箱第一次到达最右端时，物块速度是否为零？</div>
+    </header>
+
+    <div class="card">
+        <h2>📝 原题</h2>
+        <p>如图所示，弹簧一端固定，另一端与光滑水平面上的木箱相连，箱内放置一小物块，物块与木箱之间有摩擦。压缩弹簧并由静止释放，释放后物块在木箱上有滑动，滑动过程中不与木箱前后壁发生碰撞，不计空气阻力，则（　　）</p>
+        <p><b>C. 木箱第一次到达最右端时，物块速度为零</b></p>
+        <div class="answer-box">
+            <h3>📌 高考标准答案</h3>
+            <p><b>正确答案：D</b>（物块和木箱的速度第一次相同前，物块受到的摩擦力不变）</p>
+            <p>选项 C <b>不一定正确</b>。若二者在木箱第一次到达最右端之前已经共速并“粘连”一起振动，则 C 成立；否则木箱到达最右端时物块仍在滑动，速度不为零。本仿真可通过调节参数观察这两种情形。</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>⚙️ 参数调节</h2>
+        <div class="controls">
+            <div class="control">
+                <label>木箱质量 M (kg)</label>
+                <input type="range" id="M" min="0.5" max="5" step="0.1" value="2">
+                <span class="value" id="val-M">2.0</span>
+            </div>
+            <div class="control">
+                <label>物块质量 m (kg)</label>
+                <input type="range" id="m" min="0.1" max="5" step="0.1" value="1">
+                <span class="value" id="val-m">1.0</span>
+            </div>
+            <div class="control">
+                <label>劲度系数 k (N/m)</label>
+                <input type="range" id="k" min="5" max="100" step="1" value="10">
+                <span class="value" id="val-k">10</span>
+            </div>
+            <div class="control">
+                <label>摩擦系数 μ</label>
+                <input type="range" id="mu" min="0.05" max="1.2" step="0.05" value="0.8">
+                <span class="value" id="val-mu">0.80</span>
+            </div>
+            <div class="control">
+                <label>初始压缩量 x₀ (m)</label>
+                <input type="range" id="x0" min="0.2" max="2" step="0.1" value="0.8">
+                <span class="value" id="val-x0">0.8</span>
+            </div>
+            <div class="control">
+                <label>重力加速度 g (m/s²)</label>
+                <input type="range" id="g" min="5" max="15" step="0.1" value="10">
+                <span class="value" id="val-g">10.0</span>
+            </div>
+            <div class="control">
+                <label>仿真时长 (s)</label>
+                <input type="range" id="Tmax" min="2" max="15" step="0.5" value="8">
+                <span class="value" id="val-Tmax">8.0</span>
+            </div>
+        </div>
+        <div class="btn-row">
+            <button class="primary" onclick="startSim()">▶ 运行 / 重新运行</button>
+            <button class="secondary" onclick="togglePause()" id="pauseBtn">⏸ 暂停</button>
+            <button class="secondary" onclick="resetView()">⟲ 重置视角</button>
+            <button class="danger" onclick="presetCase('c_false')">典型：C 不成立（全程滑动）</button>
+            <button class="success" onclick="presetCase('c_true')">典型：C 成立（相对静止）</button>
+            <button class="secondary" onclick="presetCase('heavy')">物块较重情形</button>
+        </div>
+        <div class="speed-group">
+            <span class="label">播放速度：</span>
+            <button class="speed-btn active" onclick="setSpeed(1)" id="spd-1">正常 1×</button>
+            <button class="speed-btn" onclick="setSpeed(0.5)" id="spd-0.5">0.5×</button>
+            <button class="speed-btn" onclick="setSpeed(0.25)" id="spd-0.25">慢动作 0.25×</button>
+            <button class="speed-btn" onclick="setSpeed(0.1)" id="spd-0.1">超慢 0.1×</button>
+        </div>
+        <div class="status-bar">
+            <span>时间 t = <b id="st-t">0.000</b> s</span>
+            <span>木箱位置 x = <b id="st-x">0.000</b> m</span>
+            <span>木箱速度 v = <b id="st-v">0.000</b> m/s</span>
+            <span>物块速度 v' = <b id="st-vb">0.000</b> m/s</span>
+            <span>相对速度 v_rel = <b id="st-vrel">0.000</b> m/s</span>
+            <span>模式：<b id="st-mode">—</b></span>
+        </div>
+    </div>
+
+    <div class="grid grid-2">
+        <div class="card">
+            <h2>🎬 动画演示</h2>
+            <canvas id="animCanvas" width="800" height="280"></canvas>
+            <div class="legend">
+                <span><span class="dot" style="background:var(--box)"></span> 木箱</span>
+                <span><span class="dot" style="background:var(--block)"></span> 物块</span>
+                <span><span class="dot" style="background:var(--spring)"></span> 弹簧</span>
+                <span><span class="dot" style="background:var(--accent)"></span> 木箱最右端时刻</span>
+            </div>
+        </div>
+        <div class="card">
+            <h2>📊 选项 C 即时判定</h2>
+            <div id="verdict" style="font-size:1.15rem; margin:8px 0;">运行仿真以查看结果</div>
+            <div id="verdict-detail" style="color:var(--text-sec); font-size:0.9rem;"></div>
+            <canvas id="cCheckCanvas" width="800" height="240"></canvas>
+            <div class="legend">
+                <span><span class="dot" style="background:var(--box)"></span> 木箱速度 v</span>
+                <span><span class="dot" style="background:var(--block)"></span> 物块速度 v'</span>
+                <span><span class="dot" style="background:var(--accent)"></span> 木箱到达最右端</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-3">
+        <div class="card">
+            <h2>📈 位置-时间图像</h2>
+            <canvas id="posCanvas" width="520" height="260"></canvas>
+        </div>
+        <div class="card">
+            <h2>📈 速度-时间图像</h2>
+            <canvas id="velCanvas" width="520" height="260"></canvas>
+        </div>
+        <div class="card">
+            <h2>📈 加速度-时间图像</h2>
+            <canvas id="accCanvas" width="520" height="260"></canvas>
+        </div>
+        <div class="card">
+            <h2>📈 能量变化</h2>
+            <canvas id="energyCanvas" width="520" height="260"></canvas>
+        </div>
+        <div class="card">
+            <h2>📈 相对运动</h2>
+            <canvas id="relCanvas" width="520" height="260"></canvas>
+        </div>
+        <div class="card">
+            <h2>📈 相图（速度-位置）</h2>
+            <canvas id="phaseCanvas" width="520" height="260"></canvas>
+        </div>
+    </div>
+
+    <div class="card analysis">
+        <h2>🔍 对选项 C 的物理分析</h2>
+        <p><b>核心结论：选项 C 是否成立取决于参数（摩擦是否足以让二者“粘连”）。</b>高考标准答案不选 C，选 D。</p>
+        <p><b>关于“相对静止”：</b>本仿真会用绿色高亮标注“相对静止（共速/粘连）”阶段——图像上出现绿色阴影带，动画中物块变绿并显示“相对静止”，状态栏也提示“相对静止”。这是判断选项 B（最终是否仍有相对运动）和选项 C 的关键。</p>
+        <p>两种典型运动情形：</p>
+        <ol class="scenario-list">
+            <li><b>摩擦足够大 → 一开始就相对静止，一起做简谐运动（C 成立）。</b>若最大静摩擦力足以提供物块随整体一起振动所需的回复力（即 k|x|/(M+m) ≤ μg），二者从释放起就“粘连”成整体 (M+m)。整体到达最右端时二者速度同时为零，此时 C 成立、B 不成立。</li>
+            <li><b>摩擦不足 → 以打滑为主，但“块与槽速度相同”的瞬间仍会发生（C 不成立）。</b>若摩擦不足以从一开始就粘连，二者主要相对滑动；但木箱经过平衡位置后会减速、而物块靠摩擦仍向前加速，于是物块会一次次“追上”木箱——<b>速度相同的瞬间反复出现</b>（速度曲线上用红色“⊙”标出每一次，<b>第一次</b>出现即对应选项 D 的“第一次速度相同”）。只是这几次“同速”往往只是擦肩而过、随即再次分离，并未真正“粘连”成整体；木箱第一次到达最右端时物块通常仍在滑动，速度不为零，故 C 不成立。只有当摩擦足够大，第一次“同速”后才能真正粘连、一起振动，C 才成立。</li>
+        </ol>
+        <p>👉 想看“始终相对静止”就点 <b>典型：C 成立（相对静止）</b> 或 <b>物块较重情形</b>；想看“以打滑为主、速度相同只是擦肩而过”（C 不成立）就点 <b>典型：C 不成立</b>。也可直接拖动摩擦力 μ 滑块：μ 从小到大越过临界值时，会看到系统从“几乎全程打滑、同速瞬间一闪而过”突变为“一开始就相对静止、一起振动”。</p>
+        <div class="formula">
+            木箱从静止到第一次最右端的过程中，对其速度积分得：<br>
+            ∫₀^{t₁} a_箱 dt = 0 ⇒ ∫₀^{t₁} (−kx + F_f) dt = 0<br>
+            对物块用动量定理：m v'_₁ = ∫₀^{t₁} (−F_f) dt = −k ∫₀^{t₁} x dt<br>
+            因此 v'_₁ = −(k/m) ∫₀^{t₁} x dt。该积分一般<b>不为零</b>，故物块速度一般不为零。</div>
+        </div>
+    </div>
+
+    <div class="card analysis">
+        <h2>📐 运动方程</h2>
+        <p>设 x 为木箱相对弹簧原长的位移（向右为正），x' 为物块位置，相对位置 Δx = x' − x，相对速度 u = ẋ' − ẋ，滑动摩擦力大小 f = μmg。</p>
+        <div class="formula">
+            <b>滑动时（u ≠ 0）：</b><br>
+            Mẍ = −kx + f·sgn(u) &nbsp;&nbsp;&nbsp; mẍ' = −f·sgn(u)<br><br>
+            <b>共速粘连时（u = 0 且所需静摩擦 f_req = m|kx|/(M+m) ≤ μmg）：</b><br>
+            (M+m)ẍ = −kx，即 ẍ = −kx/(M+m)
+        </div>
+        <p><b>为什么 D 一定正确？</b> 在物块与木箱第一次达到共同速度之前，二者始终沿同一方向相对滑动（物块相对木箱的滑动方向不变），因此物块受到的滑动摩擦力大小恒为 μmg、方向不变。故 D 正确。</p>
+    </div>
+</div>
+
+<script>
+// ===================== 物理仿真核心 =====================
+const params = {};
+let data = [];
+let firstRightmost = null;
+let firstCommonVel = null;
+let commonVelTimes = [];
+let stickIntervals = [];
+let animationId = null;
+let tView = 0;
+let isPaused = false;
+let playing = false;
+let playSpeed = 1; // 播放速度倍率：1=正常，<1 为慢动作
+
+function readParams() {
+    ['M','m','k','mu','x0','g','Tmax'].forEach(id => {
+        params[id] = parseFloat(document.getElementById(id).value);
+        document.getElementById('val-'+id).textContent = params[id].toFixed(id==='k'?0: (id==='Tmax'?1:(id==='mu'?2:1)));
+    });
+}
+
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+// 单步推进：检测事件（相对速度过零 / 粘连破坏）
+function step(state, dt) {
+    const {M, m, k, mu, g} = params;
+    const f = mu * m * g;
+
+    function accel(s, slipDir) {
+        if (s.mode === 'stick') {
+            const a = -k * s.x / (M + m);
+            return {ax: a, ab: a};
+        } else {
+            return {ax: (-k * s.x + slipDir * f) / M, ab: -slipDir * f / m};
+        }
+    }
+
+    function rk4(s, h, slipDir) {
+        const k1 = accel(s, slipDir);
+        const s2 = {x: s.x + 0.5*h*s.vx, vx: s.vx + 0.5*h*k1.ax,
+                    xb: s.xb + 0.5*h*s.vb, vb: s.vb + 0.5*h*k1.ab,
+                    mode: s.mode, slipDir: slipDir};
+        const k2 = accel(s2, slipDir);
+        const s3 = {x: s.x + 0.5*h*s.vx + 0.25*h*h*k1.ax, vx: s.vx + 0.5*h*k2.ax,
+                    xb: s.xb + 0.5*h*s.vb + 0.25*h*h*k1.ab, vb: s.vb + 0.5*h*k2.ab,
+                    mode: s.mode, slipDir: slipDir};
+        const k3 = accel(s3, slipDir);
+        const s4 = {x: s.x + h*s.vx + 0.5*h*h*k2.ax, vx: s.vx + h*k3.ax,
+                    xb: s.xb + h*s.vb + 0.5*h*h*k2.ab, vb: s.vb + h*k3.ab,
+                    mode: s.mode, slipDir: slipDir};
+        const k4 = accel(s4, slipDir);
+        return {
+            x: s.x + h*s.vx + h*h*(k1.ax + k2.ax + k3.ax)/6,
+            vx: s.vx + h*(k1.ax + 2*k2.ax + 2*k3.ax + k4.ax)/6,
+            xb: s.xb + h*s.vb + h*h*(k1.ab + k2.ab + k3.ab)/6,
+            vb: s.vb + h*(k1.ab + 2*k2.ab + 2*k3.ab + k4.ab)/6,
+            mode: s.mode,
+            slipDir: s.slipDir,
+            t: s.t + h
+        };
+    }
+
+    let s = Object.assign({}, state);
+    const vrel0 = s.vb - s.vx;
+
+    if (s.mode === 'slip') {
+        // 摩擦方向由“当前相对速度方向”决定：物块相对木箱向右(v_rel>0)→摩擦向左(sd=+1)；向左(v_rel<0)→摩擦向右(sd=-1)
+        const sd = vrel0 > 0 ? +1 : -1;
+        let ns = rk4(s, dt, sd);
+        let vrel1 = ns.vb - ns.vx;
+        if (vrel0 * vrel1 < 0) {
+            let lo = 0, hi = dt;
+            for (let i = 0; i < 14; i++) {
+                const mid = (lo + hi) / 2;
+                const ms = rk4(s, mid, sd);
+                if ((s.vb - s.vx) * (ms.vb - ms.vx) < 0) hi = mid; else lo = mid;
+            }
+            const zs = rk4(s, lo, sd);
+            const a_req = -k * zs.x / (M + m);
+            const f_req = m * Math.abs(a_req);
+            if (f_req <= f + 1e-9) {
+                zs.mode = 'stick';
+                zs.slipDir = 0;
+                ns = rk4(zs, dt - lo, 0);
+            } else {
+                zs.mode = 'slip';
+                zs.slipDir = vrel1 > 0 ? +1 : -1;
+                ns = rk4(zs, dt - lo, zs.slipDir);
+            }
+        }
+        return ns;
+    } else {
+        // 粘连模式
+        let ns = rk4(s, dt, 0);
+        const a_req = -k * ns.x / (M + m);
+        const f_req = m * Math.abs(a_req);
+        if (f_req > f) {
+            // 粘连破坏：摩擦方向由此时相对速度方向决定
+            ns.mode = 'slip';
+            ns.slipDir = (ns.vb - ns.vx) > 0 ? +1 : -1;
+        }
+        return ns;
+    }
+}
+
+function runSimulation() {
+    readParams();
+    const {M, m, k, mu, g, Tmax} = params;
+    const f = mu * m * g;
+
+    // 初始状态：弹簧压缩 x0，木箱、物块静止
+    // 若 k*x0/(M+m) 对应的所需静摩擦 <= μmg，则先粘连；否则物块落后滑动
+    const initialA = k * params.x0 / (M + m);
+    const initialFneeded = m * initialA;
+    let mode = 'slip', slipDir = -1;
+    if (initialFneeded <= f + 1e-9) {
+        mode = 'stick'; slipDir = 0;
+    }
+
+    let state = {
+        t: 0, x: -params.x0, vx: 0,
+        xb: -params.x0 + 0.8, vb: 0, // 物块初始相对木箱居中
+        mode: mode, slipDir: slipDir
+    };
+
+    data = [];
+    firstRightmost = null;
+
+    const dt = 0.0005;
+    const sampleInterval = Math.max(1, Math.floor(0.005 / dt));
+    let sampleCount = 0;
+
+    const E0 = 0.5 * k * params.x0 * params.x0;
+
+    while (state.t <= Tmax + dt) {
+        const vrel = state.vb - state.vx;
+        const vBefore = state.vx;
+        const f_mag = mu * m * g;
+        const ax = state.mode==='stick' ? -k*state.x/(M+m) : (-k*state.x + state.slipDir*f_mag)/M;
+        const ab = state.mode==='stick' ? -k*state.x/(M+m) : -state.slipDir*f_mag/m;
+        const Q = Math.max(0, E0 - (0.5*k*state.x*state.x + 0.5*M*state.vx*state.vx + 0.5*m*state.vb*state.vb));
+
+        if (sampleCount % sampleInterval === 0) {
+            // 摩擦力（作用在物块上的，向右为正）：滑动态 = 动摩擦；粘连态 = 维持共速所需的静摩擦
+            const fricBlock = state.mode==='stick' ? m*(-k*state.x/(M+m)) : -state.slipDir*f_mag;
+            const fricBox = -fricBlock; // 木箱受到的反作用力
+            data.push({
+                t: state.t,
+                x: state.x,
+                vx: state.vx,
+                ax: ax,
+                xb: state.xb,
+                vb: state.vb,
+                ab: ab,
+                rel: state.xb - state.x,
+                vrel: vrel,
+                mode: state.mode,
+                fricBlock: fricBlock,
+                fricBox: fricBox,
+                E_spring: 0.5*k*state.x*state.x,
+                E_kin_box: 0.5*M*state.vx*state.vx,
+                E_kin_block: 0.5*m*state.vb*state.vb,
+                Q: Q,
+                E_total: 0.5*k*state.x*state.x + 0.5*M*state.vx*state.vx + 0.5*m*state.vb*state.vb + Q
+            });
+        }
+
+        state = step(state, dt);
+        const vAfter = state.vx;
+
+        // 检测木箱第一次到达最右端：本步内 vx 由正变零/负
+        if (firstRightmost === null && vBefore > 1e-6 && vAfter <= 1e-6) {
+            firstRightmost = {
+                idx: data.length - 1,
+                t: data[data.length-1].t,
+                x: data[data.length-1].x,
+                vb: data[data.length-1].vb,
+                vx: data[data.length-1].vx
+            };
+        }
+        sampleCount++;
+    }
+
+    // 若因 dt 未精确捕获，用数据扫描兜底
+    if (firstRightmost === null) {
+        for (let i = 1; i < data.length; i++) {
+            if (data[i-1].vx > 0 && data[i].vx <= 0) {
+                firstRightmost = { idx: i, t: data[i].t, x: data[i].x, vb: data[i].vb, vx: data[i].vx };
+                break;
+            }
+        }
+    }
+
+    // 计算“相对静止（共速/粘连）”区间
+    stickIntervals = [];
+    let inStick = false, stickStart = 0;
+    for (let i = 0; i < data.length; i++) {
+        if (data[i].mode === 'stick' && !inStick) { inStick = true; stickStart = data[i].t; }
+        else if (data[i].mode !== 'stick' && inStick) { inStick = false; stickIntervals.push([stickStart, data[i].t]); }
+    }
+    if (inStick) stickIntervals.push([stickStart, data[data.length-1].t]);
+
+    // 计算“共速（速度相同）时刻”：释放后 v_rel 每次由正变负或由负变正，都说明块与槽速度相等过
+    firstCommonVel = null;
+    commonVelTimes = [];
+    let slidingStarted = false;
+    for (let i = 1; i < data.length; i++) {
+        if (!slidingStarted && Math.abs(data[i].vrel) > 0.002) slidingStarted = true;
+        if (slidingStarted && data[i-1].vrel * data[i].vrel < 0) {
+            const frac = data[i-1].vrel / (data[i-1].vrel - data[i].vrel);
+            const tcv = data[i-1].t + frac * (data[i].t - data[i-1].t);
+            const vcv = data[i-1].vx + frac * (data[i].vx - data[i-1].vx);
+            commonVelTimes.push({ t: tcv, v: vcv });
+            if (!firstCommonVel) firstCommonVel = { t: tcv, x: data[i].x, vb: data[i].vb };
+        }
+    }
+
+    // 统计相对静止总时长
+    let stickTotal = 0;
+    stickIntervals.forEach(([a,b]) => stickTotal += (b - a));
+
+    updateVerdict(stickTotal);
+    drawAll();
+}
+
+function updateVerdict(stickTotal) {
+    const el = document.getElementById('verdict');
+    const det = document.getElementById('verdict-detail');
+    if (!firstRightmost) {
+        el.innerHTML = '<span class="wrong">未在仿真时长内找到木箱第一次最右端</span>';
+        det.textContent = '';
+        return;
+    }
+    const vb = firstRightmost.vb;
+    const tol = 0.05;
+    const stickStr = (stickTotal > 0.005)
+        ? `　|　相对静止（共速）总时长：${stickTotal.toFixed(2)} s，共 ${stickIntervals.length} 段`
+        : '　|　本参数下全程滑动，未出现相对静止';
+    const fcvStr = firstCommonVel ? `　|　第一次共速时刻：t=${firstCommonVel.t.toFixed(3)}s` : '';
+    const msg = `木箱第一次到达最右端：t=${firstRightmost.t.toFixed(3)}s，x=${firstRightmost.x.toFixed(3)}m，此时物块速度 v'=${vb.toFixed(4)} m/s` + stickStr + fcvStr;
+    det.textContent = msg;
+    if (Math.abs(vb) < tol) {
+        el.innerHTML = '<span class="correct">✓ 当前参数下 C 成立：物块速度近似为零</span>';
+    } else {
+        el.innerHTML = `<span class="wrong">✗ 当前参数下 C 不成立：物块速度 v'=${vb.toFixed(3)} m/s ≠ 0</span>`;
+    }
+}
+
+// ===================== 绘图 =====================
+function resizeCanvas(id) {
+    const c = document.getElementById(id);
+    const rect = c.getBoundingClientRect();
+    c.width = rect.width * window.devicePixelRatio;
+    c.height = rect.height * window.devicePixelRatio;
+    const ctx = c.getContext('2d');
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    return {c, ctx, w: rect.width, h: rect.height};
+}
+
+function drawAxes(ctx, w, h, xlabel, ylabel, xRange, yRange, padding) {
+    const p = padding || {l:42, r:15, t:15, b:35};
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(p.l, p.t); ctx.lineTo(p.l, h-p.b);
+    ctx.lineTo(w-p.r, h-p.b);
+    ctx.stroke();
+    ctx.fillStyle = '#64748b'; ctx.font = '12px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(xlabel, w/2, h-8);
+    ctx.save(); ctx.translate(12, h/2); ctx.rotate(-Math.PI/2); ctx.fillText(ylabel, 0, 0); ctx.restore();
+
+    return {
+        x2p: (x) => p.l + (x - xRange[0])/(xRange[1]-xRange[0])*(w-p.l-p.r),
+        y2p: (y) => h - p.b - (y - yRange[0])/(yRange[1]-yRange[0])*(h-p.t-p.b)
+    };
+}
+
+function plotLine(ctx, map, data, xkey, ykey, color, width=2) {
+    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
+    for (let i = 0; i < data.length; i++) {
+        const x = map.x2p(data[i][xkey]), y = map.y2p(data[i][ykey]);
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+    }
+    ctx.stroke();
+}
+
+function drawGridLines(ctx, map, w, h, p, xRange, yRange, xn, yn) {
+    ctx.strokeStyle = '#e2e8f0'; ctx.lineWidth = 1;
+    for (let i = 1; i < xn; i++) {
+        const xv = xRange[0] + (xRange[1]-xRange[0])*i/xn;
+        const x = map.x2p(xv);
+        ctx.beginPath(); ctx.moveTo(x, p.t); ctx.lineTo(x, h-p.b); ctx.stroke();
+    }
+    for (let i = 1; i < yn; i++) {
+        const yv = yRange[0] + (yRange[1]-yRange[0])*i/yn;
+        const y = map.y2p(yv);
+        ctx.beginPath(); ctx.moveTo(p.l, y); ctx.lineTo(w-p.r, y); ctx.stroke();
+    }
+}
+
+function drawAll() {
+    if (!data.length) return;
+    drawAnim(0);
+    drawCCheck();
+    drawGeneric('posCanvas', 't', ['x','xb'], ['木箱位置 x','物块位置 x\''], [getColor('--box'), getColor('--block')], 't (s)', '位置 (m)');
+    drawGeneric('velCanvas', 't', ['vx','vb'], ['木箱速度 v','物块速度 v\''], [getColor('--box'), getColor('--block')], 't (s)', '速度 (m/s)');
+    drawGeneric('accCanvas', 't', ['ax','ab'], ['木箱加速度 a','物块加速度 a\''], [getColor('--box'), getColor('--block')], 't (s)', '加速度 (m/s²)');
+    drawEnergy();
+    drawGeneric('relCanvas', 't', ['rel','vrel'], ['相对位置 Δx','相对速度 v_rel'], ['#8b5cf6','#ec4899'], 't (s)', '相对量');
+    drawPhase();
+}
+
+function getColor(name) {
+    const st = getComputedStyle(document.documentElement);
+    return st.getPropertyValue(name).trim();
+}
+
+function shadeStickRegions(ctx, map, w, h, p) {
+    if (!stickIntervals || !stickIntervals.length) return;
+    ctx.fillStyle = 'rgba(16,185,129,0.14)';
+    stickIntervals.forEach(([t0, t1]) => {
+        const x0 = map.x2p(t0), x1 = map.x2p(t1);
+        ctx.fillRect(x0, p.t, x1 - x0, h - p.t - p.b);
+    });
+}
+
+function markFirstCommonVel(ctx, map, w, h, p) {
+    if (!commonVelTimes.length) return;
+    ctx.fillStyle = '#ef4444';
+    commonVelTimes.forEach((c, idx) => {
+        const tx = map.x2p(c.t);
+        ctx.strokeStyle = '#ef4444'; ctx.setLineDash([3,3]); ctx.lineWidth=1.2;
+        ctx.beginPath(); ctx.moveTo(tx, p.t); ctx.lineTo(tx, h-p.b); ctx.stroke(); ctx.setLineDash([]);
+        // 在“速度相同”处（两曲线交点）画红点
+        const ty = map.y2p(c.v);
+        ctx.beginPath(); ctx.arc(tx, ty, 4, 0, 2*Math.PI); ctx.fill();
+        if (idx === 0) {
+            ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'left';
+            ctx.fillText('第一次共速', tx + 4, p.t + 12);
+        }
+    });
+    // 末尾标注数量
+    ctx.font = '10px sans-serif'; ctx.fillStyle = '#ef4444'; ctx.textAlign = 'right';
+    ctx.fillText(`共 ${commonVelTimes.length} 次“速度相同”`, w - 8, h - p.b + 22);
+}
+
+function drawGeneric(canvasId, xkey, ykeys, labels, colors, xlabel, ylabel) {
+    const {c, ctx, w, h} = resizeCanvas(canvasId);
+    const p = {l:45, r:15, t:15, b:35};
+    ctx.clearRect(0,0,w,h);
+    const xRange = [data[0].t, data[data.length-1].t];
+    let yMin = Infinity, yMax = -Infinity;
+    ykeys.forEach(k => {
+        data.forEach(d => { yMin = Math.min(yMin, d[k]); yMax = Math.max(yMax, d[k]); });
+    });
+    if (yMin === yMax) { yMin -= 1; yMax += 1; }
+    const pad = (yMax - yMin) * 0.1;
+    const yRange = [yMin - pad, yMax + pad];
+    const map = drawAxes(ctx, w, h, xlabel, ylabel, xRange, yRange, p);
+    drawGridLines(ctx, map, w, h, p, xRange, yRange, 6, 5);
+    shadeStickRegions(ctx, map, w, h, p);
+    ykeys.forEach((k, i) => plotLine(ctx, map, data, xkey, k, colors[i] || '#333'));
+    if (firstRightmost) {
+        const tx = map.x2p(firstRightmost.t);
+        ctx.strokeStyle = getColor('--accent'); ctx.setLineDash([4,4]); ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(tx, p.t); ctx.lineTo(tx, h-p.b); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (canvasId === 'velCanvas' || canvasId === 'relCanvas') markFirstCommonVel(ctx, map, w, h, p);
+    ctx.font = '12px sans-serif'; ctx.textAlign = 'left';
+    ykeys.forEach((k, i) => {
+        ctx.fillStyle = colors[i]; ctx.fillRect(w-100, 18+i*16, 10, 10);
+        ctx.fillStyle = '#475569'; ctx.fillText(labels[i], w-88, 27+i*16);
+    });
+}
+
+function drawEnergy() {
+    const {c, ctx, w, h} = resizeCanvas('energyCanvas');
+    const p = {l:45, r:15, t:15, b:35};
+    ctx.clearRect(0,0,w,h);
+    const xRange = [data[0].t, data[data.length-1].t];
+    let yMax = 0;
+    data.forEach(d => { yMax = Math.max(yMax, d.E_total, d.E_spring+d.E_kin_box+d.E_kin_block+d.Q); });
+    const yRange = [0, yMax*1.1];
+    const map = drawAxes(ctx, w, h, 't (s)', '能量 (J)', xRange, yRange, p);
+    drawGridLines(ctx, map, w, h, p, xRange, yRange, 6, 5);
+    shadeStickRegions(ctx, map, w, h, p);
+    plotLine(ctx, map, data, 't', 'E_total', '#94a3b8', 1);
+    plotLine(ctx, map, data, 't', 'E_spring', '#3b82f6');
+    plotLine(ctx, map, data, 't', 'E_kin_box', '#10b981');
+    plotLine(ctx, map, data, 't', 'E_kin_block', '#f97316');
+    plotLine(ctx, map, data, 't', 'Q', '#ef4444');
+    ctx.font='12px sans-serif'; ctx.textAlign='left';
+    const leg = [['总能量','#94a3b8'],['弹性势能','#3b82f6'],['木箱动能','#10b981'],['物块动能','#f97316'],['摩擦生热','#ef4444']];
+    leg.forEach((it,i) => { ctx.fillStyle=it[1]; ctx.fillRect(w-90,18+i*16,10,10); ctx.fillStyle='#475569'; ctx.fillText(it[0],w-78,27+i*16); });
+    if (firstRightmost) {
+        const tx = map.x2p(firstRightmost.t);
+        ctx.strokeStyle = getColor('--accent'); ctx.setLineDash([4,4]); ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(tx, p.t); ctx.lineTo(tx, h-p.b); ctx.stroke(); ctx.setLineDash([]);
+    }
+}
+
+function drawPhase() {
+    const {c, ctx, w, h} = resizeCanvas('phaseCanvas');
+    const p = {l:45, r:15, t:15, b:35};
+    ctx.clearRect(0,0,w,h);
+    let xMin=Infinity, xMax=-Infinity, yMin=Infinity, yMax=-Infinity;
+    data.forEach(d => {
+        xMin=Math.min(xMin,d.x,d.xb); xMax=Math.max(xMax,d.x,d.xb);
+        yMin=Math.min(yMin,d.vx,d.vb); yMax=Math.max(yMax,d.vx,d.vb);
+    });
+    if (xMin===xMax){xMin-=1;xMax+=1;} if(yMin===yMax){yMin-=1;yMax+=1;}
+    const padx=(xMax-xMin)*0.1, pady=(yMax-yMin)*0.1;
+    const map = drawAxes(ctx,w,h,'位置 (m)','速度 (m/s)',[xMin-padx,xMax+padx],[yMin-pady,yMax+pady],p);
+    drawGridLines(ctx,map,w,h,p,[xMin-padx,xMax+padx],[yMin-pady,yMax+pady],6,5);
+    plotLine(ctx,map,data,'x','vx',getColor('--box'));
+    plotLine(ctx,map,data,'xb','vb',getColor('--block'));
+    if (firstRightmost) {
+        const px=map.x2p(firstRightmost.x), py=map.y2p(firstRightmost.vx);
+        ctx.fillStyle=getColor('--accent'); ctx.beginPath(); ctx.arc(px,py,5,0,Math.PI*2); ctx.fill();
+    }
+    ctx.font='12px sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle=getColor('--box'); ctx.fillRect(w-100,18,10,10); ctx.fillStyle='#475569'; ctx.fillText('木箱',w-88,27);
+    ctx.fillStyle=getColor('--block'); ctx.fillRect(w-100,34,10,10); ctx.fillStyle='#475569'; ctx.fillText('物块',w-88,43);
+}
+
+function drawCCheck() {
+    const {c, ctx, w, h} = resizeCanvas('cCheckCanvas');
+    const p = {l:45, r:15, t:15, b:35};
+    ctx.clearRect(0,0,w,h);
+    const xRange = [data[0].t, data[data.length-1].t];
+    let yMin=Infinity, yMax=-Infinity;
+    data.forEach(d => { yMin=Math.min(yMin,d.vx,d.vb); yMax=Math.max(yMax,d.vx,d.vb); });
+    if (yMin===yMax){yMin-=1;yMax+=1;}
+    const pad=(yMax-yMin)*0.15; const yRange=[yMin-pad,yMax+pad];
+    const map = drawAxes(ctx,w,h,'t (s)','速度 (m/s)',xRange,yRange,p);
+    drawGridLines(ctx,map,w,h,p,xRange,yRange,6,5);
+    shadeStickRegions(ctx, map, w, h, p);
+    plotLine(ctx,map,data,'t','vx',getColor('--box'));
+    plotLine(ctx,map,data,'t','vb',getColor('--block'));
+    ctx.strokeStyle='#94a3b8'; ctx.setLineDash([2,2]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(map.x2p(xRange[0]), map.y2p(0)); ctx.lineTo(map.x2p(xRange[1]), map.y2p(0)); ctx.stroke(); ctx.setLineDash([]);
+    if (firstRightmost) {
+        const tx=map.x2p(firstRightmost.t);
+        ctx.strokeStyle=getColor('--accent'); ctx.setLineDash([4,4]); ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(tx,p.t); ctx.lineTo(tx,h-p.b); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle=getColor('--accent'); ctx.beginPath();
+        ctx.arc(tx, map.y2p(firstRightmost.vb), 5, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle='#7c3aed'; ctx.font='bold 12px sans-serif'; ctx.textAlign='left';
+        ctx.fillText(`v'=${firstRightmost.vb.toFixed(3)} m/s`, tx+8, map.y2p(firstRightmost.vb)-8);
+    }
+    ctx.font='12px sans-serif'; ctx.textAlign='left';
+    ctx.fillStyle=getColor('--box'); ctx.fillRect(w-110,18,10,10); ctx.fillStyle='#475569'; ctx.fillText('木箱速度 v',w-98,27);
+    ctx.fillStyle=getColor('--block'); ctx.fillRect(w-110,34,10,10); ctx.fillStyle='#475569'; ctx.fillText('物块速度 v\'',w-98,43);
+}
+
+function drawAnim(frameIdx) {
+    const {c, ctx, w, h} = resizeCanvas('animCanvas');
+    ctx.clearRect(0,0,w,h);
+
+    const idx = (frameIdx === undefined) ? 0 : clamp(frameIdx, 0, data.length-1);
+    const d = data[idx];
+
+    // 地面
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(40, h-50); ctx.lineTo(w-40, h-50); ctx.stroke();
+    // 墙壁
+    ctx.fillStyle = '#475569';
+    ctx.fillRect(30, h-130, 15, 80);
+    ctx.strokeStyle = '#94a3b8'; ctx.lineWidth=1;
+    for (let i=0;i<5;i++) { ctx.beginPath(); ctx.moveTo(35+i*3,h-125); ctx.lineTo(25+i*3,h-115); ctx.stroke(); }
+
+    // 坐标映射：把弹簧原长处作为 x=0，对应屏幕 x0Screen
+    const x0Screen = 180;
+    const scale = 100; // 1m = 100px
+    const boxW = 250, boxH = 60; // 木箱宽 2.5m
+    const blockW = 40, blockH = 35; // 物块(槽内)宽 0.4m
+    const wall = 10;
+    const groundY = h - 50;
+    const boxTop = groundY - boxH;
+    const innerFloor = groundY - wall; // 箱内底面
+
+    const boxScreenX = x0Screen + d.x * scale;
+    const blockScreenX = x0Screen + d.xb * scale;
+    const blockY = innerFloor - blockH; // 物块坐在槽内底面
+
+    // 画弹簧
+    ctx.strokeStyle = getColor('--spring'); ctx.lineWidth = 3;
+    const springStart = 45, springEnd = boxScreenX;
+    const coils = 12, amp = 14;
+    ctx.beginPath(); ctx.moveTo(springStart, h-95);
+    const seg = (springEnd - springStart) / coils;
+    for (let i=0; i<=coils; i++) {
+        const sx = springStart + seg*i;
+        const sy = h-95 + (i%2===0?0:(i%4===1?-amp:amp));
+        ctx.lineTo(sx, sy);
+    }
+    ctx.stroke();
+
+    // 画木箱（开口向上的槽，物块置于槽内）
+    ctx.fillStyle = '#bfdbfe'; ctx.strokeStyle = getColor('--box'); ctx.lineWidth = 2;
+    ctx.fillRect(boxScreenX, boxTop, wall, boxH);                 // 左壁
+    ctx.fillRect(boxScreenX + boxW - wall, boxTop, wall, boxH);   // 右壁
+    ctx.fillRect(boxScreenX, innerFloor, boxW, wall);            // 底面
+    ctx.strokeRect(boxScreenX, boxTop, boxW, boxH);              // 外框
+
+    // 画物块（在槽内）
+    const atRest = (d.mode === 'stick');
+    const sameSpeed = (Math.abs(d.vrel) < 0.03);
+    if (atRest) { ctx.fillStyle = '#bbf7d0'; ctx.strokeStyle = '#10b981'; }
+    else if (sameSpeed) { ctx.fillStyle = '#fef3c7'; ctx.strokeStyle = '#f59e0b'; }
+    else { ctx.fillStyle = '#fde68a'; ctx.strokeStyle = getColor('--block'); }
+    ctx.lineWidth = 3;
+    ctx.fillRect(blockScreenX, blockY, blockW, blockH);
+    ctx.strokeRect(blockScreenX, blockY, blockW, blockH);
+    ctx.textAlign = 'center';
+    if (atRest) {
+        ctx.fillStyle = '#047857'; ctx.font = 'bold 13px sans-serif';
+        ctx.fillText('相对静止', blockScreenX + blockW/2, boxTop - 8);
+    } else if (sameSpeed) {
+        ctx.fillStyle = '#b45309'; ctx.font = 'bold 13px sans-serif';
+        ctx.fillText('速度相同!', blockScreenX + blockW/2, boxTop - 8);
+    }
+
+    // 速度箭头
+    function arrow(x, y, v, color, label) {
+        if (Math.abs(v) < 0.05) return;
+        const len = clamp(v * 25, -60, 60);
+        ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x+len, y); ctx.stroke();
+        const head = len > 0 ? 6 : -6;
+        ctx.beginPath(); ctx.moveTo(x+len, y); ctx.lineTo(x+len-head, y-4); ctx.lineTo(x+len-head, y+4); ctx.fill();
+        ctx.font='11px sans-serif'; ctx.fillText(label+' '+v.toFixed(2), x+len/2-15, y-8);
+    }
+    arrow(boxScreenX+boxW/2, boxTop-12, d.vx, getColor('--box'), 'v');
+    arrow(blockScreenX+blockW/2, blockY-12, d.vb, getColor('--block'), "v'");
+
+    // 摩擦力箭头（作用在接触界面上）：物块受 f 与木箱受 f' 为作用力-反作用力
+    const FRIC = '#8b5cf6'; // 紫色代表摩擦力
+    const fricRef = Math.max(params.mu * params.m * params.g, 1e-6);
+    function fricArrow(x, y, force, label) {
+        const len = clamp(force / fricRef * 45, -55, 55);
+        if (Math.abs(len) < 3) {
+            // 力太小：画一个圆点表示静止摩擦≈0
+            ctx.fillStyle = FRIC; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill();
+            ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText(label, x, y-8);
+            return;
+        }
+        ctx.strokeStyle = FRIC; ctx.fillStyle = FRIC; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x+len, y); ctx.stroke();
+        const head = len > 0 ? 7 : -7;
+        ctx.beginPath(); ctx.moveTo(x+len, y); ctx.lineTo(x+len-head, y-5); ctx.lineTo(x+len-head, y+5); ctx.fill();
+        ctx.font='11px sans-serif'; ctx.textAlign='center';
+        ctx.fillText(`${label} ${force.toFixed(1)}N`, x+len/2, y-8);
+    }
+    // 物块受到的摩擦力（作用在接触面、块一侧，向上偏移避免与速度箭头重叠）
+    fricArrow(blockScreenX + blockW/2, innerFloor - 6, d.fricBlock, 'f');
+    // 木箱受到的反作用力（作用在底面、箱一侧，向下偏移）
+    fricArrow(boxScreenX + boxW/2, innerFloor + 9, d.fricBox, "f'");
+
+    // 标记木箱最右端
+    if (firstRightmost) {
+        const rx = x0Screen + firstRightmost.x * scale + boxW/2;
+        ctx.strokeStyle = getColor('--accent'); ctx.setLineDash([4,4]); ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(rx, h-145); ctx.lineTo(rx, h-50); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = getColor('--accent'); ctx.font='bold 12px sans-serif'; ctx.textAlign='center';
+        ctx.fillText('最右端', rx, h-150);
+        if (Math.abs(firstRightmost.vb) < 0.05) {
+            ctx.fillText("v'=0 ✓", rx, h-165);
+        } else {
+            ctx.fillText("v'≠0 ✗", rx, h-165);
+        }
+    }
+
+    // 信息文字
+    ctx.fillStyle = '#334155'; ctx.font='13px sans-serif'; ctx.textAlign='left';
+    ctx.fillText(`t=${d.t.toFixed(2)}s  x=${d.x.toFixed(2)}m  v=${d.vx.toFixed(2)}  v'=${d.vb.toFixed(2)}  ${d.mode==='stick'?'共速(静摩擦)':'滑动(动摩擦)'}`, 20, 24);
+    // 图例
+    ctx.font='12px sans-serif';
+    ctx.fillStyle = getColor('--box'); ctx.fillRect(20, 36, 14, 3); ctx.fillStyle='#475569'; ctx.textAlign='left'; ctx.fillText('木箱 v', 40, 40);
+    ctx.fillStyle = getColor('--block'); ctx.fillRect(120, 36, 14, 3); ctx.fillStyle='#475569'; ctx.fillText('物块 v\'', 140, 40);
+    ctx.fillStyle = FRIC; ctx.fillRect(220, 36, 14, 3); ctx.fillStyle='#475569'; ctx.fillText('摩擦力 f', 240, 40);
+}
+
+// ===================== 动画播放 =====================
+function startSim() {
+    if (animationId) cancelAnimationFrame(animationId);
+    runSimulation();
+    playing = true; isPaused = false;
+    document.getElementById('pauseBtn').textContent = '⏸ 暂停';
+    tView = 0;
+    animate();
+}
+
+function animate() {
+    if (!playing) return;
+    if (!isPaused) {
+        tView += 0.016 * playSpeed;
+        const duration = data[data.length-1].t - data[0].t;
+        const t = data[0].t + (tView % duration);
+        let idx = 0;
+        while (idx < data.length-1 && data[idx+1].t < t) idx++;
+        const d = data[idx];
+        document.getElementById('st-t').textContent = d.t.toFixed(3);
+        document.getElementById('st-x').textContent = d.x.toFixed(3);
+        document.getElementById('st-v').textContent = d.vx.toFixed(3);
+        document.getElementById('st-vb').textContent = d.vb.toFixed(3);
+        document.getElementById('st-vrel').textContent = d.vrel.toFixed(3);
+        const modeEl = document.getElementById('st-mode');
+        if (d.mode === 'stick') {
+            modeEl.textContent = '相对静止（共速）';
+            modeEl.style.color = '#10b981';
+        } else {
+            modeEl.textContent = '相对滑动';
+            modeEl.style.color = '#ef4444';
+        }
+        drawAnim(idx);
+    }
+    animationId = requestAnimationFrame(animate);
+}
+
+function togglePause() {
+    isPaused = !isPaused;
+    document.getElementById('pauseBtn').textContent = isPaused ? '▶ 继续' : '⏸ 暂停';
+}
+
+function setSpeed(s) {
+    playSpeed = s;
+    [1, 0.5, 0.25, 0.1].forEach(v => {
+        const el = document.getElementById('spd-' + v);
+        if (el) el.classList.toggle('active', Math.abs(v - s) < 1e-9);
+    });
+}
+
+function resetView() {
+    tView = 0;
+    if (!playing) { runSimulation(); }
+}
+
+function presetCase(name) {
+    if (name === 'c_false') {
+        document.getElementById('M').value = 2;
+        document.getElementById('m').value = 1;
+        document.getElementById('k').value = 20;
+        document.getElementById('mu').value = 0.3;
+        document.getElementById('x0').value = 1.0;
+        document.getElementById('Tmax').value = 6;
+    } else if (name === 'c_true') {
+        document.getElementById('M').value = 2;
+        document.getElementById('m').value = 1;
+        document.getElementById('k').value = 10;
+        document.getElementById('mu').value = 0.8;
+        document.getElementById('x0').value = 0.8;
+        document.getElementById('Tmax').value = 8;
+    } else if (name === 'heavy') {
+        document.getElementById('M').value = 2;
+        document.getElementById('m').value = 3;
+        document.getElementById('k').value = 20;
+        document.getElementById('mu').value = 0.4;
+        document.getElementById('x0').value = 1.0;
+        document.getElementById('Tmax').value = 8;
+    }
+    readParams();
+    startSim();
+}
+
+// 绑定滑块实时更新显示
+['M','m','k','mu','x0','g','Tmax'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => { readParams(); });
+    document.getElementById(id).addEventListener('change', () => { startSim(); });
+});
+
+window.addEventListener('resize', () => { drawAll(); });
+
+// 初始化
+readParams();
+startSim();
+</script>
+</body>
+</html>
