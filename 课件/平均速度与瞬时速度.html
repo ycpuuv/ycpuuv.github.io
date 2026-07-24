@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>平均速度与瞬时速度 · 高中物理</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --primary-light: #E8F4FD;
+            --primary-dark: #357ABD;
+            --secondary-color: #6BB6FF;
+            --accent-color: #FF7A33;
+            --text-primary: #2C3E50;
+            --text-secondary: #5A6C7D;
+            --text-light: #8B9DC3;
+            --border-color: #E1EEF7;
+            --shadow: 0 4px 20px rgba(74, 144, 226, 0.12);
+            --shadow-hover: 0 8px 24px rgba(74, 144, 226, 0.18);
+            --radius: 14px;
+            --transition: all 0.3s ease;
+            --bg-start: #E8F4FD;
+            --bg-end: #F8FBFF;
+            --bg-accent: #E1EEF7;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 50%, var(--bg-accent) 100%);
+            min-height: 100vh;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .simulation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .canvas-section {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 12px;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+        }
+        .canvas-wrap {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            flex: 1;
+            z-index: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: grab;
+        }
+        .canvas-wrap:active {
+            cursor: grabbing;
+        }
+        #p5canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+
+        /* ----- 毛玻璃面板 ----- */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 14px 18px;
+            z-index: 20;
+            position: absolute;
+            transition: var(--transition);
+            pointer-events: auto;
+        }
+        .glass-panel:hover {
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* 左上：信息面板 */
+        .info-panel {
+            top: 16px;
+            left: 16px;
+            max-width: 260px;
+        }
+        .info-panel h1 {
+            font-size: 1.1rem;
+            color: var(--primary-dark);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .formula-box {
+            background: linear-gradient(135deg, var(--primary-light), #F8FBFF);
+            padding: 8px 12px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            margin-bottom: 8px;
+            font-size: .85rem;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--text-primary);
+        }
+        .formula-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 3px;
+        }
+        .f-label {
+            color: #5a7a9a;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+            margin-right: 6px;
+            min-width: 56px;
+        }
+        .f-expr {
+            color: #1a2b42;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .f-expr .hl {
+            color: var(--accent-color);
+            font-weight: 700;
+        }
+        .info-text {
+            font-size: .78rem;
+            color: var(--text-secondary);
+            line-height: 1.55;
+            margin-top: 4px;
+        }
+        .info-text .hl {
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        /* 左下：实时数据 */
+        .physics-panel {
+            bottom: 16px;
+            left: 16px;
+            width: 220px;
+        }
+        .physics-panel h3 {
+            font-size: .92rem;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+            padding-bottom: 6px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .readout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .readout-item {
+            background: #f0f5fa;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+        .readout-item .r-label {
+            font-size: 10px;
+            color: #5a7a9a;
+            margin-bottom: 2px;
+        }
+        .readout-item .r-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .readout-item .r-value.secant {
+            color: #60A5FA;
+        }
+        .readout-item .r-value.tangent {
+            color: var(--accent-color);
+        }
+        .readout-item .r-value.delta {
+            color: #34D399;
+        }
+
+        /* 右上：控制面板 */
+        .controls-panel {
+            top: 16px;
+            right: 16px;
+            width: 270px;
+            max-height: calc(100vh - 32px);
+            overflow-y: auto;
+        }
+        .controls-panel h3 {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        .section-label {
+            font-size: .70rem;
+            color: var(--text-light);
+            margin: 10px 0 4px;
+            font-weight: 600;
+            letter-spacing: .4px;
+        }
+        .param-item {
+            margin-bottom: 10px;
+        }
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+        }
+        .param-name {
+            font-size: .85rem;
+            color: var(--text-primary);
+        }
+        .param-value {
+            font-size: .85rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E1EEF7;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            touch-action: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.4);
+            cursor: pointer;
+        }
+        .layer-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 6px;
+        }
+        .layer-btn {
+            background: #ffffff;
+            color: #5a7a9a;
+            border: 1.5px solid #d0dae8;
+            border-radius: 8px;
+            padding: 5px 12px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .layer-btn.active {
+            background: #e8f0ff;
+            color: #2979ff;
+            border-color: #2979ff;
+            box-shadow: 0 1px 6px rgba(41, 121, 255, 0.15);
+        }
+        .layer-btn .dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .layer-btn .dot.secant-dot {
+            background: #60A5FA;
+        }
+        .layer-btn .dot.tangent-dot {
+            background: var(--accent-color);
+        }
+        .layer-btn .dot.triangle-dot {
+            background: #34D399;
+        }
+
+        /* 底部控制栏 */
+        .ctrl-bar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #d0dae8;
+            border-radius: 10px;
+            padding: 6px 12px;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px 2px;
+        }
+        .ctrl-bar>* {
+            margin-left: 4px;
+        }
+        .ctrl-bar>*:first-child {
+            margin-left: 0;
+        }
+        .cbtn {
+            background: #ffffff;
+            color: #5a7a9a;
+            border: 1.5px solid #d0dae8;
+            border-radius: 7px;
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 32px;
+            min-width: 32px;
+        }
+        .cbtn:hover {
+            border-color: #2979ff;
+            color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.15);
+        }
+        .cbtn.active {
+            background: #2979ff;
+            color: #ffffff;
+            border-color: #2979ff;
+            box-shadow: 0 2px 8px rgba(41, 121, 255, 0.3);
+        }
+        .cbtn svg {
+            display: block;
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+        .back-btn {
+            position: absolute;
+            bottom: 16px;
+            right: 16px;
+            background: #fff;
+            color: var(--primary-color);
+            padding: 9px 18px;
+            border-radius: 22px;
+            text-decoration: none;
+            font-weight: 600;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 2px 10px rgba(74, 144, 226, 0.15);
+            transition: all .3s;
+            z-index: 30;
+            font-size: .82rem;
+        }
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: #fff;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .info-panel {
+                max-width: 200px;
+                padding: 10px 12px;
+            }
+            .controls-panel {
+                width: 230px;
+                padding: 10px 12px;
+                top: 12px;
+                right: 12px;
+            }
+            .physics-panel {
+                width: 180px;
+                padding: 10px 12px;
+            }
+            .back-btn {
+                bottom: 10px;
+                right: 10px;
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+            .ctrl-bar {
+                padding: 4px 8px;
+                gap: 2px;
+            }
+            .cbtn {
+                font-size: 12px;
+                padding: 4px 7px;
+                min-height: 28px;
+                min-width: 28px;
+            }
+            .info-panel h1 {
+                font-size: 0.95rem;
+            }
+            .formula-box {
+                font-size: .75rem;
+                padding: 6px 10px;
+            }
+            .readout-item .r-value {
+                font-size: 12px;
+            }
+        }
+        @media (max-width: 600px) {
+            .info-panel {
+                display: none;
+            }
+            .physics-panel {
+                bottom: 70px;
+                left: 8px;
+                width: 150px;
+                padding: 8px 10px;
+            }
+            .controls-panel {
+                width: 190px;
+                padding: 8px 10px;
+                top: 8px;
+                right: 8px;
+                max-height: calc(100vh - 80px);
+            }
+            .controls-panel h3 {
+                font-size: .85rem;
+                margin-bottom: 6px;
+            }
+            .param-name {
+                font-size: .75rem;
+            }
+            .param-value {
+                font-size: .75rem;
+            }
+            .layer-btn {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            .back-btn {
+                bottom: 8px;
+                right: 8px;
+                padding: 4px 10px;
+                font-size: 0.65rem;
+            }
+            .ctrl-bar {
+                bottom: 6px;
+                padding: 4px 6px;
+                border-radius: 8px;
+            }
+            .cbtn {
+                font-size: 10px;
+                padding: 3px 5px;
+                min-height: 24px;
+                min-width: 24px;
+                border-radius: 5px;
+            }
+            .cbtn svg {
+                width: 14px;
+                height: 14px;
+            }
+            .physics-panel .readout {
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+            }
+            .physics-panel .readout-item {
+                padding: 4px 6px;
+            }
+            .physics-panel .readout-item .r-value {
+                font-size: 11px;
+            }
+            .physics-panel .readout-item .r-label {
+                font-size: 9px;
+            }
+        }
+    </style>
+    <!-- p5.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js">
+    </script>
+</head>
+<body>
+
+    <div class="simulation-container">
+        <!-- 画布区域 -->
+        <div class="canvas-section">
+            <div class="canvas-wrap" id="cvWrap">
+                <div id="p5canvas"></div>
+            </div>
+            <!-- 底部控制栏 -->
+            <div class="ctrl-bar">
+                <button class="cbtn" id="btnPlay" onclick="togglePlay()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </button>
+                <button class="cbtn" onclick="resetAll()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 4v6h-6"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                </button>
+                <span style="width:1px;height:18px;background:#d0dae8;margin:0 4px"></span>
+                <button class="cbtn active" data-spd="1" onclick="setSpd(1)">1×</button>
+                <button class="cbtn" data-spd="2" onclick="setSpd(2)">2×</button>
+                <button class="cbtn" data-spd="4" onclick="setSpd(4)">4×</button>
+            </div>
+        </div>
+
+        <!-- 左上：信息面板 -->
+        <div class="info-panel glass-panel">
+            <h1>📐 平均速度与瞬时速度</h1>
+            <div class="formula-box">
+                <div class="formula-row"><span class="f-label">平均速度</span><span class="f-expr">v = Δx / Δt</span></div>
+                <div class="formula-row"><span class="f-label">瞬时速度</span><span class="f-expr">v= <span class="hl">lim</span><sub>Δt→0</sub> Δx/Δt</span></div>
+                <div class="formula-row"><span class="f-label">运动方程</span><span class="f-expr">x(t) = ½·t²</span></div>
+            </div>
+            <p class="info-text">割线斜率 = <span class="hl">平均速度</span>，切线斜率 = <span class="hl">瞬时速度</span>。<br>拖动滑块改变 Δt，观察割线逼近切线。<br><span style="color:#60A5FA;font-weight:600;">割线长度恒定</span>，不会随 Δt 缩小而变短。</p>
+        </div>
+
+        <!-- 左下：实时数据 -->
+        <div class="physics-panel glass-panel">
+            <h3>📊 实时数据</h3>
+            <div class="readout">
+                <div class="readout-item"><div class="r-label">平均速度 v</div><div class="r-value secant" id="roSec">--</div></div>
+                <div class="readout-item"><div class="r-label">瞬时速度 v</div><div class="r-value tangent" id="roTan">--</div></div>
+                <div class="readout-item"><div class="r-label">时间增量 Δt</div><div class="r-value delta" id="roDt">--</div></div>
+                <div class="readout-item"><div class="r-label">位置 t₀</div><div class="r-value" id="roT0">1.50</div></div>
+            </div>
+        </div>
+
+        <!-- 右上：控制面板 -->
+        <div class="controls-panel glass-panel">
+            <h3>🔧 参数调节</h3>
+            <div class="section-label">逼近控制</div>
+            <div class="param-item">
+                <div class="param-header"><span class="param-name">时间增量 Δt</span><span class="param-value" id="valDt">2.00</span></div>
+                <input type="range" id="slDt" min="0.00" max="3.00" step="0.01" value="2.00" oninput="onDtChange()">
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:#8B9DC3;margin-top:2px;">
+                    <span>0 (逼近)</span>
+                    <span>3 (远离)</span>
+                </div>
+            </div>
+            <div class="section-label">显示选项</div>
+            <div class="layer-group">
+                <button class="layer-btn active" id="btnShowSecant" onclick="toggleShow('secant')">
+                    <span class="dot secant-dot"></span>割线
+                </button>
+                <button class="layer-btn active" id="btnShowTangent" onclick="toggleShow('tangent')">
+                    <span class="dot tangent-dot"></span>切线
+                </button>
+                <button class="layer-btn active" id="btnShowTriangle" onclick="toggleShow('triangle')">
+                    <span class="dot triangle-dot"></span>Δx-Δt
+                </button>
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:#8B9DC3;text-align:center;border-top:1px solid var(--border-color);padding-top:8px;">
+                🖱 拖拽画布可平移视图
+            </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <a href="../index.html" class="back-btn">← 返回实验列表</a>
+    </div>
+
+    <script>
+        // ============================================================
+        //  全局状态
+        // ============================================================
+        const state = {
+            dt: 2.0,
+            t0: 1.5,
+            playing: false,
+            speed: 1.0,
+            showSecant: true,
+            showTangent: true,
+            showTriangle: true,
+            p5Instance: null,
+        };
+
+        const dom = {
+            slDt: document.getElementById('slDt'),
+            valDt: document.getElementById('valDt'),
+            roSec: document.getElementById('roSec'),
+            roTan: document.getElementById('roTan'),
+            roDt: document.getElementById('roDt'),
+            roT0: document.getElementById('roT0'),
+            btnPlay: document.getElementById('btnPlay'),
+            btnShowSecant: document.getElementById('btnShowSecant'),
+            btnShowTangent: document.getElementById('btnShowTangent'),
+            btnShowTriangle: document.getElementById('btnShowTriangle'),
+        };
+
+        // ----- 防止滑块操作触发画布拖拽 -----
+        window.isSliderActive = false;
+        const slider = dom.slDt;
+        slider.addEventListener('pointerdown', () => { window.isSliderActive = true; });
+        slider.addEventListener('pointerup', () => { window.isSliderActive = false; });
+        slider.addEventListener('pointercancel', () => { window.isSliderActive = false; });
+        slider.addEventListener('touchstart', () => { window.isSliderActive = true; }, { passive: true });
+        slider.addEventListener('touchend', () => { window.isSliderActive = false; }, { passive: true });
+        slider.addEventListener('touchcancel', () => { window.isSliderActive = false; }, { passive: true });
+
+        // ============================================================
+        //  物理函数
+        // ============================================================
+        function f(t) { return 0.5 * t * t; }
+
+        function df(t) { return t; }
+
+        // ============================================================
+        //  p5.js Sketch (实例模式)
+        // ============================================================
+        const sketch = (p) => {
+            let originX, originY;
+            let scale = 80;
+            let container;
+            let dragStartX = 0,
+                dragStartY = 0;
+            let isDragging = false;
+
+            p.setup = () => {
+                container = document.getElementById('p5canvas');
+                const rect = container.getBoundingClientRect();
+                const w = rect.width || 600;
+                const h = rect.height || 400;
+                const canvas = p.createCanvas(w, h);
+                canvas.parent('p5canvas');
+                p.textFont('sans-serif');
+                p.textSize(13);
+                updateLayout();
+                p.draw();
+            };
+
+            p.windowResized = () => {
+                const rect = container.getBoundingClientRect();
+                const w = rect.width || 600;
+                const h = rect.height || 400;
+                p.resizeCanvas(w, h);
+                updateLayout();
+                p.draw();
+            };
+
+            function updateLayout() {
+                originX = p.width / 2;
+                originY = p.height * 0.8;
+                const tRange = 8;
+                const xRange = 8.5;
+                const margin = 60;
+                const scaleX = (p.width - margin) / tRange;
+                const scaleY = (p.height - margin) / xRange;
+                scale = Math.min(scaleX, scaleY, 120);
+                scale = Math.max(scale, 30);
+            }
+
+            function toPixel(t, x) {
+                return { x: originX + t * scale, y: originY - x * scale };
+            }
+
+            // ----- 绘制网格 -----
+            function drawGrid() {
+                p.stroke(220, 230, 240);
+                p.strokeWeight(0.5);
+                const tMin = -originX / scale - 0.5;
+                const tMax = (p.width - originX) / scale + 0.5;
+                const xMin = -(p.height - originY) / scale - 0.5;
+                const xMax = originY / scale + 0.5;
+
+                for (let t = Math.floor(tMin); t <= Math.ceil(tMax); t += 0.5) {
+                    let px = originX + t * scale;
+                    if (px >= 0 && px <= p.width) {
+                        p.line(px, 0, px, p.height);
+                    }
+                }
+                for (let x = Math.floor(xMin); x <= Math.ceil(xMax); x += 0.5) {
+                    let py = originY - x * scale;
+                    if (py >= 0 && py <= p.height) {
+                        p.line(0, py, p.width, py);
+                    }
+                }
+            }
+
+            // ----- 坐标轴 -----
+            function drawAxes() {
+                p.stroke(50, 60, 80);
+                p.strokeWeight(2);
+                p.line(0, originY, p.width, originY);
+                p.line(originX, p.height, originX, 0);
+                p.noStroke();
+                p.fill(50, 60, 80);
+                p.triangle(p.width, originY, p.width - 10, originY - 5, p.width - 10, originY + 5);
+                p.triangle(originX, 0, originX - 5, 10, originX + 5, 10);
+                p.textSize(14);
+                p.text('t', p.width - 22, originY + 22);
+                p.text('x', originX - 22, 22);
+                p.text('O', originX - 16, originY + 18);
+
+                p.textSize(11);
+                p.fill(130, 140, 160);
+                p.textAlign(p.CENTER);
+                const tMin = -originX / scale;
+                const tMax = (p.width - originX) / scale;
+                for (let t = Math.floor(tMin); t <= Math.ceil(tMax); t++) {
+                    if (t === 0) continue;
+                    let px = originX + t * scale;
+                    if (px > 10 && px < p.width - 10) {
+                        p.text(t, px, originY + 18);
+                    }
+                }
+                const xMin = -(p.height - originY) / scale;
+                const xMax = originY / scale;
+                for (let x = Math.floor(xMin); x <= Math.ceil(xMax); x++) {
+                    if (x === 0) continue;
+                    let py = originY - x * scale;
+                    if (py > 10 && py < p.height - 10) {
+                        p.text(x, originX - 18, py + 4);
+                    }
+                }
+                p.textAlign(p.LEFT);
+            }
+
+            // ----- 曲线 (t >= 0) -----
+            function drawCurve() {
+                p.noFill();
+                p.stroke(100, 110, 130);
+                p.strokeWeight(2.5);
+                p.beginShape();
+                const tMin = Math.max(0, -originX / scale);
+                const tMax = (p.width - originX) / scale;
+                for (let px = 0; px <= p.width; px += 1.5) {
+                    let t_val = (px - originX) / scale;
+                    if (t_val < tMin || t_val > tMax) continue;
+                    let x_val = f(t_val);
+                    let py = originY - x_val * scale;
+                    if (py >= -50 && py <= p.height + 50) {
+                        p.vertex(px, py);
+                    }
+                }
+                p.endShape();
+            }
+
+            // ----- 切线 (橙色) -----
+            function drawTangent() {
+                if (!state.showTangent) return;
+                const t0 = state.t0;
+                const x0 = f(t0);
+                const k = df(t0);
+                const tMin = Math.max(0, -originX / scale);
+                const tMax = (p.width - originX) / scale;
+                let t_start = Math.max(tMin, t0 - 3.5);
+                let t_end = Math.min(tMax, t0 + 3.5);
+                let p1 = toPixel(t_start, k * (t_start - t0) + x0);
+                let p2 = toPixel(t_end, k * (t_end - t0) + x0);
+                p.stroke(255, 122, 51);
+                p.strokeWeight(2.5);
+                p.drawingContext.setLineDash([]);
+                p.line(p1.x, p1.y, p2.x, p2.y);
+                let labelPos = toPixel(t0 + 1.2, k * 1.2 + x0);
+                if (labelPos.x < p.width - 20 && labelPos.y > 20) {
+                    p.noStroke();
+                    p.fill(255, 122, 51);
+                    p.textSize(13);
+                    p.text('切线', labelPos.x + 6, labelPos.y - 6);
+                }
+            }
+
+            // ----- 割线 (蓝色虚线) — 长度恒定，不随 Δt 变短 -----
+            function drawSecant() {
+                if (!state.showSecant) return;
+                const t0 = state.t0;
+                const x0 = f(t0);
+                const dt = state.dt;
+                const t1 = t0 + dt;
+                const x1 = f(t1);
+                let p0 = toPixel(t0, x0);
+                let p1 = toPixel(t1, x1);
+
+                // 计算中点 (像素坐标)
+                let midX = (p0.x + p1.x) / 2;
+                let midY = (p0.y + p1.y) / 2;
+
+                // 计算方向向量 (p0 → p1)
+                let dx = p1.x - p0.x;
+                let dy = p1.y - p0.y;
+                let len = Math.sqrt(dx * dx + dy * dy);
+
+                // 如果两点几乎重合 (dt 极小)，使用切线方向
+                if (len < 1.0) {
+                    let k = df(t0);
+                    let angle = Math.atan2(-k * scale, scale);
+                    dx = Math.cos(angle);
+                    dy = Math.sin(angle);
+                } else {
+                    dx /= len;
+                    dy /= len;
+                }
+
+                // 固定延伸长度：画布宽度的 28%，保证割线视觉长度恒定
+                const extLen = p.width * 0.28;
+
+                let startX = midX - dx * extLen;
+                let startY = midY - dy * extLen;
+                let endX = midX + dx * extLen;
+                let endY = midY + dy * extLen;
+
+                // 裁剪到画布边界 (避免溢出难看)
+                const margin = 20;
+                const clip = (v, min, max) => Math.max(min, Math.min(max, v));
+                // 但我们使用线段裁剪: 延长到边界
+                // 简单粗暴: 直接画，超出部分自动裁剪
+                p.stroke(96, 165, 250);
+                p.strokeWeight(2.2);
+                p.drawingContext.setLineDash([6, 6]);
+                p.line(startX, startY, endX, endY);
+                p.drawingContext.setLineDash([]);
+
+                // 标签: 中点的右上方
+                let labelX = midX + 22;
+                let labelY = midY - 18;
+                if (labelX < p.width - 20 && labelY > 20) {
+                    p.noStroke();
+                    p.fill(96, 165, 250);
+                    p.textSize(13);
+                    p.text('割线', labelX, labelY);
+                }
+            }
+
+            // ----- Δx-Δt 三角形 -----
+            function drawTriangle() {
+                if (!state.showTriangle) return;
+                const t0 = state.t0;
+                const x0 = f(t0);
+                const dt = state.dt;
+                const t1 = t0 + dt;
+                const x1 = f(t1);
+                let p0 = toPixel(t0, x0);
+                let p1 = toPixel(t1, x1);
+                let cornerX = p1.x;
+                let cornerY = p0.y;
+                p.stroke(52, 211, 153);
+                p.strokeWeight(1.2);
+                p.drawingContext.setLineDash([4, 4]);
+                p.line(p0.x, p0.y, cornerX, cornerY);
+                p.line(p1.x, p1.y, cornerX, cornerY);
+                p.drawingContext.setLineDash([]);
+                p.noStroke();
+                p.fill(52, 211, 153);
+                p.textSize(13);
+                p.textAlign(p.CENTER);
+                p.text('Δt', (p0.x + cornerX) / 2, cornerY + 20);
+                p.textAlign(p.LEFT);
+                p.text('Δx', cornerX + 8, (p0.y + cornerY) / 2 + 5);
+                p.textAlign(p.LEFT);
+            }
+
+            // ----- 点 -----
+            function drawPoints() {
+                const t0 = state.t0;
+                const x0 = f(t0);
+                const dt = state.dt;
+                const t1 = t0 + dt;
+                const x1 = f(t1);
+                let p0 = toPixel(t0, x0);
+                let p1 = toPixel(t1, x1);
+                p.fill(255, 122, 51);
+                p.noStroke();
+                p.circle(p0.x, p0.y, 9);
+                p.fill(50, 60, 80);
+                p.textSize(14);
+                p.textStyle(p.BOLD);
+                p.text('P₀', p0.x + 12, p0.y - 8);
+                p.fill(96, 165, 250);
+                p.noStroke();
+                p.circle(p1.x, p1.y, 8);
+                p.fill(50, 60, 80);
+                p.text('P', p1.x + 12, p1.y - 8);
+                p.textStyle(p.NORMAL);
+            }
+
+            // ----- 主绘制 -----
+            p.draw = () => {
+                p.background(248, 251, 255);
+                drawGrid();
+                drawAxes();
+                drawCurve();
+                drawSecant();
+                drawTangent();
+                drawTriangle();
+                drawPoints();
+
+                const t0 = state.t0;
+                const dt = state.dt;
+                const t1 = t0 + dt;
+                const x0 = f(t0);
+                const x1 = f(t1);
+                const k_sec = (x1 - x0) / dt;
+                const k_tan = df(t0);
+                dom.roSec.textContent = k_sec.toFixed(3);
+                dom.roTan.textContent = k_tan.toFixed(3);
+                dom.roDt.textContent = dt.toFixed(2);
+                dom.roT0.textContent = t0.toFixed(2);
+
+                if (Math.abs(k_sec - k_tan) < 0.03) {
+                    dom.roSec.style.color = '#FF7A33';
+                } else {
+                    dom.roSec.style.color = '#60A5FA';
+                }
+            };
+
+            // ----- 鼠标拖拽平移 -----
+            p.mouseDragged = () => {
+                if (window.isSliderActive) return;
+                if (p.mouseX < 0 || p.mouseX > p.width || p.mouseY < 0 || p.mouseY > p.height) return;
+                if (!isDragging) {
+                    isDragging = true;
+                    dragStartX = p.mouseX;
+                    dragStartY = p.mouseY;
+                } else {
+                    let dx = p.mouseX - dragStartX;
+                    let dy = p.mouseY - dragStartY;
+                    originX += dx;
+                    originY += dy;
+                    dragStartX = p.mouseX;
+                    dragStartY = p.mouseY;
+                }
+                p.draw();
+            };
+
+            p.mouseReleased = () => {
+                isDragging = false;
+            };
+
+            p.update = () => {
+                p.draw();
+            };
+        };
+
+        // ============================================================
+        //  启动 p5
+        // ============================================================
+        let p5Instance = new p5(sketch, 'p5canvas');
+        state.p5Instance = p5Instance;
+
+        // ============================================================
+        //  UI 交互函数
+        // ============================================================
+
+        function onDtChange() {
+            const val = parseFloat(dom.slDt.value);
+            state.dt = val;
+            dom.valDt.textContent = val.toFixed(2);
+            if (state.playing) {
+                state.playing = false;
+                updatePlayButton();
+            }
+            if (state.p5Instance) state.p5Instance.update();
+        }
+
+        function togglePlay() {
+            if (state.dt <= 0.02) {
+                state.dt = 2.0;
+                dom.slDt.value = 2.0;
+                dom.valDt.textContent = '2.00';
+            }
+            state.playing = !state.playing;
+            updatePlayButton();
+            if (state.playing) {
+                animateStep();
+            }
+        }
+
+        function updatePlayButton() {
+            const btn = dom.btnPlay;
+            if (state.playing) {
+                btn.innerHTML =
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+            } else {
+                btn.innerHTML =
+                    `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>`;
+            }
+        }
+
+        let animFrameId = null;
+
+        function animateStep() {
+            if (!state.playing) return;
+            state.dt = state.dt * 0.94;
+            if (state.dt < 0.005) {
+                state.dt = 0.005;
+                state.playing = false;
+                updatePlayButton();
+                dom.slDt.value = state.dt;
+                dom.valDt.textContent = state.dt.toFixed(2);
+                if (state.p5Instance) state.p5Instance.update();
+                return;
+            }
+            dom.slDt.value = state.dt;
+            dom.valDt.textContent = state.dt.toFixed(2);
+            if (state.p5Instance) state.p5Instance.update();
+            const delay = Math.max(16, 60 / state.speed);
+            animFrameId = setTimeout(() => {
+                animateStep();
+            }, delay);
+        }
+
+        function resetAll() {
+            state.playing = false;
+            if (animFrameId) {
+                clearTimeout(animFrameId);
+                animFrameId = null;
+            }
+            state.dt = 2.0;
+            dom.slDt.value = 2.0;
+            dom.valDt.textContent = '2.00';
+            updatePlayButton();
+            if (state.p5Instance) {
+                state.p5Instance.windowResized();
+            }
+        }
+
+        function setSpd(s) {
+            state.speed = s;
+            document.querySelectorAll('.ctrl-bar .cbtn[data-spd]').forEach(function(b) {
+                b.classList.toggle('active', parseFloat(b.getAttribute('data-spd')) === s);
+            });
+        }
+
+        function toggleShow(type) {
+            if (type === 'secant') {
+                state.showSecant = !state.showSecant;
+                dom.btnShowSecant.classList.toggle('active', state.showSecant);
+            } else if (type === 'tangent') {
+                state.showTangent = !state.showTangent;
+                dom.btnShowTangent.classList.toggle('active', state.showTangent);
+            } else if (type === 'triangle') {
+                state.showTriangle = !state.showTriangle;
+                dom.btnShowTriangle.classList.toggle('active', state.showTriangle);
+            }
+            if (state.p5Instance) state.p5Instance.update();
+        }
+
+        // 窗口变化重绘
+        window.addEventListener('resize', () => {
+            if (state.p5Instance && state.p5Instance.windowResized) {
+                state.p5Instance.windowResized();
+            }
+        });
+
+        const resizeObserver = new ResizeObserver(() => {
+            if (state.p5Instance && state.p5Instance.windowResized) {
+                state.p5Instance.windowResized();
+            }
+        });
+        const container = document.getElementById('p5canvas');
+        if (container) {
+            resizeObserver.observe(container);
+        }
+
+        console.log('✅ 平均速度与瞬时速度仿真已启动');
+        console.log('💡 拖动 Δt 滑块 → 割线长度恒定不变');
+        console.log('💡 拖拽画布本身 → 平移视图');
+        console.log('💡 点击 ▶ 演示 Δt → 0 逼近过程，割线长度保持不变');
+    </script>
+    </body>
+</html>
