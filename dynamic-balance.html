@@ -134,14 +134,14 @@ function dash(x1,y1,x2,y2,on=8,off=6){
 
 /* 箭头 */
 function arrow(x1,y1,x2,y2,color,label,ltx,lty){
-  stroke(color); strokeWeight(3); fill(color);
+  stroke(color); strokeWeight(5); fill(color);
   line(x1,y1,x2,y2);
   const a = atan2(y2-y1,x2-x1);
-  const s = 9;
-  triangle(x2,y2, x2-s*cos(a-0.45), y2-s*sin(a-0.45), x2-s*cos(a+0.45), y2-s*sin(a+0.45));
+  const s = 14;
+  triangle(x2,y2, x2-s*cos(a-0.42), y2-s*sin(a-0.42), x2-s*cos(a+0.42), y2-s*sin(a+0.42));
   if(label!==undefined){
-    noStroke(); fill(color); textSize(15); textAlign(LEFT);
-    text(label, ltx!==undefined?ltx:x2+8, lty!==undefined?lty:y2-6);
+    noStroke(); fill(color); textSize(17); textAlign(LEFT);
+    text(label, ltx!==undefined?ltx:x2+10, lty!==undefined?lty:y2-8);
   }
 }
 
@@ -212,32 +212,39 @@ function model1(){
   circle(bx,by,r);
   noStroke(); fill(230,237,243); textSize(13); textAlign(CENTER);
   text('m', bx, by+4);
-  // 力
-  const sc = 9; // px/N
+  // 力（G 固定长度 110px 基准，N₁ N₂ 按比例放大）
+  const sc = 11; // px/N
   const lenG = G*sc;
-  forceVec(bx,by, 0,lenG, 255,211,61, 'G=G', [bx+12, by+lenG+2]);
+  const maxLen = 300;
+  forceVec(bx,by, 0,lenG, 255,211,61, 'G='+G+'N', 1, [bx+14, by+lenG+4]);
   const N1 = G/Math.tan(a);
   const N2 = G/Math.sin(a);
-  forceVec(bx,by, N1*sc,0, 88,166,255, 'N₁', [bx+N1*sc+10, by+4]);
-  forceVec(bx,by, N2*sc*Math.cos(a), -N2*sc*Math.sin(a), 80,200,120, 'N₂', [bx+N2*sc*Math.cos(a)+10, by-N2*sc*Math.sin(a)]);
+  const l1 = Math.min(N1*sc, maxLen);
+  const l2 = Math.min(N2*sc, maxLen);
+  forceVec(bx,by, l1,0, 88,166,255, 'N₁='+N1.toFixed(1)+'N', 1, [bx+l1+12, by+6]);
+  forceVec(bx,by, l2*Math.cos(a), -l2*Math.sin(a), 80,200,120, 'N₂='+N2.toFixed(1)+'N', 1, [bx+l2*Math.cos(a)+12, by-l2*Math.sin(a)-6]);
   // 角度标注
   noStroke(); fill(176,148,255); textSize(13);
   text('α='+P[1].a+'°', wallX+tx*Math.sin(a)/2+10, groundY-tx*Math.cos(a)/2-8);
   // ---- 右侧：矢量三角形 ----
   const ox = W/2+140, oy = 150;
-  const scT = 8.5;
+  const scT = 11;
   // 画布上的三角形：G 竖直
   const gEnd = {x:ox, y:oy+lenG*scT/sc};
   const n1End = {x:gEnd.x + N1*scT, y:gEnd.y};
-  stroke(255,211,61); strokeWeight(3); noFill();
+  stroke(255,211,61); strokeWeight(5); noFill();
   line(ox,oy, gEnd.x,gEnd.y);
   stroke(88,166,255); line(gEnd.x,gEnd.y, n1End.x,n1End.y);
   stroke(80,200,120); line(n1End.x,n1End.y, ox,oy);
+  // 箭头（三角形边也画箭头，表示力的方向）
+  arrow(ox,oy, gEnd.x,gEnd.y, 255,211,61);
+  arrow(gEnd.x,gEnd.y, n1End.x,n1End.y, 88,166,255);
+  arrow(n1End.x,n1End.y, ox,oy, 80,200,120);
   // 力的大小标签
-  noStroke(); fill(255,211,61); textSize(14); textAlign(LEFT);
-  text('G = '+G.toFixed(1)+' N', ox-80, oy+lenG*scT/sc+20);
-  fill(88,166,255); text('N₁ = '+N1.toFixed(1)+' N', n1End.x+10, n1End.y-8);
-  fill(80,200,120); text('N₂ = '+N2.toFixed(1)+' N', (n1End.x+ox)/2-70, oy-12);
+  noStroke(); fill(255,211,61); textSize(15); textAlign(LEFT);
+  text('G = '+G.toFixed(1)+' N', ox-90, oy+lenG*scT/sc+24);
+  fill(88,166,255); text('N₁ = '+N1.toFixed(1)+' N', n1End.x+12, n1End.y-10);
+  fill(80,200,120); text('N₂ = '+N2.toFixed(1)+' N', (n1End.x+ox)/2-90, oy-16);
   // 小标签
   noStroke(); fill(139,148,158); textSize(12.5);
   text('力矢量三角形（首尾相接）', ox-110, oy-30);
@@ -316,13 +323,13 @@ function model2(){
   // 绳与竖直夹角 θ
   const sinTh = d/L, cosTh = Math.sqrt(1-sinTh*sinTh);
   const T = valid ? G/(2*cosTh) : Infinity;
-  // 力：T1 T2 G
-  const sc = 2.2;
-  const lenT = Math.min(T*sc, 260);
+  // 力：T1 T2 G（T 按 G 的比例放大，更明显）
+  const sc = 3.2;
+  const lenT = Math.min(T*sc, 300);
   const tAng = Math.atan2(d/2, Math.abs(Py-Ay));
-  forceVec(Px,Py, lenT*Math.sin(tAng), lenT*Math.cos(tAng), 80,200,120, 'T', [Px+lenT*Math.sin(tAng)+6, Py-lenT*Math.cos(tAng)]);
-  forceVec(Px,Py, -lenT*Math.sin(tAng), lenT*Math.cos(tAng), 80,200,120, 'T');
-  forceVec(Px,Py, 0, Math.min(G*2.2,250), 255,120,80, 'G', [Px+10, Py+Math.min(G*2.2,250)+2]);
+  forceVec(Px,Py, lenT*Math.sin(tAng), lenT*Math.cos(tAng), 80,200,120, 'T='+(valid?T.toFixed(1):'—')+'N', 1, [Px+lenT*Math.sin(tAng)+8, Py-lenT*Math.cos(tAng)+14]);
+  forceVec(Px,Py, -lenT*Math.sin(tAng), lenT*Math.cos(tAng), 80,200,120, 'T='+(valid?T.toFixed(1):'—')+'N', 1, [Px-lenT*Math.sin(tAng)-110, Py-lenT*Math.cos(tAng)+14]);
+  forceVec(Px,Py, 0, Math.min(G*3.2,260), 255,120,80, 'G='+G+'N', 1, [Px+14, Py+Math.min(G*3.2,260)+6]);
   // 角度标注
   noStroke(); fill(80,200,120); textSize(12.5);
   text('θ='+(Math.asin(sinTh)*180/Math.PI).toFixed(1)+'°', Px+d/4, Py-14);
@@ -402,12 +409,14 @@ function model3(){
   // 球
   noStroke(); fill(88,166,255,90); stroke(88,166,255); strokeWeight(2);
   circle(bx,by,r);
-  // 力
-  const sc = 6;
+  // 力（G 固定长度基准，N T 按比例放大）
+  const sc = 8;
+  const maxLen = 280;
+  forceVec(bx,by, 0,G*sc, 255,211,61, 'G='+G+'N', 1, [bx+14, by+G*sc+4]);
   if(ok){
-    forceVec(bx,by, N*sc*nx, N*sc*ny, 88,166,255, 'N', [bx+N*sc*nx+8, by+N*sc*ny-4]);
-    forceVec(bx,by, tx*Math.min(T*sc,300), ty*Math.min(T*sc,300), 80,200,120, 'T', [bx+tx*Math.min(T*sc,300)+8, by+ty*Math.min(T*sc,300)-4]);
-    forceVec(bx,by, 0, G*sc, 255,211,61, 'G', [bx+12, by+G*sc+2]);
+    const lN = Math.min(N*sc, maxLen), lT = Math.min(T*sc, maxLen);
+    forceVec(bx,by, lN*nx, lN*ny, 88,166,255, 'N='+N.toFixed(1)+'N', 1, [bx+lN*nx+10, by+lN*ny-6]);
+    forceVec(bx,by, tx*lT, ty*lT, 80,200,120, 'T='+T.toFixed(1)+'N', 1, [bx+tx*lT+10, by+ty*lT-6]);
     noStroke(); fill(139,148,158); textSize(12);
     text('θ='+P[3].t+'°', topX-30, topY-8);
     text('φ='+P[3].f+'°', (bx+fx)/2+10, (by+fy)/2-6);
@@ -513,11 +522,13 @@ function model4(){
   const N1 = det!==0 ? (0*Math.cos(bt) - (-Math.sin(bt))*(-G))/det : 0;
   const N2 = det!==0 ? ((-Math.sin(th))*(-G) - 0*Math.cos(th))/det : 0;
   const ok = N1>0 && N2>0;
-  const sc=7;
+  const sc=9;
+  const maxLen=290;
+  forceVec(bx,by, 0,G*sc, 255,211,61, 'G='+G+'N', 1, [bx+14, by+G*sc+4]);
   if(ok){
-    forceVec(bx,by, N1*sc*nx, N1*sc*ny, 88,166,255, 'N₁', [bx+N1*sc*nx+8, by+N1*sc*ny-4]);
-    forceVec(bx,by, N2*sc*n2x, N2*sc*n2y, 80,200,120, 'N₂', [bx+N2*sc*n2x+8, by+N2*sc*n2y-4]);
-    forceVec(bx,by, 0, G*sc, 255,211,61, 'G', [bx+12, by+G*sc+2]);
+    const l1=Math.min(N1*sc,maxLen), l2=Math.min(N2*sc,maxLen);
+    forceVec(bx,by, l1*nx, l1*ny, 88,166,255, 'N₁='+N1.toFixed(1)+'N', 1, [bx+l1*nx+10, by+l1*ny-6]);
+    forceVec(bx,by, l2*n2x, l2*n2y, 80,200,120, 'N₂='+N2.toFixed(1)+'N', 1, [bx+l2*n2x+10, by+l2*n2y-6]);
   }
   noStroke(); fill(139,148,158); textSize(12);
   text('θ='+P[4].t+'°', topX-40, topY-10);
