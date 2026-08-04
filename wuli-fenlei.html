@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>物理课件 · 三级分类总目录</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;background:#0b0b14;color:#d4d4dc;min-height:100vh;background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%)}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.72em;padding:6px 0;transition:.2s;margin-bottom:4px}.back:hover{color:#d4a373;gap:10px}
+.container{max-width:760px;margin:0 auto;padding:32px 18px 50px}
+h1{font-size:1.3em;font-weight:600;margin-bottom:4px;color:#c8c8d0;letter-spacing:1px}
+.sub{font-size:.72em;color:#5c5c72;margin-bottom:18px;letter-spacing:.5px}
+/* 一级分类 */
+.lv1{background:#0e0e1e;border:1px solid #18182a;border-radius:10px;margin-bottom:14px;overflow:hidden}
+.lv1-head{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;transition:.2s}
+.lv1-head:hover{background:#131328}
+.lv1-head .icon{width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:.95em;flex-shrink:0;background:rgba(212,163,115,.1)}
+.lv1-head .name{font-size:.92em;font-weight:600;color:#d0d0da;flex:1}
+.lv1-head .count{font-size:.65em;color:#5c5c72;background:#16162a;padding:2px 9px;border-radius:10px}
+.lv1-head .arrow{color:#2a2a40;font-size:.7em;transition:.25s}
+.lv1.open .arrow{transform:rotate(90deg);color:#d4a373}
+/* 二级分类 */
+.lv2-wrap{display:none;border-top:1px solid #18182a;padding:12px 16px 16px}
+.lv1.open .lv2-wrap{display:block}
+.lv2{margin-bottom:12px}
+.lv2:last-child{margin-bottom:0}
+.lv2-title{font-size:.72em;color:#a08060;letter-spacing:1px;margin:8px 0 6px;display:flex;align-items:center;gap:6px}
+.lv2-title::before{content:'';width:14px;height:1px;background:#a08060;display:inline-block;opacity:.6}
+/* 三级条目 */
+.lv3{display:flex;align-items:center;gap:9px;background:#111122;border:1px solid #18182a;border-radius:6px;padding:8px 12px;text-decoration:none;color:inherit;transition:.18s;margin-bottom:4px}
+.lv3:hover{background:#16162e;border-color:#2a2a48;transform:translateX(3px)}
+.lv3 .dot{width:5px;height:5px;border-radius:50%;background:#d4a373;flex-shrink:0}
+.lv3 .nm{font-size:.78em;color:#c8c8d0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lv3 .tg{font-size:.58em;padding:1px 7px;border-radius:6px;background:rgba(212,163,115,.1);color:#a08060;flex-shrink:0}
+.lv3 .ar{color:#2a2a40;font-size:.6em;flex-shrink:0;transition:.18s}
+.lv3:hover .ar{color:#d4a373;transform:translateX(3px)}
+footer{text-align:center;padding:20px;color:#1e1e30;font-size:.6em;letter-spacing:1px}
+@media(max-width:480px){.container{padding:20px 14px 30px}h1{font-size:1.1em}}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="jiaoxue.html">← 教学资源</a>
+<h1>📚 物理课件 · 分类总目录</h1>
+<p class="sub">一级：知识模块 ｜ 二级：专题 ｜ 三级：课件/仿真 · 点击展开</p>
+
+<!-- ========== 1 运动学 ========== -->
+<div class="lv1 open" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">🏃</div><div class="name">一、运动学</div><div class="count">15</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">基本概念</div>
+      <a class="lv3" href="课件/参考系_相对运动.html"><span class="dot"></span><span class="nm">参考系 · 相对运动</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/平均速度与瞬时速度.html"><span class="dot"></span><span class="nm">平均速度与瞬时速度</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_average-instantaneous-velocity.html"><span class="dot"></span><span class="nm">平均/瞬时速度 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="加速度判断题_9道.html"><span class="dot"></span><span class="nm">加速度 · 9道易混辨析</span><span class="ar">→</span></a>
+      <a class="lv3" href="stroboscopic_effect.html"><span class="dot"></span><span class="nm">频闪效应 · 运动过程</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">公式与推导</div>
+      <a class="lv3" href="匀变速直线运动公式推导.html"><span class="dot"></span><span class="nm">匀变速直线运动 · 公式推导</span><span class="ar">→</span></a>
+      <a class="lv3" href="运动学推论_一题多解.html"><span class="dot"></span><span class="nm">运动学推论 · 一题多解</span><span class="ar">→</span></a>
+      <a class="lv3" href="运动学推论应用_思维导图.html"><span class="dot"></span><span class="nm">运动学推论 · 思维导图</span><span class="ar">→</span></a>
+      <a class="lv3" href="必修一_推导与进阶.html"><span class="dot"></span><span class="nm">必修一 · 推导与进阶</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">图像专题</div>
+      <a class="lv3" href="物理/运动学图像/点线面三步法.html"><span class="dot"></span><span class="nm">运动学图像 · 点线面三步法</span><span class="tg">新</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">追及相遇</div>
+      <a class="lv3" href="追及问题_交互探究课.html"><span class="dot"></span><span class="nm">追及问题 · 交互探究课</span><span class="ar">→</span></a>
+      <a class="lv3" href="追车碰撞动态分析.html"><span class="dot"></span><span class="nm">追车碰撞 · 动态分析</span><span class="tg">新</span><span class="ar">→</span></a>
+      <a class="lv3" href="物理/追及相遇/一题四法精讲.html"><span class="dot"></span><span class="nm">追及相遇 · 一题四法精讲</span><span class="tg">新</span><span class="ar">→</span></a>
+      <a class="lv3" href="物理/竖直上抛/相遇问题专题.html"><span class="dot"></span><span class="nm">竖直上抛 · 相遇问题专题</span><span class="tg">新</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">生活应用与复习</div>
+      <a class="lv3" href="ETC通道_运动过程动画.html"><span class="dot"></span><span class="nm">ETC通道 · 运动过程动画</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/小船渡河.html"><span class="dot"></span><span class="nm">小船渡河</span><span class="ar">→</span></a>
+      <a class="lv3" href="必修一_运动学复习_三天冲刺.html"><span class="dot"></span><span class="nm">运动学复习 · 三天冲刺</span><span class="ar">→</span></a>
+      <a class="lv3" href="运动学_课堂视频集锦.html"><span class="dot"></span><span class="nm">运动学 · 视频精选</span><span class="tg">视频</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 2 力学 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">⚖️</div><div class="name">二、力学（静力学）</div><div class="count">8</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">力的合成与分解</div>
+      <a class="lv3" href="课件/必修一/力的合成_交互动画.html"><span class="dot"></span><span class="nm">力的合成 · 交互动画</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_force-composition.html"><span class="dot"></span><span class="nm">力的合成 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_force-balance.html"><span class="dot"></span><span class="nm">力的平衡 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">受力分析</div>
+      <a class="lv3" href="课件/必修一/观察桌面的微小形变_交互动画.html"><span class="dot"></span><span class="nm">观察桌面的微小形变</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/必修一/圆弧槽角度_交互动画.html"><span class="dot"></span><span class="nm">圆弧槽角度 · 落地速度与距离</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">动态平衡（图解法）</div>
+      <a class="lv3" href="dynamic-balance.html"><span class="dot"></span><span class="nm">动态平衡 · 四模型交互演示</span><span class="tg">新</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">牛顿摆</div>
+      <a class="lv3" href="课件/仿真实验/力学_newtons-cradle.html"><span class="dot"></span><span class="nm">牛顿摆 · 动量传递仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 3 力与运动 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">🚀</div><div class="name">三、力与运动关系（牛顿定律）</div><div class="count">6</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">牛顿第一定律</div>
+      <a class="lv3" href="课件/必修一/伽利略斜面实验_交互动画.html"><span class="dot"></span><span class="nm">伽利略斜面实验 · 交互动画</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">牛顿第二定律</div>
+      <a class="lv3" href="课件/仿真实验/力学_spring-box-block.html"><span class="dot"></span><span class="nm">弹簧-滑块系统 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">圆周运动</div>
+      <a class="lv3" href="课件/仿真实验/力学_conical-pendulum.html"><span class="dot"></span><span class="nm">圆锥摆 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_vertical-circular.html"><span class="dot"></span><span class="nm">竖直面圆周运动 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/机械振动/圆锥摆模拟器_交互动画.html"><span class="dot"></span><span class="nm">圆锥摆模拟器</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">抛体运动</div>
+      <a class="lv3" href="课件/仿真实验/力学_projectile-motion.html"><span class="dot"></span><span class="nm">抛体运动 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 4 天体运动 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">🪐</div><div class="name">四、天体运动（万有引力）</div><div class="count">4</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">开普勒与万有引力</div>
+      <a class="lv3" href="课件/仿真实验/力学_kepler-laws.html"><span class="dot"></span><span class="nm">开普勒定律 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_gravity-latitude.html"><span class="dot"></span><span class="nm">重力与纬度 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">卫星运动</div>
+      <a class="lv3" href="课件/仿真实验/力学_satellite.html"><span class="dot"></span><span class="nm">卫星运动 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_analemma-satellite.html"><span class="dot"></span><span class="nm">卫星日行迹 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 5 机械振动与波 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">〰️</div><div class="name">五、机械振动与机械波</div><div class="count">9</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">简谐运动</div>
+      <a class="lv3" href="课件/机械振动/弹簧振子_简谐运动力与速度_交互动画.html"><span class="dot"></span><span class="nm">弹簧振子 · 力与速度</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/机械振动/弹簧振子_能量变化_交互动画.html"><span class="dot"></span><span class="nm">弹簧振子 · 能量变化</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_spring-oscillator.html"><span class="dot"></span><span class="nm">弹簧振子 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">单摆</div>
+      <a class="lv3" href="课件/机械振动/单摆_交互动画.html"><span class="dot"></span><span class="nm">单摆 · 交互动画</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/机械振动/单摆阻尼_交互动画.html"><span class="dot"></span><span class="nm">单摆阻尼 · 交互动画</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">机械波</div>
+      <a class="lv3" href="机械振动波_复习课件.html"><span class="dot"></span><span class="nm">机械振动和机械波 · 复习课件</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_wave-motion.html"><span class="dot"></span><span class="nm">波的传播 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/力学_wave-superposition.html"><span class="dot"></span><span class="nm">波的叠加 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="doppler_speed.html"><span class="dot"></span><span class="nm">多普勒效应 · 车速监测</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 6 电磁学 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">🧲</div><div class="name">六、电磁学</div><div class="count">23</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">静电场</div>
+      <a class="lv3" href="课件/仿真实验/电磁学_coulomb-law.html"><span class="dot"></span><span class="nm">库仑定律 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/电磁学_electric-field-lines.html"><span class="dot"></span><span class="nm">电场线 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/电磁学_charged-particle-electric.html"><span class="dot"></span><span class="nm">带电粒子在电场中 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/电磁学_cyclotron.html"><span class="dot"></span><span class="nm">回旋加速器 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">磁场与安培力</div>
+      <a class="lv3" href="课件/电磁学/通电直导线_磁场_交互动画.html"><span class="dot"></span><span class="nm">通电直导线的磁场</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/磁场对通电导线受力_3D演示.html"><span class="dot"></span><span class="nm">磁场对通电导线受力 · 3D</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/安培力_交互动画.html"><span class="dot"></span><span class="nm">安培力</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/安培力与洛伦兹力_交互动画.html"><span class="dot"></span><span class="nm">安培力与洛伦兹力</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/电磁学_earth-magnetic-field.html"><span class="dot"></span><span class="nm">地磁场 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">带电粒子在磁场中</div>
+      <a class="lv3" href="课件/电磁学/带电粒子_磁场螺旋运动_交互动画.html"><span class="dot"></span><span class="nm">带电粒子 · 磁场螺旋运动</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/电磁学_charged-particle-magnetic.html"><span class="dot"></span><span class="nm">带电粒子在磁场中 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">电磁感应</div>
+      <a class="lv3" href="课件/电磁学/法拉第直流发电机_交互动画.html"><span class="dot"></span><span class="nm">法拉第直流发电机</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/单棒_无外力模型_交互动画.html"><span class="dot"></span><span class="nm">单棒 · 无外力模型</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/导体棒_磁场运动模拟_交互动画.html"><span class="dot"></span><span class="nm">导体棒 · 磁场运动模拟</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/电磁驱动_交互动画.html"><span class="dot"></span><span class="nm">电磁驱动</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/电磁阻尼_交互动画.html"><span class="dot"></span><span class="nm">电磁阻尼</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">交变电流</div>
+      <a class="lv3" href="课件/电磁学/交变电流的产生_交互动画.html"><span class="dot"></span><span class="nm">交变电流的产生</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/理想变压器_交互动画.html"><span class="dot"></span><span class="nm">理想变压器模型</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/电磁学/远距离输电_交互动画.html"><span class="dot"></span><span class="nm">远距离输电模型</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">电子束与示波器</div>
+      <a class="lv3" href="课件/仿真实验/电磁学_cathode-ray-tube.html"><span class="dot"></span><span class="nm">阴极射线管 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/电磁学_oscilloscope.html"><span class="dot"></span><span class="nm">示波器 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">传感器</div>
+      <a class="lv3" href="课件/传感器/光敏电阻_交互实验.html"><span class="dot"></span><span class="nm">光敏电阻的特性</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/传感器/传感器_自动控制_交互实验.html"><span class="dot"></span><span class="nm">传感器 · 自动控制装置</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/传感器/霍尔元件_交互实验.html"><span class="dot"></span><span class="nm">霍尔元件的特性</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 7 热学 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">🔥</div><div class="name">七、热学</div><div class="count">4</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">分子动理论与气体</div>
+      <a class="lv3" href="课件/仿真实验/热学_brownian-motion.html"><span class="dot"></span><span class="nm">布朗运动 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/热学_gas-pressure.html"><span class="dot"></span><span class="nm">气体压强 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/热学_torricelli.html"><span class="dot"></span><span class="nm">托里拆利实验 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/热学_wetting-contact.html"><span class="dot"></span><span class="nm">浸润与接触角 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 8 光学 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">🔦</div><div class="name">八、光学</div><div class="count">4</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">光的干涉</div>
+      <a class="lv3" href="课件/仿真实验/光学_light-interference.html"><span class="dot"></span><span class="nm">光的干涉 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/光学_soap-film-interference.html"><span class="dot"></span><span class="nm">肥皂膜干涉 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/光学_wedge-interference.html"><span class="dot"></span><span class="nm">劈尖干涉 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/光学_newton-rings.html"><span class="dot"></span><span class="nm">牛顿环 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 9 原子物理 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">⚛️</div><div class="name">九、原子物理与核物理</div><div class="count">11</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">原子结构</div>
+      <a class="lv3" href="课件/仿真实验/原子物理_alpha-scattering.html"><span class="dot"></span><span class="nm">α粒子散射 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/原子物理_alpha-scattering-3d.html"><span class="dot"></span><span class="nm">α粒子散射 · 3D仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/原子物理_hydrogen-spectrum.html"><span class="dot"></span><span class="nm">氢原子光谱 · 仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+      <a class="lv3" href="课件/仿真实验/原子物理_photoelectric-effect-3d.html"><span class="dot"></span><span class="nm">光电效应 · 3D仿真</span><span class="tg">仿真</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">核物理</div>
+      <a class="lv3" href="binding-energy.html"><span class="dot"></span><span class="nm">比结合能 · 核反应方向</span><span class="ar">→</span></a>
+      <a class="lv3" href="binding-energy-lecture.html"><span class="dot"></span><span class="nm">比结合能 · 讲义</span><span class="ar">→</span></a>
+      <a class="lv3" href="decay-recoil.html"><span class="dot"></span><span class="nm">衰变反冲</span><span class="ar">→</span></a>
+      <a class="lv3" href="decay-temp.html"><span class="dot"></span><span class="nm">衰变 · 临时版</span><span class="ar">→</span></a>
+      <a class="lv3" href="bilibili-核聚变核裂变.html"><span class="dot"></span><span class="nm">B站 · 核聚变与核裂变</span><span class="tg">视频</span><span class="ar">→</span></a>
+      <a class="lv3" href="核裂变核聚变_课堂视频集锦.html"><span class="dot"></span><span class="nm">核物理 · 视频精选</span><span class="tg">视频</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 10 高三复习与真题 ========== -->
+<div class="lv1" onclick="toggle(this)">
+  <div class="lv1-head"><div class="icon">🎯</div><div class="name">十、高三复习与真题</div><div class="count">9</div><div class="arrow">▶</div></div>
+  <div class="lv2-wrap">
+    <div class="lv2"><div class="lv2-title">真题与冲刺</div>
+      <a class="lv3" href="2026gaokao-physics.html"><span class="dot"></span><span class="nm">2026山西高考物理真题</span><span class="tg">新</span><span class="ar">→</span></a>
+      <a class="lv3" href="高考物理_考前最后一眼.html"><span class="dot"></span><span class="nm">高考物理 · 考前最后一眼</span><span class="tg">2026</span><span class="ar">→</span></a>
+      <a class="lv3" href="一轮复习导学课_六本书串讲.html"><span class="dot"></span><span class="nm">一轮复习 · 六本书导学</span><span class="tg">新</span><span class="ar">→</span></a>
+      <a class="lv3" href="太原市高一物理期末复习.html"><span class="dot"></span><span class="nm">高一物理 · 期末复习</span><span class="ar">→</span></a>
+    </div>
+    <div class="lv2"><div class="lv2-title">题库与精讲</div>
+      <a class="lv3" href="tiku.html"><span class="dot"></span><span class="nm">物理题库</span><span class="ar">→</span></a>
+      <a class="lv3" href="优桥物理_题库系统.html"><span class="dot"></span><span class="nm">优桥物理 · 题库系统</span><span class="ar">→</span></a>
+      <a class="lv3" href="物理题讲解_10-12.html"><span class="dot"></span><span class="nm">物理题精讲 · 加速度车厢/地球仪/超声测速</span><span class="ar">→</span></a>
+      <a class="lv3" href="课堂视频集锦.html"><span class="dot"></span><span class="nm">课堂视频集锦（综合）</span><span class="tg">视频</span><span class="ar">→</span></a>
+    </div>
+  </div>
+</div>
+
+</div>
+<footer>启明 · 📧 ycpuuv@163.com</footer>
+<script>
+function toggle(el){
+  el.classList.toggle('open');
+}
+</script>
+</body>
+</html>
