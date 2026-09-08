@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>阿基米德三角形 × 抛体运动</title>
+<style>
+  :root{
+    --bg:#0b0b14; --card:#0e0e1e; --line:#18182a; --hover:#131328;
+    --txt:#d4d4dc; --amber:#d4a373; --amber-l:#e8c49a; --orange:#f4a261;
+    --cyan:#4cc9f0; --pink:#fb7299; --green:#7ab878; --gold:#ffd700;
+    --muted:#707088; --white:#f0f0f0;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  body{margin:0; background:var(--bg); color:var(--txt);
+    font-family:'PingFang SC','Microsoft YaHei','Noto Sans CJK SC',sans-serif;
+    background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.06) 0%,transparent 55%);}
+  header{padding:14px 16px 6px; text-align:center;}
+  header h1{margin:0; font-size:26px; letter-spacing:1px;
+    background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);
+    -webkit-background-clip:text; background-clip:text; color:transparent;}
+  header p{margin:6px 0 0; font-size:15px; color:var(--muted);}
+  .wrap{max-width:1080px; margin:0 auto; padding:8px 12px 24px;}
+  .stage-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .stage{flex:1 1 600px; min-width:290px;}
+  #cnv{width:100%; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  #cnv canvas{display:block; width:100% !important; height:auto !important; border-radius:12px;}
+  .banner{margin:8px 0 0; padding:8px 12px; border-radius:10px; font-size:16px; font-weight:600;
+    text-align:center; min-height:24px; line-height:1.5;
+    background:rgba(212,163,115,.07); border:1px dashed rgba(212,163,115,.35); color:var(--amber-l);}
+  .banner.hit{background:rgba(255,215,0,.12); border-color:rgba(255,215,0,.65); color:var(--gold);}
+  .legend{display:flex; flex-wrap:wrap; gap:6px 14px; margin:8px 0 0; font-size:13px; color:#b8b8c8;}
+  .legend span{display:inline-flex; align-items:center; gap:5px;}
+  .sw{width:13px; height:13px; border-radius:3px; display:inline-block; flex:none;}
+  .sw.dot{border-radius:50%;}
+  .stat{display:flex; flex-wrap:wrap; gap:6px; margin:8px 0 0;}
+  .chip{background:var(--card); border:1px solid var(--line); border-radius:9px; padding:5px 10px;
+    font-size:14px; line-height:1.5;}
+  .chip b{color:var(--amber-l); font-size:15px;}
+  .chip b.g{color:var(--green);} .chip b.c{color:var(--cyan);} .chip b.o{color:var(--orange);} .chip b.y{color:var(--gold);}
+  .panel{flex:0 1 320px; min-width:280px; display:flex; flex-direction:column; gap:10px;}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px;}
+  .card h3{margin:0 0 8px; font-size:16px; color:var(--amber);}
+  .ctrl{display:grid; grid-template-columns:44px 1fr 62px; align-items:center; gap:4px 8px; font-size:14px;}
+  .ctrl label{color:#b8b8c8;}
+  .ctrl output{text-align:right; color:var(--amber-l); font-weight:600;}
+  input[type=range]{width:100%; accent-color:var(--amber); height:26px; cursor:pointer;}
+  .btns{display:flex; flex-wrap:wrap; gap:8px;}
+  button{background:var(--hover); color:var(--txt); border:1px solid var(--line); border-radius:9px;
+    padding:7px 12px; font-size:14px; cursor:pointer; transition:all .15s;}
+  button:hover{border-color:var(--amber); color:var(--amber-l);}
+  button.primary{background:rgba(212,163,115,.16); border-color:rgba(212,163,115,.55); color:var(--amber-l); font-weight:600;}
+  button:disabled{opacity:.35; cursor:not-allowed;}
+  .toggles{display:flex; gap:14px; font-size:14px; color:#b8b8c8; flex-wrap:wrap; margin-top:8px;}
+  .toggles label{display:inline-flex; align-items:center; gap:6px; cursor:pointer;}
+  .areabar{display:flex; gap:12px; align-items:flex-end; margin-top:4px;}
+  .bar{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .rect{width:34px; border-radius:5px 5px 0 0;}
+  .rect.tri{height:120px; background:rgba(244,162,97,.9);}
+  .rect.arc{height:80px; background:rgba(76,201,240,.9);}
+  .lbl{font-size:13px; color:#b8b8c8;}
+  .val{font-size:12px; color:var(--muted);}
+  .mem-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(235px,1fr)); gap:10px; margin-top:12px;}
+  .mcard{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; cursor:pointer;
+    transition:border-color .2s, box-shadow .2s; user-select:none;}
+  .mcard:hover{border-color:var(--amber);}
+  .mcard.flash{border-color:var(--gold); box-shadow:0 0 18px rgba(255,215,0,.35);}
+  .mcard h4{margin:0 0 4px; font-size:16px; color:var(--white);}
+  .mcard p{margin:0; font-size:14px; color:#b8b8c8; line-height:1.55;}
+  .mcard b{color:var(--amber-l);}
+  .tip{background:rgba(122,184,120,.07); border:1px solid rgba(122,184,120,.3); border-radius:10px;
+    padding:8px 12px; font-size:15px; color:#b8e0b0; margin-top:10px; line-height:1.6;}
+  .foot{text-align:center; color:var(--muted); font-size:13px; margin-top:14px; line-height:1.7;}
+</style>
+</head>
+<body>
+<header>
+  <h1>阿基米德三角形 × 抛体运动</h1>
+  <p>切点即速度 · 弦指中点速 · 一竖三点 · 弓形恒占三分之二</p>
+</header>
+
+<div class="wrap">
+  <div class="stage-row">
+    <!-- 画布区 -->
+    <div class="stage">
+      <div id="cnv"></div>
+      <div class="banner" id="banner">拖动滑块或按 ▶ 播放 —— 小球飞过 A(t₁)、B(t₂) 两时刻</div>
+      <div class="legend" id="legend"></div>
+      <div class="stat" id="stat"></div>
+    </div>
+
+    <!-- 控制区 -->
+    <div class="panel">
+      <div class="card">
+        <h3>🎛 参数</h3>
+        <div class="ctrl">
+          <label>初速 v₀</label><input type="range" id="sV0" min="6" max="22" step="0.5"><output id="oV0"></output>
+          <label>抛射角 θ</label><input type="range" id="sTh" min="0" max="75" step="1"><output id="oTh"></output>
+          <label>起抛高 h</label><input type="range" id="sH" min="0" max="10" step="0.5"><output id="oH"></output>
+          <label>时刻 t₁</label><input type="range" id="sT1" min="0" max="100" step="1"><output id="oT1"></output>
+          <label>时刻 t₂</label><input type="range" id="sT2" min="0" max="100" step="1"><output id="oT2"></output>
+        </div>
+      </div>
+      <div class="card">
+        <h3>⚡ 一键情境</h3>
+        <div class="btns">
+          <button id="bClassic">🏹 等高斜抛</button>
+          <button id="bFlat">➡️ 平抛探究</button>
+          <button id="bRight">🎯 45° 直角</button>
+        </div>
+        <div class="btns" style="margin-top:8px;">
+          <button id="bPlay" class="primary">▶ 飞行演示</button>
+          <button id="bReset">↺ 复位</button>
+        </div>
+        <div class="toggles">
+          <label><input type="checkbox" id="tgGhost" checked> 💨 惯性幽灵线</label>
+          <label><input type="checkbox" id="tgFocus"> ✨ 焦点 / 准线</label>
+        </div>
+      </div>
+      <div class="card">
+        <h3>📏 面积比 —— A、B 怎么动都不变</h3>
+        <div class="areabar">
+          <div class="bar"><div class="rect tri"></div><div class="lbl">△ 阿基米德三角形</div><div class="val" id="vTri">0 m²</div></div>
+          <div style="align-self:center;font-size:26px;color:var(--gold);font-weight:700;">=</div>
+          <div class="bar"><div class="rect arc"></div><div class="lbl">弓形（轨迹↔弦）</div><div class="val" id="vArc">0 m²</div></div>
+          <div style="align-self:center;font-size:15px;color:#b8b8c8;line-height:1.5;">弓形面积恒为 △ 的<br><b style="color:var(--gold);font-size:22px;">2 / 3</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 记忆卡 -->
+  <div class="mem-cards">
+    <div class="mcard" data-k="tangent"><h4>① 切线 = 速度线</h4>
+      <p>轨迹切线就是该时刻速度方向。<b>若此刻重力消失，小球沿切线直飞</b>——两条"惯性命运线"一延长，交于 P。</p></div>
+    <div class="mcard" data-k="chord"><h4>② 弦 ∥ 中点时刻速度</h4>
+      <p>AB ∥ v(t_m)，t_m = (t₁+t₂)/2。匀变速运动：<b>平均速度 = 时间中点速度</b>（矢量版）。平抛 tanβ = ½tanα 的根就在这里。</p></div>
+    <div class="mcard" data-k="vert"><h4>③ 一竖三点 · M 居中</h4>
+      <p>P、M、N 沿竖直方向（沿重力）排列，<b>M 是 PN 的中点</b>。上下两段都等于 ½g(Δt/2)² —— 半个 Δt 的自由落体距离。</p></div>
+    <div class="mcard" data-k="area"><h4>④ 弓形恒占 2/3</h4>
+      <p>轨迹与弦围成的弓形面积 = <b>(2/3)·△PAB</b>（阿基米德定理）。等高起落时 = (2/3)·RH，即轨迹下平均高度 = (2/3)H。</p></div>
+  </div>
+
+  <div class="tip">🗝 <b>记忆口诀：</b>切线是命运线 · 弦指中点速 · 一竖三点 M 居中 · 弓形恒占三分二<br>
+  🎯 彩蛋：θ = 45° 等高起落时 ∠P = 90°，弦恰好<b>过抛物线焦点</b>——点 ✨ 焦点开关，看 F 正好躺在弦上。</div>
+  <div class="foot">阿基米德（前287—前212）：用这枚三角形求出了抛物线弓形面积——微积分两千年前的雏形。<br>
+  交互：拖滑块 / 飞行演示 / 点按上方 ①—④ 卡片可高亮对应图形</div>
+</div>
+
+<script src="p5.min.js"></script>
+<script>
+/* ============ 模型：从 (0,h0) 以 (vx,vy) 抛出，落回 y = 0 ============ */
+const G = 9.8;
+let v0=14, thDeg=45, h0=0, p1=0.28, p2=0.72;      // p1,p2：t1/t2 占全程 T 的比例
+let vx, vy, T, t1, t2;
+let showGhost=true, showFocus=false;
+let playSt='idle', tNow=0;                          // idle / playing / done
+let flashKey='', flashT=0;
+let sc=30, ox=0, oy=0, W=640, H=400;
+
+/* ---------------- 物理与几何 ---------------- */
+function updModel(){
+  if(thDeg===0 && h0<0.4){ h0=3; document.getElementById('sH').value=h0; } // 平抛必须有高度
+  thDeg=constrain(thDeg,0,75);
+  const th=radians(thDeg);
+  vx=v0*cos(th); vy=v0*sin(th);
+  T=(vy+sqrt(max(0,vy*vy+2*G*h0)))/G;
+  if(T<0.05) T=0.05;
+  if(p2-p1<0.05){ p1=max(0,p2-0.05); if(p1+p2>1.95){p1=0.95;p2=1;} }
+  p1=constrain(p1,0,0.97); p2=constrain(p2,0.03,1);
+  if(p2-p1<0.03){ p2=min(1,p1+0.05); }
+  t1=p1*T; t2=p2*T;
+}
+const rp=t=>createVector(vx*t, h0+vy*t-0.5*G*t*t);
+const vp=t=>createVector(vx, vy-G*t);
+const xV_=()=>vx*vy/G, yV_=()=>h0+vy*vy/(2*G);
+const focusPt=()=>createVector(xV_(), yV_()-vx*vx/(2*G));
+const directrixY=()=>yV_()+vx*vx/(2*G);
+
+/* ---------------- p5 ---------------- */
+function setup(){
+  const c=document.getElementById('cnv');
+  W=c.clientWidth||640; H=Math.round(min(W*0.6,520));
+  const cv=createCanvas(W,H); cv.parent('cnv');
+  textFont('"PingFang SC","Microsoft YaHei",sans-serif');
+  textStyle(BOLD);
+  bindUI();
+  go();
+}
+function bindUI(){
+  const $=id=>document.getElementById(id);
+  const on=(id,fn)=>{ $(id).addEventListener('input',fn); };
+  on('sV0',e=>{v0=+e.target.value;go();});
+  on('sTh',e=>{thDeg=+e.target.value;go();});
+  on('sH',e=>{h0=+e.target.value;go();});
+  on('sT1',e=>{p1=+e.target.value/100;go();});
+  on('sT2',e=>{p2=+e.target.value/100;go();});
+  $('bClassic').onclick=()=>preset(14,45,0,0.28,0.72);
+  $('bFlat').onclick=()=>preset(12,0,6,0,0.55);
+  $('bRight').onclick=()=>preset(14,45,0,0,1);
+  $('bPlay').onclick=()=>{
+    if(playSt==='playing'){ playSt='idle'; $('bPlay').textContent='▶ 飞行演示'; enableSliders(true); return; }
+    playSt='playing'; tNow=0; $('bPlay').textContent='⏸ 暂停'; enableSliders(false);
+  };
+  $('bReset').onclick=()=>preset(14,45,0,0.28,0.72);
+  $('tgGhost').onchange=e=>{showGhost=e.target.checked;};
+  $('tgFocus').onchange=e=>{showFocus=e.target.checked; layout();};
+  document.querySelectorAll('.mcard').forEach(el=>{
+    el.addEventListener('click',()=>{
+      flashKey=el.dataset.k; flashT=130;
+      document.querySelectorAll('.mcard').forEach(x=>x.classList.remove('flash'));
+      el.classList.add('flash');
+    });
+  });
+  window.addEventListener('resize',()=>{
+    const c=document.getElementById('cnv');
+    if(c.clientWidth!==W){ W=c.clientWidth; H=Math.round(min(W*0.6,520)); resizeCanvas(W,H); layout(); }
+  });
+}
+function preset(v,th,h,a,b){ v0=v; thDeg=th; h0=h; p1=a; p2=b; go(); }
+function enableSliders(on){ ['sV0','sTh','sH','sT1','sT2'].forEach(id=>document.getElementById(id).disabled=!on); }
+function go(){
+  updModel(); playSt='idle';
+  document.getElementById('bPlay').textContent='▶ 飞行演示';
+  enableSliders(true); layout(); syncUI();
+}
+/* 取景：包围全部可见元素 */
+function layout(){
+  const F=focusPt();
+  const {A,B}=calcAB(), P=calcP(A,B), M=calcM(), N=calcN(A,B);
+  let x0=0, x1=vx*T, y0=0, y1=max(P.y,M.y,N.y,h0,2*yV_()-h0);
+  x0=min(x0,P.x); x1=max(x1,P.x);
+  if(showFocus){ x0=min(x0,F.x); x1=max(x1,F.x); y0=min(y0,F.y); y1=max(y1,directrixY()); }
+  const px=(x1-x0)*0.14+1, py=(y1-y0)*0.18+1;
+  x0-=px; x1+=px; y0-=py; y1+=py;
+  sc=min(W/(x1-x0), H/(y1-y0));
+  ox=W/2-sc*(x0+x1)/2;
+  oy=H/2+sc*(y0+y1)/2;
+}
+const X=wx=>ox+wx*sc, Y=wy=>oy-wy*sc;
+function calcAB(){ return {A:rp(t1),B:rp(t2)}; }
+function calcP(A,B){ return p5.Vector.add(A, p5.Vector.mult(vp(t1),(t2-t1)/2)); }
+function calcM(){ return rp((t1+t2)/2); }
+function calcN(A,B){ return p5.Vector.add(A,B).div(2); }
+const areaTriangle=(A,B,P)=>{ const ab=p5.Vector.sub(B,A), ap=p5.Vector.sub(P,A); return 0.5*abs(ab.x*ap.y-ab.y*ap.x); };
+const areaArch=()=> (G/(2*vx*vx))*Math.pow(vx*(t2-t1),3)/6;   // ∫(弦-轨迹) dx 解析
+
+/* ---------------- 绘制 ---------------- */
+function draw(){
+  updModel();
+  if(playSt==='playing'){
+    tNow+=deltaTime/1000*(T/8);
+    if(tNow>=T){ tNow=T; playSt='done'; document.getElementById('bPlay').textContent='↻ 再播一次'; enableSliders(true); }
+  }
+  if(flashT>0){ flashT--; if(flashT===0) document.querySelectorAll('.mcard').forEach(x=>x.classList.remove('flash')); }
+
+  background(11,11,20);
+  const {A,B}=calcAB(), P=calcP(A,B), M=calcM(), N=calcN(A,B);
+  const v1=vp(t1), v2=vp(t2), vm=vp((t1+t2)/2);
+  const areaOn=flashKey==='area', chordOn=flashKey==='chord', vertOn=flashKey==='vert', tanOn=flashKey==='tangent';
+
+  /* 地面 + 轨迹 */
+  stroke(92,92,122); strokeWeight(1.5);
+  line(X(0),Y(0),X(max(vx*T,1)),Y(0));
+  stroke(215,215,228); strokeWeight(2.2); dash([8,6]); noFill();
+  beginShape();
+  for(let i=0;i<=150;i++){ const q=rp(T*i/150); vertex(X(q.x),Y(q.y)); }
+  endShape(); dash([]);
+
+  /* 焦点 / 准线 */
+  if(showFocus){
+    const F=focusPt();
+    stroke(255,107,107); strokeWeight(2); noFill();
+    for(let i=0;i<8;i++){ const a=PI*i/4; line(X(F.x),Y(F.y),X(F.x)+cos(a)*9,Y(F.y)+sin(a)*9); }
+    fill(255,107,107); noStroke(); ellipse(X(F.x),Y(F.y),6,6);
+    stroke(255,120,120,140); strokeWeight(1.6); dash([4,5]);
+    line(X(0),Y(directrixY()),X(max(vx*T,1)),Y(directrixY())); dash([]);
+    tag('F (焦点)',X(F.x)+12,Y(F.y)-8,'#ff6b6b');
+    tag('准线',X(max(vx*T,1))-40,Y(directrixY())-8,'#ff9b9b',12);
+  }
+
+  /* 面积：先 △ 后弓形 */
+  fill(244,162,97, areaOn?52:22); noStroke();
+  beginShape(); vertex(X(A.x),Y(A.y)); vertex(X(P.x),Y(P.y)); vertex(X(B.x),Y(B.y)); endShape(CLOSE);
+  fill(76,201,240, areaOn?74:34); noStroke();
+  beginShape();
+  vertex(X(A.x),Y(A.y));
+  for(let i=1;i<72;i++){ const q=rp(t1+(t2-t1)*i/72); vertex(X(q.x),Y(q.y)); }
+  vertex(X(B.x),Y(B.y));
+  endShape(CLOSE);
+
+  /* 弦 AB */
+  stroke(76,201,240, chordOn?255:215); strokeWeight(chordOn?6.5:4);
+  line(X(A.x),Y(A.y),X(B.x),Y(B.y));
+
+  /* 幽灵惯性线：过 A/B 沿速度方向延长，交 P 后再出头 */
+  if(showGhost){
+    const d1=p5.Vector.sub(P,A), d2=p5.Vector.sub(P,B);
+    const e1=p5.Vector.add(P,p5.Vector.mult(d1,0.35));
+    const e2=p5.Vector.add(P,p5.Vector.mult(d2,0.35));
+    stroke(244,162,97, tanOn?255:165); strokeWeight(tanOn?5.5:3); dash([3,7]);
+    line(X(A.x),Y(A.y),X(e1.x),Y(e1.y));
+    stroke(251,114,153,165); strokeWeight(3); dash([3,7]);
+    line(X(B.x),Y(B.y),X(e2.x),Y(e2.y));
+    dash([]);
+    /* 播放中的幽灵球（只随播放出现） */
+    if(playSt==='playing'){
+      const cap=(t2-t1)*0.72;
+      if(tNow>t1){ const g=p5.Vector.add(A,p5.Vector.mult(v1,min(tNow-t1,cap)));
+        noStroke(); fill(244,162,97,200); ellipse(X(g.x),Y(g.y),13,13); }
+      if(tNow>t2){ const g=p5.Vector.sub(B,p5.Vector.mult(v2,min(tNow-t2,cap)));
+        noStroke(); fill(251,114,153,200); ellipse(X(g.x),Y(g.y),13,13); }
+    }
+  }
+
+  /* 速度箭头（A:v1 橙 / B:v2 粉 / M:vm 绿） */
+  arrowAt(A,v1,'#f4a261','v₁',true);
+  arrowAt(B,v2,'#fb7299','v₂',false);
+  arrowAt(M,vm,'#7ab878','v_m',chordOn);
+
+  /* 一竖三点 N→M→P */
+  stroke(122,184,120, vertOn?255:150); strokeWeight(vertOn?4.5:2.2); dash([2,6]);
+  line(X(N.x),Y(N.y),X(P.x),Y(P.y)); dash([]);
+
+  /* 关键点 */
+  dot(A.x,A.y,'#4cc9f0','A',9,1);
+  dot(B.x,B.y,'#fb7299','B',9,1);
+  dot(M.x,M.y,'#7ab878','M(t_m)',8,1);
+  dot(N.x,N.y,'#d4d4dc','N',7,-1);
+  dot(P.x,P.y,'#ffd700','P',12,1);
+
+  /* ∠P = 90° 直角标记（视觉宽松：±3°内画直角符） */
+  const cosA=(v1.x*v2.x+v1.y*v2.y)/(v1.mag()*v2.mag()||1);
+  if(abs(cosA)<0.052){
+    const ua=p5.Vector.sub(A,P).normalize(), ub=p5.Vector.sub(B,P).normalize();
+    const s=15/sc;
+    const q1=p5.Vector.add(P,p5.Vector.mult(ua,s));
+    const q3=p5.Vector.add(q1,p5.Vector.mult(ub,s));
+    stroke(255,215,0); strokeWeight(3.5); noFill();
+    line(X(q1.x),Y(q1.y),X(q3.x),Y(q3.y));
+    line(X(q3.x),Y(q3.y),X(q3.x-ua.x*s),Y(q3.y+ua.y*s));
+  }
+  /* 横幅判据：弦 AB 所在直线是否过焦点（精确，∠P=90° ⇔ 弦过焦点） */
+  const abv=p5.Vector.sub(B,A);
+  const distF=abv.mag()>1e-9 ? abs(abv.x*(A.y-focusPt().y)-abv.y*(A.x-focusPt().x))/abv.mag() : 1e9;
+  const rightNow=distF*sc<6;
+
+  /* 真实小球 */
+  if(playSt==='playing'||playSt==='done'){
+    const q=rp(min(tNow,T));
+    noStroke(); fill(240,240,240); ellipse(X(q.x),Y(q.y),15,15);
+    fill(11,11,20); ellipse(X(q.x),Y(q.y),7,7);
+  }
+
+  updateBanner(rightNow);
+  updateStat(A,B,P,M,N,v1,v2,vm);
+}
+function dot(x,y,col,lab,r,dir){
+  noStroke(); fill(col); ellipse(X(x),Y(y),r*2,r*2);
+  if(r>8){ const c=color(col); noFill(); stroke(c.levels[0],c.levels[1],c.levels[2],130); strokeWeight(2); ellipse(X(x),Y(y),r*2+9,r*2+9); }  // P 光晕
+  tag(lab,X(x)+r*dir+4,Y(y)+(dir>0?-8:6),col,15);
+}
+function arrowAt(pos,vel,col,lab,bold){
+  const pxL=min(vel.mag()*sc*0.55, bold?180:140);
+  if(pxL<24) return;
+  const u=createVector(vel.x,vel.y).normalize();
+  const tip=p5.Vector.add(pos,p5.Vector.mult(u,pxL/sc));
+  const x1=X(pos.x),y1=Y(pos.y),x2=X(tip.x),y2=Y(tip.y);
+  stroke(col); strokeWeight(bold?7:5.5);
+  line(x1,y1,x2,y2);
+  const ang=atan2(y2-y1,x2-x1), ah=bold?15:13;
+  fill(col); noStroke();
+  triangle(x2,y2,x2-ah*cos(ang-0.42),y2-ah*sin(ang-0.42),x2-ah*cos(ang+0.42),y2-ah*sin(ang+0.42));
+  tag(lab+' '+(bold?vel.mag().toFixed(1)+'m/s':''),(x1+x2)/2+10,(y1+y2)/2-8,col,13.5);
+}
+function tag(txt,x,y,col,fs){
+  if(!txt) return;
+  textSize(fs||14); textAlign(LEFT,CENTER);
+  const w=textWidth(txt)+9;
+  noStroke(); fill(15,15,28,215); rect(x-5,y-10,w,20,5);
+  fill(col); text(txt,x+1,y+1);
+}
+function dash(arr){ drawingContext.setLineDash(arr); }
+
+/* ---------------- 信息面板 ---------------- */
+let lastHtml='', bannerCache='', lastStatT=0;
+function updateBanner(rightNow){
+  let html;
+  if(rightNow) html='🎯 <b>∠P = 90°</b> —— 两速度线垂直！弦 AB 恰好<b>过抛物线焦点 F</b>（点 ✨ 开关，看 F 正躺在弦上）';
+  else if(playSt==='playing') html= tNow>=t2 ? '⏱ 已过 t₂：两个幽灵沿切线滑出 → 虚线交于 <b>P</b>，围出阿基米德三角形'
+    : tNow>=t1 ? '⏱ 到达 t₁：💨 若此刻<b>重力消失</b>，小球将沿橙色虚线直飞 —— 切线 = 速度方向'
+    : '⏱ 小球飞行中 …… 依次经过 A(t₁) → B(t₂)';
+  else html='拖动滑块 / 点一键情境 / 按 ▶ 飞行演示 · 点上方 ①—④ 卡片高亮图形';
+  if(html!==bannerCache){ bannerCache=html;
+    const b=document.getElementById('banner');
+    b.innerHTML=html; b.classList.toggle('hit',rightNow); }
+}
+function updateStat(A,B,P,M,N,v1,v2,vm){
+  if(millis()-lastStatT<120 && lastStatT>0) return;
+  lastStatT=millis();
+  const dt=t2-t1;
+  const a1=degrees(atan2(v1.y,v1.x)), a2=degrees(atan2(v2.y,v2.x));
+  const angP=a1-a2, dh=G*dt*dt/8;
+  const sA=areaTriangle(A,B,P), sArc=areaArch();
+  const ch=p5.Vector.sub(B,A);
+  const par=abs(ch.x*vm.y-ch.y*vm.x)/(ch.mag()*vm.mag())<0.03 && ch.x*vm.x+ch.y*vm.y>0;
+  const sT1=document.getElementById('sT1');
+  const html=
+    '<span class="chip">∠P = <b class="y">'+angP.toFixed(1)+'°</b>'+(abs(angP-90)<2?'（≈90° 弦过焦点）':'')+'</span>'+
+    '<span class="chip">Δt = <b class="c">'+dt.toFixed(2)+'</b> s</span>'+
+    '<span class="chip">竖距 ½g(Δt/2)² = <b class="g">'+dh.toFixed(2)+'</b> m</span>'+
+    '<span class="chip">弦 ∥ v(t_m)：<b class="'+(par?'g':'')+'">'+(par?'✓ 成立':'—')+'</b></span>'+
+    '<span class="chip">S△ = <b class="o">'+sA.toFixed(1)+'</b> m² · S弓 = <b class="c">'+sArc.toFixed(1)+'</b> m² · 比 '+ (sA>0?(sArc/sA).toFixed(3):'-')+' ≈ 2/3</span>';
+  if(html!==lastHtml){ document.getElementById('stat').innerHTML=html; lastHtml=html; }
+  document.getElementById('vTri').textContent=sA.toFixed(1)+' m²';
+  document.getElementById('vArc').textContent=sArc.toFixed(1)+' m²';
+}
+function syncUI(){
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el.value!==String(val)) el.value=val; };
+  set('sV0',v0); set('sTh',thDeg); set('sH',h0); set('sT1',Math.round(p1*100)); set('sT2',Math.round(p2*100));
+  document.getElementById('oV0').textContent=v0.toFixed(1)+' m/s';
+  document.getElementById('oTh').textContent=thDeg+'°';
+  document.getElementById('oH').textContent=h0.toFixed(1)+' m';
+  document.getElementById('oT1').textContent=p1.toFixed(2)+'T';
+  document.getElementById('oT2').textContent=p2.toFixed(2)+'T';
+  const lg=document.getElementById('legend');
+  lg.innerHTML='<span><span class="sw" style="background:#f4a261"></span>v₁ 切线(橙)</span>'+
+    '<span><span class="sw" style="background:#fb7299"></span>v₂ 切线(粉)</span>'+
+    '<span><span class="sw" style="background:#7ab878"></span>v_m ∥ 弦(绿)</span>'+
+    '<span><span class="sw" style="background:#4cc9f0"></span>弦 AB</span>'+
+    '<span><span class="sw dot" style="background:#ffd700"></span>P 切线交点</span>'+
+    '<span><span class="sw dot" style="background:#7ab878"></span>M 时间中点</span>'+
+    '<span><span class="sw dot" style="background:#d4d4dc"></span>N 弦中点</span>';
+}
+</script>
+</body>
+</html>
