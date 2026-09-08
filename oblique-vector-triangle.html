@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>斜抛 · 斜交分解与矢量三角形</title>
+<style>
+  :root{
+    --bg:#0b0b14; --card:#0e0e1e; --line:#18182a; --line2:#2a2a48;
+    --amber:#d4a373; --amber-l:#f4a261; --gold:#ffd700; --orange:#ff8c42;
+    --cyan:#66c2ff; --green:#7ab878; --pink:#ff7eb6; --white:#e8e8f0;
+    --txt:#d4d4dc; --mut:#707088;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.05) 0%,transparent 55%);
+    min-height:100vh;padding-bottom:30px}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 14px 0}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+  .back{color:var(--mut);text-decoration:none;font-size:14px;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .back:hover{color:var(--amber-l);border-color:var(--line2)}
+  h1{font-size:22px;font-weight:800;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+  .sub{font-size:13.5px;color:var(--mut);margin:3px 0 10px}
+  .sub b{color:var(--amber)}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+  .step-btn{flex:1;min-width:168px;background:var(--card);border:1px solid var(--line);color:var(--mut);
+    border-radius:11px;padding:7px 8px;font-size:13.5px;cursor:pointer;text-align:left;transition:.15s;line-height:1.3}
+  .step-btn b{display:block;font-size:13px;color:var(--txt)}
+  .step-btn:hover{border-color:var(--line2)}
+  .step-btn.on{background:#16162a;border-color:var(--amber)}
+  .step-btn.on b{color:var(--amber-l)}
+  .step-btn .n{display:inline-block;width:17px;height:17px;line-height:15px;text-align:center;border-radius:50%;
+    border:1.5px solid currentColor;font-size:11px;margin-right:5px;vertical-align:1px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+  .panel h3{font-size:15px;color:var(--amber);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .panel h3 .r{font-size:12px;color:var(--mut);font-weight:400}
+  #stageWrap{width:100%}
+  canvas#stage{width:100%;height:auto;display:block;border-radius:10px;background:#0a0a13}
+  .banner{margin:8px 0 0;padding:7px 11px;border-radius:10px;font-size:14.5px;font-weight:600;
+    border:1px dashed var(--line2);color:var(--amber-l);background:rgba(212,163,115,.05);line-height:1.55}
+  .banner.hit{background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.6);color:var(--gold)}
+  .banner.cyan{color:var(--cyan);border-color:rgba(102,194,255,.35);background:rgba(102,194,255,.06)}
+  .ctrl{display:grid;grid-template-columns:70px 1fr 78px;align-items:center;gap:3px 8px;font-size:13.5px;margin:3px 0}
+  .ctrl label{color:#b8b8c8}
+  .ctrl input[type=range]{width:100%;accent-color:var(--amber)}
+  .ctrl output{text-align:right;color:var(--amber-l);font-weight:700;font-size:13.5px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  button{background:#151528;border:1px solid var(--line2);color:var(--txt);border-radius:9px;
+    padding:6px 10px;font-size:13.5px;cursor:pointer;transition:.12s}
+  button:hover{border-color:var(--amber);color:var(--amber-l)}
+  button.primary{background:linear-gradient(135deg,#8a5a2b,#d4a373);color:#0b0b14;font-weight:700;border:none}
+  button.on{background:#2a1f10;border-color:var(--amber);color:var(--gold)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{background:#12121f;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px;color:#b8b8c8;white-space:nowrap;line-height:1.4}
+  .chip b{font-size:13.5px}
+  .chip b.g{color:var(--green)} .chip b.c{color:var(--cyan)} .chip b.o{color:var(--orange)}
+  .chip b.y{color:var(--gold)} .chip b.w{color:var(--white)} .chip b.p{color:var(--pink)}
+  #paper{width:100%;height:auto;display:block;background:#0a0a13;border-radius:10px}
+  .paper-cap{font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.65}
+  .paper-cap b{color:var(--amber)}
+  .concs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+  .conc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-size:13px;cursor:pointer;line-height:1.55;color:#b8b8c8;transition:.15s}
+  .conc b{display:block;font-size:13.5px;color:var(--amber);margin-bottom:3px}
+  .conc:hover{border-color:var(--line2)}
+  .conc.on{border-color:var(--gold);background:#191907;color:var(--txt)}
+  .conc.on b{color:var(--gold)}
+  .conc .f{font-family:'Courier New',monospace;color:var(--amber-l);font-size:12.5px}
+  @media(max-width:900px){
+    .grid{grid-template-columns:1fr}
+    .concs{grid-template-columns:repeat(2,1fr)}
+    .step-btn{min-width:140px}
+  }
+  @media(max-width:520px){ .concs{grid-template-columns:1fr 1fr} }
+  .foot{margin-top:14px;font-size:12px;color:var(--mut);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><a class="back" href="jiaoxue.html">← 教学资源</a>
+    <h1>斜抛 · 斜交分解与两大矢量三角形</h1>
+  </div>
+  <div class="sub">一个斜抛 = <b>沿初速度的匀速</b> + <b>竖直自由落体</b>；位移与速度各画一张三角形 —— 五步看完，结论全到手</div>
+
+  <div class="steps" id="steps">
+    <button class="step-btn on" data-s="1"><span class="n">1</span><b>怎么拆</b>斜交分解</button>
+    <button class="step-btn" data-s="2"><span class="n">2</span><b>两把尺</b>速度三角形 · 位移三角形</button>
+    <button class="step-btn" data-s="3"><span class="n">3</span><b>尺子同形</b>位移 = 中点速度 × t</button>
+    <button class="step-btn" data-s="4"><span class="n">4</span><b>中点定理</b>v 反延线过 v₀t 中点</button>
+    <button class="step-btn" data-s="5"><span class="n">5</span><b>面积即射程</b>S△ = ½gx</button>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>🕹 实景演示 <span class="r" id="sceneName">情境：等高地面（θ=45°）</span></h3>
+      <div id="stageWrap"></div>
+      <div class="banner" id="banner">① 拆：小球同时参加两个分运动 —— <b style="color:var(--orange)">影子A 沿 v₀ 匀速直飞</b> + <b style="color:var(--cyan)">影子B 竖直自由落体</b>，按 ▶ 播放看合成。</div>
+      <div class="btns">
+        <button id="bPlay" class="primary">▶ 播放</button>
+        <button id="bReset">↺ 复位</button>
+        <button id="bGhost">👻 隐藏分运动</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h3>📐 矢量图纸 <span class="r" id="paperTitle">分位移合成</span></h3>
+        <canvas id="paper" width="560" height="292"></canvas>
+        <div class="paper-cap" id="paperCap"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>📊 实时数据</h3>
+        <div class="chips" id="chips"></div>
+        <div class="banner cyan" id="miniBanner" style="font-size:13px;margin-top:8px"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>🎚 参数</h3>
+        <div class="ctrl"><label>初速 v₀</label><input type="range" id="sV0" min="8" max="20" step="0.5" value="14"><output id="oV0">14 m/s</output></div>
+        <div class="ctrl"><label>抛射角 θ</label><input type="range" id="sTh" min="0" max="75" step="1" value="45"><output id="oTh">45°</output></div>
+        <div class="ctrl" id="rowD"><label>落差 d</label><input type="range" id="sD" min="0" max="25" step="0.5" value="0"><output id="oD">0 m</output></div>
+        <div class="ctrl"><label>时刻 t</label><input type="range" id="sT" min="0" max="100" step="0.1" value="60"><output id="oT">—</output></div>
+        <div class="btns">
+          <button id="bFlat" class="on">➡️ 等高地面</button>
+          <button id="bHoriz">↔️ 平抛特例</button>
+          <button id="bCliff">🏔 悬崖落地</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concs">
+    <div class="conc on" data-s="1"><b>① 斜交分解</b>沿 v₀ 匀速 + 竖直自由落体<span class="f">s = v₀t + ½gt²</span></div>
+    <div class="conc" data-s="2"><b>② 两把尺子</b>速度三角 v₀→gt→v；位移三角 v₀t→½gt²→s，各边都有名有姓</div>
+    <div class="conc" data-s="3"><b>③ 尺子同形</b>位移三角形 = (t/2时刻)速度三角形放大 t 倍<span class="f">s = t·v(t/2)</span></div>
+    <div class="conc" data-s="4"><b>④ 中点定理</b>任一时刻 v 的反向延长线，恰过 v₀t 的中点（平抛：过水平位移中点）</div>
+    <div class="conc" data-s="5"><b>⑤ 面积即射程</b>S△ = ½g·x → 等高射程<span class="f">R = v₀²sin2θ/g</span>，45° 最远</div>
+  </div>
+
+  <div class="foot">启明 · 抛体矢量几何系列 ② ｜ 与《阿基米德三角形 × 抛体运动》配套</div>
+</div>
+
+<script src="p5.min.js"></script>
+<script>
+/* ================= 物理常量与状态 ================= */
+const G = 9.8;
+let v0=14, thDeg=45, d=0;            // d: 落差(悬崖深)；0 = 等高
+let t=0, playing=false, ghostShow=true, step=1, lastMs=0;
+const SPEED=2.2, DEMO_H=12;          // 平抛等高时的演示落地深度
+function th(){return thDeg*Math.PI/180}
+function vx0(){return v0*Math.cos(th())}
+function vy0(){return v0*Math.sin(th())}
+function Tmax(){
+  if(thDeg<0.5 && d<0.05) return Math.sqrt(2*DEMO_H/G);   // 纯平抛永不落地→演示落点
+  return (vy0()+Math.sqrt(vy0()*vy0()+2*G*d))/G;
+}
+function pos(tt){ return {x:vx0()*tt, y:vy0()*tt-0.5*G*tt*tt} }
+function vel(tt){ return {x:vx0(), y:vy0()-G*tt} }
+function vHalf(){ return vel(t/2) }
+
+/* ================= 画布与取景 ================= */
+let cw=760, ch=470, sc=1, ox=0, oy=0, W0=0, W1=20, Y0=-1, Y1=6;
+function rngRange(a){
+  const r=a*Math.PI/180, vy=v0*Math.sin(r), T=(vy+Math.sqrt(vy*vy+2*G*d))/G;
+  return v0*Math.cos(r)*T;
+}
+function fitView(){
+  const tm=Tmax(), R=vx0()*tm;
+  let far=R;
+  if(step===5){
+    far=Math.max(far, rngRange(45));
+    if(d<0.05) far=Math.max(far, rngRange(Math.abs(90-thDeg)));
+    else far=Math.max(far, rngRange(thetaStar()));
+  }
+  W0 = d>0.05 ? -Math.max(2.2, d*0.5) : -1.2;
+  W1 = Math.max(far,8)*1.14+2.5;
+  Y1 = Math.max(vy0()*vy0()/(2*G)*1.16, 3.4)+1.2;
+  Y0 = -d-1.5;
+  sc = Math.min(cw/(W1-W0), ch/(Y1-Y0));
+  ox = (cw-(W1-W0)*sc)/2 - W0*sc;
+  oy = ch + Y0*sc;                    // 世界 y=0 的屏幕 y
+}
+function sx(wx){ return ox+wx*sc }
+function sy(wy){ return oy-wy*sc }
+
+/* ================= p5 主画布 ================= */
+const $=id=>document.getElementById(id);
+function setup(){
+  const pw=$('stageWrap'); cw=Math.max(300,pw.clientWidth||760); ch=Math.round(cw*0.6);
+  const c=createCanvas(cw,ch); c.parent('stageWrap');
+  initUI(); lastMs=millis(); fitView();
+}
+function windowResized(){
+  const pw=$('stageWrap'); cw=Math.max(300,pw.clientWidth||760); ch=Math.round(cw*0.6);
+  resizeCanvas(cw,ch); fitView();
+}
+function draw(){
+  if(playing){
+    const now=millis(), dt=Math.min((now-lastMs)/1000,0.05); lastMs=now;
+    t+=dt*SPEED;
+    if(t>=Tmax()){ t=Tmax(); playing=false; $('bPlay').innerHTML='▶ 播放'; }
+    syncT();
+  } else lastMs=millis();
+  background(10,10,19);
+  fitView();
+  drawGrid(); drawGround();
+  drawMainTrace();
+  if(step===5) { if(d<0.05) drawGhostTraces(); else drawCliffGhost(); }
+  if(step===1 && ghostShow) drawGhostMotions();
+  drawVectors();
+  if(step>=3) drawHalfV();
+  if(step===4) drawMidThm();
+  drawBall();
+  updateData(); drawPaper(); updateBanners();
+}
+/* ---------- 静态层 ---------- */
+function drawGrid(){
+  stroke(28,28,48); strokeWeight(1);
+  for(let w=Math.ceil(W0/2)*2; w<=W1; w+=2){ line(sx(w),sy(Y0),sx(w),sy(Y1)); }
+  for(let h=Math.ceil(Y0/2)*2; h<=Y1; h+=2){ line(sx(W0),sy(h),sx(W1),sy(h)); }
+  noStroke();
+}
+function drawGround(){
+  stroke(66,66,100); strokeWeight(2.4);
+  if(d>0.05){
+    line(sx(W0),sy(0),sx(0.85),sy(0));
+    line(sx(0.85),sy(0),sx(0.85),sy(-d));
+    line(sx(0.55),sy(-d),sx(W1),sy(-d));
+  } else line(sx(W0),sy(0),sx(W1),sy(0));
+  noStroke();
+  fill(160,160,185); noStroke(); textSize(12.5);
+  textAlign(LEFT,TOP); textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif');
+  if(d>0.05){ text('抛出点 O', sx(0.95), sy(0)+6); text('地面', sx(W1)-60, sy(-d)+6); }
+  else text('地面', sx(W1)-54, sy(0)+6);
+}
+function drawMainTrace(){
+  const tm=Tmax(), n=240;
+  stroke(150,150,175,80); strokeWeight(1.7); noFill();
+  beginShape();
+  for(let i=0;i<=n;i++){ const p=pos(tm*i/n); vertex(sx(p.x),sy(p.y)); }
+  endShape();
+  noStroke();
+}
+/* ---------- 矢量绘制工具 ---------- */
+const CO={r:244,g:162,b:97}, CC={r:102,g:194,b:255}, CW={r:232,g:232,b:240},
+      CP={r:255,g:126,b:182}, CG={r:255,g:215,b:0};
+function vec(x1,y1,x2,y2,c,w,alpha){
+  stroke(c.r,c.g,c.b,alpha); strokeWeight(w);
+  fill(c.r,c.g,c.b,alpha);
+  line(x1,y1,x2,y2);
+  const a=Math.atan2(y2-y1,x2-x1), h=Math.max(10,w*2.5);
+  const back=h*0.9;
+  const bx=x2-back*Math.cos(a), by=y2-back*Math.sin(a);
+  noStroke(); fill(c.r,c.g,c.b,alpha);
+  triangle(x2,y2, bx-h*0.5*Math.cos(a-Math.PI/4), by-h*0.5*Math.sin(a-Math.PI/4), bx-h*0.5*Math.cos(a+Math.PI/4), by-h*0.5*Math.sin(a+Math.PI/4));
+  noStroke();
+}
+function lab(x,y,s,c,sz){
+  noStroke(); fill(c.r,c.g,c.b); textSize(sz||13.5);
+  textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif'); textAlign(LEFT,CENTER);
+  text(s,x,y);
+}
+function dashLine(x1,y1,x2,y2,c,w,alpha,d1,d2){
+  stroke(c.r,c.g,c.b,alpha); strokeWeight(w);
+  drawingContext.setLineDash([d1||5,d2||5]);
+  line(x1,y1,x2,y2);
+  drawingContext.setLineDash([]);
+  noStroke();
+}
+/* ---------- 步骤叠加层 ---------- */
+function drawGhostMotions(){
+  const O={x:sx(0),y:sy(0)};
+  const cth=Math.cos(th()), sth=Math.sin(th());
+  const gA={x:sx(v0*cth*t), y:sy(v0*sth*t)};
+  const gB={x:sx(0), y:sy(-0.5*G*t*t)};
+  const P={x:sx(pos(t).x), y:sy(pos(t).y)};
+  dashLine(O.x,O.y,gA.x,gA.y,CO,2.2,130,6,5);          // 影子A 匀速径迹
+  dashLine(O.x,O.y,gB.x,gB.y,CC,2.2,130,6,5);          // 影子B 自由落体径迹
+  dashLine(gA.x,gA.y,P.x,P.y,CC,1.8,110,4,4);          // 平行四边形
+  dashLine(gB.x,gB.y,P.x,P.y,CO,1.8,110,4,4);
+  // 幽灵点
+  fill(10,10,19); noStroke(); ellipse(gA.x,gA.y,17,17); ellipse(gB.x,gB.y,17,17);
+  fill(CO.r,CO.g,CO.b); ellipse(gA.x,gA.y,8,8);
+  fill(CC.r,CC.g,CC.b); ellipse(gB.x,gB.y,8,8);
+  lab(gA.x+12,gA.y-6,'A：匀速影子',CO,13);
+  lab(gB.x+12,gB.y-4,'B：自由落体影子',CC,13);
+}
+function drawVectors(){
+  const p=pos(t), S={x:sx(p.x),y:sy(p.y)}, O={x:sx(0),y:sy(0)};
+  // 位移 s（粉）
+  vec(O.x,O.y,S.x,S.y,CP,4.5,235);
+  lab((O.x+S.x)/2+8,(O.y+S.y)/2-10,'s',CP,14);
+  // 分位移（step1 且关闭幽灵时显示）
+  if(step===1 && !ghostShow){
+    const cth=Math.cos(th()), sth=Math.sin(th());
+    const A={x:sx(v0*cth*t),y:sy(v0*sth*t)}, B={x:sx(0),y:sy(-0.5*G*t*t)};
+    vec(O.x,O.y,A.x,A.y,CO,3.6,200); lab(A.x+6,A.y-8,'v₀t',CO,13);
+    vec(O.x,O.y,B.x,B.y,CC,3.6,200); lab(B.x+10,B.y-6,'½gt²',CC,13);
+  }
+  // 速度 v（白，从球沿 v）
+  const vv=vel(t), L=Math.hypot(vv.x,vv.y);
+  if(L>0.1){
+    const k=Math.min(13, sc*0.14);                       // px per m/s
+    const ex=S.x+vv.x*k, ey=S.y-vv.y*k;
+    vec(S.x,S.y,ex,ey,CW,4.5,250);
+    lab(ex+8,ey-6,'v',CW,14);
+  }
+  // step2：实景补画 v₀（从 O）与 gt（从球竖直向下），对应图纸速度三角的两条直角边
+  if(step===2){
+    const k=Math.min(13, sc*0.14);
+    const ux=Math.cos(th()), uy=Math.sin(th());
+    const A={x:O.x+v0*ux*k, y:O.y-v0*uy*k};
+    vec(O.x,O.y,A.x,A.y,CO,4,210); lab(A.x+6,A.y-10,'v₀',CO,13);
+    const B={x:S.x, y:S.y+G*t*k};
+    vec(S.x,S.y,B.x,B.y,CC,4,210); lab(B.x+10,B.y-4,'gt',CC,13);
+  }
+}
+function drawHalfV(){
+  const h=vHalf(), L=Math.hypot(h.x,h.y);
+  if(L<0.05) return;
+  const O={x:sx(0),y:sy(0)};
+  const ex=O.x+h.x/L*sc*2.6, ey=O.y-h.y/L*sc*2.6;
+  dashLine(O.x,O.y,ex,ey,CG,2.4,220,2,7);
+  lab(ex+8,ey+6,'v(t/2) ∥ s',CG,13);
+}
+function drawMidThm(){
+  const O={x:sx(0),y:sy(0)};
+  const ux=Math.cos(th()), uy=Math.sin(th());
+  const far=Math.max(2, W1*1.5);
+  dashLine(O.x,O.y,sx(ux*far),sy(uy*far),CO,1.8,80,3,8);   // v₀ 射线
+  const D=pos(t), vv=vel(t);
+  const den2=vv.y*ux-vv.x*uy;
+  if(Math.abs(den2)>1e-9){
+    const mu=(D.x*uy-D.y*ux)/den2;
+    const E={x:D.x+mu*vv.x, y:D.y+mu*vv.y};    // D + mu*v = 沿 -v 走 -mu; 解方程得 mu=-m → D+mu*v 即交点
+    const C={x:v0*ux*t, y:v0*uy*t};
+    const Es={x:sx(E.x),y:sy(E.y)}, Cs={x:sx(C.x),y:sy(C.y)}, Ps={x:sx(D.x),y:sy(D.y)};
+    dashLine(Ps.x,Ps.y,Es.x,Es.y,CW,2.4,210,6,6);          // -v 反向延长线
+    // C 橙点 / E 金点
+    fill(10,10,19); noStroke(); ellipse(Cs.x,Cs.y,18,18); ellipse(Es.x,Es.y,20,20);
+    fill(CO.r,CO.g,CO.b); ellipse(Cs.x,Cs.y,8,8);
+    fill(CG.r,CG.g,CG.b); ellipse(Es.x,Es.y,10,10);
+    lab(Cs.x+10,Cs.y+20,'C：v₀t 的端点',CO,12.5);
+    lab(Es.x+10,Es.y-16,'E：v₀t 的中点（EC = OC/2）',CG,12.5);
+    lab((Es.x+Cs.x)/2-14,(Es.y+Cs.y)/2-8,'—— ∥ v ——',CW,11.5);
+  }
+}
+function drawGhostTraces(){
+  // 等高：金=45°(最远)；绿=对照角 —— 补角 90°-θ 等射程；θ=45 时补 30°
+  let ref = Math.abs(90-thDeg);
+  let refLab = 'θ\'='+Math.round(ref)+'°（等射程对照）';
+  if(Math.abs(ref-thDeg)<1.2 || Math.abs(ref-45)<1.2){ ref = 30; refLab='θ\'=30°（对照，射程较短）'; }
+  const angs=[[45,'θ=45°（最远）',CG],[ref,refLab,{r:130,g:210,b:150}]];
+  for(const [a,labl,c] of angs){
+    if(a<0.5||a>89.5||Math.abs(a-thDeg)<1.2) continue;
+    const r=a*Math.PI/180, vx=v0*Math.cos(r), vy=v0*Math.sin(r);
+    const T=(vy+Math.sqrt(vy*vy+2*G*d))/G, n=160;
+    stroke(c.r,c.g,c.b,150); strokeWeight(1.8); noFill();
+    beginShape();
+    for(let i=0;i<=n;i++){ const u=T*i/n; const px=vx*u, py=vy*u-0.5*G*u*u; vertex(sx(px),sy(py)); }
+    endShape();
+    noStroke();
+    const lp={x:vx*T, y:0};
+    lab(sx(lp.x)-96, sy(lp.y)+4, labl, c, 12);
+  }
+}
+function thetaStar(){ return Math.atan(v0/Math.sqrt(v0*v0+2*G*d))*180/Math.PI }
+function drawCliffGhost(){
+  // 悬崖：45° 不是最远 → 画出 45°(金) 与最佳角 θ*(绿) 对照
+  const angs=[45, thetaStar()];
+  const cols=[CG,{r:130,g:210,b:150}];
+  let k=0;
+  for(const a of angs){
+    if(a<0.5||a>89.5||Math.abs(a-thDeg)<1.2){k++;continue}
+    const r=a*Math.PI/180, vx=v0*Math.cos(r), vy=v0*Math.sin(r);
+    const T=(vy+Math.sqrt(vy*vy+2*G*d))/G, n=160;
+    const c=cols[k%2]; k++;
+    stroke(c.r,c.g,c.b,150); strokeWeight(1.8); noFill();
+    beginShape();
+    for(let i=0;i<=n;i++){ const u=T*i/n; const px=vx*u, py=vy*u-0.5*G*u*u; vertex(sx(px),sy(py)); }
+    endShape();
+    noStroke();
+    const lp={x:vx*T, y:-d};
+    lab(sx(lp.x)-110, sy(lp.y)-2, (a===45?'θ=45°（非最远）':'θ*='+Math.round(a)+'° 最佳'), c, 12);
+    k++;
+  }
+}
+function drawBall(){
+  const p=pos(t), S={x:sx(p.x),y:sy(p.y)};
+  fill(10,10,19); noStroke(); ellipse(S.x,S.y,22,22);
+  fill(245,245,245); ellipse(S.x,S.y,15,15);
+  const L={x:sx(vx0()*Tmax()),y:sy(-d)};
+  fill(CG.r,CG.g,CG.b); noStroke(); ellipse(L.x,L.y,7,7);
+}
+/* ================= 图纸 canvas（原生 2D） ================= */
+const paper=$('paper'), px=paper.getContext('2d');
+const P_OR='#f4a261', P_CY='#66c2ff', P_PK='#ff7eb6', P_W='#e8e8f0', P_GD='#ffd700', P_MU='#8a8aa0';
+function pv(x1,y1,x2,y2,col,w,alpha){
+  px.globalAlpha=alpha; px.strokeStyle=col; px.fillStyle=col; px.lineWidth=w; px.lineCap='round';
+  px.beginPath(); px.moveTo(x1,y1); px.lineTo(x2,y2); px.stroke();
+  const a=Math.atan2(y2-y1,x2-x1), h=Math.max(10,w*2.8);
+  px.beginPath();
+  px.moveTo(x2,y2);
+  px.lineTo(x2-h*Math.cos(a-Math.PI/5), y2-h*Math.sin(a-Math.PI/5));
+  px.lineTo(x2-h*Math.cos(a+Math.PI/5), y2-h*Math.sin(a+Math.PI/5));
+  px.closePath(); px.fill();
+  px.globalAlpha=1;
+}
+function pl(x,y,s,col,sz,al){
+  px.globalAlpha=1; px.font=(sz||13)+'px "Noto Serif SC","PingFang SC","Microsoft YaHei",sans-serif';
+  px.fillStyle=col; px.textAlign=al||'left'; px.textBaseline='middle';
+  px.fillText(s,x,y);
+}
+function clearPaper(){ px.clearRect(0,0,paper.width,paper.height) }
+function drawPaper(){
+  clearPaper();
+  if(step===1) pS1(); else if(step===2) pS2(); else if(step===3) pS3();
+  else if(step===4) pS4(); else pS5();
+}
+function pS1(){
+  pl(280,24,'位移的合成 —— 斜交分解画成一张斜三角形',P_W,15.5);
+  const O={x:52,y:232}, k=1.9;
+  const cth=Math.cos(th()), sth=Math.sin(th());
+  const C={x:O.x+v0*cth*t*k, y:O.y-v0*sth*t*k};
+  const D={x:C.x, y:C.y+0.5*G*t*t*k};
+  pv(O.x,O.y,C.x,C.y,P_OR,5,0.95);
+  pv(C.x,C.y,D.x,D.y,P_CY,5,0.95);
+  pv(O.x,O.y,D.x,D.y,P_PK,5.5,0.95);
+  pl(C.x+8,C.y-14,'v₀t：匀速（影子A）',P_OR,13);
+  pl(C.x+14,(C.y+D.y)/2+2,'½gt²：自由落体（影子B）',P_CY,13);
+  pl((O.x+D.x)/2-12,(O.y+D.y)/2+6,'s = v₀t + ½gt²',P_PK,13.5,'right');
+  px.fillStyle=P_GD; px.beginPath(); px.arc(O.x,O.y,6,0,7); px.fill();
+  pl(O.x-6,O.y+22,'O',P_MU,12.5);
+  px.setLineDash([5,5]); px.strokeStyle='rgba(138,138,160,.5)'; px.lineWidth=1.5;
+  px.beginPath(); px.moveTo(C.x,C.y); px.lineTo(D.x,D.y); px.stroke(); px.setLineDash([]);
+  pl(300,92,'① 影子A 沿初速度方向匀速直飞 —— 位移 v₀t',P_OR,13.5);
+  pl(300,124,'② 影子B 从 O 竖直自由落体 —— 位移 ½gt²',P_CY,13.5);
+  pl(300,156,'③ 小球实际位置 = 两影子位移的矢量和 s',P_PK,13.5);
+  pl(300,196,'两个分运动“同时发生、互不干扰”',P_MU,12.5);
+  pl(300,224,'竖直方向分运动的初速度是 0 —— 全交给 v₀ 了',P_MU,12.5);
+  pl(300,252,'分位移、分速度与合矢量构成斜三角形（θ≠0）',P_GD,12.5);
+}
+function pS2(){
+  pl(280,22,'两把尺子：一个管速度，一个管位移',P_W,15.5);
+  const vv=vel(t);
+  // 上：速度三角形
+  const m1=Math.max(v0, Math.abs(G*t), Math.hypot(vv.x,vv.y));
+  const k1=104/m1, O={x:96,y:86};
+  const cth=Math.cos(th()), sth=Math.sin(th());
+  const A={x:O.x+v0*cth*k1, y:O.y-v0*sth*k1};
+  const B={x:A.x, y:A.y+G*t*k1};
+  pv(O.x,O.y,A.x,A.y,P_OR,4.5,0.95); pv(A.x,A.y,B.x,B.y,P_CY,4.5,0.95);
+  pv(B.x,B.y,O.x,O.y,P_W,5.5,0.95);
+  pl(O.x-10,O.y+20,'O',P_MU,12);
+  pl((O.x+A.x)/2+6,(O.y+A.y)/2-10,'v₀',P_OR,13);
+  pl((A.x+B.x)/2+14,(A.y+B.y)/2,'gt',P_CY,13);
+  pl((B.x+O.x)/2-8,(B.y+O.y)/2-6,'v',P_W,13.5);
+  pl(300,52,'速度三角形：v = v₀ + gt',P_W,14);
+  pl(300,76,'|v₀|='+v0.toFixed(1)+'  gt='+(G*t).toFixed(1),P_OR,12.5);
+  pl(300,98,'|v|='+Math.hypot(vv.x,vv.y).toFixed(1)+' m/s',P_W,12.5);
+  pl(300,124,'斜边 v 的方向 = 轨迹切线',P_CY,12);
+  // 下：位移三角形
+  const sxv=v0*cth*t, syv=v0*sth*t;
+  const m2=Math.max(Math.hypot(sxv,syv), 0.5*G*t*t, Math.hypot(pos(t).x,pos(t).y));
+  const k2=150/Math.max(m2,0.01), O2={x:66,y:224};
+  const C={x:O2.x+sxv*k2, y:O2.y-syv*k2};
+  const D={x:C.x, y:C.y+0.5*G*t*t*k2};
+  pv(O2.x,O2.y,C.x,C.y,P_OR,4.5,0.95); pv(C.x,C.y,D.x,D.y,P_CY,4.5,0.95);
+  pv(D.x,D.y,O2.x,O2.y,P_PK,5.5,0.95);
+  pl(O2.x-10,O2.y+20,'O',P_MU,12);
+  pl((O2.x+C.x)/2+6,(O2.y+C.y)/2-8,'v₀t',P_OR,13);
+  pl(C.x+16,(C.y+D.y)/2,'½gt²',P_CY,13);
+  pl((D.x+O2.x)/2+4,(D.y+O2.y)/2-10,'s',P_PK,13.5);
+  pl(300,178,'位移三角形：s = v₀t + ½gt²',P_W,14);
+  pl(300,202,'v₀t='+Math.hypot(sxv,syv).toFixed(1)+'  ½gt²='+(0.5*G*t*t).toFixed(1),P_OR,12.5);
+  pl(300,224,'|s|='+Math.hypot(pos(t).x,pos(t).y).toFixed(1)+' m',P_PK,12.5);
+  pl(300,250,'注意：v 是切线方向，s 不是 —— 别把两把尺子看混',P_GD,12.5);
+}
+function pS3(){
+  pl(280,20,'尺子同形：位移三角形 = (t/2时刻)速度三角形 × t',P_W,15);
+  const hv=vHalf();
+  // 左：t/2 速度三角形
+  const t2v=Math.max(v0, Math.abs(G*t/2), Math.hypot(hv.x,hv.y));
+  const kL=46/t2v, O={x:112,y:190};
+  const cth=Math.cos(th()), sth=Math.sin(th());
+  const A={x:O.x+v0*cth*kL, y:O.y-v0*sth*kL};
+  const B={x:A.x, y:A.y+G*(t/2)*kL};
+  pv(O.x,O.y,A.x,A.y,P_OR,3.5,0.95); pv(A.x,A.y,B.x,B.y,P_CY,3.5,0.95);
+  pv(B.x,B.y,O.x,O.y,P_W,4,0.95);
+  pl(112,52,'t/2 时刻的\n速度三角形',P_W,12.5);
+  pl(112,120,'v₀ 走一半，gt 也走一半',P_MU,11);
+  pl(250,190,'× t',P_GD,18);
+  // 右：×t = 位移三角形（完全重合，双描边）
+  const sv=pos(t);
+  const m2=Math.max(Math.hypot(sv.x,sv.y), 0.5*G*t*t);
+  const k2=140/Math.max(m2,0.01), O2={x:368,y:200};
+  const C={x:O2.x+v0*cth*t*k2, y:O2.y-v0*sth*t*k2};
+  const D={x:C.x, y:C.y+0.5*G*t*t*k2};
+  pv(O2.x,O2.y,C.x,C.y,P_OR,4,0.75);            // v₀t
+  pv(C.x,C.y,D.x,D.y,P_CY,4,0.75);              // ½gt²
+  pv(D.x,D.y,O2.x,O2.y,P_PK,5.5,1);             // s
+  px.setLineDash([5,6]);
+  pv(O2.x,O2.y,D.x,D.y,P_W,2.4,0.65);           // t·v(t/2)=s 白虚线与粉 s 重合
+  px.setLineDash([]);
+  pl((O2.x+C.x)/2+2,(O2.y+C.y)/2-10,'v₀·t',P_OR,11.5);
+  pl((C.x+D.x)/2+6,(C.y+D.y)/2,'½gt²',P_CY,11.5);
+  pl((O2.x+D.x)/2-10,(O2.y+D.y)/2+12,'s = t·v(t/2)',P_PK,13);
+  pl(368,80,'放大 t 倍后与位移三角形\n完全重合（双线重叠）',P_W,12);
+  const Ls=Math.hypot(sv.x,sv.y), Lh=Math.hypot(hv.x,hv.y);
+  pl(368,140,'|s| / |v(t/2)| = '+(Ls/Math.max(Lh,1e-9)).toFixed(3),P_GD,14);
+  pl(368,166,'= t = '+t.toFixed(2)+' s',P_GD,14);
+}
+function pS4(){
+  pl(280,20,'中点定理的解剖：为什么 v 反延线恰过 v₀t 中点',P_W,15);
+  const cth=Math.cos(th()), sth=Math.sin(th());
+  const L1=v0*t, L2=0.5*G*t*t;
+  const k=142/Math.max(L1,L2,0.01), O={x:96,y:232};
+  const C={x:O.x+cth*L1*k, y:O.y-sth*L1*k};
+  const D={x:C.x, y:C.y+L2*k};
+  const M={x:(O.x+C.x)/2, y:(O.y+C.y)/2};       // OC 中点
+  pv(O.x,O.y,C.x,C.y,P_OR,4.5,0.9);             // v₀t
+  pv(C.x,C.y,D.x,D.y,P_CY,4.5,0.9);             // ½gt²
+  pv(O.x,O.y,D.x,D.y,P_PK,4,0.45);              // s 弱化
+  pv(D.x,D.y,M.x,M.y,P_W,2.6,0.95);             // DM ∥ v
+  px.fillStyle=P_GD; px.beginPath(); px.arc(M.x,M.y,7,0,7); px.fill();
+  px.fillStyle=P_GD; px.beginPath(); px.arc(O.x,O.y,6,0,7); px.fill();
+  pl(M.x+10,M.y-6,'M：OC 中点',P_GD,12.5);
+  pl((D.x+M.x)/2+6,(D.y+M.y)/2,'DM ∥ v',P_W,12);
+  pl((O.x+C.x)/2+4,(O.y+C.y)/2-8,'v₀t',P_OR,13);
+  pl(C.x+8,(C.y+D.y)/2+4,'½gt²',P_CY,13);
+  pl(300,58,'算一算就明白了：',P_W,14);
+  pl(300,88,'D = v₀t + ½gt²·ĝ',P_OR,14);
+  pl(300,114,'M = ½·v₀t',P_OR,14);
+  pl(300,142,'DM = D − M',P_W,13.5);
+  pl(300,168,'= ½v₀t + ½gt²·ĝ = (t/2)·(v₀ + gt·ĝ)',P_W,13.5);
+  pl(300,196,'= (t/2)·v  ⟹  DM ∥ v，长度 = t|v|/2',P_GD,14.5);
+  pl(300,228,'∴ 从 D 沿 v 的反方向走，恰好踩到 OC 中点 M',P_GD,13.5);
+  pl(96,252,'O',P_MU,12);
+}
+function pS5(){
+  pl(280,22,'速度三角形的面积，是射程的“记账本”',P_W,15.5);
+  const vv=vel(t);
+  const m1=Math.max(v0,Math.abs(G*t),Math.hypot(vv.x,vv.y));
+  const k=112/m1, O={x:118,y:170};
+  const cth=Math.cos(th()), sth=Math.sin(th());
+  const A={x:O.x+v0*cth*k, y:O.y-v0*sth*k};
+  const B={x:A.x, y:A.y+G*t*k};
+  px.globalAlpha=0.3; px.fillStyle=P_GD;
+  px.beginPath(); px.moveTo(O.x,O.y); px.lineTo(A.x,A.y); px.lineTo(B.x,B.y); px.closePath(); px.fill();
+  px.globalAlpha=1;
+  pv(O.x,O.y,A.x,A.y,P_OR,4.5,0.95); pv(A.x,A.y,B.x,B.y,P_CY,4.5,0.95);
+  pv(B.x,B.y,O.x,O.y,P_W,5.5,0.95);
+  pl((O.x+A.x)/2+4,(O.y+A.y)/2-10,'v₀',P_OR,13);
+  pl((A.x+B.x)/2+12,(A.y+B.y)/2,'gt',P_CY,13);
+  pl((B.x+O.x)/2-10,(B.y+O.y)/2+2,'v',P_W,13.5);
+  pl(O.x-10,O.y+20,'O',P_MU,12);
+  const S=0.5*v0*G*t*Math.cos(th()), x=v0*Math.cos(th())*t;
+  pl(300,56,'S△ = ½·v₀·gt·cosθ',P_W,15);
+  pl(300,84,'= ½·(v₀cosθ·t)·g',P_W,15);
+  pl(300,112,'= ½·x·g —— 只认水平位移！',P_GD,15.5);
+  pl(300,146,'当前：S△ = '+S.toFixed(2),P_GD,13.5);
+  pl(300,168,'　½gx = '+(0.5*G*x).toFixed(2),P_GD,13.5);
+  if(d<0.05){
+    pl(300,206,'落地时 x = R：',P_W,13.5);
+    pl(300,232,'R = v₀²sin2θ / g',P_PK,15);
+    pl(300,260,'θ=45° ⟹ sin2θ=1，射程最大 ✓',P_GD,13.5);
+  } else {
+    pl(300,206,'不等高落地（落差 d）：',P_W,13.5);
+    pl(300,232,'45° 不再最远，最佳角更小',P_GD,14);
+    pl(300,260,'tanθ* = v₀/√(v₀²+2gd)',P_PK,14.5);
+  }
+}
+/* ================= DOM / 交互 ================= */
+function initUI(){
+  $('sV0').oninput=()=>{v0=parseFloat($('sV0').value);$('oV0').textContent=v0.toFixed(1)+' m/s';resetT()};
+  $('sTh').oninput=()=>{thDeg=parseFloat($('sTh').value);$('oTh').textContent=thDeg+'°';resetT()};
+  $('sD').oninput=()=>{d=parseFloat($('sD').value);$('oD').textContent=d.toFixed(1)+' m';resetT()};
+  $('sT').oninput=()=>{t=parseFloat($('sT').value)/100*Tmax();playing=false;$('bPlay').innerHTML='▶ 播放';syncT()};
+  $('bPlay').onclick=()=>{ if(playing){playing=false;$('bPlay').innerHTML='▶ 播放';} else {playing=true;$('bPlay').innerHTML='⏸ 暂停';lastMs=millis();} };
+  $('bReset').onclick=()=>{playing=false;$('bPlay').innerHTML='▶ 播放';resetT()};
+  $('bGhost').onclick=()=>{ghostShow=!ghostShow;$('bGhost').textContent=ghostShow?'👻 隐藏分运动':'👻 显示分运动'};
+  document.querySelectorAll('.step-btn,.conc').forEach(el=>{
+    el.addEventListener('click',()=>goStep(parseInt(el.dataset.s)));
+  });
+  $('bFlat').onclick=()=>preset(0);
+  $('bHoriz').onclick=()=>preset(-1);
+  $('bCliff').onclick=()=>preset(1);
+  syncSliders(); resetT();
+}
+function preset(mode){
+  playing=false; $('bPlay').innerHTML='▶ 播放';
+  $('bFlat').classList.remove('on'); $('bHoriz').classList.remove('on'); $('bCliff').classList.remove('on');
+  if(mode===0){ d=0; thDeg=45; v0=14; $('bFlat').classList.add('on');
+    $('sceneName').textContent='情境：等高地面（θ=45°）'; $('rowD').style.display=''; }
+  else if(mode===-1){ d=DEMO_H; thDeg=0; v0=14; $('bHoriz').classList.add('on');
+    $('sceneName').textContent='情境：平抛特例（θ=0，斜交退化为直角）'; $('rowD').style.display='none'; }
+  else { d=12; thDeg=45; v0=14; $('bCliff').classList.add('on');
+    $('sceneName').textContent='情境：悬崖落地'; $('rowD').style.display=''; }
+  syncSliders(); resetT();
+}
+function resetT(){ t=Tmax()*(step===5?0.98:0.6); syncT(); }
+function goStep(s){
+  step=s;
+  document.querySelectorAll('.step-btn').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.s)===s));
+  document.querySelectorAll('.conc').forEach(c=>c.classList.toggle('on',parseInt(c.dataset.s)===s));
+  resetT();
+}
+function syncT(){ $('sT').value=Math.min(100,Math.round(t/Tmax()*1000)/10); $('oT').textContent=t.toFixed(2)+' s / '+Tmax().toFixed(2)+' s'; }
+function syncSliders(){
+  $('sV0').value=v0; $('oV0').textContent=v0.toFixed(1)+' m/s';
+  $('sTh').value=thDeg; $('oTh').textContent=thDeg+'°';
+  $('sD').value=d; $('oD').textContent=d.toFixed(1)+' m';
+}
+function updateData(){
+  const pv=pos(t), vv=vel(t), hv=vHalf();
+  const S=0.5*v0*G*t*Math.cos(th()), x=v0*Math.cos(th())*t;
+  const Ls=Math.hypot(pv.x,pv.y), Lh=Math.hypot(hv.x,hv.y);
+  let h='';
+  h+='<span class="chip">t = <b class="c">'+t.toFixed(2)+'</b> s</span>';
+  h+='<span class="chip">x = <b class="o">'+pv.x.toFixed(2)+'</b> m</span>';
+  h+='<span class="chip">y = <b class="o">'+pv.y.toFixed(2)+'</b> m</span>';
+  h+='<span class="chip">|v| = <b class="w">'+Math.hypot(vv.x,vv.y).toFixed(2)+'</b> m/s</span>';
+  h+='<span class="chip">|s| = <b class="p">'+Ls.toFixed(2)+'</b> m</span>';
+  h+='<span class="chip">S△ = <b class="y">'+S.toFixed(2)+'</b></span>';
+  h+='<span class="chip">½gx = <b class="y">'+(0.5*G*x).toFixed(2)+'</b></span>';
+  $('chips').innerHTML=h;
+  let mb='';
+  if(step===3 && Ls>0.01 && Lh>0.01){
+    const ratio=Ls/(t*Lh);
+    mb='验证 |s| ÷ (t·|v(t/2)|) = <b style="color:var(--gold)">'+ratio.toFixed(5)+'</b>（恒等于 1 ⟹ 矢量式 s = t·v(t/2) 成立）';
+  } else if(step===4){
+    const ux=Math.cos(th()), uy=Math.sin(th()), D=pos(t);
+    const den2=vv.y*ux-vv.x*uy;
+    if(Math.abs(den2)>1e-9){
+      const mu=(D.x*uy-D.y*ux)/den2, E={x:D.x+mu*vv.x,y:D.y+mu*vv.y};
+      const C={x:v0*ux*t,y:v0*uy*t};
+      const dev=Math.hypot(E.x-C.x/2,E.y-C.y/2)/Math.max(Math.hypot(C.x,C.y),1e-9);
+      mb='E 与 v₀t 中点偏差 = <b style="color:'+(dev<0.001?'var(--gold)':'var(--warn)')+'">'+dev.toExponential(2)+'</b>'+(dev<0.001?' ⟸ 恰为中点 ✓ 恒成立':'');
+    }
+  } else if(step===5){
+    mb='S△ 与 ½g·x 同步（当前差 '+(Math.abs(S-0.5*G*x)).toExponential(1)+'）—— 拖 θ 看面积与射程一起变';
+  } else if(step===2){
+    mb='两把尺子边长随 t 长大；v₀(橙)与 gt(青)方向不变，只变长度 → 三角形“张口”由速度差决定';
+  } else {
+    mb='拖时刻 t 或按播放：两影子分头走，小球永远钉在它们的合位移端点上';
+  }
+  $('miniBanner').innerHTML=mb;
+}
+function updateBanners(){
+  const B=$('banner');
+  let txt='', hit=false, cyan=false;
+  if(step===1){ txt='① 拆：小球 = <b style="color:var(--orange)">影子A（沿 v₀ 匀速）</b> + <b style="color:var(--cyan)">影子B（竖直自由落体）</b>。不是水平+竖直！是“斜”着拆，所以叫<b>斜交分解</b>。'; }
+  else if(step===2){ txt='② 两把尺：速度尺 <b style="color:var(--white)">v = v₀ + gt</b>；位移尺 <b style="color:var(--pink)">s = v₀t + ½gt²</b>。同一时刻各画各的，但边长都由 t 决定。'; }
+  else if(step===3){ txt='③ 核心：<b style="color:var(--gold)">s = t·v(t/2)</b> —— 把 t/2 时刻的速度三角形整体放大 t 倍，正好就是位移三角形。“位移方向 = 中点时刻速度方向”也由此而来。'; cyan=true; }
+  else if(step===4){ txt='④ 中点定理：过小球沿 <b style="color:var(--white)">v 的反向</b>作线，交 v₀ 射线于 <b style="color:var(--gold)">v₀t 的中点 E</b> —— 拖 t、换 θ、加落差，E 永远钉在中点上。'; cyan=true; }
+  else if(step===5){
+    if(t>=Tmax()-0.01){
+      if(d<0.05){ txt='⑤ 落地！R = '+(v0*v0*Math.sin(2*th())/G).toFixed(2)+' m。同速率下 <b style="color:var(--gold)">θ=45° 射程最大</b>（对照金色 ghost 轨迹）'; hit=true; }
+      else { txt='⑤ 落地！<b style="color:var(--gold)">不等高时 45° 不再最远</b>，最佳抛射角更小：tanθ* = v₀/√(v₀²+2gd)'; }
+    } else { txt='⑤ 速度三角形面积 S△ = ½g·x —— 播放到底，看落地射程与面积的关系'; }
+  }
+  B.innerHTML=txt;
+  B.className='banner'+(hit?' hit':cyan?' cyan':'');
+  const titles={
+    1:['分位移合成','<b>橙色</b> = 影子A 的位移 v₀t（沿初速度方向匀速）；<b>青色</b> = 影子B 的位移 ½gt²（竖直自由落体）；<b>粉色</b> = 合位移 s。两段分位移首尾相接成一张斜三角形。'],
+    2:['速度尺 & 位移尺','上半<b>速度尺</b>：v₀ 走一段、gt 坠一段，斜边 = 合速度 v（轨迹切线方向）。下半<b>位移尺</b>：v₀t 走一段、½gt² 坠一段，斜边 = 合位移 s（割线方向）。'],
+    3:['同形放大','把 <b>t/2 时刻</b>的速度三角形每条边 ×t：v₀→v₀t、g·(t/2)→½gt²、v(t/2)→t·v(t/2)=s —— 与位移三角形<b>精确重合</b>。'],
+    4:['中位线解剖','由 s = v₀t + ½gt² 直接推：M（OC 中点）到 D 的连线 DM = (t/2)·v ⟹ DM ∥ v。所以过 D 反延 v 必踩中 M。这是“平抛末速度反延过水平位移中点”的一般化。'],
+    5:['面积记账本','速度三角形面积 = ½·(gt)·(v₀cosθ) = ½g·x，只与水平位移挂钩。等高落地 x = R = v₀²sin2θ/g ⟹ 45° 最远；不等高时 sin2θ 的结论失效。']};
+  $('paperTitle').textContent=titles[step][0];
+  $('paperCap').innerHTML=titles[step][1];
+}
+</script>
+</body>
+</html>
