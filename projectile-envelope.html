@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抛体 · 弹道包络（安全抛物线）</title>
+<style>
+  :root{
+    --bg:#0b0b14; --card:#0e0e1e; --line:#18182a; --line2:#2a2a48;
+    --amber:#d4a373; --amber-l:#f4a261; --gold:#ffd700; --orange:#ff8c42;
+    --cyan:#66c2ff; --green:#7ab878; --pink:#ff7eb6; --white:#e8e8f0;
+    --txt:#d4d4dc; --mut:#707088;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.05) 0%,transparent 55%);
+    min-height:100vh;padding-bottom:30px}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 14px 0}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+  .back{color:var(--mut);text-decoration:none;font-size:14px;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .back:hover{color:var(--amber-l);border-color:var(--line2)}
+  h1{font-size:22px;font-weight:800;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+  .sub{font-size:13.5px;color:var(--mut);margin:3px 0 10px}
+  .sub b{color:var(--amber)}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+  .step-btn{flex:1;min-width:160px;background:var(--card);border:1px solid var(--line);color:var(--mut);
+    border-radius:11px;padding:7px 8px;font-size:13px;cursor:pointer;text-align:left;transition:.15s;line-height:1.3}
+  .step-btn b{display:block;font-size:13px;color:var(--txt)}
+  .step-btn:hover{border-color:var(--line2)}
+  .step-btn.on{background:#16162a;border-color:var(--amber)}
+  .step-btn.on b{color:var(--amber-l)}
+  .step-btn .n{display:inline-block;width:17px;height:17px;line-height:15px;text-align:center;border-radius:50%;
+    border:1.5px solid currentColor;font-size:11px;margin-right:5px;vertical-align:1px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+  .panel h3{font-size:15px;color:var(--amber);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .panel h3 .r{font-size:12px;color:var(--mut);font-weight:400}
+  #stageWrap{width:100%}
+  canvas#stage{width:100%;height:auto;display:block;border-radius:10px;background:#0a0a13}
+  .banner{margin:8px 0 0;padding:7px 11px;border-radius:10px;font-size:14.5px;font-weight:600;
+    border:1px dashed var(--line2);color:var(--amber-l);background:rgba(212,163,115,.05);line-height:1.55}
+  .banner.hit{background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.6);color:var(--gold)}
+  .banner.cyan{color:var(--cyan);border-color:rgba(102,194,255,.35);background:rgba(102,194,255,.06)}
+  .ctrl{display:grid;grid-template-columns:70px 1fr 84px;align-items:center;gap:3px 8px;font-size:13.5px;margin:3px 0}
+  .ctrl label{color:#b8b8c8}
+  .ctrl input[type=range]{width:100%;accent-color:var(--amber)}
+  .ctrl output{text-align:right;color:var(--amber-l);font-weight:700;font-size:13.5px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  button{background:#151528;border:1px solid var(--line2);color:var(--txt);border-radius:9px;
+    padding:6px 10px;font-size:13.5px;cursor:pointer;transition:.12s}
+  button:hover{border-color:var(--amber);color:var(--amber-l)}
+  button.primary{background:linear-gradient(135deg,#8a5a2b,#d4a373);color:#0b0b14;font-weight:700;border:none}
+  button.on{background:#2a1f10;border-color:var(--amber);color:var(--gold)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{background:#12121f;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px;color:#b8b8c8;white-space:nowrap;line-height:1.4}
+  .chip b{font-size:13.5px}
+  .chip b.g{color:var(--green)} .chip b.c{color:var(--cyan)} .chip b.o{color:var(--orange)}
+  .chip b.y{color:var(--gold)} .chip b.w{color:var(--white)} .chip b.p{color:var(--pink)} .chip b.r{color:var(--warn)}
+  #paper{width:100%;height:auto;display:block;background:#0a0a13;border-radius:10px}
+  .paper-cap{font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.65}
+  .paper-cap b{color:var(--amber)}
+  .concs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+  .conc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-size:13px;cursor:pointer;line-height:1.55;color:#b8b8c8;transition:.15s}
+  .conc b{display:block;font-size:13.5px;color:var(--amber);margin-bottom:3px}
+  .conc:hover{border-color:var(--line2)}
+  .conc.on{border-color:var(--gold);background:#191907;color:var(--txt)}
+  .conc.on b{color:var(--gold)}
+  .conc .f{font-family:'Courier New',monospace;color:var(--amber-l);font-size:12.5px}
+  @media(max-width:900px){
+    .grid{grid-template-columns:1fr}
+    .concs{grid-template-columns:repeat(2,1fr)}
+    .step-btn{min-width:140px}
+  }
+  @media(max-width:520px){ .concs{grid-template-columns:1fr 1fr} }
+  .foot{margin-top:14px;font-size:12px;color:var(--mut);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><a class="back" href="jiaoxue.html">← 教学资源</a>
+    <h1>抛体 · 弹道包络（安全抛物线）</h1>
+  </div>
+  <div class="sub">同一点、同速率、所有角度的弹道，被一条<b>金色抛物线</b>罩住 —— 它以内全能打到，它以外永远打不到</div>
+
+  <div class="steps">
+    <button class="step-btn on" data-s="1"><span class="n">1</span><b>轨迹族</b>扫出"伞面"</button>
+    <button class="step-btn" data-s="2"><span class="n">2</span><b>每条都相切</b>切点滑行</button>
+    <button class="step-btn" data-s="3"><span class="n">3</span><b>焦点在抛出点</b>抛物线几何</button>
+    <button class="step-btn" data-s="4"><span class="n">4</span><b>打靶判定</b>两角 / 一角 / 无解</button>
+    <button class="step-btn" data-s="5"><span class="n">5</span><b>斜面射程</b>包络一切即最远</button>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>🕹 实景演示 <span class="r" id="sceneName">同速率 v₀=14 m/s 从 O 以任意角抛出</span></h3>
+      <div id="stageWrap"></div>
+      <div class="banner" id="banner">① 把 θ 从 0° 扫到 90°：所有弹道叠在一起像一把倒扣的<b style="color:var(--gold)">金伞</b> —— 伞面就是包络。按 ▶ 扫掠。</div>
+      <div class="btns">
+        <button id="bPlay" class="primary">▶ 扫掠</button>
+        <button id="bReset">↺ 复位</button>
+        <button id="bTrace" style="display:none">👁 目标示例</button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h3>📐 矢量图纸 <span class="r" id="paperTitle">安全区与危险区</span></h3>
+        <canvas id="paper" width="560" height="292"></canvas>
+        <div class="paper-cap" id="paperCap"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>📊 实时数据</h3>
+        <div class="chips" id="chips"></div>
+        <div class="banner cyan" id="miniBanner" style="font-size:13px;margin-top:8px"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>🎚 参数</h3>
+        <div class="ctrl"><label>初速 v₀</label><input type="range" id="sV0" min="8" max="20" step="0.5" value="14"><output id="oV0">14 m/s</output></div>
+        <div class="ctrl" id="rowTh"><label>抛射角 θ</label><input type="range" id="sTh" min="3" max="87" step="0.5" value="45"><output id="oTh">45°</output></div>
+        <div class="ctrl" id="rowBeta" style="display:none"><label>斜面角 β</label><input type="range" id="sBeta" min="0" max="40" step="1" value="20"><output id="oBeta">20°</output></div>
+        <div class="ctrl" id="rowTarget" style="display:none"><label>拖靶心</label><output id="oTarget" style="text-align:left">(8, 4) m · 画布上拖动</output></div>
+        <div class="btns" id="presetBtns" style="display:none">
+          <button data-aim="inner">🎯 内点(8,4)</button>
+          <button data-aim="far">🎯 最远点(19.9,0)</button>
+          <button data-aim="env">🎯 包络上(8,8.4)</button>
+          <button data-aim="out">🎯 伞外(6,10.2)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concs">
+    <div class="conc on" data-s="1"><b>① 包络是"伞面"</b>同速率所有弹道的公共边界；伞内=打得到<span class="f">y ≤ H − gx²/2v₀²</span></div>
+    <div class="conc" data-s="2"><b>② 每条弹道都与包络相切</b>切点 x = v₀²/(g·tanθ)；45° 的切点恰是自己的落点</div>
+    <div class="conc" data-s="3"><b>③ 焦点 = 抛出点</b>包络是以 O 为焦点、y=2H 为准线的抛物线<span class="f">y = H − gx²/2v₀²</span></div>
+    <div class="conc" data-s="4"><b>④ 打靶看判别式</b>目标在包络内 ⟹ 两个抛射角；恰在包络上 ⟹ 一个；外 ⟹ 无解</div>
+    <div class="conc" data-s="5"><b>⑤ 斜面最远 = 包络切点</b>沿斜面抛最远角<span class="f">θ* = 45° + β/2</span>，落点恰在包络上</div>
+  </div>
+
+  <div class="foot">启明 · 抛体矢量几何系列 ③ ｜ 前两篇：《阿基米德三角形 × 抛体运动》《斜交分解与矢量三角形》</div>
+</div>
+
+<script src="p5.min.js"></script>
+<script>
+/* ================= 物理 ================= */
+const G=9.8;
+let v0=14, thDeg=45, betaDeg=20, step=1, sweepT=0, sweeping=false, lastMs=0;
+let aimX=8, aimY=4, dragAim=false;
+function Hm(){ return v0*v0/(2*G) }              // 竖直上抛高度 = 包络顶点 y
+function R45(){ return v0*v0/G }                  // 45° 等高射程 = 包络 x 截距
+function envY(x){ return Hm() - G*x*x/(2*v0*v0) } // 包络(安全抛物线)
+function trajY(x,th){ const r=th*Math.PI/180, c=Math.cos(r); return x*Math.tan(r) - G*x*x/(2*v0*v0*c*c) }
+function Rth(th){ const r=th*Math.PI/180; return v0*v0*Math.sin(2*r)/G }
+function xcT(th){ const u=Math.tan(th*Math.PI/180); return v0*v0/(G*u) }   // 切点x
+function thToX(th){ const r=th*Math.PI/180, vy=v0*Math.sin(r); const T=(vy+Math.sqrt(vy*vy))/G; return v0*Math.cos(r)*T }
+/* ================= 画布取景 ================= */
+let cw=760, ch=470, sc=1, ox=0, oy=0, W0=0, W1=22, Y0=-1, Y1=12;
+function fitView(){
+  const H=Hm();
+  if(step===3){
+    W0=-2.5; W1=R45()*1.08; Y0=-1; Y1=2*H*1.1+1.5;    // 要看准线 y=2H
+  } else if(step===4){
+    W0=-1; W1=R45()*1.16; Y0=-1.2; Y1=H*1.18+1.2;
+  } else if(step===5){
+    const r=betaDeg*Math.PI/180;
+    const b=max(8,R45()*1.0);
+    W0=-1; W1=b; Y0=-1.2; Y1=H*1.18+1.2;
+  } else {
+    W0=-1.2; W1=R45()*1.14+1; Y0=-1.3; Y1=H*1.2+1;
+  }
+  sc=Math.min(cw/(W1-W0), ch/(Y1-Y0));
+  ox=(cw-(W1-W0)*sc)/2 - W0*sc;
+  oy=ch + Y0*sc;
+}
+function sx(wx){ return ox+wx*sc }
+function sy(wy){ return oy-wy*sc }
+function max(a,b){ return a>b?a:b }
+/* ================= 常量色 ================= */
+const CO={r:244,g:162,b:97}, CC={r:102,g:194,b:255}, CW={r:232,g:232,b:240},
+      CP={r:255,g:126,b:182}, CG={r:255,g:215,b:0}, CM={r:120,g:140,b:190};
+/* ================= p5 ================= */
+const $=id=>document.getElementById(id);
+function setup(){
+  const pw=$('stageWrap'); cw=Math.max(300,pw.clientWidth||760); ch=Math.round(cw*0.6);
+  const c=createCanvas(cw,ch); c.parent('stageWrap');
+  initUI(); lastMs=millis(); fitView();
+}
+function windowResized(){
+  const pw=$('stageWrap'); cw=Math.max(300,pw.clientWidth||760); ch=Math.round(cw*0.6);
+  resizeCanvas(cw,ch); fitView();
+}
+function draw(){
+  if(sweeping){
+    const now=millis(), dt=Math.min((now-lastMs)/1000,0.05); lastMs=now;
+    sweepT+=dt*22;
+    if(sweepT>=86){ sweepT=86; sweeping=false; $('bPlay').innerHTML='▶ 扫掠'; }
+  } else lastMs=millis();
+  background(10,10,19);
+  fitView();
+  drawGrid(); drawGround();
+  if(step===1) s1(); else if(step===2) s2(); else if(step===3) s3();
+  else if(step===4) s4(); else s5();
+  updateData(); drawPaper(); updateBanners();
+}
+function drawGrid(){
+  stroke(28,28,48); strokeWeight(1);
+  for(let w=Math.ceil(W0/2)*2; w<=W1; w+=2){ line(sx(w),sy(Y0),sx(w),sy(Y1)); }
+  for(let h=Math.ceil(Y0/2)*2; h<=Y1; h+=2){ line(sx(W0),sy(h),sx(W1),sy(h)); }
+  noStroke();
+}
+function drawGround(){
+  stroke(66,66,100); strokeWeight(2.4); line(sx(W0),sy(0),sx(W1),sy(0)); noStroke();
+  textAlign(LEFT,TOP); textSize(12.5); fill(160,160,185);
+  textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif');
+  text('地面', sx(W1)-48, sy(0)+6);
+}
+/* 绘制工具 */
+function vec(x1,y1,x2,y2,c,w,alpha){
+  stroke(c.r,c.g,c.b,alpha); strokeWeight(w); fill(c.r,c.g,c.b,alpha);
+  line(x1,y1,x2,y2);
+  const a=Math.atan2(y2-y1,x2-x1), h=Math.max(10,w*2.4);
+  const bx=x2-h*0.95*Math.cos(a), by=y2-h*0.95*Math.sin(a);
+  noStroke(); fill(c.r,c.g,c.b,alpha);
+  triangle(x2,y2, bx-h*0.5*Math.cos(a-Math.PI/4), by-h*0.5*Math.sin(a-Math.PI/4), bx-h*0.5*Math.cos(a+Math.PI/4), by-h*0.5*Math.sin(a+Math.PI/4));
+  noStroke();
+}
+function lab(x,y,s,c,sz){
+  noStroke(); fill(c.r,c.g,c.b); textSize(sz||13.5);
+  textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif'); textAlign(LEFT,CENTER);
+  text(s,x,y);
+}
+function dash(x1,y1,x2,y2,c,w,alpha,d1,d2){
+  stroke(c.r,c.g,c.b,alpha); strokeWeight(w);
+  drawingContext.setLineDash([d1||5,d2||5]); line(x1,y1,x2,y2);
+  drawingContext.setLineDash([]); noStroke();
+}
+/* 弹道曲线(世界x 0..x1) */
+function drawTraj(th,col,w,alpha,x1,seg){
+  const n=seg||120, xx=x1!==undefined?x1:Rth(th)*1.0;
+  stroke(col.r,col.g,col.b,alpha); strokeWeight(w); noFill();
+  beginShape();
+  for(let i=0;i<=n;i++){ const x=xx*i/n; const y=trajY(x,th); if(y<-0.02) break; vertex(sx(x),sy(y)); }
+  endShape(); noStroke();
+}
+/* 包络线 */
+function drawEnv(col,w,alpha,xEnd){
+  const n=300, xe=(xEnd!==undefined?xEnd:max(W1,R45()*1.1));
+  stroke(col.r,col.g,col.b,alpha); strokeWeight(w); noFill();
+  beginShape();
+  for(let i=0;i<=n;i++){ const x=xe*i/n; const y=envY(x); if(y<-0.05) break; vertex(sx(x),sy(y)); }
+  endShape(); noStroke();
+}
+/* 落点旗标 */
+function flagAt(x,y,txt,c){
+  const X=sx(x), Y=sy(y);
+  stroke(c.r,c.g,c.b,200); strokeWeight(2); line(X,Y,X,Y-16);
+  noStroke(); fill(c.r,c.g,c.b); ellipse(X,Y,6,6);
+  lab(X+5,Y-12,txt,c,12);
+}
+/* ============ 各步 ============ */
+function s1(){
+  // 轨迹族: 扫掠 2..sweepT
+  const n=Math.max(1,Math.floor(sweepT/2.15));   // 每2.15° 一条
+  for(let i=0;i<=n;i++){
+    const thA=3+i*2.15;
+    if(thA>87) break;
+    const tcol={r:255-60*i/40,g:190-40*i/40,b:150+60*i/40};
+    const r=thA*Math.PI/180, vx=v0*Math.cos(r), vy=v0*Math.sin(r);
+    const T=2*vy/G, seg=90;
+    stroke(tcol.r,tcol.g,tcol.b,60); strokeWeight(1.3); noFill();
+    beginShape();
+    for(let j=0;j<=seg;j++){ const u=T*j/seg; const px=vx*u, py=vy*u-0.5*G*u*u; vertex(sx(px),sy(py)); }
+    endShape(); noStroke();
+  }
+  // 完成时浮现包络
+  if(sweepT>=86){
+    drawEnv(CG,3.4,255);
+    dash(sx(0),sy(0),sx(R45()),sy(0),CG,1.6,120,4,6);
+    const mid=envY(R45()*0.42);
+    lab(sx(R45()*0.44),sy(mid)+6,'包络 y = H − gx²/(2v₀²)',CG,13.5);
+    lab(sx(R45())-60,sy(0)+16,'x 截距 = 45° 最大射程',CM,12);
+  }
+  drawO();
+}
+function s2(){
+  drawEnv(CG,3.2,255);
+  // 当前θ弹道 白
+  drawTraj(thDeg,CW,2.6,235);
+  // 切点
+  const xc=xcT(thDeg), yc=envY(xc);
+  const Xc=sx(xc), Yc=sy(yc);
+  const inR=Rth(thDeg);
+  const reachable = xc<=inR+0.01;
+  // 弹道与包络双斜率线(切点处放大示意)
+  const u=Math.tan(thDeg*Math.PI/180);
+  const sl_b=u-(G*xc/(v0*v0))*(1+u*u), sl_e=-G*xc/(v0*v0);
+  // 切线(弹道方向, 白) (包络方向, 金) 局部放大画
+  const L1=60/Math.sqrt(1+sl_b*sl_b);
+  vec(Xc,Yc, Xc+L1, Yc-sl_b*L1, CW, 2, 200);
+  vec(Xc,Yc, Xc+L1, Yc-sl_e*L1, CG, 2, 200);
+  // 切点
+  fill(10,10,19); noStroke(); ellipse(Xc,Yc,18,18); fill(CG.r,CG.g,CG.b); ellipse(Xc,Yc,9,9);
+  lab(Xc+12,Yc-8,'切点 x='+xc.toFixed(2),CG,12.5);
+  // 落点对比
+  const lp=Rth(thDeg);
+  if(lp<=W1*0.98){
+    fill(10,10,19); noStroke(); ellipse(sx(lp),sy(0),15,15); fill(CW.r,CW.g,CW.b); ellipse(sx(lp),sy(0),7,7);
+    lab(sx(lp)-30,sy(0)+16,'落点 R='+lp.toFixed(1),CW,12);
+  }
+  // 45° 参考弹道
+  if(Math.abs(thDeg-45)>1.5){ dash(sx(0),sy(0),sx(R45()),sy(0),CM,1.4,90,3,6);
+    lab(sx(R45())-95,sy(0)-10,'45° 落点 = 包络 x 截距',CM,11.5); }
+  if(!reachable){
+    lab(sx(W0+0.5),sy(Y1-1.8),'⚠ 该弹道落点 R='+lp.toFixed(1)+' < 切点 x='+xc.toFixed(1)+' —— 碰不到包络就落地了',{r:224,g:96,b:80},14);
+  }
+  drawO();
+}
+function s3(){
+  // 包络 金粗; 顶点V / 焦点F=O / 准线
+  drawEnv(CG,3.4,255);
+  const H=Hm();
+  // 准线 y=2H
+  dash(sx(W0),sy(2*H),sx(W1),sy(2*H),{r:120,g:200,b:255},2,170,8,6);
+  lab(sx(W0)+10,sy(2*H)+4,'准线 y = 2H = v₀²/g',CC,13);
+  // 顶点 V(0,H)
+  fill(10,10,19); noStroke(); ellipse(sx(0),sy(H),18,18); fill(CP.r,CP.g,CP.b); ellipse(sx(0),sy(H),8,8);
+  lab(sx(0)+10,sy(H)-4,'顶点 V (0, H)',CP,13);
+  dash(sx(0),sy(H),sx(0),sy(0),CP,1.6,140,3,5);
+  // 焦点 F = O(0,0) 金 大
+  fill(CG.r,CG.g,CG.b); noStroke(); ellipse(sx(0),sy(0),12,12);
+  lab(sx(6),sy(-0.4),'焦点 F = 抛出点 O',CG,13.5);
+  // 游标 P: x 滑块 = thDeg 映射到 [0, R45]
+  const px=xcMap();
+  const py=envY(px);
+  const PX=sx(px), PY=sy(py);
+  fill(10,10,19); noStroke(); ellipse(PX,PY,22,22); fill(255,255,255); ellipse(PX,PY,12,12);
+  // PF 与 到准线距离
+  vec(PX,PY,sx(0),sy(0),CW,2.2,230);                        // PF
+  dash(PX,PY,PX,sy(2*H),CC,2.2,230,4,4);                    // 到准线垂线
+  lab((PX+sx(0))/2-8,(PY+sy(0))/2+6,'PF',CW,12.5);
+  lab(PX+10,(PY+sy(2*H))/2,'PH',CC,12.5);
+  drawO();
+}
+function xcMap(){ const t=(thDeg-3)/84; return t*R45()*0.98 }
+function drawO(){
+  fill(CG.r,CG.g,CG.b); noStroke(); ellipse(sx(0),sy(0),9,9);
+  lab(sx(0)+9,sy(0)-8,'O',CG,12.5);
+}
+function s4(){
+  drawEnv(CG,2.6,90);
+  const X=aimX, Y=aimY;
+  const E=envY(X);
+  const dd=1-2*G*Y/(v0*v0)-(G*X/(v0*v0))*(G*X/(v0*v0));
+  // 靶心
+  const TX=sx(X), TY=sy(Y);
+  noStroke();
+  stroke(255,80,80,240); strokeWeight(2.4);
+  line(TX-11,TY,TX+11,TY); line(TX,TY-11,TX,TY+11);
+  noStroke(); fill(255,120,120); ellipse(TX,TY,8,8);
+  lab(TX+14,TY-4,'目标 ('+X.toFixed(1)+', '+Y.toFixed(1)+')',{r:255,g:150,b:150},12.5);
+  // 判定与解轨迹
+  if(dd>1e-9){
+    const A=G*X*X/(v0*v0);                       // = 2·(gX²/2v₀²)，即二次项系数×2
+    const u1=(X+Math.sqrt(X*X*dd))/A, u2=(X-Math.sqrt(X*X*dd))/A;
+    const t1=Math.atan(u1)*180/Math.PI, t2=Math.atan(u2)*180/Math.PI;
+    drawTraj(t1,CW,2.2,190); drawTraj(t2,CW,2.2,190);
+    flagAt(Rth(t1),0,'θ₁='+t1.toFixed(1)+'°',CW);
+    if(t2>0.5) flagAt(Rth(t2),0,'θ₂='+t2.toFixed(1)+'°',{r:200,g:220,b:255});
+  } else if(dd>-1e-6){
+    const A=G*X*X/(v0*v0);
+    const u1=X/A;
+    const t1=Math.atan(u1)*180/Math.PI;
+    drawTraj(t1,CG,2.6,235);
+    flagAt(Rth(t1),0,'恰一角 θ='+t1.toFixed(1)+'°',CG);
+  } else {
+    dash(sx(0),sy(0),TX,TY,{r:224,g:96,b:80},1.6,130,3,6);
+  }
+  if(X<0.05){ lab(sx(0.5),sy(Y1-1.6),'目标在抛出点正上方：θ=90° 竖直抛',CW,13); }
+  drawO();
+}
+function s5(){
+  drawEnv(CG,2.6,80);
+  const r=betaDeg*Math.PI/180;
+  const thStar=45+betaDeg/2;
+  // 斜面（clamp 不画出画面顶）
+  const maxY=Y1*0.98;
+  const xEnd=Math.min(max(W1*0.99, R45()*1.02), maxY/Math.tan(r)||W1);
+  stroke(150,160,200,180); strokeWeight(2.4);
+  line(sx(0),sy(0),sx(xEnd),sy(xEnd*Math.tan(r)));
+  noStroke();
+  lab(sx(W0+0.4),sy(0.8),'斜面 β='+betaDeg+'°',{r:170,g:180,b:220},13);
+  // 最优弹道 θ*=45+β/2 (金) 与手动 θ(白)
+  drawTraj(thStar,CG,3,240);
+  drawTraj(thDeg,CW,1.8,150);
+  // 落点(斜面上) 公式
+  const Lmax=2*v0*v0*Math.cos(thStar*Math.PI/180)*Math.sin((thStar-betaDeg)*Math.PI/180)/(G*Math.cos(r)*Math.cos(r));
+  const Px=Lmax*Math.cos(r), Py=Lmax*Math.sin(r);
+  // 手动角沿斜面距离
+  function Lof(thd){
+    const rr=thd*Math.PI/180;
+    if(thd<=betaDeg) return 0;
+    return 2*v0*v0*Math.cos(rr)*Math.sin((thd-betaDeg)*Math.PI/180)/(G*Math.cos(r)*Math.cos(r));
+  }
+  const Lm=Lof(thDeg);
+  const P2x=Lm*Math.cos(r), P2y=Lm*Math.sin(r);
+  // 标记
+  if(thStar!==thDeg){
+    fill(10,10,19); noStroke(); ellipse(sx(P2x),sy(P2y),14,14); fill(CW.r,CW.g,CW.b); ellipse(sx(P2x),sy(P2y),6,6);
+    lab(sx(P2x)-70,sy(P2y)-8,'θ='+thDeg.toFixed(1)+'° 落点 L='+Lm.toFixed(1),CW,11.5);
+  }
+  fill(CG.r,CG.g,CG.b); noStroke(); ellipse(sx(Px),sy(Py),9,9);
+  lab(sx(Px)-95,sy(Py)+8,'θ*=45°+β/2 最远 L='+Lmax.toFixed(1)+' m',CG,12);
+  lab(sx(Px*0.5),sy(Py*0.5+0.5),'恰在包络上（切点）',{r:255,g:200,b:100},11.5);
+  drawO();
+}
+/* ============ 图纸 canvas ============ */
+const paper=$('paper'), px=paper.getContext('2d');
+const P_OR='#f4a261', P_CY='#66c2ff', P_PK='#ff7eb6', P_W='#e8e8f0', P_GD='#ffd700', P_MU='#8a8aa0', P_RD='#e06050';
+function pl(x,y,s,col,sz,al){
+  px.globalAlpha=1; px.font=(sz||13)+'px "Noto Serif SC","PingFang SC","Microsoft YaHei",sans-serif';
+  px.fillStyle=col; px.textAlign=al||'left'; px.textBaseline='middle';
+  px.fillText(s,x,y);
+}
+function pv(x1,y1,x2,y2,col,w,alpha){
+  px.globalAlpha=alpha; px.strokeStyle=col; px.fillStyle=col; px.lineWidth=w; px.lineCap='round';
+  px.beginPath(); px.moveTo(x1,y1); px.lineTo(x2,y2); px.stroke();
+  const a=Math.atan2(y2-y1,x2-x1), h=Math.max(9,w*2.6);
+  px.beginPath(); px.moveTo(x2,y2);
+  px.lineTo(x2-h*Math.cos(a-Math.PI/5), y2-h*Math.sin(a-Math.PI/5));
+  px.lineTo(x2-h*Math.cos(a+Math.PI/5), y2-h*Math.sin(a+Math.PI/5));
+  px.closePath(); px.fill(); px.globalAlpha=1;
+}
+function pCurve(pts,col,w,alpha){
+  px.globalAlpha=alpha; px.strokeStyle=col; px.lineWidth=w; px.lineJoin='round';
+  px.beginPath();
+  for(let i=0;i<pts.length;i++){ if(i===0)px.moveTo(pts[i][0],pts[i][1]); else px.lineTo(pts[i][0],pts[i][1]); }
+  px.stroke(); px.globalAlpha=1;
+}
+function clearPaper(){ px.clearRect(0,0,paper.width,paper.height) }
+function drawPaper(){
+  clearPaper();
+  if(step===1) pS1(); else if(step===2) pS2(); else if(step===3) pS3();
+  else if(step===4) pS4(); else pS5();
+}
+function parabolaPts(cx,cy,scale,xN,flip){
+  // 画包络迷你图: y=H-gx²/2v0² 画成屏幕曲线(右半)
+  const pts=[];
+  const H=Hm(), R=R45();
+  for(let i=0;i<=xN;i++){
+    const x=R*i/xN, y=H-G*x*x/(2*v0*v0);
+    pts.push([cx+x*scale, cy-(y*scale)]);
+  }
+  return pts;
+}
+function pS1(){
+  pl(280,22,'同速率，全角度 —— 空间被分成两层',P_W,15.5);
+  // 迷你包络+安全区填充
+  const cxp=60, cyp=190, sk=11;
+  // 安全区半透明填充
+  const H=Hm(), R=R45();
+  px.globalAlpha=0.16; px.fillStyle=P_GD;
+  px.beginPath();
+  for(let i=0;i<=80;i++){ const x=R*i/80, y=H-G*x*x/(2*v0*v0); const X=cxp+x*sk, Y=cyp-y*sk; if(i===0)px.moveTo(X,Y); else px.lineTo(X,Y); }
+  px.lineTo(cxp+R*sk,cyp); px.lineTo(cxp,cyp); px.closePath(); px.fill(); px.globalAlpha=1;
+  pCurve(parabolaPts(cxp,cyp,sk,80),P_GD,3,0.95);
+  px.strokeStyle='rgba(138,138,160,.45)'; px.lineWidth=1; px.beginPath();
+  px.moveTo(cxp,cyp); px.lineTo(cxp+R*sk,cyp); px.stroke();
+  pl(cxp+10,cyp+14,'O',P_MU,12);
+  pl(285,60,'包络以内（金色区）：',P_GD,14);
+  pl(285,86,'任意目标至少有一个抛射角能打到',P_W,13);
+  pl(285,112,'包络以外（上方）：',P_RD,14);
+  pl(285,138,'任何角度都够不着 —— 打不到',P_W,13);
+  pl(285,176,'弹道族方程视作 tanθ 的二次式：',P_MU,12.5);
+  pl(285,198,'y = x·u − (gx²/2v₀²)(1+u²),  u=tanθ',P_OR,13.5);
+  pl(285,222,'对每个 x，最高能到哪？取 u 使 y 最大',P_MU,12.5);
+  pl(285,246,'u* = v₀²/(gx) ⟹ y_max = H − gx²/(2v₀²)',P_GD,14);
+  pl(285,272,'逐点取最高的包络 —— 安全抛物线',P_W,12.5);
+}
+function pS2(){
+  pl(280,20,'相切是包络的"身份证"',P_W,15.5);
+  // 局部放大: 切点处两曲线
+  const H=Hm(), R=R45();
+  const cxp=70, cyp=205, sk=9.5;
+  pCurve(parabolaPts(cxp,cyp,sk,80),P_GD,2.6,0.9);
+  // 当前弹道
+  const th=thDeg, u=Math.tan(th*Math.PI/180);
+  const rr=th*Math.PI/180, cosc=Math.cos(rr);
+  const pts=[];
+  for(let i=0;i<=100;i++){ const x=R*i/100; const y=x*u-G*x*x*(1+u*u)/(2*v0*v0); pts.push([cxp+x*sk, cyp-y*sk]); }
+  pCurve(pts,P_W,2,0.9);
+  const xc=xcT(th), yc=envY(xc);
+  px.fillStyle=P_GD; px.beginPath(); px.arc(cxp+xc*sk, cyp-yc*sk, 7,0,7); px.fill();
+  pl(285,50,'弹道与包络在切点处：',P_W,14);
+  pl(285,76,'同一位置 + 同一斜率',P_GD,15);
+  pl(285,102,'⟹ 相切（不是相交！）',P_GD,14.5);
+  pl(285,140,'切点位置 x = v₀²/(g·tanθ)',P_OR,14);
+  pl(285,166,'θ=45° ⟹ x = v₀²/g = 自己的落点',P_CY,13);
+  pl(285,196,'θ>45°（高射）：切点在落点之前',P_W,12.5);
+  pl(285,216,'θ<45°（低射）：切点理论值在落点',P_W,12.5);
+  pl(285,236,'之后 —— 碰不到包络就落地了',P_W,12.5);
+  pl(285,262,'最大射程的秘密就藏在 45° 切点里',P_MU,12.5);
+}
+function pS3(){
+  pl(280,20,'抛物线几何：顶点、焦点、准线',P_W,15.5);
+  // 迷你抛物线 + 顶点V 焦点F(0,0) 准线
+  const H=Hm(), R=R45();
+  const cxp=75, cyp=150, sk=8.5;
+  // 准线
+  px.setLineDash([5,5]); px.strokeStyle='rgba(102,194,255,.7)'; px.lineWidth=1.6;
+  px.beginPath(); px.moveTo(cxp-10, cyp-2*H*sk); px.lineTo(cxp+R*sk+12, cyp-2*H*sk); px.stroke(); px.setLineDash([]);
+  pl(cxp-4, cyp-2*H*sk+6,'准线 y=2H',P_CY,11.5,'left');
+  pCurve(parabolaPts(cxp,cyp,sk,80),P_GD,2.8,0.95);
+  // V, F
+  px.fillStyle=P_PK; px.beginPath(); px.arc(cxp, cyp-H*sk, 6,0,7); px.fill();
+  pl(cxp+8, cyp-H*sk-2,'V(0,H)',P_PK,11.5,'left');
+  px.fillStyle=P_GD; px.beginPath(); px.arc(cxp, cyp, 6,0,7); px.fill();
+  pl(cxp+8, cyp+2,'F=O(0,0)',P_GD,11.5,'left');
+  pl(285,52,'包络：以抛出点 O 为焦点的抛物线',P_GD,15);
+  pl(285,80,'焦点 F(0,0) = O；准线 y=2H=v₀²/g',P_CY,13.5);
+  pl(285,112,'抛物线定义：曲线上任一点 P',P_W,13);
+  pl(285,136,'到焦点距离 = 到准线距离',P_W,13);
+  pl(285,160,'（图上白线 PF = 青线 PH）',P_MU,12.5);
+  pl(285,196,'物理含义：',P_W,14);
+  pl(285,220,'准线 = 2 倍竖直上抛高度',P_OR,13.5);
+  pl(285,244,'焦点在"炮口"——弹道的家族秘密',P_MU,12.5);
+  pl(285,268,'顶点 V 即 θ=90° 竖直上抛的最高点',P_CY,12.5);
+}
+function pS4(){
+  pl(280,20,'打靶判定 —— 一个判别式全搞定',P_W,15.5);
+  // 迷你: 包络+两点(内/外)
+  const H=Hm(), R=R45();
+  const cxp=60, cyp=190, sk=10.5;
+  px.globalAlpha=0.12; px.fillStyle=P_GD;
+  px.beginPath();
+  for(let i=0;i<=80;i++){ const x=R*i/80, y=H-G*x*x/(2*v0*v0); const X=cxp+x*sk, Y=cyp-y*sk; if(i===0)px.moveTo(X,Y); else px.lineTo(X,Y); }
+  px.lineTo(cxp+R*sk,cyp); px.lineTo(cxp,cyp); px.closePath(); px.fill(); px.globalAlpha=1;
+  pCurve(parabolaPts(cxp,cyp,sk,80),P_GD,2.6,0.9);
+  pl(285,44,'设 u = tanθ，目标 (X,Y)：',P_W,13.5);
+  pl(285,70,'Y = X·u − (gX²/2v₀²)(1+u²)',P_OR,14);
+  pl(285,96,'是关于 u 的一元二次方程',P_MU,12.5);
+  pl(285,120,'Δ′ = 1 − 2gY/v₀² − (gX/v₀²)²',P_GD,15);
+  pl(285,148,'Δ′>0 → 两个抛射角（一高一低）',P_GD,13.5);
+  pl(285,172,'Δ′=0 → 恰一角（目标在包络上）',P_CY,13.5);
+  pl(285,196,'Δ′<0 → 打不到（目标在伞外）',P_RD,13.5);
+  pl(285,230,'判别式的边界 Δ′=0 就是包络方程',P_W,13);
+  pl(285,254,'—— 把 Y=H−gX²/2v₀² 代回即得',P_MU,12.5);
+  pl(285,278,'拖靶心试试三种情况',P_PK,12.5);
+}
+function pS5(){
+  pl(280,20,'斜面最大射程 = 包络与斜面"一擦"',P_W,15.5);
+  // 迷你图: 斜面 + 包络切点
+  const H=Hm(), R=R45(), beta=betaDeg;
+  const r=beta*Math.PI/180;
+  const cxp=65, cyp=180, sk=10;
+  pCurve(parabolaPts(cxp,cyp,sk,80),P_GD,2.6,0.75);
+  const xEnd=R*0.98;
+  px.strokeStyle='rgba(170,180,220,.95)'; px.lineWidth=2;
+  px.beginPath(); px.moveTo(cxp,cyp); px.lineTo(cxp+xEnd*sk, cyp-xEnd*Math.tan(r)*sk); px.stroke();
+  // 最远落点(切点) 
+  const thStar=45+beta/2;
+  const Lmax=2*v0*v0*Math.cos(thStar*Math.PI/180)*Math.sin((thStar-beta)*Math.PI/180)/(G*Math.cos(r)*Math.cos(r));
+  const Px=Lmax*Math.cos(r), Py=Lmax*Math.sin(r);
+  px.fillStyle=P_GD; px.beginPath(); px.arc(cxp+Px*sk, cyp-Py*sk, 7,0,7); px.fill();
+  pl(285,50,'沿斜面抛，射程 L(θ) 有最大值：',P_W,13.5);
+  pl(285,78,'L = 2v₀²cosθ·sin(θ−β)/(g·cos²β)',P_OR,14);
+  pl(285,106,'L 最大 ⟺ θ = 45° + β/2',P_GD,15.5);
+  pl(285,134,'β=0（水平地面）退化为 45° ✓',P_CY,13);
+  pl(285,170,'几何解释：最远的落点恰是',P_W,13.5);
+  pl(285,194,'包络与斜面的切点',P_GD,14.5);
+  pl(285,222,'（拖 β 或 θ 亲手验证：',P_MU,12.5);
+  pl(285,242,'金色 θ* 落点永远最远）',P_MU,12.5);
+  pl(285,268,'斜面越陡，最佳角越接近竖直',P_PK,12.5);
+}
+/* ============ DOM ============ */
+function initUI(){
+  $('sV0').oninput=()=>{v0=parseFloat($('sV0').value);$('oV0').textContent=v0.toFixed(1)+' m/s';sweepT=0;sweeping=false;$('bPlay').innerHTML='▶ 扫掠';};
+  $('sTh').oninput=()=>{thDeg=parseFloat($('sTh').value);$('oTh').textContent=thDeg+'°';};
+  $('sBeta').oninput=()=>{betaDeg=parseFloat($('sBeta').value);$('oBeta').textContent=betaDeg+'°';};
+  $('bPlay').onclick=()=>{
+    if(step!==1){ goStep(1); }
+    if(sweeping){sweeping=false;$('bPlay').innerHTML='▶ 扫掠';}
+    else {sweeping=true;$('bPlay').innerHTML='⏸ 暂停';sweepT=0;lastMs=millis();}
+  };
+  $('bReset').onclick=()=>{sweeping=false;sweepT=0;$('bPlay').innerHTML='▶ 扫掠';goStep(1);};
+  document.querySelectorAll('.step-btn,.conc').forEach(el=>{
+    el.addEventListener('click',()=>goStep(parseInt(el.dataset.s)));
+  });
+  document.querySelectorAll('[data-aim]').forEach(b=>{
+    b.onclick=()=>{
+      const k=b.dataset.aim;
+      if(k==='inner'){aimX=8;aimY=4;}
+      else if(k==='far'){aimX=R45()*0.995;aimY=0.02;}
+      else if(k==='env'){aimX=R45()*0.4;aimY=envY(aimX);}
+      else {aimX=R45()*0.32;aimY=Hm()*1.02;}
+      $('oTarget').textContent='('+aimX.toFixed(1)+', '+aimY.toFixed(1)+') m';
+    };
+  });
+  // 拖靶心
+  const cv=$('stageWrap').querySelector('canvas');
+  cv.addEventListener('mousedown',e=>{ if(step===4) dragAim=true; });
+  window.addEventListener('mousemove',e=>{
+    if(dragAim&&step===4){
+      const rect=cv.getBoundingClientRect();
+      const mx=(e.clientX-rect.left)/rect.width*cw, my=(e.clientY-rect.top)/rect.height*ch;
+      const wx=(mx-ox)/sc, wy=(oy-my)/sc;
+      if(wx>0.25&&wx<W1-0.2&&wy>0&&wy<Y1-0.3){ aimX=wx; aimY=wy; $('oTarget').textContent='('+aimX.toFixed(1)+', '+aimY.toFixed(1)+') m'; }
+    }
+  });
+  window.addEventListener('mouseup',()=>dragAim=false);
+  cv.addEventListener('touchstart',e=>{ if(step===4) dragAim=true; },{passive:true});
+  cv.addEventListener('touchmove',e=>{
+    if(dragAim&&step===4&&e.touches.length){
+      e.preventDefault();
+      const rect=cv.getBoundingClientRect();
+      const t=e.touches[0];
+      const mx=(t.clientX-rect.left)/rect.width*cw, my=(t.clientY-rect.top)/rect.height*ch;
+      const wx=(mx-ox)/sc, wy=(oy-my)/sc;
+      if(wx>0.25&&wx<W1-0.2&&wy>0&&wy<Y1-0.3){ aimX=wx; aimY=wy; $('oTarget').textContent='('+aimX.toFixed(1)+', '+aimY.toFixed(1)+') m'; }
+    }
+  },{passive:false});
+  cv.addEventListener('touchend',()=>dragAim=false);
+  goStep(1);
+}
+function goStep(s){
+  step=s; sweeping=false; $('bPlay').innerHTML='▶ 扫掠'; sweepT=0;
+  document.querySelectorAll('.step-btn').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.s)===s));
+  document.querySelectorAll('.conc').forEach(c=>c.classList.toggle('on',parseInt(c.dataset.s)===s));
+  const thRow=$('rowTh'), betaRow=$('rowBeta'), tRow=$('rowTarget'), pb=$('presetBtns');
+  document.querySelector('#rowTh label').textContent = (s===3)?'游标 x':'抛射角 θ';
+  thRow.style.display = (s===4)?'none':'';
+  if(s===4){ tRow.style.display=''; pb.style.display=''; }
+  else { tRow.style.display='none'; pb.style.display='none'; }
+  if(s===5){ betaRow.style.display=''; }
+  else betaRow.style.display='none';
+  if(s===1){ $('bPlay').style.display=''; }
+  else $('bPlay').style.display='none';
+  syncSliders();
+  fitView();
+}
+function syncSliders(){
+  $('sV0').value=v0; $('oV0').textContent=v0.toFixed(1)+' m/s';
+  $('sTh').value=thDeg; $('oTh').textContent=thDeg+'°';
+  $('sBeta').value=betaDeg; $('oBeta').textContent=betaDeg+'°';
+}
+function updateData(){
+  const H=Hm(), R=R45();
+  let h='<span class="chip">H = v₀²/2g = <b class="p">'+H.toFixed(2)+'</b> m</span>';
+  h+='<span class="chip">包络 x 截距 = <b class="y">'+R.toFixed(2)+'</b> m（=45°射程）</span>';
+  if(step===2){
+    const xc=xcT(thDeg);
+    h+='<span class="chip">θ='+thDeg.toFixed(1)+'° 切点 x=<b class="y">'+xc.toFixed(2)+'</b> m</span>';
+    h+='<span class="chip">落点 R=<b class="c">'+Rth(thDeg).toFixed(2)+'</b> m</span>';
+  } else if(step===3){
+    h+='<span class="chip">准线 y=2H=<b class="c">'+(2*H).toFixed(2)+'</b> m</span>';
+  } else if(step===4){
+    const X=aimX,Y=aimY,E=envY(X);
+    const dd=1-2*G*Y/(v0*v0)-(G*X/(v0*v0))**2;
+    h+='<span class="chip">目标 E(x)−y = <b class="y">'+(E-Y).toFixed(2)+'</b> m</span>';
+    h+='<span class="chip">Δ′ = <b class="'+(dd>1e-9?'g':dd>-1e-6?'y':'r')+'">'+dd.toFixed(4)+'</b></span>';
+  } else if(step===5){
+    const r=betaDeg*Math.PI/180, thStar=45+betaDeg/2;
+    const Lmax=2*v0*v0*Math.cos(thStar*Math.PI/180)*Math.sin((thStar-betaDeg)*Math.PI/180)/(G*Math.cos(r)*Math.cos(r));
+    h+='<span class="chip">θ* = 45°+β/2 = <b class="y">'+thStar.toFixed(1)+'°</b></span>';
+    h+='<span class="chip">L_max = <b class="y">'+Lmax.toFixed(2)+'</b> m</span>';
+  }
+  $('chips').innerHTML=h;
+  let mb='';
+  if(step===2){
+    const xc=xcT(thDeg), u=Math.tan(thDeg*Math.PI/180);
+    const sb=u-(G*xc/(v0*v0))*(1+u*u), se=-G*xc/(v0*v0);
+    mb='切点处斜率：弹道 <b style="color:var(--white)">'+sb.toFixed(4)+'</b> vs 包络 <b style="color:var(--gold)">'+se.toFixed(4)+'</b>，差 = <b style="color:var(--gold)">'+Math.abs(sb-se).toExponential(2)+'</b>（0 ⟹ 相切 ✓）';
+  } else if(step===3){
+    const px2=xcMap(), py2=envY(px2);
+    const PF=Math.hypot(px2,py2), PH=2*H-py2;
+    mb='P 点验证抛物线定义：PF = <b style="color:var(--white)">'+PF.toFixed(4)+'</b>，到准线 = <b style="color:var(--cyan)">'+PH.toFixed(4)+'</b>，差 = <b style="color:var(--gold)">'+Math.abs(PF-PH).toExponential(2)+'</b>';
+  } else if(step===4){
+    const X=aimX,Y=aimY,E=envY(X),dd=1-2*G*Y/(v0*v0)-(G*X/(v0*v0))**2;
+    if(dd>1e-9){
+      const A=G*X*X/(v0*v0);
+      const u1=(X+Math.sqrt(X*X*dd))/A, u2=(X-Math.sqrt(X*X*dd))/A;
+      mb='✅ 打得到：θ₁='+(Math.atan(u1)*180/Math.PI).toFixed(1)+'°，θ₂='+(Math.atan(u2)*180/Math.PI).toFixed(1)+'°（一高一低两条弹道）';
+    } else if(dd>-1e-6){ mb='🎯 恰在包络上：只有一个抛射角（弹道与包络在此相切）'; }
+    else mb='❌ 打不到：目标在安全抛物线之外，任意角都够不着';
+  } else if(step===5){
+    const r=betaDeg*Math.PI/180, thStar=45+betaDeg/2;
+    const Lmax=2*v0*v0*Math.cos(thStar*Math.PI/180)*Math.sin((thStar-betaDeg)*Math.PI/180)/(G*Math.cos(r)*Math.cos(r));
+    mb='金色 θ* 弹道的落点恰在包络上 ⟹ 它已把斜面"顶到最高"，L='+Lmax.toFixed(2)+' m 无法再远';
+  } else {
+    mb='扫掠完成：伞面 = 所有弹道逐点的最高处连成的曲线（数学上叫包络）';
+  }
+  $('miniBanner').innerHTML=mb;
+}
+function updateBanners(){
+  const B=$('banner'); let txt='', hit=false, cyan=false;
+  if(step===1){ txt='① 所有弹道被包络"罩住"。伞内任意一点都有弹道经过；伞外没有。包络 = 对每个 x 取可达到的最大高度 y_max(x)。'; }
+  else if(step===2){ txt='② 拖 θ：每条弹道都与包络相切于一点（白=弹道切线、金=包络切线，两线重合）。θ=45° 的切点 = 自己的落点 = 等高最大射程。'; cyan=true; }
+  else if(step===3){ txt='③ 包络不是随便一条抛物线：<b style="color:var(--gold)">焦点在抛出点 O</b>，准线 y=2H。抛物线的光学性质在这里变成弹道学性质。'; cyan=true; }
+  else if(step===4){ txt='④ 把目标拖进/拖出金伞，实时看判定：两角 / 一角 / 无解。拖到包络线上时只剩一个角 —— 弹道恰好擦着包络飞。'; }
+  else if(step===5){
+    txt='⑤ 沿 β 斜面的最远落点：金色弹道 θ* = 45°+β/2 与包络<b style="color:var(--gold)">相切于斜面</b> —— 想再远，包络不答应。';
+  }
+  B.innerHTML=txt; B.className='banner'+(hit?' hit':cyan?' cyan':'');
+  const titles={
+    1:['安全区 & 危险区','金色区 = 安全抛物线以内：同速率任意抛角能覆盖的全部空间。<b>包络</b>（边界）= 对每个水平距离 x，能达到的最大高度 y_max(x)。'],
+    2:['相切验证','包络与每一条弹道都<b>相切</b>：切点处位置相同、切线斜率相同。切点 x = v₀²/(g·tanθ)；θ=45° 切点恰是自己的落点 —— 等高最大射程的几何根源。'],
+    3:['抛物线几何','包络 y = H − gx²/(2v₀²)：顶点 V(0,H) = 竖直上抛最高点；<b>焦点 F(0,0) = 抛出点</b>；准线 y=2H。曲线上任一点到焦点、准线等距（图上实时验证）。'],
+    4:['打靶判别式','目标 (X,Y) 代入 Δ′ = 1−2gY/v₀²−(gX/v₀²)²：&gt;0 两角、=0 一角（目标在包络上）、&lt;0 无解。Δ′=0 正是包络方程 —— 判定边界就是伞面。'],
+    5:['斜面切点','斜面最大射程问题 = 找包络与斜面的切点。最优角 θ* = 45°+β/2（β 为斜面角），β=0 退化为等高 45°。切点处 L_max = 2v₀²cosθ*·sin(θ*−β)/(g·cos²β)。']};
+  $('paperTitle').textContent=titles[step][0];
+  $('paperCap').innerHTML=titles[step][1];
+  $('sceneName').textContent='同速率 v₀='+v0.toFixed(1)+' m/s 从 O 抛出 ｜ '+titles[step][0];
+}
+</script>
+</body>
+</html>
