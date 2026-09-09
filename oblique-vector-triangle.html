@@ -360,13 +360,29 @@ function drawMidThm(){
     const C={x:v0*ux*t, y:v0*uy*t};
     const Es={x:sx(E.x),y:sy(E.y)}, Cs={x:sx(C.x),y:sy(C.y)}, Ps={x:sx(D.x),y:sy(D.y)};
     dashLine(Ps.x,Ps.y,Es.x,Es.y,CW,2.4,210,6,6);          // -v 反向延长线
+    // —— 等分可视化：|OE| = |EC| = ½|v₀t|（金色两段 + 等长双杠）——
+    const v0tLen=Math.hypot(C.x,C.y);
+    stroke(CG.r,CG.g,CG.b,110); strokeWeight(8);
+    line(O.x,O.y,Es.x,Es.y); line(Es.x,Es.y,Cs.x,Cs.y); noStroke();
+    // 等长记号(每段中点两侧小斜杠)
+    const ddx=(Cs.x-O.x), ddy=(Cs.y-O.y), dlen=Math.hypot(ddx,ddy)||1;
+    const px1=-ddy/dlen, py1=ddx/dlen;                    // 垂直方向
+    for(const frac of [0.25,0.75]){
+      const Mx=O.x+ddx*frac, My=O.y+ddy*frac;
+      for(const sgn of [-1,1]){
+        stroke(CG.r,CG.g,CG.b,220); strokeWeight(1.8);
+        line(Mx+px1*4*sgn-3*px1, My+py1*4*sgn-3*py1, Mx+px1*4*sgn+3*px1, My+py1*4*sgn+3*py1);
+      }
+    }
+    noStroke();
     // C 橙点 / E 金点
     fill(10,10,19); noStroke(); ellipse(Cs.x,Cs.y,18,18); ellipse(Es.x,Es.y,20,20);
     fill(CO.r,CO.g,CO.b); ellipse(Cs.x,Cs.y,8,8);
     fill(CG.r,CG.g,CG.b); ellipse(Es.x,Es.y,10,10);
     lab(Cs.x+10,Cs.y+20,'C：v₀t 的端点',CO,12.5);
-    lab(Es.x+10,Es.y-16,'E：v₀t 的中点（EC = OC/2）',CG,12.5);
-    lab((Es.x+Cs.x)/2-14,(Es.y+Cs.y)/2-8,'—— ∥ v ——',CW,11.5);
+    lab(Es.x+10,Es.y-16,'E：v₀t 的中点',CG,12.5);
+    lab((Es.x+Cs.x)/2+8,(Es.y+Cs.y)/2+6,'|OE| = |EC| = ½v₀t = '+(v0tLen/2).toFixed(2)+' m',CG,12.5);
+    lab((Es.x+Cs.x)/2-14,(Es.y+Cs.y)/2-10,'—— ∥ v ——',CW,11.5);
   }
 }
 function drawGhostTraces(){

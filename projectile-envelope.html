@@ -391,6 +391,17 @@ function s5(){
   line(sx(0),sy(0),sx(xEnd),sy(xEnd*Math.tan(r)));
   noStroke();
   lab(sx(W0+0.4),sy(0.8),'斜面 β='+betaDeg+'°',{r:170,g:180,b:220},13);
+  // —— 半角定理可视化：最远时初速度沿"竖直—斜面"夹角的平分线 ——
+  const halfA=(90-betaDeg)/2;                 // 平分线相对竖直(向上)方向
+  // 竖直方向(青虚)
+  dash(sx(0),sy(0),sx(0),sy(Hm()*0.95),CC,1.8,150,4,6);
+  lab(sx(0)+4,sy(Hm()*0.95)+4,'竖直',CC,12);
+  // 平分线(金虚，方向角 = 90°-halfA = θ*)
+  const bl=Math.max(2.5, R45()*0.34);
+  const bx=bl*Math.cos(thStar*Math.PI/180), by=bl*Math.sin(thStar*Math.PI/180);
+  dash(sx(0),sy(0),sx(bx),sy(by),CG,2.2,190,2,6);
+  lab(sx(W0+0.5),sy(Y1-1.3),'半角定理：最远时初速度沿 ∠(竖直,斜面) 的平分线',{r:255,g:215,b:0},13);
+  lab(sx(W0+0.5),sy(Y1-1.9),'平分角 = (90°−β)/2 = '+halfA.toFixed(1)+'° ⟺ θ* = 45°+β/2 = '+thStar.toFixed(1)+'°',{r:255,g:215,b:0},12.5);
   // 最优弹道 θ*=45+β/2 (金) 与手动 θ(白)
   drawTraj(thStar,CG,3,240);
   drawTraj(thDeg,CW,1.8,150);
@@ -663,6 +674,7 @@ function updateData(){
     const r=betaDeg*Math.PI/180, thStar=45+betaDeg/2;
     const Lmax=2*v0*v0*Math.cos(thStar*Math.PI/180)*Math.sin((thStar-betaDeg)*Math.PI/180)/(G*Math.cos(r)*Math.cos(r));
     h+='<span class="chip">θ* = 45°+β/2 = <b class="y">'+thStar.toFixed(1)+'°</b></span>';
+    h+='<span class="chip">平分角 (90°−β)/2 = <b class="y">'+((90-betaDeg)/2).toFixed(1)+'°</b></span>';
     h+='<span class="chip">L_max = <b class="y">'+Lmax.toFixed(2)+'</b> m</span>';
   }
   $('chips').innerHTML=h;
