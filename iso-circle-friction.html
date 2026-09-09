@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>等时圆 · 光滑与粗糙</title>
+<style>
+  :root{--bg:#0b0b14;--card:#0e0e1e;--line:#18182a;--line2:#2a2a48;--amber:#d4a373;--amber-l:#f4a261;
+    --gold:#ffd700;--orange:#ff8c42;--cyan:#66c2ff;--green:#7ab878;--pink:#ff7eb6;--white:#e8e8f0;
+    --txt:#d4d4dc;--mut:#707088}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.05) 0%,transparent 55%);min-height:100vh;padding-bottom:30px}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 14px 0}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+  .back{color:var(--mut);text-decoration:none;font-size:14px;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .back:hover{color:var(--amber-l);border-color:var(--line2)}
+  h1{font-size:22px;font-weight:800;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+  .sub{font-size:13.5px;color:var(--mut);margin:3px 0 10px}
+  .sub b{color:var(--amber)}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+  .step-btn{flex:1;min-width:170px;background:var(--card);border:1px solid var(--line);color:var(--mut);
+    border-radius:11px;padding:7px 8px;font-size:13px;cursor:pointer;text-align:left;transition:.15s;line-height:1.3}
+  .step-btn b{display:block;font-size:13px;color:var(--txt)}
+  .step-btn:hover{border-color:var(--line2)}
+  .step-btn.on{background:#16162a;border-color:var(--amber)}
+  .step-btn.on b{color:var(--amber-l)}
+  .step-btn .n{display:inline-block;width:17px;height:17px;line-height:15px;text-align:center;border-radius:50%;
+    border:1.5px solid currentColor;font-size:11px;margin-right:5px;vertical-align:1px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+  .panel h3{font-size:15px;color:var(--amber);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .panel h3 .r{font-size:12px;color:var(--mut);font-weight:400}
+  #stageWrap{width:100%}
+  canvas#stage{width:100%;height:auto;display:block;border-radius:10px;background:#0a0a13}
+  .banner{margin:8px 0 0;padding:7px 11px;border-radius:10px;font-size:14.5px;font-weight:600;
+    border:1px dashed var(--line2);color:var(--amber-l);background:rgba(212,163,115,.05);line-height:1.55}
+  .banner.hit{background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.6);color:var(--gold)}
+  .banner.cyan{color:var(--cyan);border-color:rgba(102,194,255,.35);background:rgba(102,194,255,.06)}
+  .ctrl{display:grid;grid-template-columns:86px 1fr 100px;align-items:center;gap:3px 8px;font-size:13.5px;margin:3px 0}
+  .ctrl label{color:#b8b8c8}
+  .ctrl input[type=range]{width:100%;accent-color:var(--amber)}
+  .ctrl output{text-align:right;color:var(--amber-l);font-weight:700;font-size:13.5px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  button{background:#151528;border:1px solid var(--line2);color:var(--txt);border-radius:9px;
+    padding:6px 10px;font-size:13.5px;cursor:pointer;transition:.12s}
+  button:hover{border-color:var(--amber);color:var(--amber-l)}
+  button.primary{background:linear-gradient(135deg,#8a5a2b,#d4a373);color:#0b0b14;font-weight:700;border:none}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{background:#12121f;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px;color:#b8b8c8;white-space:nowrap;line-height:1.4}
+  .chip b{font-size:13.5px}
+  .chip b.g{color:var(--green)} .chip b.c{color:var(--cyan)} .chip b.o{color:var(--orange)}
+  .chip b.y{color:var(--gold)} .chip b.w{color:var(--white)} .chip b.p{color:var(--pink)} .chip b.r{color:var(--warn)}
+  #paper{width:100%;height:auto;display:block;background:#0a0a13;border-radius:10px}
+  .paper-cap{font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.65}
+  .paper-cap b{color:var(--amber)}
+  .concs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+  .conc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-size:13px;line-height:1.55;color:#b8b8c8}
+  .conc b{display:block;font-size:13.5px;color:var(--amber);margin-bottom:3px}
+  .conc .f{font-family:'Courier New',monospace;color:var(--amber-l);font-size:12.5px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}.concs{grid-template-columns:repeat(2,1fr)}}
+  .foot{margin-top:14px;font-size:12px;color:var(--mut);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><a class="back" href="jiaoxue.html">← 教学资源</a>
+    <h1>等时圆 · 光滑与粗糙</h1></div>
+  <div class="sub">从顶点 A 沿不同弦下滑：<b>光滑 → 经典等时圆</b>；<b>粗糙（摩擦 μ）→ 等时圆绕 A 旋转 arctan μ</b></div>
+  <div class="steps">
+    <button class="step-btn on" data-s="1"><span class="n">1</span><b>同时出发</b>6 球沿不同弦</button>
+    <button class="step-btn" data-s="2"><span class="n">2</span><b>加摩擦 μ</b>还等时吗？</button>
+    <button class="step-btn" data-s="3"><span class="n">3</span><b>旋转的圆</b>摩擦等时圆</button>
+    <button class="step-btn" data-s="4"><span class="n">4</span><b>推导</b>等效重力视角</button>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h3>🕹 实验台 <span class="r" id="sceneName"></span></h3>
+      <div id="stageWrap"></div>
+      <div class="banner" id="banner"></div>
+      <div class="btns" style="margin-top:8px">
+        <button id="bPlay" class="primary">▶ 释放小球</button>
+        <button id="bReset">↺ 复位</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>📐 推导图纸 <span class="r" id="paperTitle"></span></h3>
+        <canvas id="paper" width="560" height="292"></canvas>
+        <div class="paper-cap" id="paperCap"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>📊 实时数据</h3>
+        <div class="chips" id="chips"></div>
+        <div class="banner cyan" id="miniBanner" style="font-size:13px;margin-top:8px"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>🎚 参数</h3>
+        <div class="ctrl"><label>摩擦系数 μ</label><input type="range" id="sMu" min="0" max="0.8" step="0.02" value="0"><output id="oMu">0</output></div>
+        <div class="ctrl"><label>圆半径 R</label><input type="range" id="sR" min="3" max="8" step="0.5" value="5"><output id="oR">5 m</output></div>
+      </div>
+    </div>
+  </div>
+  <div class="concs">
+    <div class="conc"><b>① 光滑等时圆</b>从最高点 A 沿任意光滑弦滑到圆上，时间相同<span class="f">t = 2√(R/g)</span></div>
+    <div class="conc"><b>② 有摩擦不再等时</b>同一圆上，弦越平缓摩擦阻力占比越大、越慢到——时间随弦角变</div>
+    <div class="conc"><b>③ 摩擦等时圆 = 旋转 arctan μ</b>经典圆绕 A 旋转 φ=arctan μ，新圆上各点仍等时<span class="f">t = 2√(Rcosφ/g)</span></div>
+    <div class="conc"><b>④ 等效重力</b>μ 摩擦 ⟺ 等效重力 g'=g√(1+μ²)、方向偏转 φ：等时圆沿 g' 方向"竖直"<span class="f">tanφ = μ</span></div>
+  </div>
+  <div class="foot">启明 · 力与运动模型 ｜ 等时圆（光滑→粗糙）</div>
+</div>
+<script src="p5.min.js"></script>
+<script>
+const G=9.8, CG0={r:255,g:215,b:0};
+let mu=0, R=5, step=1, playing=false, lastMs=0, tSim=0, Tmax2=3;
+let balls=[];   // {theta, L, a, color, x0,y0, done, tArrive, tcolor}
+function phi(){ return Math.atan(mu) }
+function rotForStep(){ return (step>=3)? phi() : 0 }   // step1/2 用经典圆(不旋转)，step3+ 用摩擦等时圆(旋转φ)
+/* 取景: A 顶部, 圆心在 A 下 R */
+let cw=760,ch=470,sc=1,ox=0,oy=0;
+const AX=0, AY=0;
+function fitView(){
+  const worldW=2.6*R, worldH=2.4*R;
+  sc=Math.min(cw/(worldW*1.15), ch/(worldH*1.12));
+  // 圆心屏幕: A 在画布中上
+  const cx=cw/2, cy=ch*0.16;
+  ox=cx - AX*sc; oy=cy + AY*sc;   // sx=ox+wx*sc, sy=oy-wy*sc (y 下正!)
+}
+function sx(wx){return ox+wx*sc}
+function sy(wy){return oy+wy*sc}   // wy 世界 y(向下+)
+/* 弦集合: 经典圆上 β(圆心角, 从竖直向下量, 右侧) */
+const BETAS=[18,36,54,72,88,104];
+function makeBalls(rotAngle){
+  balls=[];
+  const cols=[[255,150,80],[102,194,255],[120,220,150],[255,126,182],[255,215,0],[190,160,255]];
+  const ph=rotAngle;
+  BETAS.forEach((b,i)=>{
+    // 经典圆上点 P 相对 A（y 向下正）: 圆心 O=(0,R), P=(R sinb, R(1+cosb))
+    const Px=R*Math.sin(b*Math.PI/180), Py=R*(1+Math.cos(b*Math.PI/180));
+    // 逆时针旋转 φ（数值验证：此方向使各弦同步"变陡"补偿摩擦 → 等时 t=2√(Rcosφ/g)）
+    const rx=Px*Math.cos(ph)-Py*Math.sin(ph);
+    const ry=Px*Math.sin(ph)+Py*Math.cos(ph);
+    const L=Math.hypot(rx,ry);
+    const cosG=ry/L, sinG=rx/L;
+    const a=G*(cosG - mu*sinG);
+    if(a<0.02) return;
+    const tA=Math.sqrt(2*L/a);
+    balls.push({rx,ry,L,a,tA,done:false,col:cols[i%cols.length],pos:0,theta:b,rot:ph});
+  });
+  Tmax2=Math.max(...balls.map(b=>b.tA))*1.12+0.1;
+}
+function setup(){const pw=$('stageWrap');cw=Math.max(300,pw.clientWidth||760);ch=Math.round(cw*0.62);
+  const c=createCanvas(cw,ch);c.parent('stageWrap');initUI();lastMs=millis();fitView();makeBalls(rotForStep())}
+function windowResized(){const pw=$('stageWrap');cw=Math.max(300,pw.clientWidth||760);ch=Math.round(cw*0.62);
+  resizeCanvas(cw,ch);fitView()}
+function draw(){
+  if(playing){const now=millis(),dt=Math.min((now-lastMs)/1000,0.05);lastMs=now;tSim+=dt;
+    if(tSim>=Tmax2){tSim=Tmax2;playing=false;$('bPlay').innerHTML='▶ 释放小球'}}
+  else lastMs=millis();
+  background(10,10,19);fitView();drawGrid();drawCircles();drawChords();updateBalls();drawBalls();
+  updateData();drawPaper();updateBanners();
+}
+function drawGrid(){stroke(28,28,48);strokeWeight(1);
+  const w=Math.ceil(2.6*R); for(let x=-w;x<=w;x+=2)line(sx(x),sy(0),sx(x),sy(2.4*R));
+  for(let y=0;y<=2.4*R;y+=2)line(sx(-w),sy(y),sx(w),sy(y));noStroke()}
+function drawCircles(){
+  // 圆心 O 屏幕: A(0,0) 下 R
+  const Oxc=sx(0),Oyc=sy(R);
+  // 经典圆(灰)
+  noFill();stroke(150,150,180,110);strokeWeight(1.6);
+  drawingContext.setLineDash([4,5]);ellipse(Oxc,Oyc,2*R*sc,2*R*sc);drawingContext.setLineDash([]);noStroke();
+  // 竖直直径(灰虚线)
+  dash(sx(0),sy(0),sx(0),sy(2*R),{r:150,g:150,b:180},1.4,90,3,6);
+  // A 点
+  fill(CG0.r,CG0.g,CG0.b);noStroke();ellipse(sx(0),sy(0),11,11);
+  lab(sx(0)+10,sy(0)-4,'A',CG0,13.5);
+  // 摩擦等时圆(旋转圆) 金
+  if(mu>0.005&&step>=3){
+    const ph=phi();
+    // 圆心: 经典圆心(0,R) 绕 A 逆时针旋转 φ → (-R sinφ, R cosφ)
+    const Rox=-R*Math.sin(ph), Roy=R*Math.cos(ph);
+    noFill();stroke(255,215,0,230);strokeWeight(2.6);
+    ellipse(sx(Rox),sy(Roy),2*R*sc,2*R*sc);
+    noStroke();
+    dash(sx(0),sy(0),sx(-2*R*Math.sin(ph)),sy(2*R*Math.cos(ph)),{r:255,g:215,b:0},1.8,170,3,7);
+    lab(sx(Rox)-8,sy(Roy)-8,'摩擦等时圆（旋转 '+(ph*180/Math.PI).toFixed(1)+'°）',CG0,12.5);
+  }
+}
+function lab(x,y,s,c,sz){noStroke();fill(c.r,c.g,c.b);textSize(sz||13);
+  textAlign(LEFT,CENTER);textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif');text(s,x,y)}
+function dash(x1,y1,x2,y2,c,w,alpha,d1,d2){stroke(c.r,c.g,c.b,alpha);strokeWeight(w);
+  drawingContext.setLineDash([d1||5,d2||5]);line(x1,y1,x2,y2);drawingContext.setLineDash([]);noStroke()}
+function drawChords(){
+  balls.forEach(b=>{
+    // 弦 A→P'(旋转后)
+    stroke(b.col[0],b.col[1],b.col[2],150);strokeWeight(1.6);
+    line(sx(0),sy(0),sx(b.rx),sy(b.ry));noStroke();
+  });
+}
+function updateBalls(){
+  if(!playing&&tSim===0)return;
+  balls.forEach(b=>{ if(!b.done){ b.pos=0.5*b.a*tSim*tSim;
+    if(b.pos>=b.L){b.pos=b.L;b.done=true;} }});
+  // 全部 done 停播放
+  if(playing&&balls.every(b=>b.done)){playing=false;$('bPlay').innerHTML='▶ 释放小球'}
+}
+function drawBalls(){
+  balls.forEach(b=>{
+    if(b.pos<0)return;
+    const f=b.pos/b.L;
+    const X=sx(b.rx*f), Y=sy(b.ry*f);
+    fill(b.col[0],b.col[1],b.col[2]);noStroke();ellipse(X,Y,13,13);
+    if(b.done){ // 落点✓
+      lab(sx(b.rx)+4,sy(b.ry)-8,b.tA.toFixed(2)+'s',b.col,11.5);
+    }
+  });
+}
+/* 图纸 */
+const paper=document.getElementById('paper'),px=paper.getContext('2d');
+const P_OR='#f4a261',P_CY='#66c2ff',P_W='#e8e8f0',P_GD='#ffd700',P_MU='#8a8aa0',P_PK='#ff7eb6',P_GN='#7ab878';
+function pl(x,y,s,c,sz,al){px.globalAlpha=1;px.font=(sz||13)+'px "Noto Serif SC","PingFang SC","Microsoft YaHei",sans-serif';
+  px.fillStyle=c;px.textAlign=al||'left';px.textBaseline='middle';px.fillText(s,x,y)}
+function drawPaper(){px.clearRect(0,0,paper.width,paper.height);
+  if(step===1)d1();else if(step===2)d2();else if(step===3)d3();else d4()}
+function d1(){
+  pl(280,22,'为什么同圆必同时？',P_W,15.5);
+  pl(285,58,'弦与竖直夹 θ：',P_MU,13);
+  pl(285,82,'L = 2R·cosθ',P_OR,14);
+  pl(285,110,'光滑下滑 a = g·cosθ',P_CY,14);
+  pl(285,140,'t = √(2L/a)',P_W,14);
+  pl(285,164,'= √(4Rcosθ / gcosθ)',P_OR,13.5);
+  pl(285,190,'= 2√(R/g) —— 与 θ 无关！',P_GD,15);
+  pl(285,222,'θ 越大弦越短，但越平缓加速越小',P_MU,12.5);
+  pl(285,244,'两个效应精确抵消 → 等时',P_GD,13);
+  pl(285,268,'圆周角定理：弦长正比 cosθ',P_MU,12);
+}
+function d2(){
+  pl(280,22,'摩擦打破了抵消',P_W,15.5);
+  pl(285,56,'沿弦：a = g(cosθ − μ sinθ)',P_CY,15);
+  pl(285,88,'t = 2√(R/g) · √(cosθ/(cosθ−μsinθ))',P_OR,14);
+  pl(285,118,'θ 越大（越平缓）：',P_W,13);
+  pl(285,142,'· 弦更长 ✓ 但',P_MU,12.5);
+  pl(285,162,'· 摩擦占比 μtanθ 更大 ✗',P_PK,13);
+  pl(285,186,'抵消失效 → 不再等时',P_GD,14.5);
+  pl(285,216,'平缓弦的球明显更慢到',P_W,13);
+  pl(285,240,'（播放看落点时间标签）',P_MU,12.5);
+  pl(285,266,'θ > arctan(1/μ) 的弦根本滑不动',P_RD(),12.5);
+}
+function d3(){
+  pl(280,22,'把圆"转"出等时',P_W,15.5);
+  pl(285,56,'摩擦等效于重力偏转：',P_MU,13);
+  pl(285,80,'g_eff = g√(1+μ²)，tanφ = μ',P_OR,14.5);
+  pl(285,108,'经典圆绕 A 旋转 φ = arctan μ',P_GD,15);
+  pl(285,136,'→ 旋转圆上各点重新等时',P_GD,15);
+  pl(285,170,'弦长/加速度双双修正后：',P_MU,12.5);
+  pl(285,194,'t = 2√(R·cosφ / g)',P_OR,14.5);
+  pl(285,220,'μ=0 ⟹ φ=0 ⟹ 经典 2√(R/g)',P_CY,13);
+  pl(285,246,'μ 越大圆转得越歪、越慢',P_W,12.5);
+  pl(285,268,'（播放：金圆上的球同时到达！）',P_GN,12.5);
+}
+function d4(){
+  pl(280,22,'代数验证（旋转后每点等时）',P_W,15);
+  pl(285,50,'旋转前点对应圆心角 β：',P_MU,12.5);
+  pl(285,72,'弦 A→P′ 与竖直夹角 γ = 90°−β/2 − φ',P_OR,13.5);
+  pl(285,98,'AP′ = 2R·cos(γ+φ)·? 直接算：',P_MU,12);
+  pl(285,120,'t² = 2L/a ,  L = 2Rcos(γ+φ)',P_W,13.5);
+  pl(285,146,'cos(γ+φ) − μsin(γ+φ)',P_CY,13.5);
+  pl(285,170,'= cosγ·cosφ − sinγ·sinφ − tanφ·(…)',P_MU,12);
+  pl(285,196,'⟹ t² = 4Rcosφ/g  与 γ 无关',P_GD,15);
+  pl(285,226,'即 t = 2√(Rcosφ/g) 恒定',P_GD,15);
+  pl(285,256,'μ 增大 ⟹ φ 增大 ⟹ cosφ 减小 ⟹ 更慢',P_PK,13);
+}
+function P_RD(){return '#e06050'}
+/* DOM */
+const $=id=>document.getElementById(id);
+function initUI(){
+  $('sMu').oninput=()=>{mu=parseFloat($('sMu').value);$('oMu').textContent=mu.toFixed(2);
+    resetAll()};
+  $('sR').oninput=()=>{R=parseFloat($('sR').value);$('oR').textContent=R.toFixed(1)+' m';resetAll()};
+  $('bPlay').onclick=()=>{ if(playing){playing=false;$('bPlay').innerHTML='▶ 释放小球'}
+    else { tSim=0; balls.forEach(b=>{b.pos=0;b.done=false}); makeBalls(rotForStep());
+      playing=true;$('bPlay').innerHTML='⏸ 暂停';lastMs=millis(); } };
+  $('bReset').onclick=()=>{playing=false;tSim=0;$('bPlay').innerHTML='▶ 释放小球';resetAll()};
+  document.querySelectorAll('.step-btn').forEach(el=>el.addEventListener('click',()=>goStep(parseInt(el.dataset.s))));
+  goStep(1);resetAll();
+}
+function resetAll(){playing=false;tSim=0;$('bPlay').innerHTML='▶ 释放小球';
+  makeBalls(rotForStep());fitView()}
+function goStep(s){step=s;
+  document.querySelectorAll('.step-btn').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.s)===s));
+  resetAll()}
+function updateData(){
+  const ph=phi();
+  let h='<span class="chip">φ = arctan μ = <b class="y">'+(ph*180/Math.PI).toFixed(1)+'°</b></span>';
+  h+='<span class="chip">光滑 t = 2√(R/g) = <b class="c">'+(2*Math.sqrt(R/G)).toFixed(3)+'</b> s</span>';
+  if(mu>0.005)h+='<span class="chip">粗糙等时 t = <b class="y">'+(2*Math.sqrt(R*Math.cos(ph)/G)).toFixed(3)+'</b> s</span>';
+  h+='<span class="chip">可滑最大弦角 θ_max = <b class="o">'+(Math.atan(1/Math.max(mu,1e-9))*180/Math.PI).toFixed(1)+'°</b></span>';
+  $('chips').innerHTML=h;
+  let mb='';
+  if(balls.length){
+    const ts=balls.map(b=>b.tA);
+    const spread=(Math.max(...ts)-Math.min(...ts));
+    if(mu<0.005){mb='μ=0：各弦理论时间差 <b style="color:var(--gold)">'+spread.toExponential(1)+' s</b> —— 完全等时 ✓（播放看同时到达）';}
+    else if(step>=3){mb='旋转圆上：时间差 <b style="color:var(--gold)">'+spread.toFixed(5)+' s</b> —— 摩擦等时圆成立 ✓（t=2√(Rcosφ/g)）';}
+    else {mb='μ='+mu.toFixed(2)+'：经典圆上时间差 <b style="color:var(--warn)">'+spread.toFixed(3)+' s</b> —— 不等时了。切到第 3 步看"旋转圆"恢复等时';}
+  }
+  $('miniBanner').innerHTML=mb;
+}
+function updateBanners(){
+  const B=$('banner');let txt='',hit=false,cyan=false;
+  const T={
+    1:['① 6 个小球从 A 同时释放，沿<b>光滑</b>圆的不同弦滑下 —— 看它们是否同时到达圆周。','① μ=0：播放验证等时'],
+    2:['② 把 μ 拖起来（如 0.3），同一圆上<b style="color:var(--warn)">不再等时</b>：平缓弦摩擦占比大、后到。经典等时圆只属于光滑。','② μ>0：时间差出现'],
+    3:['③ 打开"旋转"视角：等时圆绕 A 转过 <b style="color:var(--gold)">φ=arctan μ</b>，金圆上各弦重新同时到达 —— 这就是摩擦等时圆。','③ 金圆上球同时到 ✓'],
+    4:['④ 为什么？粗糙下滑 ⟺ 等效重力 <b style="color:var(--gold)">g√(1+μ²)</b> 方向偏转 φ：等时圆永远沿"等效竖直"架设。','④ 等效重力推导']};
+  B.innerHTML=(playing? T[step][1] : T[step][0]);
+  B.className='banner'+(hit?' hit':cyan?' cyan':'');
+  const caps={1:['等时原理','弦长与加速度同步缩放：L=2Rcosθ、a=gcosθ，θ 抵消 ⟹ t=2√(R/g)。圆周角定理是几何根源。'],
+    2:['摩擦破坏等时','a=g(cosθ−μsinθ)：θ 大弦长增加（想慢→快）但摩擦项 μtanθ 也大（拖慢），不再抵消。'],
+    3:['旋转圆','等时圆绕 A 旋转 φ=arctanμ。旋转使每根弦同步"变陡"补偿摩擦，恢复等时 t=2√(Rcosφ/g)。'],
+    4:['等效重力','μ 摩擦 ⟺ 等效重力 g_eff=g√(1+μ²) 方向与竖直夹 φ=arctanμ。任何"等时圆"都是沿等效重力方向架的圆。']};
+  $('paperTitle').textContent=caps[step][0];
+  $('paperCap').innerHTML='<b>'+caps[step][1]+'</b>';
+  $('sceneName').textContent='μ='+mu.toFixed(2)+'，R='+R.toFixed(1)+' m ｜ '+caps[step][0];
+}
+</script>
+</body>
+</html>

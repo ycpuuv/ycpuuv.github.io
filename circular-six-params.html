@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>圆周运动 · 六参量关系与推导</title>
+<style>
+  :root{--bg:#0b0b14;--card:#0e0e1e;--line:#18182a;--line2:#2a2a48;--amber:#d4a373;--amber-l:#f4a261;
+    --gold:#ffd700;--orange:#ff8c42;--cyan:#66c2ff;--green:#7ab878;--pink:#ff7eb6;--white:#e8e8f0;
+    --txt:#d4d4dc;--mut:#707088}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.05) 0%,transparent 55%);min-height:100vh;padding-bottom:30px}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 14px 0}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+  .back{color:var(--mut);text-decoration:none;font-size:14px;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .back:hover{color:var(--amber-l);border-color:var(--line2)}
+  h1{font-size:22px;font-weight:800;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+  .sub{font-size:13.5px;color:var(--mut);margin:3px 0 10px}
+  .sub b{color:var(--amber)}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+  .step-btn{flex:1;min-width:158px;background:var(--card);border:1px solid var(--line);color:var(--mut);
+    border-radius:11px;padding:7px 8px;font-size:13px;cursor:pointer;text-align:left;transition:.15s;line-height:1.3}
+  .step-btn b{display:block;font-size:13px;color:var(--txt)}
+  .step-btn:hover{border-color:var(--line2)}
+  .step-btn.on{background:#16162a;border-color:var(--amber)}
+  .step-btn.on b{color:var(--amber-l)}
+  .step-btn .n{display:inline-block;width:17px;height:17px;line-height:15px;text-align:center;border-radius:50%;
+    border:1.5px solid currentColor;font-size:11px;margin-right:5px;vertical-align:1px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+  .panel h3{font-size:15px;color:var(--amber);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .panel h3 .r{font-size:12px;color:var(--mut);font-weight:400}
+  #stageWrap{width:100%}
+  canvas#stage{width:100%;height:auto;display:block;border-radius:10px;background:#0a0a13}
+  .banner{margin:8px 0 0;padding:7px 11px;border-radius:10px;font-size:14.5px;font-weight:600;
+    border:1px dashed var(--line2);color:var(--amber-l);background:rgba(212,163,115,.05);line-height:1.55}
+  .banner.hit{background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.6);color:var(--gold)}
+  .banner.cyan{color:var(--cyan);border-color:rgba(102,194,255,.35);background:rgba(102,194,255,.06)}
+  .ctrl{display:grid;grid-template-columns:76px 1fr 92px;align-items:center;gap:3px 8px;font-size:13.5px;margin:3px 0}
+  .ctrl label{color:#b8b8c8}
+  .ctrl input[type=range]{width:100%;accent-color:var(--amber)}
+  .ctrl output{text-align:right;color:var(--amber-l);font-weight:700;font-size:13.5px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  button{background:#151528;border:1px solid var(--line2);color:var(--txt);border-radius:9px;padding:6px 10px;font-size:13.5px;cursor:pointer;transition:.12s}
+  button:hover{border-color:var(--amber);color:var(--amber-l)}
+  button.primary{background:linear-gradient(135deg,#8a5a2b,#d4a373);color:#0b0b14;font-weight:700;border:none}
+  button.on{background:#2a1f10;border-color:var(--amber);color:var(--gold)}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{background:#12121f;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px;color:#b8b8c8;white-space:nowrap;line-height:1.4}
+  .chip b{font-size:13.5px}
+  .chip b.g{color:var(--green)} .chip b.c{color:var(--cyan)} .chip b.o{color:var(--orange)}
+  .chip b.y{color:var(--gold)} .chip b.w{color:var(--white)} .chip b.p{color:var(--pink)}
+  #paper{width:100%;height:auto;display:block;background:#0a0a13;border-radius:10px}
+  .paper-cap{font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.65}
+  .paper-cap b{color:var(--amber)}
+  .concs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+  .conc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-size:13px;line-height:1.55;color:#b8b8c8}
+  .conc b{display:block;font-size:13.5px;color:var(--amber);margin-bottom:3px}
+  .conc .f{font-family:'Courier New',monospace;color:var(--amber-l);font-size:12.5px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}.concs{grid-template-columns:repeat(2,1fr)}}
+  .foot{margin-top:14px;font-size:12px;color:var(--mut);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><a class="back" href="jiaoxue.html">← 教学资源</a>
+    <h1>圆周运动 · 六参量关系与推导</h1></div>
+  <div class="sub">ω · v · T · n · a · F 一张图全打通 —— <b>关系看动画，推导看 Δv</b></div>
+  <div class="steps">
+    <button class="step-btn on" data-s="1"><span class="n">1</span><b>转起来</b>角速度 → 线速度</button>
+    <button class="step-btn" data-s="2"><span class="n">2</span><b>一圈多久</b>周期 · 转速</button>
+    <button class="step-btn" data-s="3"><span class="n">3</span><b>为何向心</b>Δv 推 a</button>
+    <button class="step-btn" data-s="4"><span class="n">4</span><b>力与总览</b>F 与关系链</button>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h3>🕹 转盘实验 <span class="r" id="sceneName"></span></h3>
+      <div id="stageWrap"></div>
+      <div class="banner" id="banner"></div>
+      <div class="btns" style="margin-top:8px">
+        <button id="bPlay" class="primary">⏸ 暂停</button>
+        <button id="bReset">↺ 复位</button>
+        <button id="bDual">⭕ 双球对比(同ω)</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>📐 推导图纸 <span class="r" id="paperTitle"></span></h3>
+        <canvas id="paper" width="560" height="292"></canvas>
+        <div class="paper-cap" id="paperCap"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>📊 实时六参量</h3>
+        <div class="chips" id="chips"></div>
+        <div class="banner cyan" id="miniBanner" style="font-size:13px;margin-top:8px"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>🎚 参数</h3>
+        <div class="ctrl"><label>转速 n</label><input type="range" id="sN" min="0.1" max="3" step="0.05" value="0.5"><output id="oN">0.5 r/s</output></div>
+        <div class="ctrl"><label>半径 r</label><input type="range" id="sR" min="0.4" max="2" step="0.05" value="1"><output id="oR">1 m</output></div>
+        <div class="ctrl" id="rowM"><label>质量 m</label><input type="range" id="sM" min="0.5" max="3" step="0.1" value="1"><output id="oM">1 kg</output></div>
+        <div class="ctrl"><label>速度倍速</label><input type="range" id="sSpd" min="0.2" max="3" step="0.1" value="1"><output id="oSpd">1×</output></div>
+      </div>
+    </div>
+  </div>
+  <div class="concs">
+    <div class="conc"><b>① v = ωr</b>角速度同，半径越大线速度越大（外圈飞得快）</div>
+    <div class="conc"><b>② ω = 2π/T = 2πn</b>转一圈 2π 弧度；n 圈/秒 ⟹ T=1/n</div>
+    <div class="conc"><b>③ a = v²/r = ω²r</b>Δv 恒指向圆心：小角近似 vΔθ，a=ωv</div>
+    <div class="conc"><b>④ F = mω²r</b>向心力与 a 同向；ω 增一倍 F 增四倍（平方!）</div>
+  </div>
+  <div class="foot">启明 · 曲线运动 ｜ 圆周运动六参量</div>
+</div>
+<script src="p5.min.js"></script>
+<script>
+const PI2=Math.PI*2;
+const $=id=>document.getElementById(id);
+let n=0.5, r=1, m=1, spd=1, step=1, playing=true, phi=0, lastMs=0;
+let dual=false;
+function omega(){return PI2*n}
+function vlin(){return omega()*r}
+function aC(){return omega()*omega()*r}
+function force(){return m*aC()}
+function period(){return 1/n}
+/* 画布 */
+let cw=760,ch=470;
+function setup(){const pw=$('stageWrap');cw=Math.max(300,pw.clientWidth||760);ch=Math.round(cw*0.62);
+  const c=createCanvas(cw,ch);c.parent('stageWrap');initUI();lastMs=millis()}
+function windowResized(){const pw=$('stageWrap');cw=Math.max(300,pw.clientWidth||760);ch=Math.round(cw*0.62);resizeCanvas(cw,ch)}
+function rpx(){ return Math.min(cw,ch)*0.30 }
+function C(){ return {x:cw/2, y:ch/2+10} }
+function ballPos(rr,ang){ const C0=C(); return {x:C0.x+rr*Math.cos(ang), y:C0.y+rr*Math.sin(ang)} }
+const CO={r:244,g:162,b:97},CC={r:102,g:194,b:255},CW={r:232,g:232,b:240},CP={r:255,g:126,b:182},CG={r:255,g:215,b:0},CM={r:150,g:160,b:200};
+function draw(){
+  if(playing){const now=millis(),dt=Math.min((now-lastMs)/1000,0.05);lastMs=now;phi+=omega()*dt*spd;}
+  else lastMs=millis();
+  background(10,10,19);
+  drawOrbit();
+  drawDerivation();
+  drawBalls();
+  updateData();drawPaper();updateBanners();
+}
+function drawOrbit(){
+  const C0=C(), rr=rpx();
+  noFill();stroke(60,60,95,200);strokeWeight(1.8);ellipse(C0.x,C0.y,rr*2,rr*2);
+  if(dual){stroke(70,70,110,120);ellipse(C0.x,C0.y,rr*0.55*2,rr*0.55*2)}
+  noStroke();
+}
+function drawBalls(){
+  const C0=C(), rr=rpx();
+  const R2=rr*0.55;
+  // 半径线 + 球
+  const P=ballPos(rr,phi);
+  const P2=ballPos(R2,phi);
+  stroke(244,162,97,120);strokeWeight(1.6);line(C0.x,C0.y,P.x,P.y);noStroke();
+  // v 箭头(切线) 长度 ∝ v (比例 sv px per m/s)
+  const sv=Math.min(26, rr*0.09);
+  drawBall(P, rr, sv, false);
+  if(dual) drawBall(P2, R2, sv, true);
+}
+function drawBall(P,rrr,sv,isOuter){
+  const C0=C();
+  // 速度箭头(切向)
+  const vx=-Math.sin(phi), vy=Math.cos(phi);
+  const vv=vlin()*(isOuter?1:1);   // 同ω: 线速度 v=ωr → 外球大
+  const vReal = omega()*(isOuter? r*0.55 : r);
+  const len=vReal*sv;
+  vec(P.x,P.y,P.x+vx*len,P.y+vy*len,{r:232,g:150,b:255},3.6,240);  // 线速度 紫
+  // 加速度/力箭头(向心) 在 step>=3
+  if(step>=3){
+    const ax=Math.cos(phi), ay=Math.sin(phi);   // 指向圆心
+    const aReal=aC();
+    const al=Math.min(len, 6+Math.sqrt(aReal)*9);
+    vec(P.x,P.y,P.x-ax*al,P.y-ay*al,CC,3.2,235);   // a 青
+    if(step===4){
+      const fl=Math.min(al*1.0, al);
+      vec(P.x,P.y,P.x-ax*fl,P.y-ay*fl,{r:255,g:126,b:182},4.5,255);  // F 粉叠
+    }
+  }
+  // 球
+  fill(10,10,19);noStroke();ellipse(P.x,P.y,20,20);
+  fill(245,245,245);ellipse(P.x,P.y,12,12);
+  // r 标签
+  if(!isOuter) lab((C0.x+P.x)/2-6,(C0.y+P.y)/2,'r',CO,12.5);
+}
+function drawDerivation(){
+  if(step===3){
+    // Δv 推导：取 phi 附近两时刻速度矢量(共起点于球处)
+    const C0=C(), rr=rpx(), P=ballPos(rr,phi);
+    const dtA=0.12*spd;
+    // v(φ) 与 v(φ+dφ)
+    const sv=Math.min(26, rr*0.09), v0=vlin();
+    const a1=phi, a2=phi+dtA;
+    const vx1=-Math.sin(a1),vy1=Math.cos(a1);
+    const vx2=-Math.sin(a2),vy2=Math.cos(a2);
+    const l0=v0*sv;
+    const X=P.x+26, Y=P.y+46;      // 平移共起点
+    vec(X,Y,X+vx1*l0,Y+vy1*l0,{r:232,g:150,b:255},2.6,200);
+    vec(X,Y,X+vx2*l0,Y+vy2*l0,CW,2.6,220);
+    const dvx=(vx2-vx1)*l0, dvy=(vy2-vy1)*l0;
+    vec(X+vx1*l0,Y+vy1*l0,X+vx1*l0+dvx,Y+vy1*l0+dvy,{r:102,g:255,b:170},2.8,240);
+    lab(X-8,Y+l0+24,'v(t) 紫 → v(t+Δt) 白，Δv 绿',CM,12);
+    lab(X-8,Y+l0+44,'Δv 指向圆心 ⟹ a 向心',CC,12.5);
+    // 轨迹弧示意小角
+    noFill();stroke(60,60,95,120);strokeWeight(1.2);
+    arc(C0.x,C0.y,rr*2,rr*2,phi,phi+dtA*2);
+    noStroke();
+  }
+}
+function vec(x1,y1,x2,y2,c,w,alpha){
+  stroke(c.r,c.g,c.b,alpha);strokeWeight(w);fill(c.r,c.g,c.b,alpha);
+  line(x1,y1,x2,y2);
+  const a=Math.atan2(y2-y1,x2-x1), h=Math.max(9,w*2.4);
+  const bx=x2-h*0.95*Math.cos(a), by=y2-h*0.95*Math.sin(a);
+  noStroke();fill(c.r,c.g,c.b,alpha);
+  triangle(x2,y2,bx-h*0.5*Math.cos(a-Math.PI/4),by-h*0.5*Math.sin(a-Math.PI/4),bx-h*0.5*Math.cos(a+Math.PI/4),by-h*0.5*Math.sin(a+Math.PI/4));
+  noStroke();
+}
+function lab(x,y,s,c,sz){noStroke();fill(c.r,c.g,c.b);textSize(sz||13);
+  textAlign(LEFT,CENTER);textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif');text(s,x,y)}
+/* 图纸 */
+const paper=document.getElementById('paper'),px=paper.getContext('2d');
+const P_OR='#f4a261',P_CY='#66c2ff',P_W='#e8e8f0',P_GD='#ffd700',P_MU='#8a8aa0',P_PK='#ff7eb6',P_GN='#7ab878',P_PU='#e896ff';
+function pl(x,y,s,c,sz,al){px.globalAlpha=1;px.font=(sz||13)+'px "Noto Serif SC","PingFang SC","Microsoft YaHei",sans-serif';
+  px.fillStyle=c;px.textAlign=al||'left';px.textBaseline='middle';px.fillText(s,x,y)}
+function drawPaper(){px.clearRect(0,0,paper.width,paper.height);
+  if(step===1)d1();else if(step===2)d2();else if(step===3)d3();else d4()}
+function d1(){
+  pl(280,20,'线速度从哪来',P_W,15.5);
+  pl(285,54,'角速度 ω：每秒转过的弧度',P_OR,13.5);
+  pl(285,78,'弧长 = 半径 × 圆心角：',P_MU,12.5);
+  pl(285,102,'s = r·θ ⟹ v = r·ω',P_GD,16);
+  pl(285,132,'v = ωr —— 第一座桥',P_GD,15.5);
+  pl(285,164,'同 ω（同转盘）：',P_W,13);
+  pl(285,188,'外圈 r 大 → v 大',P_GN,13.5);
+  pl(285,210,'内圈 r 小 → v 小',P_OR,13.5);
+  pl(285,238,'点"双球对比"：两球同角速',P_MU,12.5);
+  pl(285,260,'外球紫色箭头明显更长',P_PU,12.5);
+  pl(285,280,'（转盘上人感受：外侧"甩"）',P_MU,11.5);
+}
+function d2(){
+  pl(280,20,'一圈多久？周期与转速',P_W,15.5);
+  pl(285,54,'转一圈：圆心角 2π，用 T 秒',P_W,13.5);
+  pl(285,80,'ω = 2π / T',P_GD,16);
+  pl(285,106,'转速 n = 每秒圈数：',P_OR,13.5);
+  pl(285,130,'n = 1/T ⟹ ω = 2πn',P_GD,16);
+  pl(285,160,'三兄弟一个数：',P_MU,13);
+  pl(285,184,'n = 1/T = ω/2π',P_CY,14.5);
+  pl(285,212,'常见单位换算：',P_MU,12.5);
+  pl(285,234,'1 r/min = 1/60 r/s',P_OR,13);
+  pl(285,256,'例 n=0.5 r/s：T=2s，ω=π≈3.14',P_GN,13);
+  pl(285,278,'拖 n 滑块，看球转快慢与 T 联动',P_MU,11.5);
+}
+function d3(){
+  pl(280,18,'向心加速度的来历（Δv 法）',P_W,15.5);
+  pl(285,46,'匀速圆周：v 大小不变，方向在变',P_W,13);
+  pl(285,70,'Δv = v(t+Δt) − v(t)：',P_MU,12.5);
+  pl(285,94,'Δt→0 时 Δv 垂直 v、指向圆心',P_CY,14);
+  pl(285,120,'|Δv| ≈ v·Δθ（小角近似）',P_OR,14);
+  pl(285,146,'a = Δv/Δt = v·ω = v²/r',P_GD,16.5);
+  pl(285,172,'= ω²·r （用 v=ωr 代入）',P_GD,15.5);
+  pl(285,202,'方向：每瞬都指向圆心',P_GN,14);
+  pl(285,226,'—— 所以叫"向心"加速度',P_GN,13.5);
+  pl(285,254,'主画布绿箭头 = Δv（指向圆心）',P_GN,12);
+  pl(285,276,'青箭头 a = 向心加速度（实时）',P_CY,12);
+}
+function d4(){
+  pl(280,18,'向心力：谁在拉？',P_W,15.5);
+  pl(285,48,'牛顿第二定律：F = ma',P_OR,14.5);
+  pl(285,74,'F向 = m·v²/r = m·ω²r',P_GD,17);
+  pl(285,104,'方向与 a 相同：指向圆心',P_CY,13.5);
+  pl(285,130,'⚠ 它由具体力提供：',P_MU,12.5);
+  pl(285,152,'绳拉 / 摩擦 / 支持力分力 / 万有引力…',P_W,12.5);
+  pl(285,176,'关系链（一个 ω 串到底）：',P_OR,13.5);
+  pl(285,200,'n → ω → v=ωr',P_GD,15);
+  pl(285,222,'↓ ↓',P_MU,12);
+  pl(285,244,'a=ω²r ← r',P_GD,15);
+  pl(285,266,'F=mω²r ← m',P_GD,15);
+  pl(285,286,'ω 加倍：v 加倍、a 四倍、F 四倍!',P_PK,13);
+}
+/* DOM */
+function initUI(){
+  $('sN').oninput=()=>{n=parseFloat($('sN').value);$('oN').textContent=n.toFixed(2)+' r/s'};
+  $('sR').oninput=()=>{r=parseFloat($('sR').value);$('oR').textContent=r.toFixed(2)+' m'};
+  $('sM').oninput=()=>{m=parseFloat($('sM').value);$('oM').textContent=m.toFixed(1)+' kg'};
+  $('sSpd').oninput=()=>{spd=parseFloat($('sSpd').value);$('oSpd').textContent=spd.toFixed(1)+'×'};
+  $('bPlay').onclick=()=>{playing=!playing;$('bPlay').innerHTML=playing?'⏸ 暂停':'▶ 播放';lastMs=millis()};
+  $('bReset').onclick=()=>{phi=0};
+  $('bDual').onclick=()=>{dual=!dual;$('bDual').innerHTML=dual?'⭕ 双球对比(同ω)':'● 单球'};
+  document.querySelectorAll('.step-btn').forEach(el=>el.addEventListener('click',()=>goStep(parseInt(el.dataset.s))));
+  $('bDual').classList.add('on');
+  goStep(1);
+}
+function goStep(s){step=s;
+  document.querySelectorAll('.step-btn').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.s)===s));
+  $('rowM').style.display=(s===4)?'':'none';
+  syncSliders()}
+function syncSliders(){
+  $('sN').value=n;$('oN').textContent=n.toFixed(2)+' r/s';
+  $('sR').value=r;$('oR').textContent=r.toFixed(2)+' m';
+  $('sM').value=m;$('oM').textContent=m.toFixed(1)+' kg';
+  $('sSpd').value=spd;$('oSpd').textContent=spd.toFixed(1)+'×'}
+function updateData(){
+  const w=omega();
+  let h='<span class="chip">ω = <b class="o">'+w.toFixed(2)+'</b> rad/s</span>';
+  h+='<span class="chip">v = <b class="p">'+vlin().toFixed(2)+'</b> m/s</span>';
+  h+='<span class="chip">T = <b class="c">'+period().toFixed(2)+'</b> s</span>';
+  h+='<span class="chip">n = <b class="y">'+n.toFixed(2)+'</b> r/s</span>';
+  h+='<span class="chip">a = <b class="c">'+aC().toFixed(2)+'</b> m/s²</span>';
+  if(step===4)h+='<span class="chip">F = <b class="p">'+force().toFixed(2)+'</b> N</span>';
+  $('chips').innerHTML=h;
+  let mb='';
+  const w2=omega()*2;
+  if(step===1){mb='v = ωr = '+w.toFixed(2)+'×'+r.toFixed(1)+' = <b style="color:var(--pink)">'+vlin().toFixed(2)+' m/s</b> —— 若 ω 加倍，v 也加倍';}
+  else if(step===2){mb='转一圈 = 2π rad，ω=2πn='+(PI2*n).toFixed(2)+' —— T=1/n='+(1/n).toFixed(2)+' s';}
+  else if(step===3){mb='Δv 推导：a=ωv=ω²r='+w.toFixed(2)+'²×'+r.toFixed(1)+'=<b style="color:var(--cyan)">'+aC().toFixed(2)+' m/s²</b>（绿箭头=Δv，青=a）';}
+  else {mb='F=mω²r='+m.toFixed(1)+'×'+w.toFixed(2)+'²×'+r.toFixed(1)+'=<b style="color:var(--pink)">'+force().toFixed(2)+' N</b>　|　ω 加倍 ⟹ a、F 变为 <b style="color:var(--gold)">4 倍</b>（平方律）';}
+  $('miniBanner').innerHTML=mb;
+}
+function updateBanners(){
+  const B=$('banner');let txt='',hit=false,cyan=false;
+  const T={
+    1:['① 匀速圆周：<b style="color:var(--pink)">v 沿切线</b>，大小 = ωr。拖 n 或 r，紫色箭头长度实时变 —— v = ωr 是圆周第一公式。','① 拖参数看 v 箭头变化'],
+    2:['② 周期 T = 转一圈的秒数，转速 n = 每秒圈数：<b style="color:var(--gold)">ω = 2π/T = 2πn</b>，三者只差常数。看球转一圈 = 一个周期。','② T = 1/n 联动'],
+    3:['③ 速度大小没变，方向一直在变：取两邻近时刻的 v 画一起，<b style="color:var(--green)">Δv 指向圆心</b> ⟹ a = ω²r = v²/r 向心。','③ Δv 推导中'],
+    4:['④ <b style="color:var(--pink)">F = mω²r</b>：向心力由具体力提供（绳/摩擦/支持力…）。ω 加倍 F 变 4 倍 —— 小心"平方"。','④ 拖 m 看 F']};
+  B.innerHTML=T[step][0];
+  B.className='banner'+(hit?' hit':cyan?' cyan':'');
+  const caps={1:['v = ωr','s = rθ 两边除 t：v = rω。线速度是"弧长速率"，角速度是"角度速率"。'],
+    2:['ω = 2πn','转一圈扫 2π 弧度：ωT=2π；n 圈/秒：ω=2πn，T=1/n。'],
+    3:['a 的推导','|Δv|=vΔθ ⟹ a=|Δv|/Δt=vω=v²/r=ω²r。方向：Δv 垂直 v 指向圆心（小角极限）。'],
+    4:['F = mω²r','牛顿第二定律在圆周：F向=ma。来源是合力沿径向分量；ω² 让 F 对 ω 敏感。']};
+  $('paperTitle').textContent=caps[step][0];
+  $('paperCap').innerHTML='<b>'+caps[step][1]+'</b>';
+  $('sceneName').textContent='n='+n.toFixed(2)+' r/s，r='+r.toFixed(2)+' m ｜ '+caps[step][0];
+}
+</script>
+</body>
+</html>
