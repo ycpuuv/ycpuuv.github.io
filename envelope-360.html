@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>全方向抛体 · 炮台的包络</title>
+<style>
+  :root{--bg:#0b0b14;--card:#0e0e1e;--line:#18182a;--line2:#2a2a48;--amber:#d4a373;--amber-l:#f4a261;
+    --gold:#ffd700;--orange:#ff8c42;--cyan:#66c2ff;--green:#7ab878;--pink:#ff7eb6;--white:#e8e8f0;
+    --txt:#d4d4dc;--mut:#707088;--warn:#e06050}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background-image:radial-gradient(ellipse at 50% 0%,rgba(212,163,115,.05) 0%,transparent 55%);min-height:100vh;padding-bottom:30px}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 14px 0}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+  .back{color:var(--mut);text-decoration:none;font-size:14px;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .back:hover{color:var(--amber-l);border-color:var(--line2)}
+  h1{font-size:22px;font-weight:800;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+  .sub{font-size:13.5px;color:var(--mut);margin:3px 0 10px}
+  .sub b{color:var(--amber)}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+  .step-btn{flex:1;min-width:158px;background:var(--card);border:1px solid var(--line);color:var(--mut);
+    border-radius:11px;padding:7px 8px;font-size:13px;cursor:pointer;text-align:left;transition:.15s;line-height:1.3}
+  .step-btn b{display:block;font-size:13px;color:var(--txt)}
+  .step-btn:hover{border-color:var(--line2)}
+  .step-btn.on{background:#16162a;border-color:var(--amber)}
+  .step-btn.on b{color:var(--amber-l)}
+  .step-btn .n{display:inline-block;width:17px;height:17px;line-height:15px;text-align:center;border-radius:50%;
+    border:1.5px solid currentColor;font-size:11px;margin-right:5px;vertical-align:1px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+  .panel h3{font-size:15px;color:var(--amber);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .panel h3 .r{font-size:12px;color:var(--mut);font-weight:400}
+  #stageWrap{width:100%}
+  canvas#stage{width:100%;height:auto;display:block;border-radius:10px;background:#0a0a13}
+  .banner{margin:8px 0 0;padding:7px 11px;border-radius:10px;font-size:14.5px;font-weight:600;
+    border:1px dashed var(--line2);color:var(--amber-l);background:rgba(212,163,115,.05);line-height:1.55}
+  .banner.hit{background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.6);color:var(--gold)}
+  .banner.cyan{color:var(--cyan);border-color:rgba(102,194,255,.35);background:rgba(102,194,255,.06)}
+  .ctrl{display:grid;grid-template-columns:70px 1fr 86px;align-items:center;gap:3px 8px;font-size:13.5px;margin:3px 0}
+  .ctrl label{color:#b8b8c8}
+  .ctrl input[type=range]{width:100%;accent-color:var(--amber)}
+  .ctrl output{text-align:right;color:var(--amber-l);font-weight:700;font-size:13.5px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  button{background:#151528;border:1px solid var(--line2);color:var(--txt);border-radius:9px;
+    padding:6px 10px;font-size:13.5px;cursor:pointer;transition:.12s}
+  button:hover{border-color:var(--amber);color:var(--amber-l)}
+  button.primary{background:linear-gradient(135deg,#8a5a2b,#d4a373);color:#0b0b14;font-weight:700;border:none}
+  button.on{background:#2a1f10;border-color:var(--amber);color:var(--gold)}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{background:#12121f;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:13px;color:#b8b8c8;white-space:nowrap;line-height:1.4}
+  .chip b{font-size:13.5px}
+  .chip b.g{color:var(--green)} .chip b.c{color:var(--cyan)} .chip b.o{color:var(--orange)}
+  .chip b.y{color:var(--gold)} .chip b.w{color:var(--white)} .chip b.p{color:var(--pink)} .chip b.r{color:var(--warn)}
+  #paper{width:100%;height:auto;display:block;background:#0a0a13;border-radius:10px}
+  .paper-cap{font-size:12.5px;color:var(--mut);margin-top:6px;line-height:1.65}
+  .paper-cap b{color:var(--amber)}
+  .concs{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
+  .conc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 10px;font-size:13px;cursor:pointer;line-height:1.55;color:#b8b8c8;transition:.15s}
+  .conc b{display:block;font-size:13.5px;color:var(--amber);margin-bottom:3px}
+  .conc:hover{border-color:var(--line2)}
+  .conc.on{border-color:var(--gold);background:#191907;color:var(--txt)}
+  .conc.on b{color:var(--gold)}
+  .conc .f{font-family:'Courier New',monospace;color:var(--amber-l);font-size:12.5px}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}.concs{grid-template-columns:repeat(2,1fr)}.step-btn{min-width:136px}}
+  @media(max-width:520px){.concs{grid-template-columns:1fr 1fr}}
+  .foot{margin-top:14px;font-size:12px;color:var(--mut);text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><a class="back" href="jiaoxue.html">← 教学资源</a>
+    <h1>全方向抛体 · 炮台的包络</h1></div>
+  <div class="sub">炮台在中央，向<b>四面八方</b>以同速率开炮 —— 所有弹道的边界是什么曲线？它把空间分成"打得到 / 打不到"</div>
+  <div class="steps">
+    <button class="step-btn on" data-s="1"><span class="n">1</span><b>全向扫掠</b>弹道花束</button>
+    <button class="step-btn" data-s="2"><span class="n">2</span><b>不是圆！</b>找包络方程</button>
+    <button class="step-btn" data-s="3"><span class="n">3</span><b>焦点在炮口</b>抛物线几何</button>
+    <button class="step-btn" data-s="4"><span class="n">4</span><b>打靶</b>伞内伞外</button>
+    <button class="step-btn" data-s="5"><span class="n">5</span><b>三个用途</b>射程·面积·过墙</button>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h3>🕹 炮台演示 <span class="r" id="sceneName"></span></h3>
+      <div id="stageWrap"></div>
+      <div class="banner" id="banner"></div>
+      <div class="btns" style="margin-top:8px">
+        <button id="bPlay" class="primary">▶ 全向扫掠</button>
+        <button id="bReset">↺ 复位</button>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>📐 推导图纸 <span class="r" id="paperTitle"></span></h3>
+        <canvas id="paper" width="560" height="292"></canvas>
+        <div class="paper-cap" id="paperCap"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>📊 实时数据</h3>
+        <div class="chips" id="chips"></div>
+        <div class="banner cyan" id="miniBanner" style="font-size:13px;margin-top:8px"></div>
+      </div>
+      <div class="panel" style="margin-top:10px">
+        <h3>🎚 参数</h3>
+        <div class="ctrl"><label>初速 v₀</label><input type="range" id="sV0" min="8" max="20" step="0.5" value="14"><output id="oV0">14 m/s</output></div>
+        <div class="ctrl" id="rowWall1" style="display:none"><label>墙距 d</label><input type="range" id="sDW" min="2" max="18" step="0.5" value="6"><output id="oDW">6 m</output></div>
+        <div class="ctrl" id="rowWall2" style="display:none"><label>墙高 h</label><input type="range" id="sHW" min="1" max="8" step="0.2" value="4"><output id="oHW">4 m</output></div>
+        <div class="ctrl" id="rowTarget" style="display:none"><label>拖靶心</label><output id="oTarget" style="text-align:left;grid-column:2/4"></output></div>
+      </div>
+    </div>
+  </div>
+  <div class="concs">
+    <div class="conc on" data-s="1"><b>① 花束与伞面</b>全方向弹道被同一包络罩住；伞内每个点都能被打到</div>
+    <div class="conc" data-s="2"><b>② 包络不是圆</b>直觉"等速率=圆"是错的；逐点取最高得抛物线<span class="f">y = H − gx²/2v₀²</span></div>
+    <div class="conc" data-s="3"><b>③ 焦点在炮口</b>包络是以 O 为焦点、y=2H 为准线的抛物线；V=(0,H) 是竖直上抛最高点</div>
+    <div class="conc" data-s="4"><b>④ 伞内两角、伞外死角</b>目标在包络内 ⟹ 两条弹道（一高一低）；在伞外 ⟹ 任何方向都打不到</div>
+    <div class="conc" data-s="5"><b>⑤ 用途</b>地面最远 ±v₀²/g（45°）；覆盖面积 ⅔·底·高；过墙临界 v₀²=g(h+√(h²+d²))</div>
+  </div>
+  <div class="foot">启明 · 抛体矢量几何系列 ④ ｜ 与《弹道包络 · 安全抛物线》互补：那篇单向推导，这篇全向总览</div>
+</div>
+<script src="p5.min.js"></script>
+<script>
+const G=9.8;
+let v0=14, step=1, sweepA=0, sweeping=false, lastMs=0;
+let dw=6, hw=4, aimX=8, aimY=4, dragAim=false;
+function Hm(){return v0*v0/(2*G)}
+function R45(){return v0*v0/G}
+function envY(x){return Hm()-G*x*x/(2*v0*v0)}
+function trajY(x,th){const r=th*Math.PI/180,c=Math.cos(r);return x*Math.tan(r)-G*x*x/(2*v0*v0*c*c)}
+function Rth(th){const r=th*Math.PI/180;return v0*v0*Math.sin(2*r)/G}
+let cw=760,ch=470,sc=1,ox=0,oy=0,W0=-22,W1=22,Y0=-1,Y1=13;
+function fitView(){
+  const H=Hm(),R=R45();
+  W0=-R*1.22-1.2; W1=R*1.22+1.2;
+  Y1=(step===3?2*H*1.12+1.5:H*1.2+1); Y0=-1.4;
+  sc=Math.min(cw/(W1-W0),ch/(Y1-Y0));
+  ox=(cw-(W1-W0)*sc)/2-W0*sc; oy=ch+Y0*sc;
+}
+function sx(w){return ox+w*sc}
+function sy(h){return oy-h*sc}
+const CO={r:244,g:162,b:97},CC={r:102,g:194,b:255},CW={r:232,g:232,b:240},CP={r:255,g:126,b:182},CG={r:255,g:215,b:0},CM={r:120,g:140,b:190};
+const $=id=>document.getElementById(id);
+function setup(){const pw=$('stageWrap');cw=Math.max(300,pw.clientWidth||760);ch=Math.round(cw*0.58);
+  const c=createCanvas(cw,ch);c.parent('stageWrap');initUI();lastMs=millis();fitView()}
+function windowResized(){const pw=$('stageWrap');cw=Math.max(300,pw.clientWidth||760);ch=Math.round(cw*0.58);resizeCanvas(cw,ch);fitView()}
+function draw(){
+  if(sweeping){const now=millis(),dt=Math.min((now-lastMs)/1000,0.05);lastMs=now;sweepA+=dt*26;
+    if(sweepA>=90){sweepA=90;sweeping=false;$('bPlay').innerHTML='▶ 全向扫掠';}}
+  else lastMs=millis();
+  background(10,10,19);fitView();drawGrid();drawGround();
+  if(step===1)s1();else if(step===2)s2();else if(step===3)s3();else if(step===4)s4();else s5();
+  updateData();drawPaper();updateBanners();
+}
+function drawGrid(){stroke(28,28,48);strokeWeight(1);
+  for(let w=Math.ceil(W0/2)*2;w<=W1;w+=2){line(sx(w),sy(Y0),sx(w),sy(Y1))}
+  for(let h=Math.ceil(Y0/2)*2;h<=Y1;h+=2){line(sx(W0),sy(h),sx(W1),sy(h))}noStroke()}
+function drawGround(){stroke(66,66,100);strokeWeight(2.4);line(sx(W0),sy(0),sx(W1),sy(0));noStroke();
+  textAlign(CENTER,TOP);textSize(12.5);fill(150,150,180);textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif');
+  text('地面',sx(W1*0.9),sy(0)+6)}
+function vec(x1,y1,x2,y2,c,w,alpha){stroke(c.r,c.g,c.b,alpha);strokeWeight(w);fill(c.r,c.g,c.b,alpha);
+  line(x1,y1,x2,y2);const a=Math.atan2(y2-y1,x2-x1),h=Math.max(9,w*2.4);
+  const bx=x2-h*0.95*Math.cos(a),by=y2-h*0.95*Math.sin(a);noStroke();fill(c.r,c.g,c.b,alpha);
+  triangle(x2,y2,bx-h*0.5*Math.cos(a-Math.PI/4),by-h*0.5*Math.sin(a-Math.PI/4),bx-h*0.5*Math.cos(a+Math.PI/4),by-h*0.5*Math.sin(a+Math.PI/4));noStroke()}
+function lab(x,y,s,c,sz,al){noStroke();fill(c.r,c.g,c.b);textSize(sz||13);textAlign(al||LEFT,CENTER);
+  textFont('Noto Serif SC,PingFang SC,Microsoft YaHei,sans-serif');text(s,x,y)}
+function dash(x1,y1,x2,y2,c,w,alpha,d1,d2){stroke(c.r,c.g,c.b,alpha);strokeWeight(w);
+  drawingContext.setLineDash([d1||5,d2||5]);line(x1,y1,x2,y2);drawingContext.setLineDash([]);noStroke()}
+function trajSym(th,col,w,alpha){ // 画双侧弹道
+  const r=th*Math.PI/180,vx=v0*Math.cos(r),vy=v0*Math.sin(r);
+  if(vy<=0&&th<0.01)return;
+  const T=(vy>0)?2*vy/G:0; if(T<0.01)return;
+  const n=100;stroke(col.r,col.g,col.b,alpha);strokeWeight(w);noFill();
+  for(const side of [-1,1]){beginShape();
+    for(let i=0;i<=n;i++){const u=T*i/n;const x=side*vx*u,y=vy*u-0.5*G*u*u;if(y<-0.01)break;vertex(sx(x),sy(y))}
+    endShape();}noStroke()}
+function drawEnv360(col,w,alpha,xe){const n=420,xEnd=xe||W1;
+  stroke(col.r,col.g,col.b,alpha);strokeWeight(w);noFill();beginShape();
+  for(let i=0;i<=n;i++){const x=-xEnd+(2*xEnd)*i/n,y=envY(Math.abs(x));if(y<-0.02)continue;vertex(sx(x),sy(y))}
+  endShape();noStroke()}
+function drawO(){fill(CG.r,CG.g,CG.b);noStroke();ellipse(sx(0),sy(0),11,11);lab(sx(0)+11,sy(0)-10,'O 炮台',CG,12.5)}
+/* 步骤 */
+function s1(){
+  const nA=Math.floor(sweepA/2.4);
+  for(let i=1;i<=nA;i++){const a=i*2.4;const c={r:140+90*i/38,g:170+30*i/38,b:220};trajSym(a,c,1.4,70)}
+  if(sweepA>=90){drawEnv360(CG,3.4,255);
+    lab(sx(0),sy(Hm()*0.55),'这就是"伞面"——包络',CG,14);}
+  // 竖直上抛参考
+  dash(sx(0),sy(0),sx(0),sy(Hm()),{r:200,g:160,b:120},1.5,120,3,6);
+  drawO();
+}
+function s2(){
+  drawEnv360(CG,3.4,255);
+  // 直觉圆(半径H)淡灰虚线 vs 包络 —— 破除"等速率=圆"
+  const H=Hm();
+  noFill();stroke(150,150,180,90);strokeWeight(1.6);drawingContext.setLineDash([7,6]);
+  ellipse(sx(0),sy(0),2*H*sc,2*H*sc);drawingContext.setLineDash([]);noStroke();
+  lab(sx(H*0.72),sy(H*0.75),'直觉：半径 H 的圆？',CM,13);
+  lab(sx(H*0.72),sy(H*0.75+16),'—— 错，包络是抛物线',{r:255,g:120,b:120},12.5);
+  // 竖直上抛点与45°轨迹标
+  lab(sx(0),sy(H)+6,'V(0,H) θ=90°',CP,12.5);
+  trajSym(45,{r:255,g:255,b:255},1.8,120);
+  flagAt(R45(),0,'右45°落点');flagAt(-R45(),0,'左45°落点');
+  drawO();
+}
+function flagAt(x,y,txt){const X=sx(x),Y=sy(y);stroke(CG.r,CG.g,CG.b,220);strokeWeight(2);line(X,Y,X,Y-14);
+  noStroke();fill(CG.r,CG.g,CG.b);ellipse(X,Y,6,6);lab(X,Y-12,txt,CG,11.5)}
+function s3(){
+  drawEnv360(CG,3.6,255);
+  const H=Hm();
+  dash(sx(W0*0.8),sy(2*H),sx(W1*0.8),sy(2*H),CC,2.2,200,8,6);
+  lab(sx(0),sy(2*H)+6,'准线 y=2H = v₀²/g',CC,13);
+  // V 顶点
+  fill(10,10,19);noStroke();ellipse(sx(0),sy(H),20,20);fill(CP.r,CP.g,CP.b);ellipse(sx(0),sy(H),9,9);
+  lab(sx(0)+12,sy(H)-4,'顶点 V(0,H)',CP,13);
+  dash(sx(0),sy(H),sx(0),sy(0),CP,1.6,150,3,5);
+  // 游标 P 沿包络（aimX 的绝对值映射到 [0.06R, 0.94R]）
+  const Px=Math.min(R45()*0.94, Math.max(R45()*0.06, Math.abs(aimX)));
+  const Py=envY(Px);
+  const PX=sx(Px),PY=sy(Py);
+  fill(10,10,19);noStroke();ellipse(PX,PY,24,24);fill(255,255,255);ellipse(PX,PY,13,13);
+  vec(PX,PY,sx(0),sy(0),CW,2.4,240);
+  dash(PX,PY,PX,sy(2*H),CC,2.4,240,4,4);
+  lab((PX+sx(0))/2-6,(PY+sy(0))/2+8,'PF',CW,13);
+  lab(PX+10,(PY+sy(2*H))/2,'PH',CC,13);
+  drawO();
+  fill(CG.r,CG.g,CG.b);noStroke();ellipse(sx(0),sy(0),13,13);
+}
+function s4(){
+  drawEnv360(CG,2.4,80);
+  const Xa=Math.abs(aimX), X=aimX,Y=aimY,E=envY(Xa);
+  const dd=1-2*G*Y/(v0*v0)-(G*Xa/(v0*v0))**2;
+  const TX=sx(X),TY=sy(Y);
+  stroke(255,90,90,240);strokeWeight(2.4);
+  line(TX-12,TY,TX+12,TY);line(TX,TY-12,TX,TY+12);noStroke();
+  fill(255,130,130);ellipse(TX,TY,9,9);
+  lab(TX+15,TY-4,'目标('+X.toFixed(1)+','+Y.toFixed(1)+')',{r:255,g:150,b:150},12);
+  if(Xa>0.15&&dd>1e-9){
+    const A=G*Xa*Xa/(v0*v0),u1=(Xa+Math.sqrt(Xa*Xa*dd))/A,u2=(Xa-Math.sqrt(Xa*Xa*dd))/A;
+    const t1=Math.atan(u1)*180/Math.PI,t2=Math.atan(u2)*180/Math.PI;
+    trajSym(t1,CW,2,180);trajSym(t2,CW,2,180);
+    lab(sx(Rth(t1)*0.55),sy(envY(Rth(t1)*0.55))+10,'θ₁='+t1.toFixed(0)+'° 高弹道',CW,12);
+    lab(sx(Rth(t2)*0.8),sy(-0.6),'θ₂='+t2.toFixed(0)+'° 低弹道',{r:190,g:210,b:255},12);
+  } else if(Xa>0.15&&dd>-1e-6){
+    const A=G*Xa*Xa/(v0*v0),u1=Xa/A,t1=Math.atan(u1)*180/Math.PI;
+    trajSym(t1,CG,2.4,235);
+  } else if(Xa>0.15){
+    dash(sx(0),sy(0),TX,TY,{r:224,g:96,b:80},1.6,140,3,6);
+    lab((sx(0)+TX)/2-40,(sy(0)+TY)/2,'打不到(伞外死角)',{r:255,g:130,b:130},13);
+  }
+  drawO();
+}
+function s5(){
+  const H=Hm(),R=R45();
+  // 覆盖面积填充
+  const n=300;
+  noStroke();fill(255,215,0,26);beginShape();
+  vertex(sx(-R),sy(0));
+  for(let i=0;i<=n;i++){const x=-R+2*R*i/n;vertex(sx(x),sy(envY(Math.abs(x))))}
+  vertex(sx(R),sy(0));endShape(CLOSE);noStroke();
+  drawEnv360(CG,2.6,150);
+  // 最远射程旗标
+  flagAt(R,0,'最远 R=v₀²/g');flagAt(-R,0,'');
+  lab(sx(R*0.62),sy(-0.5),'45°方向打到最远',CG,12);
+  // 墙（墙高不随 v₀ 缩水：v₀ 不足时墙顶自然落在伞外 → 过不去）
+  const d=Math.min(dw,R*0.9),h=Math.min(hw,14);
+  const Ew=envY(d);
+  const xW=sx(d);
+  const hDraw=Math.min(h, Y1*0.96);
+  stroke(190,140,90,240);strokeWeight(5);line(xW,sy(0),xW,sy(hDraw));noStroke();
+  lab(xW-26,sy(hDraw)+6,'墙 '+d.toFixed(0)+'m × '+h.toFixed(1)+'m',{r:220,g:170,b:120},11.5);
+  const vc=Math.sqrt(G*(h+Math.sqrt(h*h+d*d)));
+  if(v0>=vc-1e-9){
+    // 过墙低角轨迹
+    const A=G*d*d/(v0*v0),dd2=1-2*G*h/(v0*v0)-(G*d/v0/v0)**2;
+    if(dd2>-1e-9){const u2=(d-Math.sqrt(Math.max(0,d*d*dd2)))/A,t2=Math.atan(u2)*180/Math.PI;
+      trajSym(t2,CG,2.2,200);
+      lab(sx(d*0.4),sy(envY(d*0.4))+8,'θ='+t2.toFixed(1)+'° 擦顶过墙',CG,11.5);}
+    lab(sx(0),sy(H*0.9),'v₀ ≥ v_min='+vc.toFixed(2)+' 能过 ✓',{r:160,g:230,b:170},13.5);
+  } else {
+    lab(sx(0),sy(H*0.9),'v₀ < v_min='+vc.toFixed(2)+' —— 过不去 ✗',{r:255,g:120,b:120},13.5);
+  }
+  drawO();
+}
+/* 图纸 */
+const paper=$('paper'),px=paper.getContext('2d');
+const Q_OR='#f4a261',Q_CY='#66c2ff',Q_PK='#ff7eb6',Q_W='#e8e8f0',Q_GD='#ffd700',Q_MU='#8a8aa0',Q_RD='#e06050',Q_GN='#7ab878';
+function pl(x,y,s,c,sz,al){px.globalAlpha=1;px.font=(sz||13)+'px "Noto Serif SC","PingFang SC","Microsoft YaHei",sans-serif';
+  px.fillStyle=c;px.textAlign=al||'left';px.textBaseline='middle';px.fillText(s,x,y)}
+function drawPaper(){px.clearRect(0,0,paper.width,paper.height);
+  if(step===1)d1();else if(step===2)d2();else if(step===3)d3();else if(step===4)d4();else d5()}
+function d1(){
+  pl(280,20,'一步一问',Q_W,15.5);
+  pl(285,58,'Q：同速率、全方向，',Q_MU,13.5);
+  pl(285,82,'所有弹道能罩住多大区域？',Q_MU,13.5);
+  pl(285,118,'把每一枪都打向"最高处"',Q_W,13.5);
+  pl(285,142,'—— 每个水平距离只留最高的那发',Q_W,13.5);
+  pl(285,176,'这些最高点连成的线',Q_GD,15);
+  pl(285,200,'= 弹道的包络（安全边界）',Q_GD,15);
+  pl(285,238,'先猜后证：它是圆吗？',Q_PK,14);
+  pl(285,262,'下一步见分晓 ↓',Q_MU,12.5);
+}
+function d2(){
+  pl(280,18,'推导：包络为什么是抛物线',Q_W,15.5);
+  pl(285,46,'设 u=tanθ（θ 对水平面的仰角）：',Q_MU,12.5);
+  pl(285,70,'y = x·u − gx²(1+u²)/(2v₀²)',Q_OR,14);
+  pl(285,98,'固定 |x|，把 y 看成 u 的二次函数',Q_W,13);
+  pl(285,122,'开口向下 ⟹ 有最大值：',Q_MU,12.5);
+  pl(285,148,'u* = v₀²/(g|x|)',Q_CY,13.5);
+  pl(285,174,'y_max = v₀²/2g − gx²/(2v₀²)',Q_GD,15.5);
+  pl(285,202,'= H − gx²/(2v₀²)  ← 抛物线！',Q_GD,15.5);
+  pl(285,236,'√ 灰色圆(半径H)整个被包络罩住',Q_RD,12.5);
+  pl(285,258,'圆横向只到 ±v₀²/2g，包络到 ±v₀²/g —— 两倍！',Q_RD,12.5);
+}
+function d3(){
+  pl(280,18,'把包络画完整，几何自己跳出来',Q_W,15.5);
+  pl(285,50,'顶点 V(0,H)：θ=90° 竖直上抛最高',Q_PK,13.5);
+  pl(285,76,'焦点 F(0,0)=O：就在炮口！',Q_GD,14.5);
+  pl(285,102,'准线 y=2H=v₀²/g',Q_CY,13.5);
+  pl(285,136,'抛物线定义现场验证：',Q_W,13);
+  pl(285,162,'曲线上任一点 P 满足 PF=PH',Q_W,13);
+  pl(285,188,'（主画布白线=青线，实时相等）',Q_MU,12.5);
+  pl(285,226,'细思恐极的物理版：',Q_GD,14);
+  pl(285,252,'"炮弹全部从焦点发出"',Q_GD,14.5);
+  pl(285,276,'抛物线光学性质在此变成弹道学',Q_MU,12.5);
+}
+function d4(){
+  pl(280,18,'打靶判定（左右对称，看一侧即可）',Q_W,15.5);
+  pl(285,52,'目标(X,Y) 在包络内 ⟺',Q_W,13.5);
+  pl(285,76,'Δ′ = 1−2gY/v₀²−(gX/v₀²)² > 0',Q_GD,14.5);
+  pl(285,104,'>0 两角：低平快弹 + 高吊慢弹',Q_GN,13.5);
+  pl(285,128,'=0 恰一角：弹道擦着伞面飞',Q_CY,13.5);
+  pl(285,152,'<0 死角：任何方向都够不着',Q_RD,13.5);
+  pl(285,190,'两条弹道飞行时间还不同：',Q_MU,12.5);
+  pl(285,212,'低弹道先到（"直接命中"）',Q_W,12.5);
+  pl(285,232,'高弹道后到（"吊射/越过"）',Q_W,12.5);
+  pl(285,260,'拖靶心：伞内⇄伞外 现场切换',Q_PK,13);
+}
+function d5(){
+  pl(280,18,'用途三件套',Q_W,15.5);
+  pl(285,46,'① 地面最远射程',Q_GD,14);
+  pl(285,68,'包络与地面交点 x=±v₀²/g',Q_OR,13.5);
+  pl(285,88,'即 θ=45° 弹道（等高特例）',Q_MU,12);
+  pl(285,118,'② 覆盖面积（金色区域）',Q_GD,14);
+  pl(285,140,'抛物线弓形 = ⅔·底·高',Q_MU,12);
+  pl(285,158,'S = (2/3)·(2v₀²/g)·(v₀²/2g)',Q_OR,13.5);
+  pl(285,176,'= 2v₀⁴/(3g²)  ← 一个炮台的"领空"',Q_GD,13.5);
+  pl(285,206,'③ 过墙临界',Q_GD,14);
+  pl(285,228,'墙顶恰在包络上时初速最小',Q_W,13);
+  pl(285,250,'v_min² = g(h + √(h²+d²))',Q_OR,14);
+  pl(285,274,'拖 v₀：小于它 高墙永远翻不过去',Q_PK,12.5);
+}
+/* DOM */
+function initUI(){
+  $('sV0').oninput=()=>{v0=parseFloat($('sV0').value);$('oV0').textContent=v0.toFixed(1)+' m/s';sweepA=0;sweeping=false;$('bPlay').innerHTML='▶ 全向扫掠'};
+  $('sDW').oninput=()=>{dw=parseFloat($('sDW').value);$('oDW').textContent=dw.toFixed(1)+' m'};
+  $('sHW').oninput=()=>{hw=parseFloat($('sHW').value);$('oHW').textContent=hw.toFixed(1)+' m'};
+  $('bPlay').onclick=()=>{if(step!==1)goStep(1);
+    if(sweeping){sweeping=false;$('bPlay').innerHTML='▶ 全向扫掠'}else{sweeping=true;$('bPlay').innerHTML='⏸ 暂停';sweepA=0;lastMs=millis()}};
+  $('bReset').onclick=()=>{sweeping=false;sweepA=0;$('bPlay').innerHTML='▶ 全向扫掠';goStep(1)};
+  document.querySelectorAll('.step-btn,.conc').forEach(el=>el.addEventListener('click',()=>goStep(parseInt(el.dataset.s))));
+  const cv=$('stageWrap').querySelector('canvas');
+  cv.addEventListener('mousedown',e=>{if(step===3||step===4)dragAim=true});
+  window.addEventListener('mousemove',e=>{if(dragAim&&(step===3||step===4))pick(e.clientX,e.clientY)});
+  window.addEventListener('mouseup',()=>dragAim=false);
+  cv.addEventListener('touchstart',e=>{if(step===3||step===4)dragAim=true},{passive:true});
+  cv.addEventListener('touchmove',e=>{if(dragAim&&(step===3||step===4)&&e.touches.length){e.preventDefault();pick(e.touches[0].clientX,e.touches[0].clientY)}},{passive:false});
+  cv.addEventListener('touchend',()=>dragAim=false);
+  goStep(1);
+}
+function pick(cx,cy){const rect=$('stageWrap').querySelector('canvas').getBoundingClientRect();
+  const mx=(cx-rect.left)/rect.width*cw,my=(cy-rect.top)/rect.height*ch;
+  const wx=(mx-ox)/sc,wy=(oy-my)/sc;
+  if(Math.abs(wx)>0.3&&Math.abs(wx)<R45()*1.02&&wy>0&&wy<Y1-0.3){aimX=wx;aimY=wy;
+    $('oTarget').textContent=(step===3?'游标 P：x=':'目标 (')+(step===3?(Math.min(R45()*0.94,Math.max(R45()*0.06,Math.abs(wx)))).toFixed(1)+' m —— 左右拖动':aimX.toFixed(1)+', '+aimY.toFixed(1)+') m —— 拖到伞外试试')}}
+function goStep(s){step=s;sweeping=false;sweepA=0;$('bPlay').innerHTML='▶ 全向扫掠';
+  document.querySelectorAll('.step-btn').forEach(b=>b.classList.toggle('on',parseInt(b.dataset.s)===s));
+  document.querySelectorAll('.conc').forEach(c=>c.classList.toggle('on',parseInt(c.dataset.s)===s));
+  $('rowWall1').style.display=s===5?'':'none';$('rowWall2').style.display=s===5?'':'none';
+  $('rowTarget').style.display=(s===3||s===4)?'':'none';
+  if(s===3&&Math.abs(aimX)<0.5)aimX=6;
+  if(s===4&&(aimY>Hm()||aimX===0)){aimY=Hm()*0.6;aimX=8}
+  $('bPlay').style.display=s===1?'':'none';
+  fitView();syncSliders()}
+function syncSliders(){$('sV0').value=v0;$('oV0').textContent=v0.toFixed(1)+' m/s';
+  $('sDW').value=dw;$('oDW').textContent=dw.toFixed(1)+' m';$('sHW').value=hw;$('oHW').textContent=hw.toFixed(1)+' m'}
+function updateData(){
+  const H=Hm(),R=R45();
+  let h='<span class="chip">H=v₀²/2g=<b class="p">'+H.toFixed(2)+'</b></span><span class="chip">最远射程=<b class="y">±'+R.toFixed(2)+'</b> m</span>';
+  if(step===5){const d=Math.min(dw,R*0.9),hh=hw;
+    const vc=Math.sqrt(G*(hh+Math.sqrt(hh*hh+d*d)));
+    h+='<span class="chip">覆盖面积 S=<b class="y">'+(2*v0*v0*v0*v0/(3*G*G)).toFixed(1)+'</b> m²</span>';
+    h+='<span class="chip">过墙 v_min=<b class="'+(v0>=vc?'g':'r')+'">'+vc.toFixed(2)+'</b> m/s</span>'}
+  $('chips').innerHTML=h;
+  let mb='';
+  if(step===2){mb='包络(金)在直觉圆(灰)之外：竖直上方等高，越往两侧抛物线越高越远 —— 同速率 ≠ 圆形覆盖，只因斜抛能把速度"存"到高度再换射程';}
+  else if(step===3){const Px=Math.min(R45()*0.94,Math.max(R45()*0.06,Math.abs(aimX)));
+    const Py=envY(Px);const PF=Math.hypot(Px,Py),PH=2*H-Py;
+    mb='P('+Px.toFixed(2)+','+Py.toFixed(2)+')：PF=<b style="color:var(--white)">'+PF.toFixed(4)+'</b>，PH=<b style="color:var(--cyan)">'+PH.toFixed(4)+'</b>，差=<b style="color:var(--gold)">'+Math.abs(PF-PH).toExponential(2)+'</b>'}
+  else if(step===4){const X=aimX,Y=aimY,Xa=Math.abs(X),E=envY(Xa);
+    const dd=1-2*G*Y/(v0*v0)-(G*Xa/(v0*v0))**2;
+    if(Xa<0.3)mb='目标在炮口正上方：θ=90° 竖直弹，最高到 '+H.toFixed(1)+' m';
+    else if(dd>1e-9){const A=G*Xa*Xa/(v0*v0),u1=(Xa+Math.sqrt(Xa*Xa*dd))/A,u2=(Xa-Math.sqrt(Xa*Xa*dd))/A;
+      mb='✅ 伞内：θ₁='+(Math.atan(u1)*180/Math.PI).toFixed(1)+'°（高吊）+ θ₂='+(Math.atan(u2)*180/Math.PI).toFixed(1)+'°（低平）';
+      if(X<0)mb+='（目标在左半侧，两条弹道镜像向左）';}
+    else if(dd>-1e-6)mb='🎯 恰在伞面上：唯一弹道，擦边命中';
+    else mb='❌ 伞外死角：所有方向都够不着（防御方视角：这里绝对安全）';}
+  else if(step===5){const d=Math.min(dw,R45()*0.9),hh=hw;
+    const vc=Math.sqrt(G*(hh+Math.sqrt(hh*hh+d*d)));
+    mb='过墙判定：v₀='+v0.toFixed(1)+(v0>=vc?' ≥ v_min='+vc.toFixed(1)+' —— 低角弹道擦顶翻越 ✓':' < v_min='+vc.toFixed(1)+' —— 翻不过去 ✗（墙顶在伞外）');}
+  else mb='扫掠完成：同速率全方向的弹道"花束"，边界即包络。下一步破除"圆形覆盖"的直觉';
+  $('miniBanner').innerHTML=mb;
+}
+function updateBanners(){
+  const B=$('banner');let txt='',hit=false,cyan=false;
+  const T={
+    1:['① 炮台向四面八方开炮：扫掠角从水平转到竖直（左右镜像）。所有弹道叠成一束"花"，最高处轮廓就是边界。','① 全方向扫掠进行中……按 ▶ 重看'],
+    2:['② 包络 <b style="color:var(--gold)">y = H − gx²/(2v₀²)</b>，H=v₀²/2g。注意：它不是圆！同速率直觉"圆形覆盖"在这里被抛物线打败。','② 扫掠完成：金色伞面即包络'],
+    3:['③ 完整抛物线几何：<b style="color:var(--gold)">焦点 F 就在炮口 O</b>，顶点 V 在正上方 H，准线 y=2H。曲线上任一点到 F 与到准线等距（实时验证）。','③ 游标 P 沿包络滑动'],
+    4:['④ 拖靶心：伞内目标有<b>两条</b>弹道（高吊/低平），伞面上一条，伞外是<b style="color:var(--warn)">绝对死角</b>——攻防双方的"安全区"判定。','④ 目标可拖：伞内⇄伞外'],
+    5:['⑤ 用途三件套：<b style="color:var(--gold)">① 地面最远 ±v₀²/g</b>（45°）　<b style="color:var(--gold)">② 覆盖面积 2v₀⁴/3g²</b>（金区）　<b style="color:var(--gold)">③ 过墙临界 v_min²=g(h+√(h²+d²))</b>——拖墙与 v₀ 看判定。','⑤ 调节墙距/墙高/初速']};
+  B.innerHTML=(sweeping&&step===1)?T[1][1]:T[step][0];
+  B.className='banner'+(hit?' hit':cyan?' cyan':'');
+  const caps={1:['观察','炮台居中，θ 从水平扫到竖直、左右对称。先记住最高点的轮廓，下一步"逐点取最高"给出方程。'],
+    2:['破除直觉','每个 |x| 处把 y(u) 取最大：u=tanθ 二次式顶点 u*=v₀²/(g|x|)。最大高度连成抛物线 —— 灰色参考圆(半径H)处处低于它。'],
+    3:['几何自证','抛物线完整显现：V(0,H)、F(0,0)=O、准线 y=2H。白线 PF 与青线 PH 实时相等（抛物线定义）。'],
+    4:['打靶判定','Δ′=1−2gY/v₀²−(gX/v₀²)²：>0 两角、=0 一角、<0 死角。左右对称，一侧结论全方向成立。'],
+    5:['三个用途','最远射程=包络与地面交点；覆盖面积=弓形=⅔·底·高=2v₀⁴/3g²；过墙临界=墙顶贴包络 ⟹ v_min²=g(h+√(h²+d²))。']};
+  $('paperTitle').textContent=caps[step][0];
+  $('paperCap').innerHTML='<b>'+caps[step][1]+'</b>';
+  $('sceneName').textContent='v₀='+v0.toFixed(1)+' m/s ｜ '+caps[step][0];
+}
+</script>
+</body>
+</html>

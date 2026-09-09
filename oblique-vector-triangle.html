@@ -478,20 +478,41 @@ function pS2(){
   pl(300,250,'注意：v 是切线方向，s 不是 —— 别把两把尺子看混',P_GD,12.5);
 }
 function pS3(){
-  pl(280,20,'尺子同形：位移三角形 = (t/2时刻)速度三角形 × t',P_W,15);
+  pl(280,16,'两尺同图：位移三角形 = 速度尺的"中线半边" ×t',P_W,15);
   const hv=vHalf();
-  // 左：t/2 速度三角形
-  const t2v=Math.max(v0, Math.abs(G*t/2), Math.hypot(hv.x,hv.y));
-  const kL=46/t2v, O={x:112,y:190};
+  // —— 左：速度三角形 OAB 完整，位移÷t 三角 OAM 藏其中 ——
+  const k=5, O={x:100,y:165};
   const cth=Math.cos(th()), sth=Math.sin(th());
-  const A={x:O.x+v0*cth*kL, y:O.y-v0*sth*kL};
-  const B={x:A.x, y:A.y+G*(t/2)*kL};
-  pv(O.x,O.y,A.x,A.y,P_OR,3.5,0.95); pv(A.x,A.y,B.x,B.y,P_CY,3.5,0.95);
-  pv(B.x,B.y,O.x,O.y,P_W,4,0.95);
-  pl(112,52,'t/2 时刻的\n速度三角形',P_W,12.5);
-  pl(112,120,'v₀ 走一半，gt 也走一半',P_MU,11);
-  pl(250,190,'× t',P_GD,18);
-  // 右：×t = 位移三角形（完全重合，双描边）
+  const A={x:O.x+v0*cth*k, y:O.y-v0*sth*k};      // v₀ 端点
+  const B={x:A.x, y:A.y+G*t*k};                   // +gt → v 端点
+  const M={x:(A.x+B.x)/2, y:(A.y+B.y)/2};         // AB 中点 = v(t/2)=v̄ 端点
+  // 位移÷t 三角 OAM 淡粉填充
+  px.globalAlpha=0.16; px.fillStyle=P_PK;
+  px.beginPath(); px.moveTo(O.x,O.y); px.lineTo(A.x,A.y); px.lineTo(M.x,M.y); px.closePath(); px.fill();
+  px.globalAlpha=1;
+  // 速度尺（全）
+  pv(O.x,O.y,A.x,A.y,P_OR,4.5,0.92);              // v₀
+  pv(A.x,A.y,B.x,B.y,P_CY,4,0.92);                // gt
+  pv(B.x,B.y,O.x,O.y,P_W,5,0.95);                 // v
+  // 位移尺÷t（中线）
+  pv(O.x,O.y,M.x,M.y,P_PK,5,0.98);                // OM = v̄ = s/t
+  pv(A.x,A.y,M.x,M.y,P_CY,2.2,0.55);              // A→M = ½gt（虚线感用细线）
+  // M 点（AB 中点=金）
+  px.fillStyle=P_GD; px.beginPath(); px.arc(M.x,M.y,6.5,0,7); px.fill();
+  px.strokeStyle=P_GD; px.lineWidth=1.6; px.beginPath(); px.arc(M.x,M.y,10,0,7); px.stroke();
+  // 标注
+  pl((O.x+A.x)/2-6,(O.y+A.y)/2-10,'v₀',P_OR,13);
+  pl(A.x+12,(A.y+B.y)/2,'gt',P_CY,13);
+  pl((B.x+O.x)/2-12,(B.y+O.y)/2-8,'v',P_W,13.5);
+  pl(M.x+14,M.y-4,'M：AB 中点',P_GD,11.5);
+  pl(M.x+14,M.y+12,'= v(t/2) = v̄',P_GD,11);
+  pl((O.x+M.x)/2-10,(O.y+M.y)/2-8,'v̄ = s/t',P_PK,12.5);
+  pl(O.x-8,O.y+22,'O',P_MU,12.5);
+  pl(60,60,'速度尺 OAB：v₀ →+gt → v',P_W,12.5);
+  pl(60,76,'位移尺÷t：粉△OAM = v₀、½gt、v̄',P_PK,12.5);
+  pl(60,288,'位移三角形(真实) = 粉△OAM × t',P_GD,12.5);
+  pl(246,168,'×t',P_GD,17);
+  // —— 右：×t 放大 = 真实位移三角形（双描边重合）——
   const sv=pos(t);
   const m2=Math.max(Math.hypot(sv.x,sv.y), 0.5*G*t*t);
   const k2=140/Math.max(m2,0.01), O2={x:368,y:200};
@@ -506,7 +527,7 @@ function pS3(){
   pl((O2.x+C.x)/2+2,(O2.y+C.y)/2-10,'v₀·t',P_OR,11.5);
   pl((C.x+D.x)/2+6,(C.y+D.y)/2,'½gt²',P_CY,11.5);
   pl((O2.x+D.x)/2-10,(O2.y+D.y)/2+12,'s = t·v(t/2)',P_PK,13);
-  pl(368,80,'放大 t 倍后与位移三角形\n完全重合（双线重叠）',P_W,12);
+  pl(368,70,'×t 后 = 位移三角形\n（粉△OAM 每条边×t）',P_W,12);
   const Ls=Math.hypot(sv.x,sv.y), Lh=Math.hypot(hv.x,hv.y);
   pl(368,140,'|s| / |v(t/2)| = '+(Ls/Math.max(Lh,1e-9)).toFixed(3),P_GD,14);
   pl(368,166,'= t = '+t.toFixed(2)+' s',P_GD,14);
@@ -652,7 +673,7 @@ function updateBanners(){
   let txt='', hit=false, cyan=false;
   if(step===1){ txt='① 拆：小球 = <b style="color:var(--orange)">影子A（沿 v₀ 匀速）</b> + <b style="color:var(--cyan)">影子B（竖直自由落体）</b>。不是水平+竖直！是“斜”着拆，所以叫<b>斜交分解</b>。'; }
   else if(step===2){ txt='② 两把尺：速度尺 <b style="color:var(--white)">v = v₀ + gt</b>；位移尺 <b style="color:var(--pink)">s = v₀t + ½gt²</b>。同一时刻各画各的，但边长都由 t 决定。'; }
-  else if(step===3){ txt='③ 核心：<b style="color:var(--gold)">s = t·v(t/2)</b> —— 把 t/2 时刻的速度三角形整体放大 t 倍，正好就是位移三角形。“位移方向 = 中点时刻速度方向”也由此而来。'; cyan=true; }
+  else if(step===3){ txt='③ 两尺同图：速度尺 <b style="color:var(--white)">OAB</b>（v₀→gt→v）里藏着位移尺 —— 取斜边 AB 中点 M 连 O，<b style="color:var(--gold)">粉△OAM 就是位移三角形÷t</b>（v₀、½gt、v̄=s/t）。M 是 AB 中点 ⟹ 位移方向正指速度尺斜边中点。'; cyan=true; }
   else if(step===4){ txt='④ 中点定理：过小球沿 <b style="color:var(--white)">v 的反向</b>作线，交 v₀ 射线于 <b style="color:var(--gold)">v₀t 的中点 E</b> —— 拖 t、换 θ、加落差，E 永远钉在中点上。'; cyan=true; }
   else if(step===5){
     if(t>=Tmax()-0.01){
@@ -665,7 +686,7 @@ function updateBanners(){
   const titles={
     1:['分位移合成','<b>橙色</b> = 影子A 的位移 v₀t（沿初速度方向匀速）；<b>青色</b> = 影子B 的位移 ½gt²（竖直自由落体）；<b>粉色</b> = 合位移 s。两段分位移首尾相接成一张斜三角形。'],
     2:['速度尺 & 位移尺','上半<b>速度尺</b>：v₀ 走一段、gt 坠一段，斜边 = 合速度 v（轨迹切线方向）。下半<b>位移尺</b>：v₀t 走一段、½gt² 坠一段，斜边 = 合位移 s（割线方向）。'],
-    3:['同形放大','把 <b>t/2 时刻</b>的速度三角形每条边 ×t：v₀→v₀t、g·(t/2)→½gt²、v(t/2)→t·v(t/2)=s —— 与位移三角形<b>精确重合</b>。'],
+    3:['两尺同图（中线半边）','左图：速度三角形 OAB（橙 v₀ → 青 gt → 白 v）完整画出，取斜边 AB 中点 M，粉色 OM 连线 = v̄ = v(t/2) = s/t —— 粉△OAM（v₀、½gt、v̄）就是<b>位移三角形每边÷t</b>。右图：把粉△OAM 整体 ×t，精确得到真实位移三角形（粉 s 与白虚线重合）。一句记：位移方向正指速度尺斜边的中点。'],
     4:['中位线解剖','由 s = v₀t + ½gt² 直接推：M（OC 中点）到 D 的连线 DM = (t/2)·v ⟹ DM ∥ v。所以过 D 反延 v 必踩中 M。这是“平抛末速度反延过水平位移中点”的一般化。'],
     5:['面积记账本','速度三角形面积 = ½·(gt)·(v₀cosθ) = ½g·x，只与水平位移挂钩。等高落地 x = R = v₀²sin2θ/g ⟹ 45° 最远；不等高时 sin2θ 的结论失效。']};
   $('paperTitle').textContent=titles[step][0];
