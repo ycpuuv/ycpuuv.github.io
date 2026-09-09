@@ -288,33 +288,56 @@ function drawGhostMotions(){
 }
 function drawVectors(){
   const p=pos(t), S={x:sx(p.x),y:sy(p.y)}, O={x:sx(0),y:sy(0)};
-  // 位移 s（粉）
+  const cth=Math.cos(th()), sth=Math.sin(th());
+  // 位移 s（粉，全程）—— 也是位移三角形的斜边
   vec(O.x,O.y,S.x,S.y,CP,4.5,235);
   lab((O.x+S.x)/2+8,(O.y+S.y)/2-10,'s',CP,14);
-  // 分位移（step1 且关闭幽灵时显示）
+  // step1：分位移（幽灵关闭时）
   if(step===1 && !ghostShow){
-    const cth=Math.cos(th()), sth=Math.sin(th());
     const A={x:sx(v0*cth*t),y:sy(v0*sth*t)}, B={x:sx(0),y:sy(-0.5*G*t*t)};
     vec(O.x,O.y,A.x,A.y,CO,3.6,200); lab(A.x+6,A.y-8,'v₀t',CO,13);
     vec(O.x,O.y,B.x,B.y,CC,3.6,200); lab(B.x+10,B.y-6,'½gt²',CC,13);
   }
-  // 速度 v（白，从球沿 v）
   const vv=vel(t), L=Math.hypot(vv.x,vv.y);
-  if(L>0.1){
-    const k=Math.min(13, sc*0.14);                       // px per m/s
-    const ex=S.x+vv.x*k, ey=S.y-vv.y*k;
-    vec(S.x,S.y,ex,ey,CW,4.5,250);
-    lab(ex+8,ey-6,'v',CW,14);
-  }
-  // step2：实景补画 v₀（从 O）与 gt（从球竖直向下），对应图纸速度三角的两条直角边
-  if(step===2){
+  if(step===2||step===3){
+    sceneTwoTriangles(S,O,cth,sth,vv);
+  } else if(L>0.1){
     const k=Math.min(13, sc*0.14);
-    const ux=Math.cos(th()), uy=Math.sin(th());
-    const A={x:O.x+v0*ux*k, y:O.y-v0*uy*k};
-    vec(O.x,O.y,A.x,A.y,CO,4,210); lab(A.x+6,A.y-10,'v₀',CO,13);
-    const B={x:S.x, y:S.y+G*t*k};
-    vec(S.x,S.y,B.x,B.y,CC,4,210); lab(B.x+10,B.y-4,'gt',CC,13);
+    vec(S.x,S.y,S.x+vv.x*k,S.y-vv.y*k,CW,4.5,250);
+    lab(S.x+vv.x*k+8,S.y-vv.y*k-6,'v',CW,14);
   }
+}
+/* 实景双三角（直接长在轨迹图上）：位移三角形真实尺度 + 速度三角形锚在球上 */
+function sceneTwoTriangles(S,O,cth,sth,vv){
+  const dim = step===2?1:0.55;
+  // —— 位移三角形：O → C(v₀t 沿初速) → 球(½gt² 竖下) → O(s 粉,已画) ——
+  const C={x:sx(v0*cth*t),y:sy(v0*sth*t)};
+  vec(O.x,O.y,C.x,C.y,CO,4,230*dim);
+  vec(C.x,C.y,S.x,S.y,CC,3.6,220*dim);
+  fill(10,10,19); noStroke(); ellipse(C.x,C.y,12,12);
+  fill(CO.r,CO.g,CO.b); ellipse(C.x,C.y,5,5);
+  if(step===2){
+    lab((O.x+C.x)/2+8,(O.y+C.y)/2-8,'v₀t',CO,13);
+    lab(C.x+10,(C.y+S.y)/2,'½gt²',CC,13);
+  }
+  // —— 速度三角形（锚在球 S，v₀ 平移过来闭合）：S→A(v₀) →B(gt) →S(v) ——
+  const k=4.4;                                    // px per (m/s)
+  const A={x:S.x+v0*cth*k, y:S.y-v0*sth*k};
+  const B={x:A.x, y:A.y+G*t*k};
+  dashLine(S.x,S.y,A.x,A.y,CO,2.4,190*dim,6,4);   // v₀ 平移(虚线)
+  vec(A.x,A.y,B.x,B.y,CC,3.4,235*dim);            // gt
+  vec(S.x,S.y,B.x,B.y,CW,4.6,255);                // v 斜边(方向即球处切线速度)
+  if(step===2){
+    lab(A.x+8,A.y-8,'v₀',CO,12.5);
+    lab(B.x+8,(A.y+B.y)/2,'gt',CC,12.5);
+    lab((S.x+B.x)/2-6,(S.y+B.y)/2-8,'v',CW,13);
+  }
+  // —— 斜边中点 M = v(t/2) = v̄；S→M ∥ O→S(s) ——
+  const M={x:(A.x+B.x)/2, y:(A.y+B.y)/2};
+  fill(CG.r,CG.g,CG.b); noStroke(); ellipse(M.x,M.y,7,7);
+  const vbarCol = step===3? CG : CP;
+  dashLine(S.x,S.y,M.x,M.y,vbarCol,2.6,245*dim,3,5); // v̄ = s/t 方向：与 s 平行
+  if(step===2) lab(M.x+9,M.y-6,'M：斜边中点 = v̄',CG,11.5);
 }
 function drawHalfV(){
   const h=vHalf(), L=Math.hypot(h.x,h.y);
