@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>巧用角动量求解高考物理压轴题 · 要点整理</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;background:#0b0b14;color:#d4d4dc;line-height:1.85;background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%)}
+.container{max-width:740px;margin:0 auto;padding:30px 18px 60px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.74em;padding:6px 0;transition:.2s;margin-bottom:6px}
+.back:hover{color:#d4a373;gap:10px}
+h1{font-size:1.4em;font-weight:700;margin:6px 0 8px;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.5}
+.lead{font-size:.76em;color:#707088;margin-bottom:20px}
+.lead a{color:#7ab8b0;text-decoration:none}
+h2{font-size:1em;font-weight:600;color:#f0e6d6;margin:30px 0 8px;padding-left:11px;border-left:3px solid #d4a373;line-height:1.6}
+h3{font-size:.92em;font-weight:600;color:#e8c49a;margin:18px 0 6px;line-height:1.6}
+p{font-size:.86em;margin-bottom:11px}
+.card{background:#0e0e1e;border:1px solid #18182a;border-radius:10px;padding:15px 17px;margin-bottom:11px}
+.card .ct{font-size:.88em;font-weight:600;color:#f0e6d6;margin-bottom:9px}
+ul{list-style:none;margin:4px 0 0}
+li{font-size:.83em;color:#c0c0cc;padding-left:16px;position:relative;margin-bottom:5px}
+li::before{content:'';position:absolute;left:2px;top:.72em;width:5px;height:5px;border-radius:50%;background:#a08060}
+li b{color:#e8c49a;font-weight:600}
+.quote{font-size:.82em;color:#a8a8bc;background:rgba(212,163,115,.06);border-left:2px solid #d4a373;padding:10px 14px;border-radius:0 7px 7px 0;margin:10px 0}
+.quote b{color:#d4a373}
+.mine{background:rgba(92,141,137,.07);border:1px solid rgba(92,141,137,.25);border-radius:10px;padding:15px 17px;margin-bottom:11px}
+.mine .ct{font-size:.86em;font-weight:600;color:#7ab8b0;margin-bottom:9px}
+.mine li::before{background:#5c8d89}
+.f{font-family:'Cambria Math','Latin Modern Math','Times New Roman',serif;color:#ffe9c7;background:rgba(255,233,199,.06);padding:1px 6px;border-radius:4px;white-space:nowrap}
+.blk{font-family:'Cambria Math','Latin Modern Math','Times New Roman',serif;font-size:.92em;color:#ffe9c7;background:rgba(255,233,199,.06);border-radius:7px;padding:9px 13px;margin:9px 0;text-align:center;line-height:2}
+.ans{display:inline-block;font-size:.78em;font-weight:700;color:#0b0b14;background:#7ab8b0;border-radius:5px;padding:1px 9px;margin-left:6px;vertical-align:1px}
+.twrap{overflow-x:auto;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:.76em;min-width:520px}
+th,td{border:1px solid #1e1e34;padding:7px 9px;text-align:left;color:#c0c0cc;vertical-align:top;line-height:1.7}
+th{background:#131328;color:#e8c49a;font-weight:600;white-space:nowrap}
+td b{color:#e8c49a}
+figure{margin:12px 0;background:#0a0a16;border:1px solid #18182a;border-radius:10px;padding:10px 8px 4px}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-size:.7em;color:#5c5c72;text-align:center;padding:6px 4px 4px;line-height:1.6}
+footer{text-align:center;padding:26px 10px;color:#1e1e30;font-size:.64em;letter-spacing:1px;line-height:2}
+@media(max-width:560px){.container{padding:20px 14px 44px}h1{font-size:1.18em}}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="jiaoyan.html">← 教学研究</a>
+<h1>巧用角动量求解高考物理压轴题</h1>
+<div class="lead">刚体刘的小宇宙 · 作者 be water · 2026.9.12 ｜ 要点整理 ＋ 边界补充<br>原文：<a href="https://mp.weixin.qq.com/s/dHQabsKLazzcsb14AoV67Q" target="_blank" rel="noopener">mp.weixin.qq.com ↗</a>（原文为 4 张长图，本站已重排为可检索文字，未复制原文图片）</div>
+
+<div class="quote"><b>一句话骨架：</b>动量管平动、能量管大小，角动量管<b>绕某点的转动</b>。压轴题里只要出现「绕某点转的曲线运动」且力始终指向同一点（有心力），角动量守恒就是最短的一条路——初末两态各写一个 <span class="f">mvr</span>，中间过程一律不用管。它的门槛只有一个字：<b>先证力矩为零</b>。</div>
+
+<h2>一、理论部分：四行看懂（原文 §一～§四 的压缩）</h2>
+<div class="card">
+  <div class="ct">1. 定义：角动量与力矩</div>
+  <div class="blk">L = r × mv = r × p　　M = r × F</div>
+  <ul>
+    <li>角动量大小 <span class="f">L = m v r sinγ</span>（γ 是 r 与 p 的夹角）；方向垂直于 r、p 所在平面，r、p、L 成右手螺旋</li>
+    <li>力矩大小 <span class="f">M = r F sinα</span>；方向同理成右手螺旋</li>
+    <li>单位：<span class="f">kg·m²/s</span> / <span class="f">N·m</span></li>
+  </ul>
+</div>
+<div class="card">
+  <div class="ct">2. 定理：角动量版的「F = ma」</div>
+  <div class="blk">M = dL/dt　　即「合力矩 = 角动量的变化率」</div>
+  <p style="font-size:.83em;color:#c0c0cc">推导只有一步巧劲：对动量定理两边左叉乘 r，右边用 <span class="f">d/dt(r×mv) = dr/dt×mv + r×d(mv)/dt</span>，第一项 <span class="f">v×mv = 0</span> 自动消失。</p>
+</div>
+<div class="card">
+  <div class="ct">3. 守恒：只问一句「力矩是不是零」</div>
+  <div class="blk">若 M = 0，则 L = 常矢量</div>
+  <ul>
+    <li><b>有心力</b>对<b>力心</b>的力矩恒为零（绳的拉力、万有引力、弹簧、静电力……凡力线过同一点的都是）——这是高考题里 90% 的入口</li>
+    <li>力<b>平行于轴</b>或<b>穿过轴</b>，对<b>该轴</b>的力矩为零（竖直轴上的重力、穿过管轴的绳拉力）</li>
+  </ul>
+</div>
+<div class="card">
+  <div class="ct">4. 唯一的坑：守恒与否，取决于你选的参考点</div>
+  <ul>
+    <li>角动量本身含 <span class="f">r</span>，所以换参考点就换一个 L；A 点守恒 ≠ B 点也守恒</li>
+    <li>原文图 5.6：把参考点从力心 O 挪到 O′，同一个行星运动立刻<b>不守恒</b>了</li>
+    <li>做题时：「对哪个点/哪条轴守恒」必须写出来，写不清楚就是没证</li>
+  </ul>
+</div>
+<div class="quote">教材源头：漆安慎《力学》（第三版）第五章 §5.1。最早的实例是<b>开普勒第二定律</b>——行星的掠面速度守恒，翻成现代语言就是「对太阳的角动量守恒」。动量和能量都解释不了「近日点快、远日点慢」，角动量一句话说穿。</div>
+
+<h2>二、四道典型例题</h2>
+
+<h3>例题 1 ｜绳穿竖直管，缓慢下拉（2024·江苏卷·第 10 题·压轴选择题）<span class="ans">BC</span></h3>
+<div class="card">
+  <ul>
+    <li><b>题：</b>细绳穿过竖直管拴住小球，小球先在 A 高度做水平面内匀速圆周运动；用力把绳缓慢下拉，小球升到 B 高度（B 高于 A）继续做水平面内的匀速圆周运动，不计摩擦，判断 v、ω、a、F 如何变</li>
+    <li><b>命门：</b>下拉过程中 v 与 r <b>同时变</b>，靠 <span class="f">v = ωr</span> 判不出来——这正是角动量的舞台</li>
+    <li><b>守恒证：</b>取管的竖直轴为转轴，绳拉力沿绳且穿过轴、重力平行于轴，二者对轴的力矩都是零 ⇒ 小球对轴的角动量守恒，<span class="f">L = m v r = 常量</span></li>
+    <li><b>A 选项：</b>与圆锥摆关系 <span class="f">mg tanθ = mv²/r</span> 联立，消去 r 得 <span class="f">v = ∛(L g tanθ / m)</span>；下拉后 θ 变大 ⇒ v 变大 ⇒ <b>v<sub>A</sub> &lt; v<sub>B</sub>，A 错</b></li>
+    <li><b>B 选项：</b><span class="f">ω = √(g/(l cosθ)) = √(g/h)</span>，小球升高 h 变小 ⇒ ω 变大 ⇒ <b>B 对</b></li>
+    <li><b>C / D 选项：</b><span class="f">a = g tanθ</span>、<span class="f">F = mg tanθ</span>，都随 θ 变大 ⇒ <b>C 对、D 错</b></li>
+    <li><b>点睛（原文）：</b>真正的难点只有 A；B、C、D 用圆锥摆受力分析就「自然」解决了，不必处处强求角动量。<b>守恒律是利器，但不是唯一工具——该用什么知识就用什么知识。</b></li>
+  </ul>
+</div>
+
+<figure>
+<svg viewBox="0 0 320 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="绳穿竖直管下拉示意图">
+  <line x1="150" y1="18" x2="150" y2="105" stroke="#6c6c84" stroke-width="2"/>
+  <line x1="162" y1="18" x2="162" y2="105" stroke="#6c6c84" stroke-width="2"/>
+  <text x="170" y="30" fill="#5c5c72" font-size="10">竖直管</text>
+  <line x1="156" y1="18" x2="156" y2="10" stroke="#d4a373" stroke-width="1.6"/>
+  <path d="M152 10 L160 10 L156 2 Z" fill="#d4a373"/>
+  <text x="164" y="12" fill="#d4a373" font-size="10">F</text>
+  <line x1="150" y1="60" x2="96" y2="132" stroke="#d4a373" stroke-width="1.3"/>
+  <line x1="150" y1="40" x2="72" y2="112" stroke="#7ab8b0" stroke-width="1.3" stroke-dasharray="4 3"/>
+  <ellipse cx="156" cy="132" rx="60" ry="13" fill="none" stroke="#d4a373" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>
+  <ellipse cx="156" cy="112" rx="84" ry="16" fill="none" stroke="#7ab8b0" stroke-width="1" stroke-dasharray="3 3" opacity=".55"/>
+  <circle cx="96" cy="132" r="6" fill="#d4a373"/><text x="78" y="152" fill="#d4a373" font-size="11">A</text>
+  <circle cx="72" cy="112" r="6" fill="#7ab8b0"/><text x="54" y="106" fill="#7ab8b0" font-size="11">B</text>
+  <line x1="156" y1="60" x2="156" y2="132" stroke="#5c5c72" stroke-width=".9" stroke-dasharray="2 3"/>
+  <text x="160" y="176" fill="#5c5c72" font-size="10">下拉 → 小球升高，半径变小、张角变大</text>
+</svg>
+<figcaption>例题 1　绳穿过竖直管，下拉后小球由 A 升至 B（本站重绘示意，非原文图片）</figcaption>
+</figure>
+
+<h3>例题 2 ｜卢瑟福散射中，原子核在哪个区域<span class="ans">A ①</span></h3>
+<div class="card">
+  <ul>
+    <li><b>题：</b>α 粒子经某原子核附近的轨迹如图中实线（弧线向上凸起，P 在左、Q 在右）；虚线是过 P、Q 与轨迹相切的直线，两虚线和轨迹把平面分成 ①（两切线上方）②（左）③（右）④（两切线下方、弧线之上）四个区域。该原子核可能位于哪个区域</li>
+    <li><b>命门：</b>本题考的<b>不是</b>角动量大小守恒，而是<b>方向</b>守恒——L 是矢量，守恒意味着不但大小不变，方向也不能变（恒垂直于纸面指向同一侧）</li>
+    <li><b>化归：</b>方向不变 ⇔ 粒子自始至终绕核沿同一转向（同为顺/逆时针）旋转。用右手定则逐点检验即可</li>
+    <li><b>逐区检验：</b>核在 ② 区 → P 处逆时针、Q 处顺时针，初末转向相反，排除；核在 ③ 区 → 与 ② 对称，同样排除；核在 ④ 区 → P、Q 两端转向虽一致，但<b>轨迹中间（弧顶附近）</b>的绕行方向与两端相反，排除</li>
+    <li><b>核在 ① 区：</b>从 P 经弧顶到 Q，全程保持同一转向，角动量方向处处相同——成立。答案 <b>A（①区域）</b></li>
+    <li><b>点睛（原文）：</b>本题<b>无需</b>「合力指向轨迹凹侧」那套传统分析。角动量守恒既约束大小也约束方向，只靠「方向不变 ⊗ 转向一致」这一条就锁定了核的唯一位置</li>
+  </ul>
+</div>
+
+<figure>
+<svg viewBox="0 0 360 210" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="卢瑟福散射四区域示意图">
+  <line x1="18" y1="128" x2="342" y2="42" stroke="#6c6c84" stroke-width="1" stroke-dasharray="5 4"/>
+  <line x1="18" y1="42" x2="342" y2="128" stroke="#6c6c84" stroke-width="1" stroke-dasharray="5 4"/>
+  <path d="M40 120 Q180 46 320 120" fill="none" stroke="#7ab8b0" stroke-width="2.4"/>
+  <path d="M232 79 L243 76 L240 87 Z" fill="#7ab8b0"/>
+  <circle cx="40" cy="120" r="3.4" fill="#d4a373"/><text x="26" y="134" fill="#d4a373" font-size="11">P</text>
+  <circle cx="320" cy="120" r="3.4" fill="#d4a373"/><text x="326" y="134" fill="#d4a373" font-size="11">Q</text>
+  <circle cx="180" cy="85" r="3.4" fill="#5c8c72"/>
+  <text x="170" y="72" fill="#6c6c84" font-size="10">①</text>
+  <text x="168" y="106" fill="#e8c49a" font-size="11">④</text>
+  <text x="64" y="80" fill="#6c6c84" font-size="10">②</text>
+  <text x="286" y="80" fill="#6c6c84" font-size="10">③</text>
+  <text x="182" y="46" fill="#5c5c72" font-size="9">两切线交点</text>
+  <text x="150" y="150" fill="#5c5c72" font-size="10">弧线向上凸起，粒子自 P 向 Q 运动</text>
+</svg>
+<figcaption>例题 2　两条切线与轨迹把平面分成四个区域；核在 ① 区时全程转向一致（本站重绘示意，非原文图片）</figcaption>
+</figure>
+
+<h3>例题 3 ｜同轴半圆柱极板中的四个粒子（2022·全国乙卷·第 21 题·压轴选择题）<span class="ans">D</span></h3>
+<div class="card">
+  <ul>
+    <li><b>题：</b>两同轴半圆柱形极板半径 R 与 R+d，板间电场强度大小与到圆心 O 的距离成反比（<span class="f">E = k/r</span>）、方向指向 O。四个带正电同种粒子穿过板间到探测器：1、2 做半径 r₁、r₂ 的圆周运动（R&lt;r₁&lt;r₂&lt;R+d），3 从 r₂ 入射、r₁ 出射，4 从 r₁ 入射、r₂ 出射，不计重力</li>
+    <li><b>命门：</b><span class="f">F = qE = qk/r</span> 始终指向 O，是<b>有心力</b> ⇒ 每个粒子对 O 点的角动量都守恒。而 3 的出射点 r₁ 是全程<b>最近点</b>、4 的出射点 r₂ 是全程<b>最远点</b>——极值点处径向速度为零，速度必为纯切向，于是入射、出射两态都能直接写 <span class="f">L = mvr</span></li>
+    <li><b>A：</b>粒子 3 向里走，<span class="f">v₃出 r₁ = v₃入 r₂ ⇒ v₃出 = (r₂/r₁)v₃入 &gt; v₃入</span> ⇒ 出射动能反而更大，<b>A 错</b></li>
+    <li><b>B：</b>粒子 4 向外走，<span class="f">v₄出 = (r₁/r₂)v₄入 &lt; v₄入</span> ⇒ 出射动能更小，<b>B 错</b></li>
+    <li><b>C：</b>粒子 1、2 做圆周运动，<span class="f">qk/r = mv²/r ⇒ Ek = qk/2</span>，动能与 r <b>无关</b> ⇒ 两者相等，<b>C 错</b></li>
+    <li><b>D：</b>粒子 3 在 r₂ 处沿切向入射后<b>向里偏</b>，说明该处电场力大于维持圆周运动所需的向心力，即入射速率小于在 r₂ 处做圆周运动的速率：<span class="f">½m(v₃入)² &lt; ½·qk</span>；而 <span class="f">½qk</span> 正是粒子 1 的入射动能 ⇒ <b>D 对</b></li>
+    <li><b>点睛（原文）：</b>A、B 两问是角动量守恒的「标准舞台」；C 用圆周运动条件、D 用「向里偏 ⇒ 速度不够圆周」的向心分析即可自然解决</li>
+  </ul>
+</div>
+
+<figure>
+<svg viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="同轴半圆柱极板与四个粒子轨迹示意图">
+  <path d="M60 150 A 62 62 0 0 1 60 30" fill="none" stroke="#d4a373" stroke-width="2"/>
+  <path d="M60 165 A 90 90 0 0 1 60 15" fill="none" stroke="#6c6c84" stroke-width="1.6" stroke-dasharray="5 4"/>
+  <circle cx="60" cy="90" r="2.6" fill="#e8c49a"/><text x="48" y="94" fill="#e8c49a" font-size="10">O</text>
+  <text x="34" y="86" fill="#d4a373" font-size="9">R</text><text x="14" y="86" fill="#6c6c84" font-size="9">R+d</text>
+  <path d="M60 90 m 0 -40 A 40 40 0 0 1 60 130" fill="none" stroke="#7ab8b0" stroke-width="1.4" opacity=".9" transform="translate(0,0)"/>
+  <path d="M60 90 m 0 -52 A 52 52 0 0 1 60 142" fill="none" stroke="#7ab8b0" stroke-width="1" stroke-dasharray="3 3" opacity=".8"/>
+  <path d="M33 50 Q62 34 74 62" fill="none" stroke="#e8c49a" stroke-width="1.3"/>
+  <path d="M33 138 Q70 132 88 100" fill="none" stroke="#e8c49a" stroke-width="1.3"/>
+  <path d="M74 62 L82 56 L80 66 Z" fill="#e8c49a"/>
+  <text x="86" y="60" fill="#e8c49a" font-size="9">粒子3</text>
+  <text x="86" y="122" fill="#e8c49a" font-size="9">粒子4</text>
+  <text x="66" y="76" fill="#7ab8b0" font-size="9">粒子1</text>
+  <text x="70" y="112" fill="#7ab8b0" font-size="9">粒子2</text>
+  <text x="200" y="90" fill="#5c5c72" font-size="10">粒子1、2：圆周运动</text>
+  <text x="200" y="106" fill="#5c5c72" font-size="10">粒子3：r₂ → r₁（向里）</text>
+  <text x="200" y="122" fill="#5c5c72" font-size="10">粒子4：r₁ → r₂（向外）</text>
+  <text x="200" y="140" fill="#5c5c72" font-size="10">E = k/r，指向 O ⇒ 有心力</text>
+</svg>
+<figcaption>例题 3　同轴半圆柱极板与四个粒子轨迹（本站重绘示意，非原文图片）</figcaption>
+</figure>
+
+<h3>例题 4 ｜绳穿孔吊重物，求再次垂直时的距离（教材例题）</h3>
+<div class="card">
+  <ul>
+    <li><b>题：</b>不可伸长的细绳一端连着光滑水平面上质量为 m 的质点，另一端穿过光滑小孔 O 悬挂质量为 M 的物体。开始时 m 距孔 O 的距离为 a，且有垂直于绳的速度 v。求当 m <b>再次</b>运动到速度方向与绳垂直时，它离孔的距离 x</li>
+    <li><b>双守恒：</b>绳的拉力始终过孔 O，是有心力 ⇒ m 对 O 的角动量守恒；绳不可伸长、系统只有重力做功 ⇒ 机械能守恒</li>
+    <li><b>关键认识：</b>「速度方向与绳垂直」⇔ 径向速度为零 ⇔ 该时刻全部速度都是横向速度 v′。而 M 的速率恒等于 m 的径向速率，初末两态径向速度都为零 ⇒ <b>这两态 M 的速度也为零、动能为零</b>，能量方程里只剩 m 的动能（这一步最容易漏，也可能被扣分）</li>
+    <li><b>角动量：</b><span class="f">mva = mv′x ⇒ v′ = va/x</span></li>
+    <li><b>机械能：</b><span class="f">½mv² = ½mv′² + Mg(x − a)</span>（x&lt;a 时第二项为负，表示 M 下降放能；一个方程两种情形都涵盖）</li>
+    <li><b>联立求解：</b>代入并两边同乘 x² 得 <span class="f">m v² (x + a) = 2 Mg x²</span>（x = a 对应初始时刻，舍去），取正根：</li>
+  </ul>
+  <div class="blk">x = [ m v² + √( m²v⁴ + 8 M g m a v² ) ] / (4 M g)</div>
+  <ul>
+    <li><b>三个极限检验（原文）：</b>Mg 很小 → x 很大（几乎拉不住，m 飞很远才转向）✓；Mg 很大 → x 很小（被猛拽向小孔）✓；恰有 <span class="f">Mg = mv²/a</span>（拉力刚好提供向心力）→ <b>x = a</b>，即做匀速圆周运动、处处「速度与绳垂直」，自洽 ✓</li>
+  </ul>
+</div>
+
+<figure>
+<svg viewBox="0 0 340 190" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="绳穿孔吊重物示意图">
+  <line x1="30" y1="60" x2="300" y2="60" stroke="#6c6c84" stroke-width="1.4"/>
+  <text x="30" y="52" fill="#5c5c72" font-size="10">光滑水平面</text>
+  <circle cx="150" cy="60" r="3" fill="#e8c49a"/><text x="140" y="50" fill="#e8c49a" font-size="10">O</text>
+  <circle cx="236" cy="60" r="5" fill="#d4a373"/><text x="244" y="56" fill="#d4a373" font-size="10">m</text>
+  <line x1="150" y1="60" x2="236" y2="60" stroke="#d4a373" stroke-width="1.2"/>
+  <line x1="236" y1="60" x2="236" y2="22" stroke="#7ab8b0" stroke-width="1.6"/>
+  <path d="M231 26 L241 26 L236 14 Z" fill="#7ab8b0"/>
+  <text x="242" y="26" fill="#7ab8b0" font-size="10">v</text>
+  <text x="190" y="74" fill="#5c5c72" font-size="10">a</text>
+  <circle cx="70" cy="60" r="5" fill="#d4a373"/><text x="48" y="56" fill="#d4a373" font-size="10">m</text>
+  <line x1="70" y1="60" x2="150" y2="60" stroke="#d4a373" stroke-width="1.2"/>
+  <line x1="70" y1="60" x2="70" y2="16" stroke="#7ab8b0" stroke-width="1.6"/>
+  <path d="M65 20 L75 20 L70 8 Z" fill="#7ab8b0"/>
+  <text x="60" y="26" fill="#7ab8b0" font-size="10">v′</text>
+  <text x="106" y="74" fill="#5c5c72" font-size="10">x</text>
+  <line x1="150" y1="60" x2="150" y2="132" stroke="#d4a373" stroke-width="1.2"/>
+  <rect x="131" y="132" width="38" height="30" fill="none" stroke="#e8c49a" stroke-width="1.4"/>
+  <text x="152" y="152" fill="#e8c49a" font-size="11">M</text>
+  <line x1="150" y1="162" x2="150" y2="182" stroke="#7ab8b0" stroke-width="1.4"/>
+  <path d="M145 176 L155 176 L150 188 Z" fill="#7ab8b0"/>
+  <text x="158" y="180" fill="#7ab8b0" font-size="10">Mg</text>
+</svg>
+<figcaption>例题 4　水平面上的质点 m 经小孔 O 与悬挂物体 M 相连；两个位置的速度都垂直于绳（本站重绘示意，非原文图片）</figcaption>
+</figure>
+
+<h2>三、原文的方法总结：四步走</h2>
+<div class="twrap">
+<table>
+<tr><th>步骤</th><th>要点</th><th>四题中的体现</th></tr>
+<tr><td>① 选参考点／参考轴</td><td>选<b>力心</b>、<b>转轴</b>这类让力矩表达式最简单的几何要素</td><td>题 1 选管轴；题 2 选核；题 3 选圆心 O；题 4 选小孔 O</td></tr>
+<tr><td>② 判断力矩是否为零</td><td>有心力对力心力矩为零；过轴／平行轴的力对轴力矩为零</td><td>四题全是「有心力 ⇒ 角动量守恒」</td></tr>
+<tr><td>③ 写守恒式</td><td><span class="f">m v r sinγ = 常量</span>；<b>转折点处 γ = 90°，表达式最简洁</b></td><td>题 1、3、4 都化为 <span class="f">L = mvr</span></td></tr>
+<tr><td>④ 搭配第二定律</td><td>能量守恒／向心力条件／轨迹几何，该用什么用什么，不强求角动量</td><td>题 1 向心力式；题 2 几何约束；题 3 向心条件；题 4 能量守恒</td></tr>
+</table>
+</div>
+<div class="quote">原文结语：角动量的魅力在于它把「围绕某点的转动行为」凝缩成一个守恒量。只要认准有心力（或力矩为零的轴），<b>无须追踪运动细节，初末两态一联立，答案便水到渠成</b>。</div>
+
+<h2>阅读该文时必须带上的边界（编者补充）</h2>
+<div class="mine">
+  <div class="ct">以下为整理者补充，非原文观点</div>
+  <ul>
+    <li><b>先看清四道题的「含金量分布」，别被标题误导。</b>这篇标题叫「巧用角动量」，但真正<b>非角动量不可</b>的只有两道：题 1 的 A 选项（v、r 同时变，没有角动量判不出来）和题 2（方向守恒，别的方法无从下手）。题 3 的 C、D 与题 4 都有替代路径（向心条件、双守恒）。所以给学生讲的时候，重点不是「四题都用角动量」，而是<b>「哪两题少了它就不行」</b>——这样学生才不会形成「见曲线运动就写 mvr」的条件反射。</li>
+    <li><b>最大的失分点不是忘公式，是忘前提。</b>高考卷面上写 <span class="f">mvr₁ = mvr₂</span> 之前，必须先交代<b>「对哪条轴／哪个点」</b>与<b>「这个点上的力矩为什么是零」</b>。这两句话没有，就等于把定理当公式套——阅卷时属于「依据不足」。原文明明写了这一点（§四的图 5.6 专门警告参考点依赖），但学生做快题时最容易把它删掉。</li>
+    <li><b>反方观点（值得摆到台面上）：</b>「把角动量搬进高中压轴题」这件事本身有争议。<b>理由一：</b>人教版必修二只讲「面积速度」、选必一只讲动量与动量守恒，<b>「角动量」这个名词在教材里根本不出现</b>，它的概念难点（参考点依赖、方向守恒）在高中没有铺垫，学生记住的往往只是一个 <span class="f">L = mvr</span>，遇到<b>力矩不为零</b>的情形（例如变力不沿力线、绳被别住）就会误用；这类错误比不会做更隐蔽。<b>理由二：</b>高考按步骤给分，角动量守恒不是教材定理，用它必须自带解释，若只写结果不写前提，反而可能丢步骤分。所以我的判断是：<b>它应当被当成压轴题的「验算工具」和「一眼看穿的那一眼」，而不是一个需要单独开专题、单独讲概念的知识点。</b>对尖子生讲一轮就够，对中等生甚至不必提。</li>
+    <li><b>再远一层（本文最值得带走的东西）：</b>「有心力 ⇒ 角动量守恒」不是一道题的技巧，它是物理史上的一个转折点——例题 2 的简化版，正是卢瑟福 1911 年用来推翻汤姆孙模型、提出核式结构的原始工具；再往后一步，玻尔把 L 量子化（<span class="f">L = nħ</span>），氢光谱的能级就出来了。开普勒的行星面积、卢瑟福的核、玻尔的能级，用的是<b>同一个 L</b>。给尖子生讲到这一句，他才知道这个工具值钱在哪：它不是「大学提前学」，它是<b>通向近代物理的那扇门</b>。这也是我把它放进「教学研究」而不是「课件」的原因——它是一份方法资料，不是一个知识点。</li>
+    <li><b>教学落点（四题一起用时的正确用法）：</b>别拆成四道题讲。四题连着出，让学生自己体会一件事——同一个现象可以从<b>动量、能量、角动量</b>三个守恒量里挑一个切入，挑对了三行写完，挑错了二十行还没算完。「巧」字落在<b>选择</b>上，不在公式上。建议的课堂结构：先发四题只让学生<b>选工具</b>（不计算），每人写「用哪个守恒量、选哪条轴、力矩为什么为零」三行；对答案之后再算。这一节课的训练量比刷一整卷压轴题都值。</li>
+  </ul>
+</div>
+
+<footer>启明教学 · 教学研究 ｜ 资料整理，版权归原作者「刚体刘的小宇宙」（作者 be water）所有；原文为长图，本站仅作教学研究存档、已重排为可检索文字，未复制原文图片<br>原文链接：mp.weixin.qq.com/s/dHQabsKLazzcsb14AoV67Q</footer>
+</div>
+</body>
+</html>
