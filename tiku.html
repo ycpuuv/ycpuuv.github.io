@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>启明 · 题库</title>
+<title>物理题库 · 启明</title>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{
@@ -195,7 +195,7 @@
 <header>
   <div class="left">
     <a class="back" href="index.html">← 返回</a>
-    <h1>📝 启明题库</h1>
+    <h1>📝 物理题库</h1>
   </div>
   <div class="stats">
     <span>📦 共 <strong id="totalCount">0</strong> 题</span>
@@ -574,7 +574,7 @@ function importJSON() {
 function exportJSON() {
   const blob=new Blob([JSON.stringify(questions,null,2)],{type:'application/json'});
   const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;a.download='启明题库.json';a.click();
+  const a=document.createElement('a');a.href=url;a.download='物理题库.json';a.click();
   URL.revokeObjectURL(url);
 }
 
