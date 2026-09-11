@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>高中物理备课双轨攻略 · 普通生 / 优等生</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;background:#0b0b14;color:#d4d4dc;line-height:1.85;background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%),radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.03) 0%,transparent 50%);background-attachment:fixed}
+.container{max-width:760px;margin:0 auto;padding:30px 18px 60px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.74em;padding:6px 0;transition:.2s;margin-bottom:6px}
+.back:hover{color:#d4a373;gap:10px}
+h1{font-size:1.45em;font-weight:700;margin:6px 0 8px;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.5}
+.lead{font-size:.78em;color:#707088;margin-bottom:22px;letter-spacing:.3px}
+h2{font-size:1.02em;font-weight:600;color:#f0e6d6;margin:34px 0 6px;padding-left:11px;border-left:3px solid #d4a373;line-height:1.6}
+h2 .no{color:#a08060;font-size:.82em;margin-right:7px;font-weight:700}
+.h2sub{font-size:.7em;color:#5c5c72;margin:0 0 14px 14px}
+h3{font-size:.9em;font-weight:600;color:#e8c49a;margin:20px 0 8px}
+p{font-size:.86em;margin-bottom:11px}
+p.note{font-size:.79em;color:#8a8a9e}
+.card{background:#0e0e1e;border:1px solid #18182a;border-radius:10px;padding:15px 17px;margin-bottom:11px}
+.card:hover{border-color:#2a2a48}
+.card .ct{font-size:.88em;font-weight:600;color:#f0e6d6;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card .ct .step{font-size:.72em;background:rgba(212,163,115,.14);color:#d4a373;padding:2px 9px;border-radius:20px;font-weight:700;flex-shrink:0}
+.row{font-size:.81em;color:#c0c0cc;margin:0 0 6px;padding-left:0}
+.row b{color:#d4a373;font-weight:600}
+.row:last-child{margin-bottom:0}
+ul{list-style:none;margin:6px 0 0}
+li{font-size:.83em;color:#c0c0cc;padding-left:16px;position:relative;margin-bottom:5px}
+li::before{content:'';position:absolute;left:2px;top:.72em;width:5px;height:5px;border-radius:50%;background:#a08060}
+li b{color:#e8c49a;font-weight:600}
+.quote{font-size:.8em;color:#a8a8bc;background:rgba(212,163,115,.05);border-left:2px solid #a08060;padding:9px 13px;border-radius:0 7px 7px 0;margin:9px 0 0}
+.quote b{color:#d4a373}
+.warn{background:rgba(224,96,80,.06);border:1px solid rgba(224,96,80,.2);border-radius:8px;padding:11px 14px;font-size:.8em;color:#c9a09a;margin:10px 0}
+.warn b{color:#e06050}
+.tip{background:rgba(122,184,120,.06);border:1px solid rgba(122,184,120,.2);border-radius:8px;padding:11px 14px;font-size:.8em;color:#a3c8a0;margin:10px 0}
+.tip b{color:#7ab878}
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}
+.dual>div{background:#0e0e1e;border:1px solid #18182a;border-radius:9px;padding:13px 14px}
+.dual .a{border-top:2px solid #5c8d89}
+.dual .b{border-top:2px solid #d4a373}
+.dual h4{font-size:.78em;font-weight:700;letter-spacing:.5px;margin-bottom:8px}
+.dual .a h4{color:#7ab8b0}
+.dual .b h4{color:#d4a373}
+.dual li{font-size:.78em;margin-bottom:4px}
+.mono{font-family:'Courier New',monospace;color:#e8c49a;background:rgba(212,163,115,.06);padding:1px 6px;border-radius:4px;font-size:.94em}
+.toc{background:#0e0e1e;border:1px solid #18182a;border-radius:10px;padding:14px 17px;margin-bottom:8px}
+.toc .tt{font-size:.72em;color:#5c5c72;letter-spacing:1px;margin-bottom:9px}
+.toc a{display:block;font-size:.8em;color:#a0a0b4;text-decoration:none;padding:3px 0;transition:.2s}
+.toc a:hover{color:#d4a373;padding-left:5px}
+.tl{display:flex;gap:2px;margin:10px 0;flex-wrap:wrap}
+.tl div{font-size:.68em;padding:6px 8px;border-radius:5px;color:#0b0b14;font-weight:600;text-align:center;flex:1;min-width:74px}
+.tl .c1{background:#5c8d89}.tl .c2{background:#7ab878}.tl .c3{background:#d4a373}.tl .c4{background:#e0a060}.tl .c5{background:#c8a878}
+table{width:100%;border-collapse:collapse;font-size:.79em;margin:8px 0}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid #18182a;vertical-align:top}
+th{color:#a08060;font-weight:600;font-size:.92em;background:rgba(212,163,115,.05)}
+td:first-child{color:#e8c49a;font-weight:600;white-space:nowrap}
+.chk{list-style:none}
+.chk li{padding-left:24px}
+.chk li::before{content:'☐';position:absolute;left:2px;top:0;background:none;width:auto;height:auto;border-radius:0;color:#5c8d89;font-size:1.05em}
+footer{text-align:center;padding:26px 10px;color:#1e1e30;font-size:.64em;letter-spacing:1px;line-height:2}
+@media(max-width:560px){.container{padding:20px 14px 44px}h1{font-size:1.2em}.dual{grid-template-columns:1fr}.tl div{min-width:60px;font-size:.62em}}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="jiaoyan.html">← 教学研究</a>
+<h1>高中物理备课双轨攻略</h1>
+<div class="lead">普通生轨 · 优等生轨 ｜ 一份讲义，两个版本 ｜ 全流程 · 可落地 · 带模板</div>
+
+<div class="toc">
+  <div class="tt">目 录</div>
+  <a href="#s0">零 · 总纲：分层不是分内容，是分支架</a>
+  <a href="#s1">一 · 通用六步流程（两条轨都走）</a>
+  <a href="#s2">二 · 普通生轨：让他跟得上、做得对</a>
+  <a href="#s3">三 · 优等生轨：让他跳一跳、还想再来一次</a>
+  <a href="#s4">四 · 双轨对照表</a>
+  <a href="#s5">五 · 45 分钟时间盘子</a>
+  <a href="#s6">六 · 四张可直接用的模板</a>
+  <a href="#s7">七 · 周备课节奏与时间投入</a>
+  <a href="#s8">八 · 两种典型失败模式</a>
+  <a href="#s9">九 · 收尾三问 · 备课自检表</a>
+</div>
+
+<h2 id="s0"><span class="no">零</span>总纲：分层不是分内容，是分支架</h2>
+<div class="h2sub">先解决方向问题，再谈流程</div>
+<p>同一个知识点、同一份讲义，<b>普通生多给脚手架，优等生撤脚手架</b>。</p>
+<p>为什么不能分内容？因为分内容＝你要备两套课，讲两遍，批两套作业——工作量翻倍，撑不过一个月。而支架分层＝一份课、一个核心问题、同样的实验与图示，只在<b>提问的深度</b>、<b>留白的多少</b>、<b>作业的出口</b>上做差异。工作量只多 20%，产出翻一倍。</p>
+<div class="card">
+  <div class="ct">三个必须区分清楚的概念</div>
+  <div class="row"><b>支架</b>＝你替他走的那一步。挖空、给图、给公式模板、给第一步——撤支架就是让他自己走这一步。</div>
+  <div class="row"><b>内容</b>＝知识点本身。内容对所有学生是同一套（课标规定），不该分。</div>
+  <div class="row"><b>出口</b>＝这节课结束时他必须独立完成到哪一步。这个<b>必须分</b>：普通生出口低一点保证成功体验，优等生出口高一点保证跳一跳。</div>
+</div>
+
+<h2 id="s1"><span class="no">一</span>通用六步流程</h2>
+<div class="h2sub">两条轨走同一套流程，只在第 5、6 步分岔</div>
+
+<div class="card">
+  <div class="ct"><span class="step">第 1 步</span>定标 —— 把目标写成行为</div>
+  <div class="row"><b>做什么：</b>把"这节课讲什么"改成"这节课他必须能做什么"。</div>
+  <div class="row"><b>怎么做：</b>用行为动词收尾——能写出、能判断、能求出、能画出、能解释。一条，不要三条。</div>
+  <div class="row"><b>反例：</b>"讲动量定理及其应用"</div>
+  <div class="row"><b>正例：</b>"学生能对两体碰撞过程写出动量守恒式，并求出碰后任一物体的速度"</div>
+  <div class="row"><b>产出物：</b>一行字，写在讲义最上方，学生也看得见。</div>
+  <div class="row"><b>检查点：</b>这句话能不能出一道题来考？考不出来的目标就是没定。</div>
+</div>
+
+<div class="card">
+  <div class="ct"><span class="step">第 2 步</span>裸做 —— 整套流程的地基</div>
+  <div class="row"><b>做什么：</b>不看答案、不看教参、不看自己以前的教案，把课上要讲的题和今天布置的作业<b>自己从头做一遍</b>。</div>
+  <div class="row"><b>怎么做：</b>一边做一边<b>记录自己的犹豫点</b>——哪一步停了两秒、哪一步要先想一下方向、哪个符号差点写反。用一个本子记，别在脑子里过。</div>
+  <div class="row"><b>关键判断：</b>你的犹豫点，就是学生的断点。你做起来顺的地方，学生也顺；你卡过一次的地方，40 个人里有 25 个会卡在那儿。</div>
+  <div class="row"><b>产出物：</b>一张"卡点清单"（本子上 3–5 条）。</div>
+  <div class="row"><b>检查点：</b>这节课的卡点我找到了吗？找不到，说明你没裸做。</div>
+</div>
+<div class="tip"><b>为什么这一步不可省：</b>备课最难的不是"讲清楚"，而是"预判他会在哪一步不清楚"。你带火箭班多年，卡点判断是肌肉记忆——但<b>肌肉记忆不能传给青年教师</b>。写下来，它才变成可复制的东西。</div>
+
+<div class="card">
+  <div class="ct"><span class="step">第 3 步</span>找卡点 —— 把断点归成三类</div>
+  <div class="row"><b>第一类 · 前概念错：</b>他带着一个错误的生活经验来。例如"力大速度就大""重的东西下落快""运动一定有推力"。<b>处理方式：制造冲突</b>——先让他预测，再用实验/仿真打脸，最后才讲正确概念。</div>
+  <div class="row"><b>第二类 · 数学工具缺：</b>物理听懂了，式子写不出来。三角函数、矢量分解、正负号、图像斜率与面积、方程移项。<b>处理方式：单独补 5 分钟，别指望他会在物理课上自己会。</b></div>
+  <div class="row"><b>第三类 · 生活经验缺：</b>没见过传送带、没坐过过山车、不知道摩天轮怎么转。<b>处理方式：给画面</b>——视频、仿真、示意图，别用语言描述代替画面。</div>
+  <div class="row"><b>产出物：</b>卡点清单上给每条标一个类别。</div>
+</div>
+
+<div class="card">
+  <div class="ct"><span class="step">第 4 步</span>定路径 —— 决定"讲多少、留多少"</div>
+  <div class="row"><b>做什么：</b>决定这节课从哪个口子切进去。</div>
+  <div class="row"><b>四选一：</b>①现象切入（实验/仿真先出画面）②问题切入（先抛一个他答不上来的问题）③错误切入（先给一个错的，让他找茬）④旧知切入（从上一节的结论推下来）。</div>
+  <div class="row"><b>真正要定的是留白：</b>哪些步骤我写完整（示范），哪些步骤我只写到一半（挖空），哪些步骤我完全不写（他自己走）。</div>
+  <div class="row"><b>产出物：</b>一条主线 + 三个留白点。</div>
+  <div class="row"><b>检查点：</b>整节课如果只保留一件事，我保留什么？——那句话就是这个出口。</div>
+</div>
+
+<div class="card">
+  <div class="ct"><span class="step">第 5 步</span>配素材 —— 两条轨在这里第一次分岔</div>
+  <div class="row"><b>素材优先级：</b>能演示真实实验就演示 ＞ 交互仿真（可拖参数）＞ 视频 ＞ 静态图示。<b>动画永远优于比喻</b>——别用语言描述代替画面。</div>
+  <div class="row"><b>题目排序：</b>基础（对答案）→ 中档（要动脑）→ 压轴（够一够）。普通生的课到中档为止，压轴留作钉子；优等生的课中档起步，压轴当主菜。</div>
+  <div class="row"><b>讲义分岔：</b>同一份讲义出 A/B 两版（见第六部分模板），差异只在留白多少，不在知识点。</div>
+  <div class="row"><b>易错点前置：</b>把上一届最高频的 2–3 个错误，做成"这样错在哪"的对照卡放在例题旁边。</div>
+</div>
+
+<div class="card">
+  <div class="ct"><span class="step">第 6 步</span>定检测 —— 出口必须有刻度</div>
+  <div class="row"><b>当堂检测：</b>课末留 3 分钟，1 道题，只考这节课的核心目标，独立完成，当场收。</div>
+  <div class="row"><b>怎么用：</b>不收分数，只分三类——<b>过关 / 半过关 / 没过关</b>。没过的名单记下来，第二天开课前 3 分钟点名复查。</div>
+  <div class="row"><b>作业分版：</b>A 版（同型保底，保证做得出来）／B 版（一题多变 + 1 道难题或挑战题）。</div>
+  <div class="row"><b>课后 10 分钟：</b>把"今天卡在哪一步"写回备课本，下周的卡点清单从这里长出来。</div>
+</div>
+
+<h2 id="s2"><span class="no">二</span>普通生轨</h2>
+<div class="h2sub">目标：跟得上、做得对、有信心</div>
+
+<ul>
+  <li><b>目标降维。</b>一节课只打死一个核心目标。宁可少讲一个公式，也要让他会用一个。最忌"这节课信息量很大"——信息量大＝他没接住。</li>
+  <li><b>入口必须看得见。</b>先现象、后道理，绝不从公式出发。公式是结论，不是出发点。</li>
+  <li><b>拆台阶。</b>一个推导拆成 3–4 个"每一步他都能自己走"的小问，挖空让他填。先整段模仿，再撤一半支架，最后独立走。</li>
+  <li><b>先补数学卡点。</b>三角函数、正负号、图像斜率、移项——数学不通，物理讲十遍也白讲。发现卡在数学上就当场停下补，不要往后硬推。</li>
+  <li><b>讲一半、练一段、生多说、你低喊。</b>每段讲解不超过 5 分钟，紧接一段同型小练；让他开口复述、上台写；少吼，音量降下来——你一急，他就断了。</li>
+  <li><b>错题必须归因。</b>概念错／模型错／运算错／审题错——四种错法配四种作业。一律"再做题"是最贵的无效劳动。</li>
+  <li><b>出口要低。</b>作业前一多半与课上例题同型，保证他能做出来。<b>正反馈的价值高于多做题</b>：能自己做出来，他才肯开始学。</li>
+  <li><b>易错点前置。</b>上一届最常见的 2–3 个错误，课上当场演示"这样错在哪"，比事后纠错便宜得多。</li>
+  <li><b>不点名做基础题。</b>基础题留给后进生和中等生，让每个人都有能答出来的机会——一道全班都能答的题，被你点到的那个中等生答对了，他那一节课就稳了。</li>
+</ul>
+<div class="quote"><b>备课自检：</b>这节课下课后，他能独立写出哪一步？<b>写不出来＝没备到。</b></div>
+
+<h2 id="s3"><span class="no">三</span>优等生轨</h2>
+<div class="h2sub">目标：跳一跳、有兴趣、还想再来一次</div>
+
+<ul>
+  <li><b>目标升维。</b>不给他更多同类题——他不缺题。给他<b>条件的边界</b>和<b>方法的比较</b>："这个结论在什么条件下才成立""两种解法哪个更省事、为什么"。</li>
+  <li><b>备课先自己答三问。</b>①这个结论的适用条件是什么？②改一个条件还成立吗？③还有第二种解法吗？——三问答不上来，这节课对优等生就是零含量。</li>
+  <li><b>一题三变。</b>课堂例题提前备好变式：去掉一个理想化假设、加上摩擦、改成非匀强、改成非弹性、把平面改成斜面。变式的落点（答案、陷阱在哪、他会在哪翻车）必须提前算好，不能临场编。</li>
+  <li><b>备陷阱清单。</b>让他掉进坑再被拉出来。<b>差点做错的题才是好题</b>——全对的题只是复习，差点错的题才是生长点。</li>
+  <li><b>备追问链。</b>不问"是什么"，问"为什么""还有什么""如果……呢"。每节课留 1 个<b>只对优等生说</b>的挑战性问题，不写进课件、不打分、不交作业——正是"不进课件、专门给我"，他才会去做。</li>
+  <li><b>隐性短板专练。</b>书写规范（写原始公式、带单位、标矢量方向）、答题节奏（掐表）、卷面字迹。<b>尖子生丢分多在此，不在难度。</b>每周一篇限时书写临摹，要求精不要求多，写不好重写。</li>
+  <li><b>出口要够不着一点点。</b>课后给一道压轴或它的降低版，<b>允许做不出</b>，第二天讲。做不出而不崩溃，是优等生最需要练的能力。</li>
+  <li><b>角色要用起来。</b>让他讲（每周小课堂分享一个方法）、带一个中等生、大考后写"满分错题分析"。知识讲一遍记得比听十遍牢。</li>
+  <li><b>敲打要敲在"怎么赢更多"，不是"有人盯着你"。</b>考完第一个找优等生没错，但话术要改：不是"至少五个人盯着你的位置"（这会让一部分人开始保守、不敢试新解法），而是"这次你赢在哪一步、下次怎么赢得更多"。<b>优等生的高分是"敢试"喂出来的，不是"怕掉"吓出来的。</b></li>
+</ul>
+<div class="quote"><b>备课自检：</b>这节课有没有一个地方，是连他都得想 10 秒的？</div>
+
+<h2 id="s4"><span class="no">四</span>双轨对照表</h2>
+<div class="h2sub">同一份讲义的两个版本，差异只在这七行</div>
+<table>
+<tr><th style="width:22%">维度</th><th style="width:39%">普通生轨</th><th style="width:39%">优等生轨</th></tr>
+<tr><td>目标</td><td>一个核心目标，会用一个</td><td>同一知识点，看边界与方法比较</td></tr>
+<tr><td>入口</td><td>生活现象 / 实验 / 仿真</td><td>一个反例，或一句"如果不这样呢"</td></tr>
+<tr><td>推导</td><td>挖空填步，先模仿后独立</td><td>先说思路、自己推，你只补漏</td></tr>
+<tr><td>例题</td><td>同型两道，第二道撤一点支架</td><td>一道三变，加多解比较</td></tr>
+<tr><td>课堂练习</td><td>当堂同型小练，必须有</td><td>课堂不练，改成课后挑战题</td></tr>
+<tr><td>作业</td><td>A 版：同型为主，保底能做完</td><td>B 版：一题多变 ＋ 1 道难题</td></tr>
+<tr><td>检测</td><td>当堂 1 题定位"过关/没过关"</td><td>满分错题分析 ＋ 答题节奏掐表</td></tr>
+<tr><td>你说话比例</td><td>你讲 60%，他做 40%</td><td>你讲 30%，他讲他做 70%</td></tr>
+</table>
+
+<h2 id="s5"><span class="no">五</span>45 分钟时间盘子</h2>
+<div class="h2sub">同样 45 分钟，两种切法</div>
+
+<h3>普通生班（重"走通"）</h3>
+<div class="tl"><div class="c1">情境/实验 8′</div><div class="c2">分段讲解＋小练 15′</div><div class="c3">当堂同型练 12′</div><div class="c4">检测与归因 7′</div><div class="c5">小结 3′</div></div>
+<p class="note">要点：讲解那 15′ 不是一整段，是切成 3 段"讲 4 分钟—练 1 分钟"。他每走通一小段，都有一次成功。</p>
+
+<h3>优等生班（重"想深"）</h3>
+<div class="tl"><div class="c1">情境压缩 4′</div><div class="c2">追问式推进 12′</div><div class="c3">一题多变/多解 15′</div><div class="c4">挑战题探究 10′</div><div class="c5">小结留钩 4′</div></div>
+<p class="note">要点：情境不铺长，4 分钟直接进问题。留钩＝小结时故意留一个没答案的问题，把好奇心带到课后。</p>
+
+<h2 id="s6"><span class="no">六</span>四张可直接用的模板</h2>
+<div class="h2sub">复制走就能用</div>
+
+<h3>模板 1 · 课时讲义 A/B 骨架</h3>
+<div class="dual">
+  <div class="a">
+    <h4>A 版（普通生）</h4>
+    <ul>
+      <li>学习目标（1 条，行为化）</li>
+      <li>现象/实验引入（先出画面）</li>
+      <li>例题 1：挖空填步 + 完整示范</li>
+      <li>随堂小练 1：同型，当堂收</li>
+      <li>例题 2：同型，撤一半支架</li>
+      <li>易错对照卡：这样错在哪</li>
+      <li>当堂检测：1 题，3 分钟</li>
+      <li>作业 A：同型为主，保底能做完</li>
+    </ul>
+  </div>
+  <div class="b">
+    <h4>B 版（优等生）</h4>
+    <ul>
+      <li>学习目标（1 条，含边界/比较）</li>
+      <li>引入：一个反例或一句追问</li>
+      <li>例题 1：先说思路，自己推</li>
+      <li>变式 1/2/3：改条件，落点已备</li>
+      <li>多解比较：两种方法优劣</li>
+      <li>陷阱卡：差点做错的那一步</li>
+      <li>挑战问题：课后，不打分</li>
+      <li>作业 B：一题多变 + 1 道难题</li>
+    </ul>
+  </div>
+</div>
+
+<h3>模板 2 · 细节核查清单（物理版，做完题逐项过）</h3>
+<div class="card">
+  <ul class="chk">
+    <li>研究对象选对了吗？受力图画完整了吗？</li>
+    <li>摩擦力方向是按"阻碍相对滑动"判的吗？（不能默认它帮忙）</li>
+    <li>矢量的方向标了吗？正方向选了吗？</li>
+    <li>写的是原始公式，还是直接代数的变形式？每个字母的物理意义对上了吗？</li>
+    <li>代入前统一到国际单位了吗？答案带单位了吗？</li>
+    <li>"恰好 / 最远 / 最大 / 刚好不……"对应的等式找到了吗？</li>
+    <li>分阶段了吗？有没有漏掉一个阶段（如共速前/共速后）？</li>
+    <li>结果的数量级合理吗？正负号的物理意义说得出来吗？</li>
+    <li>解出多个根时，舍去不符合物理情境的那个了吗？</li>
+    <li>图像题的斜率 / 面积 / 截距的物理意义写出来了吗？</li>
+    <li>关键步骤写出依据了吗（"由牛顿第二定律得…"）？</li>
+    <li>答案格式规范吗：有必要的文字说明、有结果、有单位？</li>
+  </ul>
+</div>
+
+<h3>模板 3 · 挑战性问题库（每章备 3–4 个，只对优等生说）</h3>
+<div class="card">
+  <div class="row"><b>必修一</b></div>
+  <ul>
+    <li>为什么"速度为零"不等于"加速度为零"？举一个实例，再举一个反例。</li>
+    <li>如果摩擦力突然消失，传送带上的物块会怎样？分几种情形讨论。</li>
+    <li>弹簧测力计在加速上升的电梯里读数是多少？如果电梯自由落体呢？它能读出来吗？</li>
+    <li>"绳只能拉不能推"这个理想化，什么时候会导致错误结论？</li>
+  </ul>
+  <div class="row" style="margin-top:11px"><b>必修二</b></div>
+  <ul>
+    <li>平抛落地时间只由高度决定——如果地面是斜的，还成立吗？</li>
+    <li>圆周运动的向心力到底是"谁"提供的？提供它的那个力不够了会怎样？</li>
+    <li>同步卫星能不能定点在太原上空？为什么？</li>
+    <li>第一宇宙速度用"重力＝向心力"推和用"万有引力＝向心力"推，结果差多少？差在哪？</li>
+  </ul>
+  <div class="row" style="margin-top:11px"><b>动量 · 振动与波</b></div>
+  <ul>
+    <li>非弹性碰撞"损失"的机械能去哪了？动量为什么没跟着损失？</li>
+    <li>单摆周期与振幅无关——大角度下还成立吗？误差从哪来？</li>
+    <li>波的干涉加强点上，质点是一直待在最大位移吗？</li>
+    <li>多普勒效应里，是"频率真的变了"还是"接收到的频率变了"？</li>
+  </ul>
+  <div class="row" style="margin-top:11px"><b>电磁</b></div>
+  <ul>
+    <li>电场强度为零的点，电势一定为零吗？举个反例。</li>
+    <li>充电后断开的电容器，拉开板距，板间场强 E 变不变？分"不断电/断电"两种各推一遍。</li>
+    <li>洛伦兹力不做功，那电动机是靠什么做功的？</li>
+    <li>楞次定律和能量守恒是什么关系？能不能只用能量守恒推出感应电流方向？</li>
+  </ul>
+  <div class="row" style="margin-top:11px"><b>近代物理</b></div>
+  <ul>
+    <li>光强变大→电流变大，但遏止电压不变。这两个现象一起说明了光是什么？</li>
+    <li>半衰期能不能用来算"还剩几个原子核"？为什么不能？</li>
+    <li>卢瑟福散射里，为什么绝大多数 α 粒子几乎不偏转？这说明了什么？</li>
+    <li>比结合能越大越稳定——用"平均质量"来算时，这两件事是同一件事的两面吗？</li>
+  </ul>
+</div>
+
+<h3>模板 4 · 满分错题分析（大考后写，分析"差点做错"的）</h3>
+<div class="card">
+  <div class="row"><b>题目：</b>（抄题或贴题号）</div>
+  <div class="row"><b>我当时差点错在哪一步：</b>（把犹豫的那一步写出来）</div>
+  <div class="row"><b>是什么让我从坑里爬出来：</b>（哪个条件、哪张图、哪句话）</div>
+  <div class="row"><b>命题人把条件改一下，我还会不会错：</b>（自己改一个条件再试）</div>
+  <div class="row"><b>这道题暴露了我哪个习惯问题：</b>书写 / 审题 / 节奏 / 心态，四选一</div>
+  <div class="row"><b>一句话总结：</b></div>
+</div>
+<div class="tip"><b>为什么只分析"差点做错"的：</b>做错的题他本来就不会，分析出来的是知识缺口；<b>差点做错的题暴露的是习惯和判断</b>——那才是尖子生丢分的真凶。能把自己"差点掉坑"写清楚，说明真吃透了。</div>
+
+<h2 id="s7"><span class="no">七</span>周备课节奏与时间投入</h2>
+<div class="h2sub">把"裸做"固定成每周的硬档期，其他都是它的下游</div>
+<table>
+<tr><th style="width:26%">时间</th><th>动作</th></tr>
+<tr><td>每周一 · 2 小时</td><td>本周 4 节课的<b>裸做</b>：把课上要讲的题和作业全做一遍，标记犹豫点，形成本周卡点清单。<b>这一档不可挪用。</b></td></tr>
+<tr><td>课前 1 天 · 20′</td><td>定标 → 找卡点 → 定路径（从卡点清单直接取材，不重新想）</td></tr>
+<tr><td>课前 1 天 · 20′</td><td>配素材（实验/仿真/图示）＋ 出 A/B 两版讲义</td></tr>
+<tr><td>课后 10′</td><td>记录当堂检测没过关名单 ＋ "今天卡在哪一步"写回备课本</td></tr>
+<tr><td>每月末 · 1 小时</td><td>本月陷阱清单归档 ＋ 挑战性问题库补 5 条 ＋ 错题归因统计（看全班集中在哪类错）</td></tr>
+</table>
+<p><b>时间投入参考：</b>新授课首次备 60–80 分钟（裸做 30 ＋ 设计 20 ＋ 素材 20）；习题课 30–40 分钟；复习课 40–50 分钟。<b>模板建立起来之后，从第二年开始每节课降 30–40%。</b>第一次不会白花——它是投资，不是成本。</p>
+<div class="warn"><b>最容易崩的地方：</b>把"裸做"跳过，直接抄教参的思路去讲。教参的思路是编者裸做出来的，跳过裸做的代价是——<b>你不知道学生会在哪里断，只能凭反应现场救火。</b>一节课崩不崩，往往在备课时就已经定了。</div>
+
+<h2 id="s8"><span class="no">八</span>两种典型失败模式</h2>
+<div class="h2sub">互为镜像，而且互相不会犯</div>
+<div class="card">
+  <div class="ct">普通生课 · 失败在"我讲清楚了"</div>
+  <div class="row">"讲清楚了"是<b>教师视角</b>，不是学生视角。你觉得清楚，是因为你已经懂了十年。</div>
+  <div class="row"><b>判据只有一个：</b>他能不能自己做出来。做不出来，再清楚也是白讲。</div>
+  <div class="row"><b>典型症状：</b>讲得很流畅，学生点头，一动手全错。病根＝你替他走完了所有该由他走的步。</div>
+</div>
+<div class="card">
+  <div class="ct">优等生课 · 失败在"我讲得很深"</div>
+  <div class="row">深度不等于思维量。你讲得再深，他只是<b>听众</b>；你要的是他被卡住、被追问、自己走通。</div>
+  <div class="row"><b>典型症状：</b>你讲了三种解法、讲了竞赛拓展，学生听得赞叹，但一节课下来脑子没转过一圈。</div>
+  <div class="row"><b>一句话：讲得深是表演，卡得准才是教学。</b></div>
+</div>
+<p class="note">有意思的是：这两条错误几乎不会互换——带普通班的老师很少"讲得太深"，带尖子班的老师很少"讲得太浅"。所以这类课的备课，<b>靠经验补不上，只能靠流程卡住</b>。</p>
+
+<h2 id="s9"><span class="no">九</span>收尾三问 · 备课自检表</h2>
+<div class="h2sub">每节课备完，逐项答，不答完不进教室</div>
+<div class="card">
+  <ul class="chk">
+    <li><b>第一问：</b>这节课的卡点我找到了吗？（来源＝裸做时的犹豫点）</li>
+    <li><b>第二问：</b>普通生能独立走出哪一步？优等生有没有需要想 10 秒的地方？</li>
+    <li><b>第三问：</b>如果只能保留一件事，我保留什么？</li>
+  </ul>
+</div>
+<div class="card">
+  <div class="ct">课前 60 秒快速自检</div>
+  <ul class="chk">
+    <li>目标写成行为了吗？一条？</li>
+    <li>卡点清单带进教室了吗？（3–5 条）</li>
+    <li>留白点定了吗？（哪些挖空、哪些完全他写）</li>
+    <li>整节课最低和最高的出口，都定了吗？</li>
+    <li>当堂检测的 1 道题准备好了吗？</li>
+    <li>A/B 两版作业都备好了吗？</li>
+    <li>有一个只对优等生说的挑战问题吗？</li>
+  </ul>
+</div>
+<div class="quote" style="margin-top:16px"><b>最后一句：</b>备课的核心不是"把课想好"，是<b>把学生的断点想在前头</b>。你带火箭班这么多年最值钱的东西，不是那几道压轴题的解法，是你一看题就知道"他会栽在哪"——把这个直觉写成流程，它就不只属于你一个人了。</div>
+
+<footer>启明教学 · 教学研究 ｜ 备课双轨攻略<br>可复制 · 可交给青年教师直接用</footer>
+</div>
+</body>
+</html>
