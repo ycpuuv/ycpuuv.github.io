@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>高中物理大概念·中概念·微概念体系图</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;background:#0b0b14;color:#d4d4dc;line-height:1.8;background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.04) 0%,transparent 55%)}
+.container{max-width:760px;margin:0 auto;padding:26px 14px 60px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;font-size:.74em;padding:6px 0;transition:.2s;margin-bottom:4px}
+.back:hover{color:#d4a373;gap:10px}
+h1{font-size:1.32em;font-weight:700;margin:4px 0 6px;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1.5}
+.lead{font-size:.74em;color:#707088;margin-bottom:16px}
+.lead b{color:#a08060}
+.bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.btn{font-size:.72em;padding:6px 14px;border-radius:16px;background:#0e0e1e;border:1px solid #22223a;color:#98a0b0;cursor:pointer;transition:.2s;font-family:inherit}
+.btn:hover{border-color:#d4a373;color:#d4a373}
+
+/* 大概念节点 */
+.big{margin-bottom:14px;border-radius:12px;overflow:hidden;border:1px solid #1c1c30;background:#0d0d1c}
+.big-head{display:flex;align-items:center;gap:10px;padding:13px 15px;cursor:pointer;user-select:none;transition:.2s}
+.big-head:hover{background:#12122630}
+.big-head .dotc{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.big-head .bt{font-size:1.02em;font-weight:700;letter-spacing:.5px}
+.big-head .bs{font-size:.7em;color:#6c6c84;margin-left:auto;letter-spacing:.5px}
+.big-head .cv{font-size:.72em;color:#4a4a60;transition:.25s;margin-left:8px}
+.big.open .cv{transform:rotate(90deg)}
+.big-body{display:none;padding:2px 12px 14px}
+.big.open .big-body{display:block}
+
+/* 中概念卡 */
+.mid{background:#0e0e1e;border:1px solid #191930;border-radius:9px;padding:11px 13px;margin-bottom:9px}
+.mid .mt{font-size:.84em;font-weight:600;color:#e8c49a;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.mid .mt .idx{font-size:.72em;color:#5c5c72;font-weight:400;font-family:'Courier New',monospace}
+.mid .mt .bk{font-size:.68em;color:#5c5c72;font-weight:400;margin-left:auto;text-align:right}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:.72em;padding:3px 9px;border-radius:5px;background:rgba(212,163,115,.07);border:1px solid rgba(212,163,115,.14);color:#c0b8a8;white-space:nowrap}
+.c1 .chip{background:rgba(92,141,137,.09);border-color:rgba(92,141,137,.22);color:#a8c4c0}
+.c2 .chip{background:rgba(212,163,115,.07);border-color:rgba(212,163,115,.16);color:#c8bda8}
+.c3 .chip{background:rgba(251,114,153,.07);border-color:rgba(251,114,153,.18);color:#d4a8b8}
+.c1 .big-head{background:rgba(92,141,137,.07)}
+.c1 .dotc{background:#5c8d89}
+.c2 .big-head{background:rgba(212,163,115,.07)}
+.c2 .dotc{background:#d4a373}
+.c3 .big-head{background:rgba(251,114,153,.06)}
+.c3 .dotc{background:#fb7299}
+.c1 .mid .mt{color:#8fc0ba}
+.c3 .mid .mt{color:#e8a0b8}
+
+.note{background:rgba(92,141,137,.07);border:1px solid rgba(92,141,137,.25);border-radius:10px;padding:13px 15px;margin:16px 0}
+.note .ct{font-size:.84em;font-weight:600;color:#7ab8b0;margin-bottom:8px}
+ul{list-style:none;margin:0}
+li{font-size:.82em;color:#c0c0cc;padding-left:15px;position:relative;margin-bottom:5px}
+li::before{content:'';position:absolute;left:2px;top:.7em;width:5px;height:5px;border-radius:50%;background:#5c8d89}
+li b{color:#e8c49a}
+.warn{background:rgba(251,114,153,.06);border:1px solid rgba(251,114,153,.2);border-radius:10px;padding:13px 15px;margin:14px 0}
+.warn .ct{font-size:.84em;font-weight:600;color:#fb7299;margin-bottom:8px}
+.warn li::before{background:#fb7299}
+footer{text-align:center;padding:26px 10px;color:#1e1e30;font-size:.64em;letter-spacing:1px;line-height:2}
+@media(max-width:560px){.container{padding:18px 12px 44px}h1{font-size:1.15em}.chip{font-size:.68em}.mid .mt .bk{display:none}}
+</style>
+</head>
+<body>
+<div class="container">
+<a class="back" href="jiaoyan.html">← 教学研究</a>
+<h1>高中物理概念体系图</h1>
+<div class="lead">大概念 → 中概念 → 微概念 ｜ 依据人教版（2019）六册教材结构与 2025 年修订课标"物质·运动和相互作用·能量"三大主题<br>点标题展开 / 收起 ｜ 整理日期：2026.9</div>
+
+<div class="bar">
+  <button class="btn" onclick="all(true)">全部展开</button>
+  <button class="btn" onclick="all(false)">全部收起</button>
+</div>
+
+<!-- ========== 大概念一 ========== -->
+<div class="big c1" id="b1">
+  <div class="big-head" onclick="tg('b1')">
+    <span class="dotc"></span>
+    <span class="bt">物质</span>
+    <span class="bs">4 中概念</span>
+    <span class="cv">▶</span>
+  </div>
+  <div class="big-body">
+
+    <div class="mid">
+      <div class="mt">1 分子动理论 <span class="bk">选必三·第一章</span></div>
+      <div class="chips">
+        <span class="chip">物体由大量分子组成</span><span class="chip">阿伏加德罗常数 N<sub>A</sub></span><span class="chip">分子直径数量级 10⁻¹⁰ m</span><span class="chip">油膜法估测分子大小</span><span class="chip">布朗运动</span><span class="chip">热运动</span><span class="chip">分子间引力与斥力并存</span><span class="chip">分子力—距离图像</span><span class="chip">分子动能</span><span class="chip">分子势能</span><span class="chip">内能</span><span class="chip">温度是分子平均动能的标志</span><span class="chip">分子速率分布规律</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">2 固体·液体·气体 <span class="bk">选必三·第二章</span></div>
+      <div class="chips">
+        <span class="chip">晶体与非晶体</span><span class="chip">单晶体与多晶体</span><span class="chip">各向异性</span><span class="chip">液晶</span><span class="chip">表面张力</span><span class="chip">浸润与不浸润</span><span class="chip">毛细现象</span><span class="chip">饱和汽与饱和汽压</span><span class="chip">相对湿度</span><span class="chip">温度和温标</span><span class="chip">热力学温度·绝对零度</span><span class="chip">玻意耳定律</span><span class="chip">查理定律</span><span class="chip">盖-吕萨克定律</span><span class="chip">理想气体状态方程</span><span class="chip">气体压强的微观解释</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">3 原子结构与原子核 <span class="bk">选必三·第四、五章</span></div>
+      <div class="chips">
+        <span class="chip">α 粒子散射实验</span><span class="chip">核式结构模型</span><span class="chip">能级·基态与激发态</span><span class="chip">跃迁与光子</span><span class="chip">氢原子光谱</span><span class="chip">玻尔原子模型</span><span class="chip">原子核的组成</span><span class="chip">质子数·中子数·质量数</span><span class="chip">同位素</span><span class="chip">天然放射性</span><span class="chip">α 衰变</span><span class="chip">β 衰变</span><span class="chip">γ 射线</span><span class="chip">半衰期</span><span class="chip">核反应方程</span><span class="chip">核力</span><span class="chip">结合能·比结合能</span><span class="chip">质量亏损</span><span class="chip">"基本"粒子·夸克</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">4 场：物质的特殊形态 <span class="bk">必修三·第九、十、十三章 ／ 选必二·第一章</span></div>
+      <div class="chips">
+        <span class="chip">电荷·元电荷 e</span><span class="chip">电荷守恒</span><span class="chip">点电荷</span><span class="chip">库仑定律</span><span class="chip">电场</span><span class="chip">电场强度 E</span><span class="chip">电场线</span><span class="chip">匀强电场</span><span class="chip">电势</span><span class="chip">等势面</span><span class="chip">电势差 U</span><span class="chip">电势能</span><span class="chip">电容器·电容 C</span><span class="chip">平行板电容器</span><span class="chip">磁场</span><span class="chip">磁感应强度 B</span><span class="chip">磁感线</span><span class="chip">匀强磁场</span><span class="chip">磁通量 Φ</span><span class="chip">电磁场</span><span class="chip">电磁波·光是电磁波</span><span class="chip">电磁波谱</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== 大概念二 ========== -->
+<div class="big c2" id="b2">
+  <div class="big-head" onclick="tg('b2')">
+    <span class="dotc"></span>
+    <span class="bt">运动和相互作用</span>
+    <span class="bs">8 中概念</span>
+    <span class="cv">▶</span>
+  </div>
+  <div class="big-body">
+
+    <div class="mid">
+      <div class="mt">1 运动的描述与匀变速运动 <span class="bk">必修一·第一、二章</span></div>
+      <div class="chips">
+        <span class="chip">质点</span><span class="chip">参考系</span><span class="chip">坐标系</span><span class="chip">时刻与时间间隔</span><span class="chip">位移</span><span class="chip">路程</span><span class="chip">矢量与标量</span><span class="chip">速度</span><span class="chip">平均速度</span><span class="chip">瞬时速度</span><span class="chip">速率</span><span class="chip">加速度</span><span class="chip">x-t 图像</span><span class="chip">v-t 图像</span><span class="chip">匀变速直线运动</span><span class="chip">速度公式</span><span class="chip">位移公式</span><span class="chip">速度—位移关系</span><span class="chip">中间时刻速度</span><span class="chip">逐差法</span><span class="chip">自由落体运动</span><span class="chip">重力加速度 g</span><span class="chip">伽利略的研究方法</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">2 力与物体平衡 <span class="bk">必修一·第三章</span></div>
+      <div class="chips">
+        <span class="chip">力·力的三要素</span><span class="chip">重力·重心</span><span class="chip">弹力</span><span class="chip">胡克定律</span><span class="chip">静摩擦力</span><span class="chip">滑动摩擦力</span><span class="chip">动摩擦因数</span><span class="chip">力的图示</span><span class="chip">力的合成</span><span class="chip">力的分解</span><span class="chip">平行四边形定则</span><span class="chip">共点力的平衡</span><span class="chip">正交分解法</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">3 运动与力的关系 <span class="bk">必修一·第四章</span></div>
+      <div class="chips">
+        <span class="chip">牛顿第一定律</span><span class="chip">惯性</span><span class="chip">牛顿第二定律 F=ma</span><span class="chip">牛顿第三定律</span><span class="chip">作用力与反作用力</span><span class="chip">超重与失重</span><span class="chip">国际单位制</span><span class="chip">动力学的两类基本问题</span><span class="chip">连接体问题</span><span class="chip">板块模型</span><span class="chip">传送带模型</span><span class="chip">瞬时性问题</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">4 曲线运动与万有引力 <span class="bk">必修二·第五、六、七章</span></div>
+      <div class="chips">
+        <span class="chip">曲线运动的速度方向</span><span class="chip">运动的合成与分解</span><span class="chip">平抛运动</span><span class="chip">斜抛运动</span><span class="chip">线速度</span><span class="chip">角速度</span><span class="chip">周期</span><span class="chip">转速</span><span class="chip">向心加速度</span><span class="chip">向心力</span><span class="chip">竖直平面内的圆周运动</span><span class="chip">离心运动</span><span class="chip">万有引力定律</span><span class="chip">引力常量 G</span><span class="chip">卡文迪什扭秤实验</span><span class="chip">开普勒三定律</span><span class="chip">万有引力与重力的关系</span><span class="chip">三个宇宙速度</span><span class="chip">人造卫星</span><span class="chip">同步卫星</span><span class="chip">卫星变轨</span><span class="chip">双星系统</span><span class="chip">相对论时空观</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">5 动量与碰撞 <span class="bk">选必一·第一章</span></div>
+      <div class="chips">
+        <span class="chip">动量 p=mv</span><span class="chip">冲量 I=Ft</span><span class="chip">动量定理</span><span class="chip">动量守恒定律</span><span class="chip">动量守恒的条件</span><span class="chip">弹性碰撞</span><span class="chip">非弹性碰撞</span><span class="chip">完全非弹性碰撞</span><span class="chip">反冲</span><span class="chip">火箭</span><span class="chip">人船模型</span><span class="chip">验证动量守恒定律</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">6 机械振动与机械波 <span class="bk">选必一·第二、三章</span></div>
+      <div class="chips">
+        <span class="chip">简谐运动</span><span class="chip">回复力</span><span class="chip">振幅</span><span class="chip">周期</span><span class="chip">频率</span><span class="chip">相位</span><span class="chip">简谐运动图像</span><span class="chip">单摆·周期公式</span><span class="chip">简谐运动的能量</span><span class="chip">固有频率</span><span class="chip">受迫振动</span><span class="chip">共振</span><span class="chip">波的形成与传播</span><span class="chip">横波与纵波</span><span class="chip">波长</span><span class="chip">波速 v=λf</span><span class="chip">波的图像</span><span class="chip">波的反射·折射</span><span class="chip">波的衍射</span><span class="chip">波的干涉</span><span class="chip">多普勒效应</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">7 光与电磁波 <span class="bk">选必一·第四章 ／ 选必二·第四章</span></div>
+      <div class="chips">
+        <span class="chip">光的反射</span><span class="chip">光的折射定律</span><span class="chip">折射率 n</span><span class="chip">全反射</span><span class="chip">临界角</span><span class="chip">光导纤维</span><span class="chip">光的色散</span><span class="chip">光的干涉</span><span class="chip">双缝干涉实验</span><span class="chip">光的衍射</span><span class="chip">光的偏振</span><span class="chip">激光</span><span class="chip">麦克斯韦电磁场理论</span><span class="chip">电磁振荡</span><span class="chip">电磁波的发射与接收</span><span class="chip">无线电波·红外线·紫外线·X 射线·γ 射线</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">8 带电粒子在电磁场中的运动 <span class="bk">选必二·第一章</span></div>
+      <div class="chips">
+        <span class="chip">磁场对通电导线的作用力</span><span class="chip">左手定则</span><span class="chip">安培力 F=BIL</span><span class="chip">磁场对运动电荷的作用力</span><span class="chip">洛伦兹力 F=qvB</span><span class="chip">带电粒子在匀强磁场中的圆周运动</span><span class="chip">半径公式</span><span class="chip">周期公式</span><span class="chip">带电粒子在匀强电场中的加速</span><span class="chip">带电粒子在匀强电场中的偏转</span><span class="chip">示波管</span><span class="chip">速度选择器</span><span class="chip">磁流体发电机</span><span class="chip">电磁流量计</span><span class="chip">质谱仪</span><span class="chip">回旋加速器</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ========== 大概念三 ========== -->
+<div class="big c3" id="b3">
+  <div class="big-head" onclick="tg('b3')">
+    <span class="dotc"></span>
+    <span class="bt">能量</span>
+    <span class="bs">6 中概念</span>
+    <span class="cv">▶</span>
+  </div>
+  <div class="big-body">
+
+    <div class="mid">
+      <div class="mt">1 功和机械能 <span class="bk">必修二·第八章</span></div>
+      <div class="chips">
+        <span class="chip">功 W=Flcosθ</span><span class="chip">正功与负功</span><span class="chip">总功</span><span class="chip">功率 P=W/t</span><span class="chip">P=Fv</span><span class="chip">额定功率与实际功率</span><span class="chip">机车启动问题</span><span class="chip">动能</span><span class="chip">动能定理</span><span class="chip">重力势能</span><span class="chip">重力做功与路径无关</span><span class="chip">弹性势能</span><span class="chip">机械能</span><span class="chip">机械能守恒定律</span><span class="chip">验证机械能守恒定律</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">2 能量守恒与转化 <span class="bk">必修二／必修三·第十二章</span></div>
+      <div class="chips">
+        <span class="chip">能量守恒定律</span><span class="chip">能量转化与转移</span><span class="chip">能量耗散</span><span class="chip">功与能的对应关系</span><span class="chip">重力做功对应重力势能变化</span><span class="chip">合外力做功对应动能变化</span><span class="chip">摩擦力做功与内能</span><span class="chip">电场力做功与电势能</span><span class="chip">安培力做功与电能</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">3 热与内能 <span class="bk">选必三·第三章</span></div>
+      <div class="chips">
+        <span class="chip">内能</span><span class="chip">热传递</span><span class="chip">做功改变内能</span><span class="chip">热力学第一定律 ΔU=Q+W</span><span class="chip">热力学第二定律</span><span class="chip">熵</span><span class="chip">能量转化与转移的方向性</span><span class="chip">热机与热机效率</span><span class="chip">两类永动机不可能</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">4 电能与能量转化 <span class="bk">必修三·第十一、十二章</span></div>
+      <div class="chips">
+        <span class="chip">电流·电压·电阻</span><span class="chip">串联与并联电路</span><span class="chip">电功</span><span class="chip">电功率</span><span class="chip">焦耳定律</span><span class="chip">电动势 E</span><span class="chip">内阻</span><span class="chip">闭合电路欧姆定律</span><span class="chip">路端电压</span><span class="chip">电源效率</span><span class="chip">电表改装</span><span class="chip">多用电表</span><span class="chip">测电源电动势和内阻</span><span class="chip">描绘伏安特性曲线</span><span class="chip">家庭电路与安全用电</span><span class="chip">电能的输送</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">5 电磁感应中的能量转化 <span class="bk">选必二·第二、三章</span></div>
+      <div class="chips">
+        <span class="chip">电磁感应现象</span><span class="chip">楞次定律</span><span class="chip">右手定则</span><span class="chip">法拉第电磁感应定律</span><span class="chip">动生电动势</span><span class="chip">感生电动势</span><span class="chip">自感与互感</span><span class="chip">涡流</span><span class="chip">电磁感应中的电路问题</span><span class="chip">电磁感应中的力学问题</span><span class="chip">电磁感应中的焦耳热</span><span class="chip">交变电流的产生</span><span class="chip">有效值与峰值</span><span class="chip">变压器原理</span><span class="chip">远距离输电</span><span class="chip">传感器</span>
+      </div>
+    </div>
+
+    <div class="mid">
+      <div class="mt">6 量子与核能 <span class="bk">选必三·第四、五章</span></div>
+      <div class="chips">
+        <span class="chip">黑体辐射</span><span class="chip">普朗克量子假说</span><span class="chip">能量子</span><span class="chip">光电效应</span><span class="chip">光电效应规律</span><span class="chip">爱因斯坦光电方程</span><span class="chip">光子</span><span class="chip">遏止电压</span><span class="chip">波粒二象性</span><span class="chip">德布罗意波长</span><span class="chip">能级跃迁与光子能量</span><span class="chip">核能</span><span class="chip">结合能·比结合能</span><span class="chip">质量亏损</span><span class="chip">质能方程 E=mc²</span><span class="chip">核裂变·链式反应</span><span class="chip">核反应堆</span><span class="chip">核聚变</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="note">
+  <div class="ct">怎么用这张图</div>
+  <ul>
+    <li><b>当"骨架"用，不当"清单"用。</b>三层结构是"大概念—中概念—微概念"，复习时顺着往下走，缺哪一格就补哪一格；反过来从微概念往上归位，能看出学生到底卡在哪一层——是概念没记住（微），还是没归到原理上（中），还是压根没有能量/守恒这种统摄视角（大）。</li>
+    <li><b>跨册串讲就靠大概念。</b>必修二机械能、选修热力学、电磁感应焦耳热、核能，教材里分散在四个模块，但在"能量"这一支下面是同一件事：转化与守恒。一轮复习按大概念串，比按教材顺序串更容易打通。</li>
+    <li><b>三大概念和高考评析的方向是同一件事。</b>2025—2026 年物理评析反复讲"综合运用多个规律""抓住主要矛盾""定性半定量"，考的就是学生有没有上层的大概念——只会套公式的学生，缺的正是这一层。</li>
+    <li><b>中概念编号可当章节对照。</b>每个中概念的右上角标了所在册与章，方便对着教材查漏。</li>
+  </ul>
+</div>
+
+<div class="warn">
+  <div class="ct">边界说明</div>
+  <ul>
+    <li><b>概念层级没有唯一答案。</b>这张图是按 2025 年修订课标"物质·运动和相互作用·能量"三大主题＋人教版六册教材结构做的一种整理，不是官方发布的唯一体系。不同教材版本、不同教研机构会有别的切法。</li>
+    <li><b>"场"归入物质、"动量"归入运动和相互作用</b>都是有争论的划法：场既有物质性也有相互作用性；动量守恒既是运动学结论也是守恒律。这里按"有利于教学"而非"哲学上最严谨"来归位，遇到更好的切法可以随时调整。</li>
+    <li><b>微概念不等于考点清单。</b>这里列的是概念的"存在性"清单，不代表考试权重；有些微概念（如液晶、相对论时空观）属于了解层次。</li>
+  </ul>
+</div>
+
+<footer>启明教学 · 教学研究 ｜ 依据《普通高中物理课程标准（2017年版2025年修订）》三大主题框架与人教版（2019）教材目录整理<br>概念层级为本站整理方案，非官方唯一体系</footer>
+</div>
+
+<script>
+function tg(id){document.getElementById(id).classList.toggle('open');}
+function all(open){
+  document.querySelectorAll('.big').forEach(function(e){
+    if(open){e.classList.add('open');}else{e.classList.remove('open');}
+  });
+}
+document.getElementById('b1').classList.add('open');
+</script>
+</body>
+</html>
