@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>脱离时刻 · cosθ = 2/3 的两张面孔</title>
+<style>
+  :root{--bg:#0b0b14;--card:#0e0e1e;--line:#18182a;--line2:#2a2a48;--amber:#d4a373;--amber-l:#f4a261;
+    --gold:#ffd700;--orange:#ff8c42;--cyan:#66c2ff;--green:#7ab878;--pink:#ff7eb6;--red:#e06050;
+    --white:#e8e8f0;--txt:#d4d4dc;--mut:#707088}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+    background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.05) 0%,transparent 55%);min-height:100vh;padding-bottom:30px}
+  .wrap{max-width:1180px;margin:0 auto;padding:14px 14px 0}
+  .topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:2px}
+  .back{color:var(--mut);text-decoration:none;font-size:14px;padding:4px 10px;border:1px solid var(--line);border-radius:8px}
+  .back:hover{color:var(--amber-l);border-color:var(--line2)}
+  h1{font-size:22px;font-weight:800;background:linear-gradient(90deg,#ff6b35,#ffd700,#fb7299);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:.5px}
+  .sub{font-size:13.5px;color:var(--mut);margin:3px 0 10px}
+  .sub b{color:var(--amber)}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 12px}
+  .step-btn{flex:1;min-width:150px;background:var(--card);border:1px solid var(--line);color:var(--mut);
+    border-radius:11px;padding:7px 8px;font-size:12.5px;cursor:pointer;text-align:left;transition:.15s;line-height:1.35}
+  .step-btn b{display:block;font-size:13px;color:var(--txt)}
+  .step-btn:hover{border-color:var(--line2)}
+  .step-btn.on{background:#16162a;border-color:var(--amber)}
+  .step-btn.on b{color:var(--amber-l)}
+  .step-btn .n{display:inline-block;width:17px;height:17px;line-height:15px;text-align:center;border-radius:50%;
+    border:1.5px solid currentColor;font-size:11px;margin-right:5px;vertical-align:1px}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 348px;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+  .panel h3{font-size:15px;color:var(--amber);margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .panel h3 .r{font-size:12px;color:var(--mut);font-weight:400}
+  #stageWrap{width:100%}
+  canvas{width:100%;height:auto;display:block;border-radius:10px;background:#0a0a13}
+  .banner{margin:8px 0 0;padding:8px 11px;border-radius:10px;font-size:14px;font-weight:600;
+    border:1px dashed var(--line2);color:var(--amber-l);background:rgba(212,163,115,.05);line-height:1.6}
+  .banner.tx{margin-top:6px;border-style:solid;border-color:rgba(212,163,115,.22);background:rgba(212,163,115,.03);
+    color:#b8b8c8;font-weight:400;font-size:13.5px}
+  .banner.tx b{color:var(--amber-l)}
+  .banner.hit{background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.6);color:var(--gold)}
+  .ctrl{display:grid;grid-template-columns:74px 1fr 88px;align-items:center;gap:3px 8px;font-size:13px;margin:4px 0}
+  .ctrl label{color:#b8b8c8}
+  .ctrl input[type=range]{width:100%;accent-color:var(--amber)}
+  .ctrl output{text-align:right;color:var(--amber-l);font-weight:700;font-size:13px}
+  .btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  button{background:#151528;border:1px solid var(--line2);color:var(--txt);border-radius:9px;padding:6px 10px;font-size:13.5px;cursor:pointer;transition:.12s}
+  button:hover{border-color:var(--amber);color:var(--amber-l)}
+  button.primary{background:linear-gradient(135deg,#8a5a2b,#d4a373);color:#0b0b14;font-weight:700;border:none}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .chip{background:#12121f;border:1px solid var(--line);border-radius:8px;padding:4px 8px;font-size:12.5px;color:#b8b8c8;white-space:nowrap;line-height:1.5}
+  .chip b{font-size:13px}
+  .chip b.g{color:var(--green)} .chip b.c{color:var(--cyan)} .chip b.o{color:var(--orange)}
+  .chip b.y{color:var(--gold)} .chip b.w{color:var(--white)} .chip b.p{color:var(--pink)} .chip b.r{color:var(--red)}
+  .dv{font-size:13.5px;line-height:1.85;color:#c4c4d0}
+  .dv .f{display:block;font-family:'Courier New',monospace;color:var(--amber-l);background:rgba(212,163,115,.06);
+    border-left:2px solid rgba(212,163,115,.5);padding:5px 9px;margin:6px 0;font-size:13.5px;border-radius:0 6px 6px 0;overflow-x:auto;white-space:nowrap}
+  .dv .f.g{color:var(--green);border-left-color:rgba(122,184,120,.6);background:rgba(122,184,120,.06)}
+  .dv .f.r{color:#e88070;border-left-color:rgba(224,96,80,.6);background:rgba(224,96,80,.06)}
+  .dv b.k{color:var(--gold)}
+  .dv em{color:var(--cyan);font-style:normal}
+  .warn{margin-top:10px;padding:9px 12px;border-radius:11px;background:rgba(224,96,80,.06);
+    border:1px solid rgba(224,96,80,.22);font-size:13px;line-height:1.75;color:#c8b0ac}
+  .warn b{color:#e08070}
+  .warn li{margin-left:17px;margin-top:3px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+  .card2{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px;line-height:1.7;color:#b8b8c8}
+  .card2 b{display:block;font-size:14px;color:var(--amber);margin-bottom:4px}
+  .card2 .f{font-family:'Courier New',monospace;color:var(--amber-l);font-size:12.5px}
+  .card2.green{border-color:rgba(122,184,120,.3)} .card2.green b{color:var(--green)}
+  .foot{margin-top:14px;font-size:12px;color:var(--mut);text-align:center;line-height:1.8}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.steps .step-btn{min-width:46%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar"><a class="back" href="jiaoxue.html">← 教学资源</a>
+    <h1>脱离时刻 · cosθ = 2/3 的两张面孔</h1></div>
+  <div class="sub">小球脱离球面 ｜ 匀质杆离开墙面 —— <b>同一个临界因子，同一个母式</b></div>
+
+  <div class="steps" id="stepBar">
+    <button class="step-btn on" data-s="1"><span class="n">1</span><b>现象</b>球在哪儿离开球面</button>
+    <button class="step-btn" data-s="2"><span class="n">2</span><b>钥匙①</b>能量给"供给"</button>
+    <button class="step-btn" data-s="3"><span class="n">3</span><b>钥匙②</b>N≥0 给"上限"</button>
+    <button class="step-btn" data-s="4"><span class="n">4</span><b>交点</b>为什么是 2/3</button>
+    <button class="step-btn" data-s="5"><span class="n">5</span><b>推论</b>顶点下 R/3</button>
+    <button class="step-btn" data-s="6"><span class="n">6</span><b>母式</b>θ₀ 与 v₀ 一般情形</button>
+    <button class="step-btn" data-s="7"><span class="n">7</span><b>同构</b>杆离墙的第二张面孔</button>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h3>🕹 实验台 <span class="r" id="sceneName"></span></h3>
+      <div id="stageWrap"></div>
+      <div class="banner" id="banner"></div>
+      <div class="banner tx" id="transit"></div>
+      <div class="btns">
+        <button id="bPlay" class="primary">⏸ 暂停</button>
+        <button id="bReset">↺ 复位</button>
+        <button id="bJump">⏩ 直接看脱离瞬间</button>
+      </div>
+      <div class="ctrl" style="margin-top:8px"><label>播放速率</label>
+        <input type="range" id="rate" min="0.15" max="1.2" step="0.05" value="0.45"><output id="rateV">0.45×</output></div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h3>📐 本步推导 <span class="r" id="dvTitle"></span></h3>
+        <div class="dv" id="dvBox"></div>
+      </div>
+      <div class="panel" id="ctrlPanel">
+        <h3>🎛 可调参数</h3>
+        <div class="ctrl" id="rowTh0"><label>θ₀ 释放角</label>
+          <input type="range" id="sTh0" min="0" max="60" step="1" value="0"><output id="vTh0">0°</output></div>
+        <div class="ctrl" id="rowV0"><label>v₀ 初速度</label>
+          <input type="range" id="sV0" min="0" max="160" step="1" value="0"><output id="vV0">0.00 √(gR)</output></div>
+        <div class="ctrl" id="rowR"><label>球半径 R</label>
+          <input type="range" id="sR" min="40" max="200" step="1" value="100"><output id="vR">1.00 m</output></div>
+        <div class="ctrl" id="rowG"><label>重力 g</label>
+          <input type="range" id="sG" min="3" max="15" step="0.1" value="9.8"><output id="vG">9.8</output></div>
+        <div style="font-size:12.5px;color:var(--mut);line-height:1.7;margin-top:6px" id="ctrlHint"></div>
+      </div>
+      <div class="panel">
+        <h3>📊 实时数值 <span class="r" id="liveTag">θ₀=0° 静止释放</span></h3>
+        <div class="chips" id="chips"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card2">
+      <b>① cosθ = 2/3 推出来的一串数</b>
+      <span class="f">sinθ* = √5/3 ≈ 0.7454</span><br>
+      <span class="f">tanθ* = √5/2 ≈ 1.1180</span><br>
+      <span class="f">θ* = 48.19°</span><br>
+      下滑高度 = R/3（恒在顶点下方）<br>
+      脱离点离球心高度 = 2R/3<br>
+      脱离速度 v = √(2gR/3) ≈ 0.8165√(gR)
+    </div>
+    <div class="card2 green">
+      <b>② 真正的母式（要背的是它）</b>
+      <span class="f">cosθ* = (2/3)cosθ₀ + v₀²/(3gR)</span><br>
+      θ₀ = 0、v₀ = 0 → 才退化成 2/3<br>
+      <span class="f">v₀ = √(gR) → cosθ* = 1 → 顶点即脱离</span><br>
+      凹面（碗内壁）永不脱离：<br>
+      <span class="f">N = mg·cosθ + mv²/R &gt; 0 恒成立</span>
+    </div>
+    <div class="card2">
+      <b>③ 本质：系数比 2 : 1</b>
+      两条曲线一联立就出 2/3：<br>
+      <span class="f">1 − cosθ = (1/2)·cosθ</span><br>
+      系数 2 来自动能前的 <b style="color:var(--gold);display:inline">½</b>。<br>
+      凡"能量守恒 + 某法向力归零 +<br>圆周(或定轴转动)约束"的题，答案都是这个形状。
+    </div>
+  </div>
+
+  <div class="warn">
+    <b>⚠️ 六个高频错解</b>
+    <ul>
+      <li><b>θ 量错方向</b> —— 必须是与<b style="color:#e08070">竖直方向</b>的夹角，不是与水平面。方向错则数值全错。</li>
+      <li><b>从 θ₀ 释放还套 2/3</b> —— 应该用 cosθ* = (2/3)cosθ₀。背 2/3 的学生在这里全军覆没。</li>
+      <li><b>给初速度的题仍用 2/3</b> —— 必须带 v₀²/(3gR) 那一项。</li>
+      <li><b>把脱离点当最高点</b> —— 脱离点在顶点下方，脱离瞬间即进入斜抛。</li>
+      <li><b>忘了 N = 0 的物理含义</b> —— 是"刚要脱离"的临界，此时向心力只由重力的法向分量提供。</li>
+      <li><b>碗内壁（凹面）也套 2/3</b> —— 凹面 N 恒正，永远不会脱离，方向反了。</li>
+    </ul>
+  </div>
+
+  <div class="warn" style="background:rgba(102,194,255,.05);border-color:rgba(102,194,255,.2);color:#a8c0d8">
+    <b style="color:var(--cyan)">🔎 顺带一个漂亮的巧合（考光学时回头串一遍）</b><br>
+    折射率 n = 1.5 时全反射临界角满足 <span style="font-family:'Courier New',monospace;color:var(--cyan)">sinC = 1/n = 2/3</span>，C = 41.81°。
+    力学角 48.19° 与它<b style="color:var(--cyan)">互余</b> —— 因为一个是 2/3 当余弦、一个是 2/3 当正弦。
+    同一个 2/3，两处登场，学生最容易在这里混。
+  </div>
+
+  <div class="foot">
+    启明 · 圆周运动临界专题 ｜ 全部数值经 node 独立复算（解析式与数值模拟双通道核对，0 失败）<br>
+    <span style="color:#4c4c60">θ₀ = 0 是数学上的不稳定平衡（ω(0)=0），动画统一从 1° 起跑，对结论影响 &lt; 0.02%</span>
+  </div>
+</div>
+
+<script src="p5.min.js"></script>
+<script>
+const D2R = Math.PI/180, R2D = 180/Math.PI;
+const C = {
+  bg:'#0a0a13', sphere:'#141428', sphereLine:'#2e2e50', ground:'#3a3a58',
+  gold:'#ffd700', amber:'#d4a373', amberL:'#f4a261', orange:'#ff8c42',
+  cyan:'#66c2ff', green:'#7ab878', pink:'#ff7eb6', red:'#e06050',
+  white:'#e8e8f0', mut:'#707088', txt:'#d4d4dc', dim:'#4c4c60'
+};
+function col(hex, a){ const c = color(hex); return color(c.levels[0], c.levels[1], c.levels[2], a); }
+
+// ---------------- 状态 ----------------
+let S = {
+  step:1, running:true, rate:0.45,
+  R:1, g:9.8, th0s:0, v0f:0,          // v0f = v0 与 √(gR) 的比值
+  th:0, thd:0, phase:'sliding', t:0, trail:[], landX:null,
+  x:0, y:0, vx:0, vy:0, th0eff:0, cosStar:0.6667, thStar:0, w0:0,
+  sweep:0,
+  rod:{th:0, thd:0, phase:'sliding', xc:0, vxc:0, t:0, trail:[]},
+  Rpx:170, sc:170, cx:0, groundY:0, Lpx:300, Xw:0
+};
+let $ = id => document.getElementById(id);
+
+// ---------------- 初始化 / 复位 ----------------
+function resetSim(){
+  const th0 = Math.max(S.th0s*D2R, 1*D2R);       // 顶端为不稳定平衡，统一 1° 起跑
+  S.th0eff = th0;
+  S.v0abs = S.v0f * Math.sqrt(S.g*S.R);           // 实际初速度 (m/s)
+  // 母式（原值，可能 >1）
+  const raw = (2/3)*Math.cos(th0) + (S.v0abs*S.v0abs)/(3*S.g*S.R);
+  S.cosStarRaw = raw;
+  // v₀² ≥ gR·cosθ₀ 时释放瞬间即脱离（N 一开始就 ≤0），脱离角就是释放角、速度就是 v₀
+  if (raw >= Math.cos(th0)){ S.thStar = th0; S.immediate = true; }
+  else { S.thStar = Math.acos(raw); S.immediate = false; }
+  S.cosStar = Math.cos(S.thStar);
+  S.vDet = S.immediate ? S.v0abs : Math.sqrt(S.g*S.R*S.cosStar);
+  S.th = th0; S.thd = S.v0abs/S.R; S.phase='sliding'; S.t=0; S.trail=[]; S.landX=null;
+  S.x = S.R*Math.sin(th0); S.y = S.R*(1+Math.cos(th0));
+  S.vx = 0; S.vy = 0;
+  // 杆（同 θ₀，静止释放）
+  const r = S.rod;
+  r.th = th0; r.phase='sliding'; r.t=0; r.trail=[];
+  r.thd = Math.sqrt(Math.max(0, (3*S.g/1.0)*(Math.cos(th0)-Math.cos(r.th))));
+  r.xc = 0.5*Math.sin(th0); r.vxc = 0;
+}
+function dislodgeRod(){
+  const r = S.rod;
+  r.th = S.thStar;
+  r.thd = Math.sqrt(Math.max(0, 3*S.g*(Math.cos(S.th0eff)-Math.cos(r.th))/1.0));
+  r.xc = 0.5*Math.sin(r.th);
+  r.vxc = 0.5*Math.cos(r.th)*r.thd;   // 离墙后 x 方向不再受力 → 匀速
+  r.phase = 'off';
+}
+function jumpToDetach(){
+  S.th = S.thStar;
+  S.x = S.R*Math.sin(S.thStar); S.y = S.R*(1+Math.cos(S.thStar));
+  S.vx = S.vDet*Math.cos(S.thStar); S.vy = -S.vDet*Math.sin(S.thStar);
+  S.trail = [];
+  for (let a=S.th0eff; a<=S.thStar; a+=0.01) S.trail.push({x:S.R*Math.sin(a), y:S.R*(1+Math.cos(a))});
+  S.phase = 'fly';
+  dislodgeRod(); S.rod.trail = [];
+}
+
+// ---------------- 物理积分 ----------------
+// 关键：不能用 ω = √(2g(cosθ₀−cosθ)/R) 这个能量开方式做积分 ——
+// 它在释放点 ω(θ₀)=0 处是奇点，数值上会让球永远卡在起点（动画僵住）。
+// 改用切向牛顿第二定律的微分方程：θ̈ = (g/R)·sinθ（v₀ 只进初值，不进方程）。
+function accBall(th){ return (S.g/S.R)*Math.sin(th); }
+function rk4(th, w, dt, acc){
+  const k1t = w,            k1w = acc(th);
+  const k2t = w + 0.5*dt*k1w, k2w = acc(th + 0.5*dt*k1t);
+  const k3t = w + 0.5*dt*k2w, k3w = acc(th + 0.5*dt*k2t);
+  const k4t = w + dt*k3w,     k4w = acc(th + dt*k3t);
+  return [th + dt*(k1t + 2*k2t + 2*k3t + k4t)/6,
+          w  + dt*(k1w + 2*k2w + 2*k3w + k4w)/6];
+}
+function stepBall(dt){
+  if (S.phase === 'sliding'){
+    const r = rk4(S.th, S.thd, dt, accBall);
+    S.th = r[0]; S.thd = r[1];
+    if (S.immediate || Math.cos(S.th) <= S.cosStar){
+      S.th = S.thStar;
+      S.x = S.R*Math.sin(S.thStar); S.y = S.R*(1+Math.cos(S.thStar));
+      S.vx = S.vDet*Math.cos(S.thStar); S.vy = -S.vDet*Math.sin(S.thStar);
+      S.phase = 'fly'; dislodgeRod();
+      return;
+    }
+    S.x = S.R*Math.sin(S.th); S.y = S.R*(1+Math.cos(S.th));
+    S.trail.push({x:S.x, y:S.y});
+    if (S.trail.length > 900) S.trail.shift();
+  } else if (S.phase === 'fly'){
+    S.vx += 0; S.vy -= S.g*dt;
+    S.x += S.vx*dt; S.y += S.vy*dt;
+    S.trail.push({x:S.x, y:S.y});
+    if (S.trail.length > 900) S.trail.shift();
+    if (S.y <= 0){ S.y = 0; S.phase='land'; S.landX = S.x; }
+  }
+  S.t += dt;
+}
+function stepRod(dt){
+  const r = S.rod, a = 0.5;   // L = 1 m, a = L/2
+  if (r.phase === 'sliding'){
+    // 贴墙期间绕墙角转动：J=mL²/3，力矩 mg·(L/2)·sinθ ⟹ θ̈ = 3g·sinθ/(2L)
+    const rr = rk4(r.th, r.thd, dt, th => (3*S.g/(2*1.0))*Math.sin(th));
+    r.th = rr[0]; r.thd = rr[1];
+    r.xc = a*Math.sin(r.th);
+    r.trail.push({x:r.xc, y:a*Math.cos(r.th)});
+    if (r.trail.length > 900) r.trail.shift();
+    // 离墙判据：N墙 ≤ 0 ⟺ cosθ ≤ cosθ*
+    if (Math.cos(r.th) <= S.cosStar || S.immediate){ dislodgeRod(); }
+  } else if (r.phase === 'off'){
+    // 离墙后：ẍ_cm = 0，且下端始终贴地 (y_cm = a·cosθ)
+    // 转动方程 => θ̈ = sinθ·(g − a·cosθ·θ̇²) / [ a·(1/3 + sin²θ) ]
+    const th = r.th, s = Math.sin(th), c = Math.cos(th);
+    const thdd = s*(S.g - a*c*r.thd*r.thd)/(a*(1/3 + s*s));
+    r.thd += thdd*dt;
+    r.th += r.thd*dt;
+    r.xc += r.vxc*dt;
+    r.trail.push({x:r.xc, y:a*Math.cos(r.th)});
+    if (r.trail.length > 900) r.trail.shift();
+    if (r.th >= Math.PI/2 - 0.002){ r.th = Math.PI/2; r.phase='done'; }
+  }
+  r.t += dt;
+}
+
+// ---------------- 画布几何 ----------------
+function updGeom(){
+  const w = width, h = height;
+  S.groundY = h - 40;
+  S.Rpx = Math.min(h*0.36, w*0.22);
+  S.sc = S.Rpx / S.R;
+  S.cx = w*0.33;
+  S.Lpx = Math.min(h*0.60, w*0.40);
+  S.Xw = w*0.20;
+}
+let toS = (wx, wy) => [S.cx + wx*S.sc, S.groundY - wy*S.sc];
+
+function arrow(x1,y1,x2,y2,c,wt){
+  stroke(c); strokeWeight(wt||3); line(x1,y1,x2,y2);
+  const a = Math.atan2(y2-y1, x2-x1), hl = 9+2*(wt||3);
+  push(); translate(x2,y2); rotate(a); noStroke(); fill(c);
+  triangle(0,0,-hl,-hl*0.42,-hl,hl*0.42); pop();
+}
+
+// ---------------- 场景一：球面 ----------------
+function drawSphereScene(){
+  background(C.bg);
+  const gy = S.groundY, Rpx = S.Rpx, cx = S.cx;
+  // 地面
+  stroke(C.ground); strokeWeight(2); line(0, gy, width, gy);
+  // 球面
+  noStroke(); fill(col(C.sphere,255)); circle(cx, gy-Rpx, Rpx*2);
+  stroke(C.sphereLine); strokeWeight(1.6); noFill(); circle(cx, gy-Rpx, Rpx*2);
+  // 顶点水平虚线 + 脱离高度虚线
+  const apexY = gy-2*Rpx;
+  stroke(col(C.dim,180)); strokeWeight(1); drawingContext.setLineDash([5,5]);
+  line(cx-Rpx*1.25, apexY, cx+Rpx*1.25, apexY);
+  const detY = gy - Rpx*(1+Math.cos(S.thStar));
+  stroke(col(C.gold,120)); line(cx-Rpx*1.15, detY, cx+Rpx*2.4, detY);
+  drawingContext.setLineDash([]);
+  if (S.step !== 4){
+    noStroke(); fill(col(C.gold,220)); textSize(12.5); textAlign(LEFT);
+    text('脱离高度', cx+Rpx*1.28+3, detY-4);
+  }
+  // 步骤5 额外标注 R/3（注意：顶点到地面是 2R，不是 R）
+  if (S.step === 5){
+    const x = cx - Rpx*1.15;
+    stroke(col(C.white,140)); strokeWeight(1.5); line(x, apexY, x, gy);   // 整段 = 2R
+    stroke(C.pink); strokeWeight(6); line(x, apexY, x, apexY + Rpx/3);   // 顶端 R/3
+    stroke(col(C.white,205)); strokeWeight(1.5);
+    line(x-7, apexY, x+7, apexY);
+    line(x-7, apexY + Rpx/3, x+7, apexY + Rpx/3);
+    line(x-7, gy, x+7, gy);
+    noStroke(); fill(C.pink); textSize(14); textAlign(LEFT);
+    text('R/3', x+11, apexY + Rpx/6 + 6);
+    fill(col(C.white,205)); textSize(13);
+    text('2R', x+11, gy - 8);
+    fill(col(C.gold,225)); textSize(13);
+    text('下滑到脱离 = R/3', x-3, apexY - 13);
+  }
+  // 球心 + 半径 + 角度
+  const byy = gy - Rpx*(1+Math.cos(S.th));
+  const bxx = cx + Rpx*Math.sin(S.th);
+  stroke(col(C.mut,170)); strokeWeight(1.2); drawingContext.setLineDash([3,3]);
+  line(cx, gy-Rpx, bxx, byy); drawingContext.setLineDash([]);
+  noStroke(); fill(C.mut); circle(cx, gy-Rpx, 4);
+  // 角度弧
+  push(); noFill(); stroke(C.amber); strokeWeight(1.6);
+  arc(cx, gy-Rpx, 62, 62, -HALF_PI, -HALF_PI + S.th);
+  pop();
+  noStroke(); fill(C.amber); textSize(14); textAlign(CENTER);
+  text('θ', cx + 28*Math.sin(S.th/2) + 9, gy-Rpx - 30*Math.cos(S.th/2) + 5);
+  // 轨迹
+  noFill(); stroke(col(C.pink,150)); strokeWeight(2); beginShape();
+  for (const p of S.trail){ const s = toS(p.x, p.y); vertex(s[0], s[1]); } endShape();
+  if (S.landX !== null){
+    const s = toS(S.landX, 0);
+    stroke(col(C.pink,200)); strokeWeight(2); line(s[0]-7, s[1]-7, s[0]+7, s[1]+7);
+    line(s[0]-7, s[1]+7, s[0]+7, s[1]-7);
+    noStroke(); fill(C.pink); textSize(13); textAlign(CENTER);
+    text('落点 '+S.landX.toFixed(2)+'R', s[0], s[1]-13);
+  }
+  // 小球
+  noStroke(); fill(col(C.gold,60)); circle(bxx, byy, 34);
+  fill(C.gold); circle(bxx, byy, 17);
+  // 速度矢量（脱离后）
+  if (S.phase !== 'sliding' && (S.vx||S.vy)){
+    const vs = S.sc*0.30;
+    arrow(bxx, byy, bxx+S.vx*vs, byy-S.vy*vs, C.cyan, 3.4);
+  }
+  // 力矢量
+  const Nmg = 3*(Math.cos(S.th) - S.cosStar);
+  const isRod = false;
+  const Gpx = Math.min(115, 40+70);
+  if (S.step === 2){
+    // 能量视图：下降高度的竖直标尺
+    const barX = 26, barW = 20, barTop = gy - Rpx*2 + 4, barBot = gy - 6;
+    stroke(col(C.dim,150)); strokeWeight(1); noFill(); rect(barX, barTop, barW, barBot-barTop);
+    const frac = (1-Math.cos(S.th))/(1-Math.cos(Math.PI/2));
+    noStroke(); fill(col(C.green,210));
+    rect(barX, barBot-(barBot-barTop)*frac*1.0, barW, (barBot-barTop)*frac*1.0);
+    noStroke(); fill(C.green); textSize(13.5); textAlign(LEFT);
+    text('下降高度 h', barX+barW+8, barTop+16);
+    text('h = R(1−cosθ) = '+((1-Math.cos(S.th))*S.R).toFixed(3)+' m', barX+barW+8, barTop+36);
+    fill(C.gold); textSize(13.5);
+    text('v²/(gR) = '+(2*(1-Math.cos(S.th))).toFixed(3), barX+barW+8, barTop+58);
+    fill(col(C.white,190)); textSize(12.5);
+    text('球"有"多少', barX+barW+8, barTop+78);
+  } else {
+    // 重力（固定基准长度）
+    arrow(bxx, byy, bxx, byy + Gpx, C.orange, 5);
+    noStroke(); fill(C.orange); textSize(13.5); textAlign(LEFT);
+    text('G = mg', bxx+7, byy+Gpx+4);
+    // 法向力 N（按比例，画长）
+    if (S.phase === 'sliding' && Nmg > 0.004){
+      const nlen = Math.min(200, 26 + 118*Nmg);
+      const nx = bxx + Math.sin(S.th)*nlen, ny = byy - Math.cos(S.th)*nlen;
+      arrow(bxx, byy, nx, ny, C.green, 5);
+      noStroke(); fill(C.green); textSize(13.5); textAlign(LEFT);
+      const side = (S.th < 1.1) ? 1 : -1;
+      text('N = '+Nmg.toFixed(2)+' mg', nx + 6*side, ny + (S.th < 1.1 ? -6 : 14));
+    } else if (S.phase === 'sliding'){
+      noStroke(); fill(C.gold); textSize(15); textAlign(LEFT);
+      text('N → 0', bxx + 12, byy - 12);
+    } else {
+      noStroke(); fill(C.gold); textSize(15); textAlign(LEFT);
+      text('N = 0 · 已脱离', bxx + 12, byy - 16);
+    }
+  }
+  // 左上角大字 HUD
+  noStroke(); fill(col(C.white,235)); textAlign(LEFT); textSize(17);
+  text('θ = ' + (S.th*R2D).toFixed(2) + '°', 16, 26);
+  textSize(14); fill(col(C.txt,220));
+  text('cosθ = ' + Math.cos(S.th).toFixed(4), 16, 48);
+  const nv = 3*(Math.cos(S.th)-S.cosStar);
+  fill(nv > 0.02 ? C.green : (nv > -0.02 ? C.gold : C.red));
+  text('N/(mg) = ' + nv.toFixed(3), 16, 70);
+  if (S.step === 6){
+    noStroke(); fill(col(C.cyan,230)); textSize(13.5);
+    text('θ₀ = ' + (S.th0eff*R2D).toFixed(0) + '°   v₀ = ' + (S.v0f).toFixed(2) + '√(gR)', 16, 92);
+    // 释放点标记
+    const rx = cx + Rpx*Math.sin(S.th0eff), ry = gy - Rpx*(1+Math.cos(S.th0eff));
+    noFill(); stroke(C.cyan); strokeWeight(2); circle(rx, ry, 15);
+  }
+}
+
+// ---------------- 场景二：两条曲线（步骤 4）----------------
+function drawCurveScene(){
+  background(C.bg);
+  const L = 64, Rt = width-30, T = 44, B = height-46;
+  const PW = Rt-L, PH = B-T;
+  const px = t => L + (t/D2R/90)*PW;
+  const py = v => B - (v/2.15)*PH;
+  // 网格
+  stroke(col(C.dim,110)); strokeWeight(1);
+  for (let v=0; v<=2; v+=0.5){ line(L, py(v), Rt, py(v)); }
+  for (let d=0; d<=90; d+=15){ line(px(d*D2R), T, px(d*D2R), B); }
+  // 轴
+  stroke(col(C.mut,220)); strokeWeight(1.6); line(L,T,L,B); line(L,B,Rt,B);
+  noStroke(); fill(C.mut); textSize(13); textAlign(CENTER);
+  for (let d=0; d<=90; d+=15) text(d+'°', px(d*D2R), B+18);
+  textAlign(RIGHT);
+  for (let v=0; v<=2; v+=0.5) text(v.toFixed(1), L-7, py(v)+4);
+  textAlign(LEFT); fill(col(C.txt,200)); textSize(13);
+  text('θ（与竖直方向夹角）', Rt-190, B+34);
+  push(); translate(16, T+90); rotate(-HALF_PI); textSize(13); fill(col(C.txt,200));
+  text('v²/(gR)', -28, 0); pop();
+  // 脱离区填充（供给 > 上限）
+  noStroke(); const ths = S.thStar;
+  fill(col(C.red,26));
+  beginShape();
+  for (let a=ths; a<=Math.PI/2+1e-6; a+=0.01){ vertex(px(a), py(2*(1-Math.cos(a)))); }
+  for (let a=Math.PI/2; a>=ths-1e-6; a-=0.01){ vertex(px(a), py(Math.cos(a))); }
+  endShape(CLOSE);
+  noStroke(); fill(col(C.red,190)); textSize(12.5); textAlign(CENTER);
+  text('脱离区', px(1.30), py(1.15));
+  // 曲线A：供给
+  noFill(); stroke(C.green); strokeWeight(3); beginShape();
+  for (let a=0; a<=Math.PI/2+1e-6; a+=0.005) vertex(px(a), py(2*(1-Math.cos(a))));
+  endShape();
+  noFill(); stroke(C.white); strokeWeight(3); stroke(col(C.red,255)); beginShape();
+  for (let a=0; a<=Math.PI/2+1e-6; a+=0.005) vertex(px(a), py(Math.cos(a)));
+  endShape();
+  noStroke(); fill(C.green); textSize(14); textAlign(LEFT);
+  text('供给：v²/(gR) = 2(1−cosθ)', px(0.62), py(1.72));
+  fill(C.red); textAlign(RIGHT);
+  text('上限：v²/(gR) = cosθ', Rt-6, py(0.42));
+  // 扫掠线
+  const a0 = Math.min(S.sweep, Math.PI/2);
+  stroke(col(C.gold,190)); strokeWeight(1.6);
+  line(px(a0), T, px(a0), B);
+  noStroke();
+  fill(C.green); circle(px(a0), py(2*(1-Math.cos(a0))), 10);
+  fill(C.red); circle(px(a0), py(Math.cos(a0)), 10);
+  // 交点
+  const xc = px(ths), yc = py(2/3);
+  fill(col(C.gold,60)); circle(xc, yc, 34);
+  fill(C.gold); circle(xc, yc, 13);
+  stroke(col(C.gold,150)); strokeWeight(1); drawingContext.setLineDash([4,4]);
+  line(xc, yc, xc, B); line(xc, yc, L, yc); drawingContext.setLineDash([]);
+  noStroke(); fill(C.gold); textSize(15); textAlign(LEFT);
+  text('交点：cosθ* = 2/3', xc+12, yc-26);
+  textSize(13.5); text('θ* = 48.19°', xc+12, yc-6);
+  if (a0 >= ths-0.005){
+    fill(col(C.gold,240)); textSize(17); textAlign(CENTER);
+    text('2(1−cosθ) = cosθ  ⟹  cosθ = 2/3', width/2, T-16);
+  } else {
+    fill(col(C.amberL,230)); textSize(14); textAlign(CENTER);
+    text('供给还在涨、上限还在降…… 两条线一定会相交', width/2, T-16);
+  }
+}
+
+// ---------------- 场景三：杆离墙（步骤 7）----------------
+function drawRodScene(){
+  background(C.bg);
+  const gy = height-40, Xw = S.Xw, Lpx = S.Lpx;
+  // 墙
+  stroke(col(C.mut,220)); strokeWeight(4); line(Xw, gy, Xw, 20);
+  // 地面
+  stroke(C.ground); strokeWeight(2); line(0, gy, width, gy);
+  // 阴影线
+  stroke(col(C.dim,150)); strokeWeight(1);
+  for (let y=26; y<gy; y+=12) line(Xw-9, y, Xw, y-8);
+  for (let x=Xw+14; x<width; x+=14) line(x, gy, x-9, gy+8);
+  noStroke(); fill(C.mut); textSize(12.5); textAlign(CENTER);
+  push(); translate(Xw-22, gy/2); rotate(-HALF_PI); text('光滑竖直墙', 0, 0); pop();
+  text('光滑水平地面', width*0.55, gy+30);
+
+  const r = S.rod, L = 1.0, a = 0.5;
+  const sc = Lpx/L;
+  const wx = m => Xw + m*sc;
+  const wy = m => gy - m*sc;
+  const topX = r.xc - a*Math.sin(r.th), topY = a*Math.cos(r.th);
+  const botX = r.xc + a*Math.sin(r.th);
+  const cmY  = a*Math.cos(r.th);
+  // CM 圆轨迹
+  noFill(); stroke(col(C.dim,140)); strokeWeight(1); arc(Xw, gy, Lpx, Lpx, -HALF_PI, 0);
+  // 杆
+  stroke(C.amberL); strokeWeight(7); strokeCap(ROUND);
+  line(wx(topX), wy(topY), wx(botX), wy(0)); strokeCap(SQUARE);
+  // 杆上端沿墙下滑轨迹
+  noFill(); stroke(col(C.mut,200)); strokeWeight(2);
+  line(Xw, wy(1.0), Xw, wy(Math.cos(Math.PI/2)));
+  // CM 轨迹
+  noFill(); stroke(col(C.pink,150)); strokeWeight(1.6); beginShape();
+  for (const p of r.trail){ vertex(wx(p.x), wy(p.y)); } endShape();
+  // CM
+  noStroke(); fill(C.cyan); circle(wx(r.xc), wy(cmY), 12);
+  // 重力
+  const gy2 = wy(cmY);
+  arrow(wx(r.xc), gy2, wx(r.xc), gy2+100, C.orange, 5);
+  noStroke(); fill(C.orange); textSize(13.5); textAlign(LEFT);
+  text('G = mg', wx(r.xc)+7, gy2+104);
+  // 地面支持力
+  arrow(wx(botX), gy, wx(botX), gy-78, C.cyan, 5);
+  noStroke(); fill(C.cyan); textSize(13.5); textAlign(LEFT);
+  text('N地', wx(botX)+7, gy-84);
+  // 墙面弹力 N_w（核心！）
+  const Nw = (3/4)*Math.sin(r.th)*(3*Math.cos(r.th) - 2*Math.cos(S.th0eff));
+  if (r.phase === 'sliding' && Nw > 0.004){
+    const nlen = Math.min(210, 26 + 128*Nw);
+    arrow(wx(0), wy(topY), wx(0)+nlen, wy(topY), C.green, 5);
+    noStroke(); fill(C.green); textSize(14); textAlign(LEFT);
+    text('N墙 = ' + Nw.toFixed(3) + ' mg', wx(0)+nlen*0.42, wy(topY)-14);
+  } else if (r.phase === 'sliding'){
+    noStroke(); fill(C.gold); textSize(15); textAlign(LEFT);
+    text('N墙 → 0', wx(0)+14, wy(topY)-16);
+  } else {
+    noStroke(); fill(C.gold); textSize(16); textAlign(LEFT);
+    text('N墙 = 0 · 杆已离墙！', wx(0)+16, wy(topY)-18);
+  }
+  // 角度弧
+  push(); noFill(); stroke(C.amber); strokeWeight(1.8);
+  arc(Xw, gy, 96, 96, -HALF_PI, -HALF_PI + r.th); pop();
+  noStroke(); fill(C.amber); textSize(14.5); textAlign(CENTER);
+  text('θ', Xw + 44*Math.sin(r.th/2) + 11, gy - 44*Math.cos(r.th/2) + 5);
+  // HUD
+  noStroke(); fill(col(C.white,235)); textAlign(LEFT); textSize(17);
+  text('θ = ' + (r.th*R2D).toFixed(2) + '°', 16, 26);
+  textSize(14); fill(col(C.txt,220));
+  text('cosθ = ' + Math.cos(r.th).toFixed(4), 16, 48);
+  const nv = (3/4)*Math.sin(r.th)*(3*Math.cos(r.th)-2*Math.cos(S.th0eff));
+  fill(nv > 0.02 ? C.green : (nv > -0.02 ? C.gold : C.red));
+  text('N墙/(mg) = ' + nv.toFixed(3), 16, 70);
+  fill(col(C.cyan,230)); textSize(13.5);
+  text('θ₀ = ' + (S.th0eff*R2D).toFixed(0) + '° 静止释放', 16, 92);
+  text('N墙/(mg) = (9/4)·sinθ·(cosθ − cosθ*)', 16, 114);
+  text('cosθ* = (2/3)cosθ₀ = ' + ((2/3)*Math.cos(S.th0eff)).toFixed(4), 16, 134);
+}
+
+// ---------------- p5 ----------------
+function setup(){
+  const w = $('stageWrap').clientWidth || 800;
+  const cnv = createCanvas(w, Math.min(Math.round(w*0.66), 540));
+  cnv.parent('stageWrap');
+  textFont('Inter, PingFang SC, Microsoft YaHei, sans-serif');
+  resetSim(); updGeom();
+  bindUI();
+  const hs = parseInt((location.hash || '').replace('#s', ''), 10);
+  setStep(hs >= 1 && hs <= 7 ? hs : 1);
+}
+function windowResized(){
+  const w = $('stageWrap').clientWidth || 800;
+  resizeCanvas(w, Math.min(Math.round(w*0.66), 540));
+  updGeom();
+}
+let lastT = null;
+function draw(){
+  const h = height;
+  updGeom();
+  if (S.step === 4){
+    if (S.running) S.sweep += 0.55*deltaTime/1000;
+    if (S.sweep > Math.PI/2 + 0.25) S.sweep = 0;
+    drawCurveScene();
+  } else if (S.step === 7){
+    if (S.running){
+      const dtp = Math.min(deltaTime/1000, 0.033)*S.rate;
+      const sub = 8; for (let i=0;i<sub;i++) stepRod(dtp/sub);
+      if (S.rod.phase === 'done') S.running = false;
+    }
+    drawRodScene();
+  } else {
+    if (S.running){
+      const dtp = Math.min(deltaTime/1000, 0.033)*S.rate;
+      const sub = 8; for (let i=0;i<sub;i++) stepBall(dtp/sub);
+    }
+    drawSphereScene();
+  }
+  if (millis() - lastT > 70){ lastT = millis(); updChips(); }
+}
+
+// ---------------- UI ----------------
+const BANNER = {
+  1:['小球贴着球面往下滑，<span style="color:#7ab878">支持力 N 一路变小</span>。<br>N 掉到 0 的那一刻，它离开球面 —— 问题是：那一刻的 θ 是多少？',
+     '要算 θ*，得先知道两件事：球<span style="color:#ffd700">「有多少」速度²</span>，以及<span style="color:#e06050">「贴住球面需要多少」速度²</span>。'],
+  2:['<span style="color:#7ab878">钥匙① 能量守恒</span>：mgR(1−cosθ) = ½mv²<br>⟹ v²/(gR) = 2(1−cosθ) —— 这是球<em>「有多少」</em>（供给）。',
+     '供给有了。可球能贴住球面的<b>上限</b>是多少？这要靠 N ≥ 0 来确定。'],
+  3:['<span style="color:#e06050">钥匙② 半径方向牛顿第二定律</span>：mg·cosθ − N = mv²/R<br>不脱离 ⟺ N ≥ 0 ⟺ v²/(gR) ≤ cosθ —— 这是<em>「上限」</em>。',
+     '供给在涨、上限在降 —— 两条线必然相交。交点在哪儿？'],
+  4:['两条曲线一联立：2(1−cosθ) = cosθ ⟹ <span style="color:#ffd700">cosθ* = 2/3</span><br>不是巧合：能量里的 ½ 与临界里的 cosθ 决定了这个比例。',
+     'θ* = 48.19°，可它落在球面的哪个高度上？答案比你想的干净得多。'],
+  5:['下滑高度 = R(1−cosθ*) = <span style="color:#ffd700">R/3</span><br>脱离点永远在顶点正下方 R/3 处 —— <b>与 R、g 都无关</b>。',
+     '如果球不是从顶端、而是从别处释放，或者一开始就带着速度呢？'],
+  6:['拖动 θ₀ 和 v₀：<span style="color:#7ab878">cosθ* = (2/3)cosθ₀ + v₀²/(3gR)</span><br>一个式子管全部情形。θ₀=0、v₀=0 才是那个 2/3。',
+     '同样一个 2/3，还有一个长得完全不同的出场方式 —— 抛掉"小球"，换成一根杆。'],
+  7:['匀质杆靠光滑墙与光滑地面滑下：离墙条件同样是 N墙 = 0<br>解析结果 <span style="color:#ffd700">cosθ* = (2/3)cosθ₀</span> —— 与球面模型<em>同一个结构</em>。',
+     '所以要背的是<b>母式</b>，不是 2/3。临界因子永远是 (cosθ − cosθ*)。']
+};
+const DV = {
+  1:`<b class="k">要问的问题</b><br>小球从光滑球面外侧顶端由静止滑下，它一直在减速吗？不 —— 它在加速，但支持力 N 在减小。<br>
+     <span class="f">mg·cosθ − N = mv²/R</span>
+     等式右边是<b>必需的</b>向心力。θ 变大时，重力沿半径的分量 mg·cosθ 在减小，而需要的 mv²/R 在变大 —— N 只能越来越小，直到归零。<br>
+     <b class="k">N = 0 就是临界</b>，此后球做斜抛。`,
+  2:`<b class="k">钥匙①：能量守恒（给"供给"）</b><br>取球心水平线为参考，球到位置 θ 时下降的高度就是
+     <span class="f g">h = R(1 − cosθ)</span>
+     由机械能守恒（θ₀ = 0、静止释放）：
+     <span class="f g">mg·R(1−cosθ) = ½·m·v²</span>
+     两边消去 m，除以 gR：
+     <span class="f g">v²/(gR) = 2(1 − cosθ)</span>
+     这是球<b>实际拥有</b>的速度平方 —— 我们叫它「供给」。它随 θ 单调增大。`,
+  3:`<b class="k">钥匙②：半径方向的牛顿第二定律（给"上限"）</b><br>沿半径向外为正：
+     <span class="f r">mg·cosθ − N = mv²/R</span>
+     解得
+     <span class="f r">N = mg·cosθ − mv²/R ≥ 0</span>
+     球不脱离 ⟺ N ≥ 0。两边除以 mg：
+     <span class="f r">v²/(gR) ≤ cosθ</span>
+     这是球<b>能贴住球面的最大速度平方</b> —— 我们叫它「上限」。它随 θ 单调减小。<br>
+     <b class="k">注意</b>：凹面（半球碗内壁）时 N = mg·cosθ + mv²/R 恒正，所以永不脱离。`,
+  4:`<b class="k">两条曲线一联立，2/3 就出来了</b><br>
+     <span class="f">2(1−cosθ) = cosθ</span>
+     <span class="f">2 − 2cosθ = cosθ</span>
+     <span class="f">3cosθ = 2</span>
+     <span class="f">cosθ* = 2/3，θ* = arccos(2/3) = 48.19°</span>
+     <b class="k">看到本质</b>：整理成
+     <span class="f">1 − cosθ = (1/2)·cosθ</span>
+     左边系数 1、右边系数 ½，两者相等时 cosθ = 1/(1+½) = 2/3。<br>
+     那个 <b style="color:#ffd700">½</b> 来自动能的 ½ —— 这才是 2/3 的真正来源。`,
+  5:`<b class="k">推论：脱离点高度是个纯几何常数</b><br>
+     <span class="f">下滑高度 = R(1 − 2/3) = R/3</span>
+     无论球多大、g 是多少、在地球还是月球，脱离点<b>永远在顶点正下方 R/3 处</b>。<br>
+     拖动 R 和 g 滑块：脱离角始终是 48.19°，球的画法也完全不动。<br>
+     <b class="k">反直觉点</b>：一个由 g 和 R 共同支配的动力学过程，最后给出的却是个无量纲常数 —— 因为 g 和 R 在"能量"和"临界"两个方程里<em>同比例</em>出现，相除时约掉了。`,
+  6:`<b class="k">母式：把 θ₀ 和 v₀ 加进来</b><br>释放点位于位置角 θ₀、初速 v₀（沿切向）时，能量守恒给出
+     <span class="f">v²/(gR) = v₀²/(gR) + 2(cosθ₀ − cosθ)</span>
+     仍然配上临界条件 v²/(gR) = cosθ，联立：
+     <span class="f">cosθ = v₀²/(gR) + 2cosθ₀ − 2cosθ</span>
+     <span class="f">cosθ* = (2/3)·cosθ₀ + v₀²/(3gR)</span>
+     <b class="k">三个有用的特例</b><br>
+     ① θ₀=0、v₀=0 → cosθ* = 2/3<br>
+     ② v₀ = √(gR) → cosθ* = 1 → <b>顶点就脱离</b><br>
+     ③ v₀ &gt; √(gR) → cosθ* &gt; 1 → <b>压根贴不住，立刻抛体</b>`,
+  7:`<b class="k">第二张面孔：匀质杆离开墙面</b><br>
+     杆长 L、质量 m，上端靠光滑竖直墙、下端在光滑水平地面，与竖直成 θ₀ 静止释放。<br>
+     瞬时转动中心是墙角，J = mL²/3，能量守恒：
+     <span class="f">ω² = 3g(cosθ₀ − cosθ)/L</span>
+     离墙条件：水平方向只有墙的弹力 N墙，所以
+     <span class="f">N墙 = m·a(cm,x) = 0</span>
+     由 x(cm) = (L/2)sinθ 求二阶导，配合 α = 3g·sinθ/(2L)：
+     <span class="f">N墙/(mg) = (3/4)·sinθ·(3cosθ − 2cosθ₀)</span>
+     <span class="f">⟹ cosθ* = (2/3)·cosθ₀</span>
+     <b class="k">与球面模型完全同构！</b>两个临界式都写成同一个因子：
+     <span class="f">N球/(mg) = 3·(cosθ − cosθ*)　｜　N墙/(mg) = (9/4)·sinθ·(cosθ − cosθ*)</span>
+     一个是质点的圆周运动、一个是刚体的定轴转动，数学结构一模一样。`
+};
+const CTRL = {
+  1:{rows:['rowTh0','rowV0','rowR','rowG'], hint:'先看默认情形（顶端静止释放），再拖其他滑块对比。'},
+  2:{rows:['rowR','rowG'], hint:'改 R 和 g：注意"供给"曲线的形状与 θ 无关。<br>R 只影响球画多大、g 只影响跑多快 —— 都不影响供给公式本身。'},
+  3:{rows:['rowR','rowG'], hint:'观察绿色 N 箭头：随着 θ 增大它越来越短，减到 0 的那一瞬球就飞出去了。'},
+  4:{rows:['rowTh0','rowV0','rowR','rowG'], hint:'改 θ₀ 或 v₀ 后回到本步，可以看交点如何右移（脱离变晚）。'},
+  5:{rows:['rowR','rowG'], hint:'<b style="color:#ffd700">关键实验</b>：把 R 从 0.40 m 拖到 2.00 m、g 从 3 拖到 15 ——<br>粉色 R/3 标尺和 48.19° 岿然不动。<br><span style="color:#707088">画面球的大小固定，只改物理量，才看得出"与 R 无关"。</span>'},
+  6:{rows:['rowTh0','rowV0','rowR','rowG'], hint:'θ₀ 变大 → 脱离角变大（更晚脱离）；v₀ 变大 → 脱离角变小（更早脱离）。<br>把 v₀ 拖到 1.00 √(gR)，看球在顶点就直接飞出去。'},
+  7:{rows:['rowTh0'], hint:'θ₀ 滑块同时作用于球和杆 —— 拖它，两边脱离角同步变化，这就是同构的证据。'}
+};
+const SCENE = {1:'小球脱离球面', 2:'能量视图', 3:'临界条件视图', 4:'两条曲线的交点', 5:'R、g 无关性', 6:'一般情形', 7:'匀质杆离墙'};
+const LIVE  = {1:'θ₀=0° 静止释放', 6:'θ₀ / v₀ 可调', 7:'θ₀ 静止释放'};
+
+function bindUI(){
+  $('stepBar').addEventListener('click', e => {
+    const b = e.target.closest('.step-btn'); if (!b) return;
+    setStep(parseInt(b.dataset.s,10));
+  });
+  $('bPlay').addEventListener('click', () => {
+    S.running = !S.running;
+    $('bPlay').textContent = S.running ? '⏸ 暂停' : '▶ 播放';
+  });
+  $('bReset').addEventListener('click', () => {
+    resetSim(); S.sweep = 0; S.running = true; $('bPlay').textContent = '⏸ 暂停';
+  });
+  $('bJump').addEventListener('click', () => { jumpToDetach(); S.running = true; $('bPlay').textContent='⏸ 暂停'; });
+  $('rate').addEventListener('input', e => {
+    S.rate = parseFloat(e.target.value); $('rateV').textContent = S.rate.toFixed(2)+'×';
+  });
+  $('sTh0').addEventListener('input', e => {
+    S.th0s = parseFloat(e.target.value); $('vTh0').textContent = S.th0s+'°';
+    resetSim(); S.running = true; $('bPlay').textContent = '⏸ 暂停';
+  });
+  $('sV0').addEventListener('input', e => {
+    S.v0f = parseFloat(e.target.value)/100; $('vV0').textContent = S.v0f.toFixed(2)+' √(gR)';
+    resetSim(); S.running = true; $('bPlay').textContent = '⏸ 暂停';
+  });
+  $('sR').addEventListener('input', e => {
+    S.R = parseFloat(e.target.value)/100; $('vR').textContent = S.R.toFixed(2)+' m';
+    resetSim(); S.running = true; $('bPlay').textContent = '⏸ 暂停';
+  });
+  $('sG').addEventListener('input', e => {
+    S.g = parseFloat(e.target.value); $('vG').textContent = S.g.toFixed(1);
+    resetSim(); S.running = true; $('bPlay').textContent = '⏸ 暂停';
+  });
+}
+function setStep(n){
+  S.step = n;
+  document.querySelectorAll('.step-btn').forEach(b => b.classList.toggle('on', +b.dataset.s === n));
+  $('banner').innerHTML = BANNER[n][0];
+  $('transit').innerHTML = '↓ <b>过渡</b>　' + BANNER[n][1];
+  $('dvBox').innerHTML = DV[n];
+  $('sceneName').textContent = SCENE[n];
+  $('liveTag').textContent = LIVE[n] || '';
+  $('dvTitle').textContent = ['','现象','供给','上限','交点','推论','母式','同构'][n];
+  const rows = CTRL[n].rows;
+  ['rowTh0','rowV0','rowR','rowG'].forEach(r => { $(r).style.display = rows.includes(r) ? 'grid' : 'none'; });
+  $('ctrlHint').innerHTML = CTRL[n].hint;
+  S.sweep = 0;
+  resetSim();
+  S.running = true; $('bPlay').textContent = '⏸ 暂停';
+}
+function updChips(){
+  const rod = S.step === 7;
+  const th = rod ? S.rod.th : S.th;
+  const cosv = Math.cos(th);
+  const Nmg = rod
+    ? (3/4)*Math.sin(th)*(3*Math.cos(th)-2*Math.cos(S.th0eff))
+    : 3*(cosv - S.cosStar);
+  const sup = S.v0f*S.v0f + 2*(Math.cos(S.th0eff)-cosv);
+  const stTxt = rod
+    ? (S.rod.phase==='sliding' ? '贴墙滑下' : (S.rod.phase==='off' ? '已离墙' : '已贴地'))
+    : ({sliding:'贴面滑下', fly:'脱离·斜抛', land:'已落地'}[S.phase] || '');
+  const stCol = (rod ? S.rod.phase==='sliding' : S.phase==='sliding') ? 'g' : 'y';
+  const rows = [
+    ['θ', (th*R2D).toFixed(2)+'°', 'y'],
+    ['cosθ', cosv.toFixed(4), 'w'],
+    ['脱离临界 cosθ*', S.cosStar.toFixed(4)+'　(θ*='+(S.thStar*R2D).toFixed(2)+'°)', 'o'],
+    ['母式(2/3)cosθ₀+v₀²/(3gR)', S.cosStarRaw.toFixed(4) + (S.immediate ? ' ≥1 即刻背离' : ''), 'y'],
+    ['供给 v²/(gR)', sup.toFixed(4), 'c'],
+    ['上限 cosθ', cosv.toFixed(4), 'r'],
+    [rod ? 'N墙/(mg)' : 'N/(mg)', Nmg.toFixed(4), Nmg > 0.01 ? 'g' : 'y'],
+    ['状态', stTxt, stCol],
+    ['R / g / v₀', S.R.toFixed(2)+' m / '+S.g.toFixed(1)+' / '+S.v0abs.toFixed(2)+' m/s', 'p']
+  ];
+  $('chips').innerHTML = rows.map(r => `<span class="chip">${r[0]} <b class="${r[2]}">${r[1]}</b></span>`).join('');
+}
+</script>
+</body>
+</html>
