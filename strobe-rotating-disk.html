@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>频闪观测转动圆盘 · 专题突破</title>
+<style>
+:root{
+  --bg:#070b16;
+  --panel:rgba(255,255,255,.05);
+  --line:rgba(255,255,255,.10);
+  --text:#e9eef8;
+  --muted:#94a3bd;
+  --cyan:#38e1f2;
+  --pink:#ff7ab8;
+  --amber:#ffc44d;
+  --green:#5ee6a8;
+  --purple:#a78bfa;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1100px 620px at 12% -12%, #17253f 0%, transparent 62%),
+    radial-gradient(900px 520px at 92% -6%, #2b1436 0%, transparent 58%),
+    var(--bg);
+  color:var(--text);
+  font-family:"Microsoft YaHei","PingFang SC",system-ui,-apple-system,"Segoe UI",sans-serif;
+  line-height:1.85;padding:28px 18px 72px;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1200px;margin:0 auto;}
+
+/* ---------- hero ---------- */
+.hero{text-align:center;padding:8px 0 30px;}
+.tag{display:inline-block;font-size:13.5px;letter-spacing:.12em;color:#8ff0ff;
+  border:1px solid rgba(56,225,242,.4);background:rgba(56,225,242,.08);
+  padding:6px 16px;border-radius:999px;margin-bottom:18px;}
+.hero h1{font-size:clamp(28px,4.6vw,46px);margin:0 0 14px;font-weight:800;letter-spacing:.02em;
+  background:linear-gradient(95deg,#ffffff 5%,#7ce7ff 45%,#ffb0dd 95%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;line-height:1.25;}
+.hero .lead{max-width:780px;margin:0 auto;color:#b9c7dd;font-size:17px;}
+.hero .lead b{color:#7ce7ff;}
+
+/* ---------- card ---------- */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:18px;
+  padding:26px 28px;margin-bottom:22px;backdrop-filter:blur(8px);
+  box-shadow:0 14px 44px rgba(0,0,0,.38);}
+.card>h2{font-size:22px;margin:0 0 18px;display:flex;align-items:center;gap:12px;font-weight:800;}
+.card>h2::before{content:"";width:6px;height:22px;border-radius:3px;
+  background:linear-gradient(180deg,var(--cyan),var(--purple));flex:none;}
+
+/* ---------- 原题 ---------- */
+.problem-body{font-size:18px;background:rgba(56,225,242,.05);
+  border-left:4px solid var(--cyan);border-radius:0 12px 12px 0;padding:18px 22px;color:#e3ecfa;}
+.problem-body b{color:#7ef0ff;}
+.given{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;}
+.given span{border:1px dashed rgba(255,255,255,.22);border-radius:10px;
+  padding:6px 14px;font-size:15px;color:#cfe0f5;font-family:Consolas,"Courier New",monospace;}
+
+/* ---------- 动画 ---------- */
+.boards{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+@media(max-width:860px){.boards{grid-template-columns:1fr;}}
+.board{background:rgba(0,0,0,.30);border:1px solid var(--line);border-radius:14px;padding:14px;}
+.board-title{font-size:15.5px;font-weight:700;display:flex;justify-content:space-between;
+  align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.pill{font-size:12.5px;padding:3px 11px;border-radius:999px;font-weight:700;white-space:nowrap;}
+.pill.warn{color:#ffd77a;background:rgba(255,196,77,.13);border:1px solid rgba(255,196,77,.35);}
+.pill.ok{color:#8ff0ff;background:rgba(56,225,242,.12);border:1px solid rgba(56,225,242,.35);}
+canvas{width:100%;aspect-ratio:1/1;display:block;border-radius:12px;background:#04060b;}
+.board-foot{margin-top:10px;font-size:13.5px;color:var(--muted);
+  font-family:Consolas,"Courier New",monospace;text-align:center;min-height:22px;}
+
+/* ---------- 控制 ---------- */
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px 26px;}
+@media(max-width:860px){.controls{grid-template-columns:1fr;}}
+.ctrl label{display:flex;justify-content:space-between;align-items:baseline;
+  font-size:14.5px;color:var(--muted);margin-bottom:8px;}
+.ctrl label b{color:var(--cyan);font-size:16px;font-family:Consolas,monospace;}
+input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:3px;
+  background:linear-gradient(90deg,rgba(56,225,242,.55),rgba(167,139,250,.75));outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#fff;border:3px solid #38e1f2;box-shadow:0 0 12px rgba(56,225,242,.7);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;
+  border:3px solid #38e1f2;cursor:pointer;}
+
+.btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;align-items:center;}
+button{font-family:inherit;font-size:15px;font-weight:700;color:#e9eef8;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:9px 18px;cursor:pointer;transition:.18s;}
+button:hover{background:rgba(255,255,255,.14);transform:translateY(-1px);}
+button.primary{background:linear-gradient(92deg,#2fd6ea,#7c6cf5);border:none;color:#04151b;
+  box-shadow:0 8px 22px rgba(56,225,242,.30);}
+button.active{background:rgba(94,230,168,.18);border-color:rgba(94,230,168,.5);color:#8ff5c4;}
+
+.presets{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;}
+.chip{font-size:14px;padding:7px 15px;border-radius:999px;background:rgba(167,139,250,.10);
+  border:1px solid rgba(167,139,250,.35);color:#cbbcff;cursor:pointer;transition:.18s;user-select:none;}
+.chip:hover{background:rgba(167,139,250,.24);transform:translateY(-1px);}
+
+/* ---------- 读数 ---------- */
+.readout{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:12px;}
+.ro{background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:12px;padding:12px 16px;}
+.ro span{display:block;font-size:13.2px;color:var(--muted);line-height:1.5;}
+.ro b{font-size:21px;font-family:Consolas,"Courier New",monospace;color:#fff;letter-spacing:.01em;}
+.ro.hi{border-color:rgba(56,225,242,.45);background:rgba(56,225,242,.08);}
+.ro.hi b{color:#7ef0ff;font-size:24px;}
+.hint{margin:16px 0 0;font-size:15.2px;color:#ffd77a;background:rgba(255,196,77,.07);
+  border:1px solid rgba(255,196,77,.22);border-radius:10px;padding:12px 18px;display:none;}
+.hint.show{display:block;}
+
+/* ---------- 步骤 ---------- */
+.steps{display:grid;gap:14px;}
+.step{display:grid;grid-template-columns:52px 1fr;gap:18px;background:rgba(255,255,255,.035);
+  border:1px solid var(--line);border-radius:14px;padding:16px 20px;}
+.step .n{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;
+  font-size:20px;font-weight:800;background:linear-gradient(140deg,#2fd6ea,#7c6cf5);
+  color:#05131a;align-self:start;}
+.step h3{margin:0 0 8px;font-size:17px;color:#9fe9ff;font-weight:800;}
+.step p{margin:4px 0;font-size:15.8px;color:#d3deee;}
+.step p b{color:#7ef0ff;}
+.answer{margin-top:18px;padding:16px 22px;border-radius:12px;font-size:18px;color:#e6f2ff;
+  background:linear-gradient(92deg,rgba(56,225,242,.15),rgba(167,139,250,.15));
+  border:1px solid rgba(56,225,242,.42);}
+.answer b{color:#7ef0ff;font-size:20px;}
+
+/* ---------- 公式 / 表格 ---------- */
+.note{color:#b9c7dd;font-size:15.8px;margin:0 0 6px;}
+.fml{font-family:Consolas,"Courier New",monospace;background:rgba(0,0,0,.38);
+  border:1px solid rgba(56,225,242,.22);border-left:4px solid var(--cyan);border-radius:8px;
+  padding:14px 18px;font-size:17px;color:#a9f3ff;overflow-x:auto;margin:12px 0 18px;line-height:2;}
+table{width:100%;border-collapse:collapse;font-size:15.5px;margin-top:6px;}
+th,td{padding:11px 15px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;}
+th{color:#9fe9ff;font-weight:800;background:rgba(56,225,242,.07);}
+tbody tr:hover td{background:rgba(255,255,255,.03);}
+td.mono{font-family:Consolas,monospace;color:#ffd77a;}
+
+/* ---------- 易错 ---------- */
+.warn-list{margin:0;padding:0;list-style:none;}
+.warn-list li{position:relative;padding:13px 18px 13px 48px;margin-bottom:10px;border-radius:12px;
+  background:rgba(255,196,77,.06);border:1px solid rgba(255,196,77,.18);
+  font-size:15.8px;color:#eadfc8;}
+.warn-list li::before{content:"!";position:absolute;left:17px;top:15px;width:20px;height:20px;
+  border-radius:50%;background:rgba(255,196,77,.92);color:#1a1200;font-weight:900;font-size:14px;
+  display:grid;place-items:center;line-height:1;}
+.warn-list b{color:#ffd77a;}
+
+/* ---------- 变式 ---------- */
+details{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;
+  padding:15px 20px;margin-bottom:12px;}
+summary{cursor:pointer;font-weight:700;font-size:16px;color:#e9eef8;list-style:none;}
+summary::-webkit-details-marker{display:none;}
+summary::before{content:"▸ ";color:var(--cyan);}
+details[open] summary::before{content:"▾ ";}
+details p{margin:10px 0 0;color:#cfe0f5;font-size:15.6px;}
+details p b{color:#7ef0ff;}
+.tip{color:#9fe9ff !important;font-size:14.8px !important;border-left:3px solid rgba(56,225,242,.5);
+  padding-left:12px;margin-top:12px !important;}
+
+/* ---------- 小结 ---------- */
+.final{font-size:17.5px;color:#e3ecfa;background:linear-gradient(92deg,rgba(56,225,242,.10),rgba(255,122,184,.10));
+  border:1px solid rgba(56,225,242,.28);border-radius:14px;padding:20px 24px;}
+.final b{color:#ffb0dd;}
+/* ---------- 返回 ---------- */
+.topnav{padding:0 0 10px;}
+.topnav a{color:#8ff0ff;text-decoration:none;font-size:14px;display:inline-block;
+  border:1px solid rgba(56,225,242,.35);background:rgba(56,225,242,.08);
+  padding:6px 15px;border-radius:999px;transition:.18s;}
+.topnav a:hover{background:rgba(56,225,242,.2);}
+footer{text-align:center;color:#5d6b85;font-size:13.5px;margin-top:34px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topnav"><a href="jiaoxue.html">← 教学资源</a></div>
+
+<header class="hero">
+  <div class="tag">高中物理 · 圆周运动 · 频闪与视觉暂留</div>
+  <h1>频闪观测转动圆盘</h1>
+  <p class="lead">一次闪光 = 一张快照。当闪光频率与转速相差很小时，快照之间的"错位"会让转盘看起来<b>慢慢地倒着转</b>。先动手把参数拉一拉，再回头看推导。</p>
+</header>
+
+<!-- ================= 原题 ================= -->
+<section class="card">
+  <h2>原题</h2>
+  <div class="problem-body">
+    如图 6-9 所示，带有一白点的黑色圆盘，绕过其中心且垂直于盘面的轴沿<b>顺时针</b>方向匀速转动，转速 <b>n = 20 r/s</b>。
+    在暗室中用每秒闪光 <b>21 次</b>的频闪光源照射圆盘，求观察到白点转动的方向和转动的周期。
+  </div>
+  <div class="given">
+    <span>真实转向：顺时针</span>
+    <span>转速 n = 20 r/s</span>
+    <span>频闪频率 f = 21 次/秒</span>
+    <span>环境：暗室</span>
+  </div>
+</section>
+
+<!-- ================= 动画 ================= -->
+<section class="card">
+  <h2>动手实验：把参数拉一拉，亲眼看看白点怎么"倒转"</h2>
+  <div class="boards">
+    <div class="board">
+      <div class="board-title">
+        <span>① 连续光下的真实转动</span>
+        <span class="pill warn">顺时针 20 r/s</span>
+      </div>
+      <canvas id="cvReal"></canvas>
+      <div class="board-foot" id="footReal">—</div>
+    </div>
+    <div class="board">
+      <div class="board-title">
+        <span>② 暗室 + 频闪（每秒 21 次）</span>
+        <span class="pill ok">眼睛看到的样子</span>
+      </div>
+      <canvas id="cvStrobe"></canvas>
+      <div class="board-foot" id="footStrobe">—</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="ctrl">
+      <label>转盘转速 n <b><span id="labN">20</span> r/s</b></label>
+      <input type="range" id="rngN" min="1" max="60" step="1" value="20">
+    </div>
+    <div class="ctrl">
+      <label>频闪频率 f <b><span id="labF">21</span> 次/s</b></label>
+      <input type="range" id="rngF" min="1" max="40" step="1" value="21">
+    </div>
+    <div class="ctrl">
+      <label>播放速度 <b><span id="labS">0.20</span> x</b></label>
+      <input type="range" id="rngS" min="5" max="150" step="5" value="20">
+    </div>
+  </div>
+
+  <div class="btns">
+    <button class="primary" id="btnPlay">暂停</button>
+    <button id="btnReset">重置时间</button>
+    <button id="btnGhost" class="active">残影：开</button>
+    <button id="btnOrigin">回到原题（n=20，f=21）</button>
+  </div>
+
+  <div class="presets">
+    <span class="chip" data-n="20" data-f="21">原题：n=20，f=21</span>
+    <span class="chip" data-n="20" data-f="19">只把 f 改成 19</span>
+    <span class="chip" data-n="22" data-f="21">只把 n 改成 22</span>
+    <span class="chip" data-n="20" data-f="40">f=40（半圈临界）</span>
+    <span class="chip" data-n="20" data-f="10">f=10（看起来静止）</span>
+    <span class="chip" data-n="50" data-f="21">n=50（要跨整数圈）</span>
+  </div>
+
+  <div class="readout">
+    <div class="ro"><span>r = n / f（每闪一次转过的圈数）</span><b id="roR">—</b></div>
+    <div class="ro"><span>k = 最接近 r 的整数</span><b id="roK">—</b></div>
+    <div class="ro"><span>等效转速 n' = n - k·f</span><b id="roNv">—</b></div>
+    <div class="ro hi"><span>观察到的方向</span><b id="roDir">—</b></div>
+    <div class="ro hi"><span>观察到的周期 T'</span><b id="roT">—</b></div>
+  </div>
+  <p class="hint" id="roHint"></p>
+</section>
+
+<!-- ================= 三步法 ================= -->
+<section class="card">
+  <h2>三步法解本题</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="n">1</div>
+      <div>
+        <h3>两次闪光之间，圆盘转了多少？</h3>
+        <p>频闪周期 Δt = 1/f = 1/21 s ≈ 0.0476 s。</p>
+        <p>这段时间圆盘转过的圈数 r = n·Δt = 20/21 ≈ 0.952 圈（顺时针），</p>
+        <p>换成角度就是 r × 360° ≈ 342.9°（顺时针）——<b>差一点点就是整整一圈</b>。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">2</div>
+      <div>
+        <h3>把"多出来的接近一整圈"折掉</h3>
+        <p>眼睛每次只看到一张<b>快照</b>，它分不清白点是转过了 342.9° 还是 -17.1°（二者只差整整一圈，终点位置相同）。</p>
+        <p>习惯上取"转得最少"的那个：342.9° - 360° = <b>-17.1°</b>，即视觉上白点每次闪光<b>逆时针</b>移动 360°/21 = 1/21 圈。</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="n">3</div>
+      <div>
+        <h3>定方向、算周期</h3>
+        <p><b>方向：</b>每闪一次白点逆时针挪 1/21 圈，所以观察到白点<b>逆时针</b>转动。</p>
+        <p><b>周期：</b>逆时针挪满一整圈需要 21 次闪光，用时 T = 21 × (1/21) s = <b>1 s</b>。</p>
+        <p>也可直接用公式：T = 1/(f - n) = 1/(21 - 20) s = 1 s。</p>
+      </div>
+    </div>
+  </div>
+  <div class="answer">
+    答：观察到白点沿 <b>逆时针</b> 方向转动，转动周期为 <b>1 s</b>。
+  </div>
+</section>
+
+<!-- ================= 通用方法 ================= -->
+<section class="card">
+  <h2>这类题的通用方法（一套公式打天下）</h2>
+  <p class="note">设圆盘真实转速为 n（r/s，方向已知），频闪频率为 f（次/s），则：</p>
+  <div class="fml">
+    ① r = n / f            ← 每闪一次，圆盘转过的圈数<br>
+    ② k = 最接近 r 的整数    ← 把"整数圈"折掉<br>
+    ③ n' = n - k·f          ← 等效（视觉）转速，带符号，单位 r/s<br>
+    ④ T' = 1 / |n'|         ← 观察到的周期，单位 s
+  </div>
+  <table>
+    <thead>
+      <tr><th>等效转速 n' 的情况</th><th>观察到的现象</th><th>典型例子</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="mono">n' = 0</td><td>白点看起来完全静止不动</td><td class="mono">n=20, f=10 → k=2</td></tr>
+      <tr><td class="mono">n' 与 n 同号</td><td>与真实方向相同（看起来正常正转）</td><td class="mono">n=22, f=21 → 顺时针，T'=1 s</td></tr>
+      <tr><td class="mono">n' 与 n 异号</td><td>与真实方向相反（看起来倒转）</td><td class="mono">n=20, f=21 → 逆时针，T'=1 s</td></tr>
+      <tr><td class="mono">|r - k| ≈ 0.5</td><td>半圈临界：两个亮点交替闪，方向不可判定</td><td class="mono">n=20, f=40</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ================= 易错点 ================= -->
+<section class="card">
+  <h2>四个高频易错点</h2>
+  <ul class="warn-list">
+    <li><b>别只看"20 圈"和"21 次"就断言"太快看不清"。</b>20 与 21 只差 1，恰好构成"低频差拍"，肉眼能清清楚楚地看到 1 r/s 的慢速反向转动——这正是本题的巧妙之处。</li>
+    <li><b>别忘了"折整数圈"。</b>当 r = n/f 大于 1 时要先减掉整数圈。例如 n = 50 r/s、f = 21 次/s 时 r ≈ 2.38，等效转速是 50 - 2×21 = 8 r/s（顺时针），而不是 50 - 21 = 29 r/s。页面里点一下 n=50 那个预设，能直接看出差别。</li>
+    <li><b>注意"半圈临界"。</b>当 n/f 的小数部分约为 0.5 时（如 n = 20 r/s、f = 40 次/s），相邻两张快照相差半圈，白点在两个直径相对的位置交替出现，看起来像两个亮点轮流闪，此时没有确定的转动方向。</li>
+    <li><b>单位要统一。</b>若转速给的是 r/min（转/分），先除以 60 化成 r/s 再代入公式；另外"每秒闪光 f 次"指的是闪光<b>频率</b>，闪光周期是 1/f。</li>
+  </ul>
+</section>
+
+<!-- ================= 变式 ================= -->
+<section class="card">
+  <h2>变式训练（点标题展开答案）</h2>
+
+  <details>
+    <summary>变式 1　把频闪频率改为 19 次/秒，其他条件不变，观察到白点向哪个方向转？周期多大？</summary>
+    <p>r = n/f = 20/19 ≈ 1.053 圈，取 k = 1。</p>
+    <p>等效转速 n' = n - k·f = 20 - 19 = 1 r/s，为正，说明与真实方向相同。</p>
+    <p><b>答：白点顺时针转动，周期 T' = 1/1 = 1 s。</b></p>
+    <p class="tip">对比原题：f 只从 21 变到 19，方向立刻反过来。可见"看到的方向"取决于 n 与 k·f 谁大谁小，而不是单纯看 n 和 f 谁大谁小。</p>
+  </details>
+
+  <details>
+    <summary>变式 2　把圆盘转速改为 22 r/s（仍顺时针），频闪仍为 21 次/秒，结果如何？</summary>
+    <p>r = 22/21 ≈ 1.048 圈，取 k = 1。</p>
+    <p>n' = 22 - 21 = 1 r/s &gt; 0，与真实方向同号。</p>
+    <p><b>答：白点顺时针转动（正转），周期 T' = 1 s。</b></p>
+    <p class="tip">n 比 k·f 大一点 → 正转；n 比 k·f 小一点 → 倒转。这就是"车轮倒转"现象的分界线。</p>
+  </details>
+
+  <details>
+    <summary>变式 3　若频闪频率改为 40 次/秒，转速仍为 20 r/s，能看到什么？</summary>
+    <p>r = 20/40 = 0.5 圈，正好是半圈。</p>
+    <p>两次闪光之间白点转过半圈，于是白点在两个直径相对的位置上交替出现，看起来像两个亮点轮流闪。</p>
+    <p><b>答：此时 n' = ±20 r/s，"正转"与"倒转"在视觉上完全等价，无法判定出确定的转动方向。</b></p>
+    <p class="tip">在页面里点"f=40（半圈临界）"预设，可以亲眼看到两个亮点交替出现的效果。</p>
+  </details>
+
+  <details>
+    <summary>变式 4　若转速为 20 r/s、频闪频率改为 10 次/秒，又看到什么？</summary>
+    <p>r = 20/10 = 2 圈，取 k = 2，n' = 20 - 2×10 = 0。</p>
+    <p>每次闪光时白点都恰好转回原来的位置。</p>
+    <p><b>答：白点看起来静止不动，与真实转向无关。</b></p>
+    <p class="tip">延伸：如果圆盘上不止一个白点，而是画成有花纹的图案，那"静止"就可能被打破——利用盘上多个标记可以消除这种多解性，这也是工程上用"打标记法"测转速的思路。</p>
+  </details>
+</section>
+
+<!-- ================= 小结 ================= -->
+<section class="card">
+  <h2>一句话总结</h2>
+  <div class="final">
+    频闪观察，本质是把<b>连续转动切成一串离散快照</b>。每两次快照之间圆盘转过的圈数 r = n/f 里，<b>整数圈是"看不见的"</b>，
+    只有剩下的那一点点（r 减去最近的整数）才是白点看起来的位移——它决定了观察到的<b>方向</b>，而补满这一圈所需的时间就是观察到的<b>周期</b>。
+  </div>
+</section>
+
+<footer>启明 · 高中物理专题 · 频闪与视觉暂留</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var TH0 = Math.PI / 2;                 // 白点初始位置：正上方
+
+  var st = {
+    n: 20,          // 转盘转速 r/s
+    f: 21,          // 频闪频率 次/s
+    speed: 0.20,    // 播放倍速
+    playing: true,
+    ghost: true,    // 是否显示残影
+    t: 0            // 已播放的真实时间（秒）
+  };
+
+  var cvR = document.getElementById('cvReal');
+  var cvS = document.getElementById('cvStrobe');
+  var A = null, B = null, tick = 0;
+
+  /* ---------------- 画布尺寸 ---------------- */
+  function fit(cv){
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var rect = cv.getBoundingClientRect();
+    var w = Math.max(240, rect.width || 320);
+    var h = Math.max(240, rect.height || 320);
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    var ctx = cv.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { ctx: ctx, w: w, h: h };
+  }
+  function fitAll(){
+    A = fit(cvR);
+    B = fit(cvS);
+  }
+
+  /* ---------------- 基础绘图 ---------------- */
+  function discBase(ctx, cx, cy, R, border){
+    var g = ctx.createRadialGradient(cx - R*0.35, cy - R*0.35, R*0.08, cx, cy, R);
+    g.addColorStop(0, '#343c4e');
+    g.addColorStop(1, '#10131b');
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2);
+    ctx.fillStyle = g; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = border; ctx.stroke();
+
+    // 刻度
+    for (var i = 0; i < 24; i++){
+      var a = i * Math.PI / 12;
+      var inner = (i % 2 === 0) ? R*0.85 : R*0.92;
+      ctx.beginPath();
+      ctx.moveTo(cx + inner*Math.cos(a), cy - inner*Math.sin(a));
+      ctx.lineTo(cx + R*0.97*Math.cos(a), cy - R*0.97*Math.sin(a));
+      ctx.strokeStyle = (i % 2 === 0) ? 'rgba(255,255,255,.28)' : 'rgba(255,255,255,.13)';
+      ctx.lineWidth = (i % 2 === 0) ? 2 : 1.2;
+      ctx.stroke();
+    }
+    // 中心轴
+    ctx.beginPath(); ctx.arc(cx, cy, R*0.07, 0, Math.PI*2);
+    ctx.fillStyle = '#080b12'; ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 1.5; ctx.stroke();
+  }
+
+  function plotDot(ctx, cx, cy, R, th, r, color, glow){
+    var x = cx + R*Math.cos(th), y = cy - R*Math.sin(th);
+    if (glow){
+      var g = ctx.createRadialGradient(x, y, 0, x, y, r*3.8);
+      g.addColorStop(0, glow);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.beginPath(); ctx.arc(x, y, r*3.8, 0, Math.PI*2);
+      ctx.fillStyle = g; ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  function arcPath(ctx, cx, cy, r, a0, a1){
+    var N = 64;
+    ctx.beginPath();
+    for (var i = 0; i <= N; i++){
+      var a = a0 + (a1 - a0) * i / N;
+      var x = cx + r*Math.cos(a), y = cy - r*Math.sin(a);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+  }
+
+  // 带箭头的弧（数学角度 a0 -> a1）
+  function arcArrow(ctx, cx, cy, r, a0, a1, color, lw){
+    arcPath(ctx, cx, cy, r, a0, a1);
+    ctx.setLineDash([]);
+    ctx.lineWidth = lw; ctx.strokeStyle = color; ctx.lineCap = 'round';
+    ctx.stroke();
+
+    var dir = (a1 > a0) ? 1 : -1;
+    var a = a1;
+    var tipx = cx + r*Math.cos(a), tipy = cy - r*Math.sin(a);
+    var tx = -Math.sin(a)*dir, ty = -Math.cos(a)*dir;   // 屏幕切向单位向量
+    var nx = Math.cos(a), ny = -Math.sin(a);            // 屏幕外法向
+    var L = 14, W = 7;
+    ctx.beginPath();
+    ctx.moveTo(tipx, tipy);
+    ctx.lineTo(tipx - tx*L + nx*W, tipy - ty*L + ny*W);
+    ctx.lineTo(tipx - tx*L - nx*W, tipy - ty*L - ny*W);
+    ctx.closePath();
+    ctx.fillStyle = color; ctx.fill();
+  }
+
+  function label(ctx, x, y, text, color){
+    ctx.font = '700 14px "Microsoft YaHei",system-ui,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = color;
+    ctx.fillText(text, x, y);
+  }
+
+  /* ---------------- 左盘：真实转动 ---------------- */
+  function drawReal(o){
+    var ctx = o.ctx, w = o.w, h = o.h;
+    ctx.clearRect(0, 0, w, h);
+    var cx = w/2, cy = h/2, R = Math.min(w, h) * 0.32;
+
+    discBase(ctx, cx, cy, R, 'rgba(140,165,205,.45)');
+
+    var th = TH0 - 2*Math.PI*st.n*st.t;
+
+    // 拖尾（表现"转得很快"）
+    for (var i = 7; i >= 1; i--){
+      var al = 0.34 * (1 - i/8);
+      plotDot(ctx, cx, cy, R, th + i*0.26, 2.5 + 4.5*(1 - i/8),
+              'rgba(180,215,255,' + al.toFixed(3) + ')');
+    }
+    plotDot(ctx, cx, cy, R, th, 11, '#ffffff', 'rgba(190,230,255,.55)');
+
+    arcArrow(ctx, cx, cy, R*1.16, 2.5, 0.6, 'rgba(255,196,77,.95)', 5);
+    label(ctx, cx, h - 4, '真实：顺时针 ' + st.n + ' r/s   每转一圈 ' + (1/st.n).toFixed(3) + ' s',
+          'rgba(255,214,130,.92)');
+  }
+
+  /* ---------------- 右盘：频闪观察 ---------------- */
+  function drawStrobe(o){
+    var ctx = o.ctx, w = o.w, h = o.h;
+    ctx.clearRect(0, 0, w, h);
+    var cx = w/2, cy = h/2, R = Math.min(w, h) * 0.32;
+
+    var n = st.n, f = st.f, t = st.t;
+    var ft = f * t;
+    var k = Math.floor(ft);
+    var frac = ft - k;                              // 0~1 表示距上次闪光过了多少
+    var flash = Math.max(0, 1 - frac / 0.12);       // 刚闪过瞬间的亮度
+
+    discBase(ctx, cx, cy, R, 'rgba(95,120,165,' + (0.35 + 0.55*flash).toFixed(2) + ')');
+
+    // 闪光提亮 + 扩散光环
+    if (flash > 0){
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2);
+      ctx.fillStyle = 'rgba(160,205,255,' + (0.12*flash).toFixed(3) + ')';
+      ctx.fill();
+
+      var ringR = R * (1 + 0.55 * (1 - flash));
+      ctx.beginPath(); ctx.arc(cx, cy, ringR, 0, Math.PI*2);
+      ctx.strokeStyle = 'rgba(150,220,255,' + (0.35*flash).toFixed(3) + ')';
+      ctx.lineWidth = 3; ctx.stroke();
+    }
+
+    var thNow  = TH0 - 2*Math.PI * n * (k / f);
+    var km     = Math.round(n / f);
+    var dvis   = 2*Math.PI * (km - n / f);          // 视觉上每次闪光的角位移（带符号：正=逆时针）
+
+    // 残影：前两次闪光的位置
+    if (st.ghost){
+      for (var j = 1; j <= 2; j++){
+        var kk = k - j;
+        if (kk < 0) continue;
+        var thp = TH0 - 2*Math.PI * n * (kk / f);
+        plotDot(ctx, cx, cy, R, thp, 9, 'rgba(150,200,255,' + (0.32/j).toFixed(2) + ')');
+      }
+    }
+
+    // 本次闪现的位移弧
+    if (k > 0 && Math.abs(dvis) > 0.005 && Math.abs(dvis) < Math.PI - 0.005){
+      ctx.save();
+      ctx.setLineDash([5, 5]);
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(56,225,242,.55)';
+      arcPath(ctx, cx, cy, R*0.70, thNow - dvis, thNow);
+      ctx.stroke();
+      ctx.restore();
+      arcArrow(ctx, cx, cy, R*0.70, thNow - dvis, thNow, 'rgba(56,225,242,.95)', 2);
+    }
+
+    // 白点本体
+    plotDot(ctx, cx, cy, R, thNow, 11, '#ffffff', 'rgba(120,220,255,.85)');
+
+    // 视觉转动方向弧箭头
+    var crit = Math.abs(Math.abs(n/f - km) - 0.5) < 0.015;
+    var nv = n - km * f;
+    var arrowColor = 'rgba(120,160,190,.45)';
+    var txt = '闪光瞬间：白点出现在这里';
+
+    if (crit){
+      txt = '临界：两个亮点交替闪，方向不可判定';
+      arrowColor = 'rgba(160,160,180,.45)';
+    } else if (Math.abs(nv) < 1e-9){
+      txt = '看起来完全静止不动';
+      arrowColor = 'rgba(94,230,168,.75)';
+    } else if (dvis > 0){
+      txt = '视觉方向：逆时针（与真实相反）';
+      arrowColor = 'rgba(56,225,242,.95)';
+      arcArrow(ctx, cx, cy, R*1.16, 0.6, 2.5, arrowColor, 5);
+    } else {
+      txt = '视觉方向：顺时针（与真实相同）';
+      arrowColor = 'rgba(255,122,184,.95)';
+      arcArrow(ctx, cx, cy, R*1.16, 2.5, 0.6, arrowColor, 5);
+    }
+
+    label(ctx, cx, h - 4, txt, 'rgba(200,232,255,.92)');
+  }
+
+  /* ---------------- 数值读数 ---------------- */
+  function updateStatic(){
+    var n = st.n, f = st.f;
+    var r = n / f;
+    var k = Math.round(r);
+    var nv = n - k * f;
+    var frac = Math.abs(r - k);
+    var crit = Math.abs(frac - 0.5) < 0.015;
+
+    document.getElementById('roR').textContent = r.toFixed(4);
+    document.getElementById('roK').textContent = k;
+    document.getElementById('roNv').textContent = (nv > 0 ? '+' : '') + nv.toFixed(2) + ' r/s';
+
+    var dirEl = document.getElementById('roDir');
+    var tEl = document.getElementById('roT');
+    var hintEl = document.getElementById('roHint');
+    var hintText = '';
+
+    if (crit){
+      dirEl.textContent = '无法判定';
+      tEl.textContent = '—';
+      hintText = '半圈临界：n/f 的小数部分接近 0.5，白点在两个直径相对的位置交替出现，看起来像两个亮点轮流闪，' +
+                 '“转过半圈”与“倒回半圈”在视觉上完全等价，因此没有确定的转动方向。';
+    } else if (Math.abs(nv) < 1e-9){
+      dirEl.textContent = '静止不动';
+      tEl.textContent = '∞（不转）';
+      hintText = 'n 恰好是 f 的整数倍：每次闪光时白点都回到同一位置，看起来完全静止。';
+    } else {
+      dirEl.textContent = (nv > 0) ? '顺时针（与真实相同）' : '逆时针（与真实相反）';
+      tEl.textContent = (1 / Math.abs(nv)).toFixed(2) + ' s';
+      hintText = '每闪一次，白点在视觉上' + (nv > 0 ? '顺时针' : '逆时针') +
+                 '移动 ' + frac.toFixed(4) + ' 圈（= 1/' + (1/frac).toFixed(2) + ' 圈）；' +
+                 '补满一整圈需要 ' + Math.round(1/frac) + ' 次闪光，故 T\' = ' + (1/Math.abs(nv)).toFixed(2) + ' s。';
+    }
+    hintEl.textContent = hintText;
+    hintEl.classList.add('show');
+  }
+
+  function updateDynamic(){
+    document.getElementById('footReal').textContent =
+      '已转过 ' + (st.t * st.n).toFixed(2) + ' 圈';
+
+    var k = Math.floor(st.f * st.t);
+    var km = Math.round(st.n / st.f);
+    var nv = Math.abs(st.n - km * st.f);
+    var crit = Math.abs(Math.abs(st.n/st.f - km) - 0.5) < 0.015;
+    var vis = crit ? '两个亮点交替闪' : (nv * st.t).toFixed(2) + ' 圈';
+
+    document.getElementById('footStrobe').textContent =
+      '已闪光 ' + k + ' 次　｜　视觉上白点转过 ' + vis;
+  }
+
+  /* ---------------- 主循环 ---------------- */
+  var last = performance.now();
+  function frame(now){
+    var dt = (now - last) / 1000;
+    last = now;
+    if (dt > 0.12) dt = 0.12;
+    if (st.playing) st.t += dt * st.speed;
+
+    if (A && B){
+      drawReal(A);
+      drawStrobe(B);
+      tick++;
+      if (tick % 6 === 0) updateDynamic();
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------------- 交互 ---------------- */
+  function bindRange(id, labId, apply, fmt){
+    var el = document.getElementById(id);
+    var lab = document.getElementById(labId);
+    el.addEventListener('input', function(){
+      var v = parseFloat(el.value);
+      apply(v);
+      lab.textContent = fmt ? fmt(v) : v;
+      updateStatic();
+    });
+  }
+
+  bindRange('rngN', 'labN', function(v){ st.n = v; });
+  bindRange('rngF', 'labF', function(v){ st.f = v; });
+  bindRange('rngS', 'labS', function(v){ st.speed = v / 100; }, function(v){ return (v/100).toFixed(2); });
+
+  document.getElementById('btnPlay').addEventListener('click', function(){
+    st.playing = !st.playing;
+    this.textContent = st.playing ? '暂停' : '继续';
+  });
+
+  document.getElementById('btnReset').addEventListener('click', function(){
+    st.t = 0;
+  });
+
+  document.getElementById('btnGhost').addEventListener('click', function(){
+    st.ghost = !st.ghost;
+    this.textContent = '残影：' + (st.ghost ? '开' : '关');
+    this.classList.toggle('active', st.ghost);
+  });
+
+  document.getElementById('btnOrigin').addEventListener('click', function(){
+    setNF(20, 21);
+  });
+
+  function setNF(n, f){
+    st.n = n; st.f = f;
+    document.getElementById('rngN').value = n;
+    document.getElementById('rngF').value = f;
+    document.getElementById('labN').textContent = n;
+    document.getElementById('labF').textContent = f;
+    st.t = 0;
+    updateStatic();
+  }
+
+  var chips = document.querySelectorAll('.chip');
+  for (var i = 0; i < chips.length; i++){
+    chips[i].addEventListener('click', function(){
+      setNF(parseInt(this.getAttribute('data-n'), 10), parseInt(this.getAttribute('data-f'), 10));
+    });
+  }
+
+  /* ---------------- 启动 ---------------- */
+  function boot(){
+    fitAll();
+    updateStatic();
+    updateDynamic();
+    requestAnimationFrame(frame);
+  }
+
+  if (document.readyState === 'complete') boot();
+  else window.addEventListener('load', boot);
+
+  window.addEventListener('resize', fitAll);
+  if (window.ResizeObserver){
+    var boards = document.querySelector('.boards');
+    if (boards) new ResizeObserver(function(){ fitAll(); }).observe(boards);
+  }
+})();
+</script>
+</body>
+</html>
