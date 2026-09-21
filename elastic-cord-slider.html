@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第10题 · 弹性绳滑块沿杆往复运动动画</title>
+<style>
+:root{
+  --bg:#eef2f7; --card:#ffffff; --ink:#0f172a; --muted:#5b6b7f;
+  --blue:#2563eb; --red:#ef4444; --purple:#8b5cf6; --green:#10b981;
+  --orange:#f59e0b; --line:#e2e8f0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;background:var(--bg);color:var(--ink);padding:16px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-size:24px}
+.badge{background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;font-weight:700;padding:8px 18px;border-radius:999px;font-size:18px;box-shadow:0 4px 10px rgba(37,99,235,.35)}
+.sub{color:var(--muted);font-size:14px;width:100%}
+.layout{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(330px,1fr);gap:14px;align-items:start}
+.card{background:var(--card);border-radius:14px;box-shadow:0 2px 10px rgba(15,23,42,.07);padding:12px}
+.stage{position:relative;padding:8px}
+canvas#scene{width:100%;height:auto;display:block;border-radius:10px;background:#f8fafc}
+#banner{position:absolute;left:16px;right:16px;bottom:16px;background:rgba(15,23,42,.87);color:#e2e8f0;padding:10px 14px;border-radius:10px;font-size:14.5px;line-height:1.55;backdrop-filter:blur(3px)}
+#banner b{color:#fbbf24}
+.card h2{font-size:16px;margin:4px 4px 10px;display:flex;align-items:center;gap:8px}
+.card h2 .dot{width:10px;height:10px;border-radius:50%;background:var(--blue);display:inline-block}
+.controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font-family:inherit;font-size:15px;font-weight:600;border:none;border-radius:9px;padding:9px 16px;cursor:pointer;background:var(--blue);color:#fff;transition:.15s}
+button:hover{filter:brightness(1.12)}
+button.gray{background:#64748b}
+.seg{display:inline-flex;border:2px solid var(--blue);border-radius:9px;overflow:hidden}
+.seg button{border-radius:0;background:#fff;color:var(--blue);padding:7px 12px;font-size:14px}
+.seg button.on{background:var(--blue);color:#fff}
+.toggles{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;font-size:14px}
+.toggles label{display:flex;align-items:center;gap:5px;cursor:pointer}
+.keys{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.keys .cap{font-size:13px;color:var(--muted);align-self:center}
+button.small{font-size:13px;padding:6px 10px;background:#ede9fe;color:#5b21b6}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ditem{background:#f1f5f9;border-radius:10px;padding:8px 10px}
+.ditem .lab{font-size:12.5px;color:var(--muted)}
+.ditem .val{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}
+.ditem .val small{font-size:12px;color:var(--muted);font-weight:400}
+.ditem.wide{grid-column:1/-1}
+.phase-tag{display:inline-block;padding:2px 12px;border-radius:999px;font-size:14.5px;font-weight:700;color:#fff}
+.bar-row{display:grid;grid-template-columns:122px 1fr 76px;align-items:center;gap:8px;margin:7px 0;font-size:13.5px}
+.bar-track{height:16px;background:#eef2f7;border-radius:8px;overflow:hidden}
+.bar-fill{height:100%;border-radius:8px;width:0}
+.bar-val{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.note{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.6}
+canvas#vt{width:100%;height:auto;display:block}
+details{margin-top:4px}
+summary{cursor:pointer;font-weight:700;font-size:15px;padding:6px 4px;user-select:none}
+.opt{display:flex;gap:8px;align-items:flex-start;padding:7px 9px;border-radius:9px;margin:5px 0;font-size:14px;line-height:1.6;background:#f8fafc}
+.opt .v{flex:none;font-weight:800;color:#fff;border-radius:7px;padding:1px 10px;font-size:14px;margin-top:2px}
+.opt.ok .v{background:var(--green)} .opt.no .v{background:var(--red)}
+.opt b{color:var(--blue)}
+.formula{background:#f1f5f9;border-left:4px solid var(--blue);padding:8px 12px;border-radius:0 8px 8px 0;font-size:13.5px;margin:8px 0;line-height:1.9}
+.stmt{font-size:13.5px;line-height:1.9;color:#334155;padding:4px 6px}
+/* —— 题目卡片 —— */
+.qcard{background:linear-gradient(180deg,#ffffff,#f8fafc);border:1px solid var(--line);border-left:6px solid var(--blue);margin-bottom:14px}
+.qhead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.qhead .no{background:var(--blue);color:#fff;font-weight:800;font-size:16px;padding:3px 14px;border-radius:8px}
+.qhead h2{margin:0;font-size:18px}
+.qhead .tag{font-size:13px;color:#7c3aed;background:#ede9fe;border-radius:999px;padding:3px 12px;font-weight:700}
+.qtext{font-size:16.5px;line-height:2.0;color:#1e293b;text-align:justify}
+.qtext .hl{color:var(--blue);font-weight:700}
+.qopts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.qopt{font-size:16px;line-height:1.8;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.qopt .k{font-weight:800;color:var(--blue);margin-right:6px}
+.qfoot{margin-top:10px;font-size:13.5px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap}
+.qfoot b{color:#b45309}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.qopts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<style>.siteback{display:inline-block;margin:0 0 14px;padding:6px 12px;border:1px solid #cbd5e1;border-radius:9px;color:#475569;font-size:13.5px;text-decoration:none;background:#fff}.siteback:hover{color:#2563eb;border-color:#93c5fd}.siteback .ar{opacity:.55;margin-left:4px}</style>
+<a class="siteback" href="jiaoxue.html">← 教学资源</a>
+
+<header>
+  <h1>弹性轻绳 · 滑块沿杆往复运动</h1>
+  <span class="badge">答案：AC</span>
+  <div class="sub">第10题 ｜ 杆与水平面成 53°，m=1 kg，μ=0.16，k=10 N/m，PQ⊥OM 且 PQ=1.6 m，绳原长=OQ，g=10 m/s²（sin53°=0.8）</div>
+</header>
+
+<!-- ===== 题干（最前） ===== -->
+<div class="card qcard">
+  <div class="qhead">
+    <span class="no">第 10 题</span>
+    <h2>力学 · 弹性轻绳与斜杆上的滑块（多选）</h2>
+    <span class="tag">复杂长题 · 硬核讲解</span>
+  </div>
+  <p class="qtext">
+    如图，与水平面成 <span class="hl">53°</span> 夹角且固定于 <span class="hl">O、M</span> 两点的硬直杆上套着一质量为 <span class="hl">1 kg</span> 的滑块，弹性轻绳一端固定于 <span class="hl">O</span> 点，另一端跨过固定在 <span class="hl">Q</span> 处的光滑定滑轮与位于直杆上 <span class="hl">P</span> 点的滑块拴接，弹性轻绳原长为 <span class="hl">OQ</span>，<span class="hl">PQ 为 1.6 m 且垂直于 OM</span>。现将滑块无初速释放，假设<span class="hl">最大静摩擦力与滑动摩擦力相等</span>。滑块与杆之间的动摩擦因数为 <span class="hl">0.16</span>，弹性轻绳上弹力 <em>F</em> 的大小与其伸长量 <em>x</em> 满足 <span class="hl">F = kx</span>，<span class="hl">k = 10 N/m</span>，<span class="hl">g 取 10 m/s²</span>，<span class="hl">sin53° = 0.8</span>。则滑块（&nbsp;&nbsp;&nbsp;&nbsp;）
+  </p>
+  <div class="qopts">
+    <div class="qopt"><span class="k">A．</span>与杆之间的滑动摩擦力大小始终为 1.6 N</div>
+    <div class="qopt"><span class="k">B．</span>下滑与上滑过程中所受滑动摩擦力的冲量相同</div>
+    <div class="qopt"><span class="k">C．</span>从释放到静止的位移大小为 0.64 m</div>
+    <div class="qopt"><span class="k">D．</span>从释放到静止克服滑动摩擦力做功为 2.56 J</div>
+  </div>
+  <div class="qfoot">
+    <span>正确选项：<b>AC</b></span>
+    <span>下滑最低点：<b>1.28 m</b></span>
+    <span>最终停于：<b>d = 0.64 m（临界平衡）</b></span>
+    <span>克服摩擦力做功：<b>3.072 J</b></span>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- 左：动画舞台 -->
+  <div class="card stage">
+    <canvas id="scene"></canvas>
+    <div id="banner">正在加载动画…</div>
+  </div>
+  <!-- 右：控制与数据 -->
+  <div>
+    <div class="card">
+      <h2><span class="dot"></span>控制台</h2>
+      <div class="controls">
+        <button id="btnPlay">暂停</button>
+        <button id="btnReset" class="gray">重置</button>
+        <span class="seg" id="speedSeg">
+          <button data-s="0.25">0.25×</button><button data-s="0.5" class="on">0.5×</button><button data-s="1">1×</button>
+        </span>
+      </div>
+      <div class="toggles">
+        <label><input type="checkbox" id="tgForce" checked> 受力箭头</label>
+        <label><input type="checkbox" id="tgDecomp" checked> 弹力分解 F∥=kd / F⊥=16N</label>
+        <label><input type="checkbox" id="tgStrobe" checked> 频闪残影</label>
+      </div>
+      <div class="keys">
+        <span class="cap">关键时刻：</span>
+        <button class="small" id="k0">释放瞬间</button>
+        <button class="small" id="kA">下滑 v最大</button>
+        <button class="small" id="kB">最低点 1.28m</button>
+        <button class="small" id="kC">上滑 v最大</button>
+        <button class="small" id="kD">最终静止</button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2><span class="dot" style="background:var(--orange)"></span>实时数据</h2>
+      <div class="dgrid">
+        <div class="ditem wide"><div class="lab">阶段</div><div class="val"><span class="phase-tag" id="dPhase">阶段① 下滑</span></div></div>
+        <div class="ditem"><div class="lab">时间 t</div><div class="val"><span id="dT">0.00</span><small> s</small></div></div>
+        <div class="ditem"><div class="lab">离释放点 H 的距离 d</div><div class="val"><span id="dD">0.00</span><small> m</small></div></div>
+        <div class="ditem"><div class="lab">绳伸长量 x = QP</div><div class="val"><span id="dX">1.60</span><small> m</small></div></div>
+        <div class="ditem"><div class="lab">速度 v（沿杆向下为正）</div><div class="val"><span id="dV">0.00</span><small> m/s</small></div></div>
+        <div class="ditem"><div class="lab">加速度 a</div><div class="val"><span id="dA">6.40</span><small> m/s²</small></div></div>
+        <div class="ditem"><div class="lab">弹力 F = kx</div><div class="val"><span id="dF">16.0</span><small> N</small></div></div>
+        <div class="ditem"><div class="lab">支持力 N（恒定）</div><div class="val">10<small> N</small></div></div>
+        <div class="ditem wide"><div class="lab">滑动摩擦力 f（恒定）</div><div class="val" id="dFric">1.6<small> N · 沿杆向上</small></div></div>
+      </div>
+      <div class="note">示意说明：f 与 v 的箭头长度已适当放大，便于观察。</div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2><span class="dot" style="background:var(--green)"></span>能量跟踪（以释放点为参考面）</h2>
+      <div class="bar-row"><span>动能 Ek</span><div class="bar-track"><div class="bar-fill" id="bEk" style="background:#ef4444"></div></div><span class="bar-val" id="nEk">0.00 J</span></div>
+      <div class="bar-row"><span>弹性势能增量</span><div class="bar-track"><div class="bar-fill" id="bPe" style="background:#8b5cf6"></div></div><span class="bar-val" id="nPe">0.00 J</span></div>
+      <div class="bar-row"><span>重力势能减少量</span><div class="bar-track"><div class="bar-fill" id="bPg" style="background:#10b981"></div></div><span class="bar-val" id="nPg">0.00 J</span></div>
+      <div class="bar-row"><span>摩擦生热 Q</span><div class="bar-track"><div class="bar-fill" id="bQ" style="background:#f59e0b"></div></div><span class="bar-val" id="nQ">0.00 J</span></div>
+      <div class="note">能量守恒：减少的重力势能 = 动能 + 弹性势能增量 + 摩擦生热。<br>最终核对：8×0.64 = 2.048 + 3.072 J；全程 W<sub>克摩</sub> = 1.6 N × 1.92 m = 3.072 J（不是 2.56 J，D 错）。</div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <h2><span class="dot" style="background:var(--purple)"></span>v–t 图像（沿杆向下为正）</h2>
+      <canvas id="vt"></canvas>
+      <div class="note">两段都是简谐运动的半周期：下滑 a = 6.4 − 10d（平衡位形 d=0.64），上滑 a = 10d − 9.6（平衡位形 d=0.96）；ω=√10 rad/s，两段时长均为 π/√10 ≈ 0.99 s，峰值速度分别为 2.02 m/s 与 1.01 m/s。</div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <details open>
+        <summary>选项逐项判定（答案：AC）</summary>
+        <div class="opt ok"><span class="v">A 对</span><span>垂直杆方向：F⊥ = k·PQ = 16 N 恒定，N = 16 − mg·cos53° = 16 − 6 = 10 N 恒定，故 f = μN = <b>1.6 N 始终不变</b>（滑动过程中）。</span></div>
+        <div class="opt no"><span class="v">B 错</span><span>冲量是矢量：下滑时摩擦力沿杆<b>向上</b>，上滑时沿杆<b>向下</b>，方向相反，冲量不可能相同。</span></div>
+        <div class="opt ok"><span class="v">C 对</span><span>下滑 1.28 m 到最低点，再上滑 0.64 m，恰停在 d = 0.64 m 处（此处 8 − 6.4 = 1.6 N = 最大静摩擦，临界平衡），位移大小 <b>0.64 m</b>。</span></div>
+        <div class="opt no"><span class="v">D 错</span><span>总路程 = 1.28 + 0.64 = 1.92 m，W<sub>克摩</sub> = 1.6 × 1.92 = <b>3.072 J</b>，不是 2.56 J。</span></div>
+        <div class="formula">
+          <b>关键推理链</b><br>
+          ① 绳总长 = OQ + QP，原长 = OQ ⇒ 伸长量 x = QP，F = k·QP，方向 P→Q；<br>
+          ② F 沿杆分量 = k·QP·(d/QP) = <b>k·d</b> ⇒ 等效于"锚在 H 点、原长为 0、劲度系数 k 的弹簧"；垂直杆分量恒为 k·PQ = 16 N；<br>
+          ③ 垂直杆方向平衡：N = 16 − mg·cos53° = 10 N（恒）⇒ f = μN = 1.6 N（恒，A 对）；<br>
+          ④ 下滑 a = 6.4 − 10d，v=0 时 6.4D = 5D² ⇒ 最低点 D = 1.28 m；<br>
+          ⑤ 上滑 a = 10d − 9.6，由能量守恒（计摩擦）得上滑 0.64 m，停在 d = 0.64 m，恰为最大静摩擦的临界位置，此后不再运动（C 对）；<br>
+          ⑥ 全程路程 1.92 m，3.072 J 机械能转化为内能（D 错）。
+        </div>
+        <div class="note">题干见页首「第 10 题」卡片。</div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= 物理模型（精确解析解） ================= */
+const m=1, k=10, g=10, mu=0.16, s53=0.8, c53=0.6;
+const PQ=1.6;                    // Q 到杆的垂距 = 初始绳伸长量
+const Fperp=k*PQ;                // 16 N：弹力的垂直杆分量，恒定
+const Nn=Fperp-m*g*c53;          // 10 N：支持力恒定
+const fk=mu*Nn;                  // 1.6 N：滑动摩擦力恒定
+const Gs=m*g*s53;                // 8 N：重力沿杆（向下）分量
+const w=Math.sqrt(k/m);          // ω = √10 rad/s
+const d0=(Gs-fk)/k;              // 0.64 m：下滑段等效平衡位置
+const d2=(Gs+fk)/k;              // 0.96 m：上滑段等效平衡位置
+const Dmax=2*d0;                 // 1.28 m：最低点
+const A2=Dmax-d2;                // 0.32 m：上滑段振幅
+const t1=Math.PI/w;              // 下滑时长 ≈0.9935 s
+const T=2*t1;                    // 总时长 ≈1.987 s
+
+function stateAt(t){
+  if(t<=0) return {d:0, v:0, a:Gs-fk, phase:1};
+  if(t<t1){const s=w*t, d=d0*(1-Math.cos(s));
+    return {d, v:d0*w*Math.sin(s), a:Gs-fk-k*d, phase:1};}
+  if(t<T){const s=w*(t-t1), d=d2+A2*Math.cos(s);
+    return {d, v:-A2*w*Math.sin(s), a:k*d-Gs-fk, phase:2};}
+  return {d:d0, v:0, a:0, phase:3};
+}
+function pathAt(t){ // 已走过的路程（用于摩擦生热）
+  if(t<=0) return 0;
+  if(t<t1) return stateAt(t).d;
+  if(t<T)  return Dmax+(Dmax-stateAt(t).d);
+  return Dmax+d0; // 1.92 m
+}
+
+/* ================= 场景几何（单位：米） ================= */
+const u={x:c53,y:s53};           // 沿杆向上单位向量
+const n={x:-s53,y:c53};          // 指向 Q 一侧的法向单位向量
+const sH=PQ*s53/c53;             // 2.1333：H（垂足/释放点）到 O 的杆上距离
+const O={x:0,y:0};
+const Q={x:0,y:sH*s53+PQ*c53};   // (0, 2.6667) 恰在 O 正上方，同题图
+const M={x:3.5*c53,y:3.5*s53};   // (2.1, 2.8) 杆长 3.5 m
+function Pof(d){const s=sH-d; return {x:s*u.x, y:s*u.y};}
+function QPlen(d){return Math.hypot(PQ,d);}
+
+/* ================= 画布初始化 ================= */
+const cv=document.getElementById('scene'), ctx=cv.getContext('2d');
+const LW=960, LH=880, dpr=Math.min(2,window.devicePixelRatio||1);
+cv.width=LW*dpr; cv.height=LH*dpr;
+cv.style.aspectRatio=LW+" / "+LH;
+ctx.scale(dpr,dpr);
+const world={x0:-0.95,x1:2.85,y0:-0.45,y1:3.3};
+const S=Math.min(LW/(world.x1-world.x0), LH/(world.y1-world.y0));
+const ox=(LW-S*(world.x1-world.x0))/2 - S*world.x0;
+const oy=(LH-S*(world.y1-world.y0))/2 + S*world.y1;
+const X=x=>ox+S*x, Y=y=>oy-S*y;
+
+/* ================= 绘制工具 ================= */
+function line(a,b,color,wd,dash){
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=wd;ctx.setLineDash(dash||[]);
+  ctx.beginPath();ctx.moveTo(X(a.x),Y(a.y));ctx.lineTo(X(b.x),Y(b.y));ctx.stroke();ctx.restore();
+}
+function dot(p,color,r){
+  ctx.save();ctx.fillStyle=color;ctx.beginPath();
+  ctx.arc(X(p.x),Y(p.y),r,0,6.2832);ctx.fill();ctx.restore();
+}
+function hatch(a,b,dir,color){ // 基线 + 向 dir 方向的短斜线（墙面阴影线）
+  line(a,b,color,3);
+  const dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy), ux=dx/L, uy=dy/L, hl=0.09;
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.6;
+  for(let s=0.05;s<L;s+=0.14){
+    const px=a.x+ux*s, py=a.y+uy*s;
+    ctx.beginPath();ctx.moveTo(X(px),Y(py));ctx.lineTo(X(px+dir.x*hl),Y(py+dir.y*hl));ctx.stroke();
+  }
+  ctx.restore();
+}
+function arrow(from,vec,color,label,o){ // 世界坐标向量箭头
+  o=o||{};
+  const x0=X(from.x),y0=Y(from.y),x1=X(from.x+vec.x),y1=Y(from.y+vec.y);
+  if(Math.hypot(x1-x0,y1-y0)<3) return;
+  const ang=Math.atan2(y1-y0,x1-x0), hs=10;
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=3.5;ctx.lineCap='round';
+  if(o.dash)ctx.setLineDash(o.dash);
+  ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(x1,y1);
+  ctx.lineTo(x1-hs*Math.cos(ang-0.42),y1-hs*Math.sin(ang-0.42));
+  ctx.lineTo(x1-hs*Math.cos(ang+0.42),y1-hs*Math.sin(ang+0.42));
+  ctx.closePath();ctx.fill();
+  if(label){
+    ctx.font='700 14.5px "Microsoft YaHei"';ctx.textAlign='center';ctx.textBaseline='middle';
+    let lx,ly;
+    if(o.beyond){lx=x1+17*Math.cos(ang);ly=y1+17*Math.sin(ang);}
+    else{const px=-Math.sin(ang),py=Math.cos(ang),sd=o.side||1;
+      lx=x1+px*16*sd;ly=y1+py*16*sd;}
+    ctx.lineWidth=4;ctx.strokeStyle='rgba(255,255,255,.88)';ctx.strokeText(label,lx,ly);
+    ctx.fillText(label,lx,ly);
+  }
+  ctx.restore();
+}
+const rodAng=-Math.atan2(s53,c53); // 杆在屏幕上的旋转角
+function tickAt(d,color,label){    // 杆上的位置刻度 + 沿杆文字
+  const p=Pof(d);
+  line({x:p.x-n.x*0.10,y:p.y-n.y*0.10},{x:p.x-n.x*0.20,y:p.y-n.y*0.20},color,3.5);
+  ctx.save();ctx.translate(X(p.x-n.x*0.27),Y(p.y-n.y*0.27));ctx.rotate(rodAng);
+  ctx.fillStyle=color;ctx.font='700 13px "Microsoft YaHei"';
+  ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label,0,0);ctx.restore();
+}
+function dimLine(d,label){ // d 的尺寸标注线
+  const H0=Pof(0), P1=Pof(d), off=0.3;
+  line({x:H0.x-n.x*0.22,y:H0.y-n.y*0.22},{x:H0.x-n.x*0.38,y:H0.y-n.y*0.38},'#d97706',2);
+  line({x:P1.x-n.x*0.22,y:P1.y-n.y*0.22},{x:P1.x-n.x*0.38,y:P1.y-n.y*0.38},'#d97706',2);
+  line({x:H0.x-n.x*off,y:H0.y-n.y*off},{x:P1.x-n.x*off,y:P1.y-n.y*off},'#d97706',2,[5,4]);
+  const mid={x:(H0.x+P1.x)/2-n.x*0.2, y:(H0.y+P1.y)/2-n.y*0.2};
+  ctx.save();ctx.translate(X(mid.x),Y(mid.y));ctx.rotate(rodAng);
+  ctx.fillStyle='#d97706';ctx.font='800 14px "Microsoft YaHei"';
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,0,0);ctx.restore();
+}
+function drawSlider(p,ghost){
+  ctx.save();ctx.translate(X(p.x),Y(p.y));ctx.rotate(rodAng);
+  const wpx=S*0.34, hpx=S*0.24;
+  ctx.globalAlpha=ghost?0.22:1;
+  ctx.fillStyle='#f97316';ctx.strokeStyle='#7c2d12';ctx.lineWidth=2.5;
+  ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(-wpx/2,-hpx/2,wpx,hpx,6);
+  else ctx.rect(-wpx/2,-hpx/2,wpx,hpx);
+  ctx.fill();ctx.stroke();
+  if(!ghost){
+    ctx.fillStyle='#fff7ed';ctx.beginPath();ctx.arc(0,0,S*0.045,0,6.2832);ctx.fill();
+    ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='800 13px "Microsoft YaHei"';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('P',0,-hpx*0.26);
+    ctx.font='600 11px "Microsoft YaHei"';
+    ctx.fillText('1kg',0,hpx*0.3);
+  }
+  ctx.restore();
+}
+function legend(){
+  const x0=LW-180,y0=14,w=166,h=126;
+  ctx.save();ctx.fillStyle='rgba(255,255,255,.92)';ctx.strokeStyle='#e2e8f0';ctx.lineWidth=1.5;
+  ctx.beginPath();
+  if(ctx.roundRect)ctx.roundRect(x0,y0,w,h,10);else ctx.rect(x0,y0,w,h);
+  ctx.fill();ctx.stroke();
+  const rows=[['#ef4444','G 重力 10N'],['#8b5cf6','F 弹力 = kx'],['#10b981','N 支持（恒）'],['#f59e0b','f 摩擦（恒）'],['#0891b2','v 速度'],['#2563eb','F∥ / F⊥ 分解']];
+  ctx.font='600 12.5px "Microsoft YaHei"';ctx.textAlign='left';ctx.textBaseline='middle';
+  rows.forEach((r,i)=>{
+    const yy=y0+17+i*17.5;
+    ctx.strokeStyle=r[0];ctx.fillStyle=r[0];ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(x0+12,yy);ctx.lineTo(x0+38,yy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(x0+40,yy);ctx.lineTo(x0+32,yy-4);ctx.lineTo(x0+32,yy+4);ctx.closePath();ctx.fill();
+    ctx.fillStyle='#334155';ctx.fillText(r[1],x0+48,yy);
+  });
+  ctx.restore();
+}
+
+/* ================= 主场景渲染 ================= */
+function render(st){
+  ctx.clearRect(0,0,LW,LH);
+  /* 浅色网格 */
+  ctx.save();ctx.strokeStyle='#e9eef5';ctx.lineWidth=1;
+  for(let gx=-0.5;gx<=2.5;gx+=0.5){ctx.beginPath();ctx.moveTo(X(gx),Y(world.y0));ctx.lineTo(X(gx),Y(world.y1));ctx.stroke();}
+  for(let gy=0.5;gy<=3;gy+=0.5){ctx.beginPath();ctx.moveTo(X(world.x0),Y(gy));ctx.lineTo(X(world.x1),Y(gy));ctx.stroke();}
+  ctx.restore();
+  /* 地面 / 墙 / 顶棚 */
+  hatch({x:-0.95,y:0},{x:2.85,y:0},{x:-0.35,y:-1},'#334155');
+  hatch({x:2.1,y:1.9},{x:2.1,y:3.25},{x:1,y:-0.35},'#334155');
+  hatch({x:-0.5,y:2.95},{x:0.5,y:2.95},{x:-0.35,y:1},'#334155');
+  line({x:0,y:2.95},Q,'#334155',2);
+  /* 53° 角 */
+  ctx.save();ctx.strokeStyle='#64748b';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(X(O.x),Y(O.y),S*0.52,0,rodAng,true);ctx.stroke();ctx.restore();
+  ctx.fillStyle='#334155';ctx.font='800 16px "Microsoft YaHei"';
+  ctx.textAlign='center';ctx.textBaseline='alphabetic';
+  ctx.fillText('53°',X(O.x)+S*0.7*Math.cos(-0.4636),Y(O.y)+S*0.7*Math.sin(-0.4636)+6);
+  /* 杆 */
+  ctx.save();ctx.strokeStyle='#475569';ctx.lineWidth=7;ctx.lineCap='round';
+  ctx.beginPath();ctx.moveTo(X(O.x),Y(O.y));ctx.lineTo(X(M.x),Y(M.y));ctx.stroke();ctx.restore();
+  dot(O,'#0f172a',5); dot(M,'#0f172a',5);
+  /* 定滑轮 Q */
+  ctx.save();ctx.fillStyle='#fff';ctx.strokeStyle='#475569';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.arc(X(Q.x),Y(Q.y),S*0.075,0,6.2832);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#0f172a';ctx.beginPath();ctx.arc(X(Q.x),Y(Q.y),3,0,6.2832);ctx.fill();ctx.restore();
+  /* 初始绳位虚线 Q-H 与关键位置刻度 */
+  line(Q,Pof(0),'#cbd5e1',1.8,[7,7]);
+  tickAt(0,'#475569','释放点 H');
+  tickAt(0.64,'#059669','0.64 m 停');
+  tickAt(1.28,'#dc2626','1.28 m 最低');
+  /* 频闪残影 */
+  if(tgStrobe.checked){for(const gd of ghosts)drawSlider(Pof(gd),true);}
+  /* 绳 */
+  const P=Pof(st.d);
+  line(O,Q,'#1e293b',2.5);
+  line(Q,P,'#1e293b',2.5);
+  /* d 尺寸标注 */
+  if(st.d>0.03)dimLine(st.d,'d = '+st.d.toFixed(2)+' m');
+  /* 滑块 */
+  drawSlider(P,false);
+  /* 速度箭头 */
+  if(Math.abs(st.v)>0.03){
+    arrow(P,{x:-u.x*0.1*st.v, y:-u.y*0.1*st.v},'#0891b2','v = '+Math.abs(st.v).toFixed(2)+' m/s',{beyond:true});
+  }
+  /* 受力 */
+  if(tgForce.checked){
+    arrow(P,{x:0,y:-0.045*m*g},'#ef4444','G=mg=10 N',{side:1});
+    const QPl=QPlen(st.d), Fl=k*QPl;
+    const dir={x:(Q.x-P.x)/QPl, y:(Q.y-P.y)/QPl}, Lf=Math.max(0.045*Fl,0.22);
+    arrow(P,{x:dir.x*Lf,y:dir.y*Lf},'#8b5cf6','F=kx='+Fl.toFixed(1)+' N',{beyond:true});
+    arrow(P,{x:-n.x*0.45,y:-n.y*0.45},'#10b981','N=10 N',{beyond:true});
+    const sgn=(st.phase===2)?-1:1;
+    const flab=(st.phase===3)?'f=1.6 N（静）':'f=1.6 N';
+    arrow(P,{x:u.x*sgn*0.22,y:u.y*sgn*0.22},'#f59e0b',flab,{beyond:true,dash:(st.phase===3)?[5,4]:null});
+    if(tgDecomp.checked){
+      const Lp=0.045*k*st.d;
+      if(st.d>0.02)arrow(P,{x:u.x*Lp,y:u.y*Lp},'#2563eb','F∥=kd='+(k*st.d).toFixed(1)+' N',{beyond:true,dash:[6,5]});
+      arrow(P,{x:n.x*0.72,y:n.y*0.72},'#0d9488','F⊥=16 N 恒',{beyond:true,dash:[6,5]});
+      if(st.d>0.02){
+        line({x:P.x+u.x*Lp,y:P.y+u.y*Lp},{x:P.x+u.x*Lp+n.x*0.72,y:P.y+u.y*Lp+n.y*0.72},'#cbd5e1',1.2,[4,4]);
+        line({x:P.x+n.x*0.72,y:P.y+n.y*0.72},{x:P.x+u.x*Lp+n.x*0.72,y:P.y+u.y*Lp+n.y*0.72},'#cbd5e1',1.2,[4,4]);
+      }
+    }
+  }
+  /* 点标注 */
+  ctx.fillStyle='#0f172a';ctx.font='800 17px "Microsoft YaHei"';ctx.textBaseline='alphabetic';
+  ctx.textAlign='right';ctx.fillText('O',X(O.x)-12,Y(O.y)+20);
+  ctx.textAlign='left';ctx.fillText('M',X(M.x)+12,Y(M.y)-6);
+  ctx.fillText('Q（定滑轮）',X(Q.x)+14,Y(Q.y)-12);
+  legend();
+}
+
+/* ================= v-t 小图 ================= */
+const vcv=document.getElementById('vt'), vctx=vcv.getContext('2d');
+const VW=340, VH=172;
+vcv.width=VW*dpr; vcv.height=VH*dpr;
+vcv.style.aspectRatio=VW+" / "+VH;
+vctx.scale(dpr,dpr);
+const vm={l:36,r:10,t:10,b:24}, vMin=-1.35, vMax=2.35, tMax=2.15;
+function drawVT(t){
+  vctx.clearRect(0,0,VW,VH);
+  const px=tt=>vm.l+(tt/tMax)*(VW-vm.l-vm.r);
+  const py=vv=>vm.t+(vMax-vv)/(vMax-vMin)*(VH-vm.t-vm.b);
+  vctx.strokeStyle='#94a3b8';vctx.lineWidth=1.5;
+  vctx.beginPath();vctx.moveTo(vm.l,vm.t);vctx.lineTo(vm.l,VH-vm.b);vctx.lineTo(VW-vm.r,VH-vm.b);vctx.stroke();
+  vctx.setLineDash([4,4]);vctx.strokeStyle='#cbd5e1';
+  vctx.beginPath();vctx.moveTo(vm.l,py(0));vctx.lineTo(VW-vm.r,py(0));vctx.stroke();vctx.setLineDash([]);
+  vctx.fillStyle='#64748b';vctx.font='11px sans-serif';vctx.textAlign='right';
+  [-1,1,2].forEach(vv=>vctx.fillText(vv,vm.l-5,py(vv)+4));
+  vctx.textAlign='center';
+  [1,2].forEach(tt=>vctx.fillText(tt,px(tt),VH-vm.b+14));
+  vctx.fillText('t/s',VW-18,VH-vm.b+14);
+  vctx.save();vctx.translate(10,vm.t+30);vctx.rotate(-Math.PI/2);
+  vctx.fillText('v/(m/s)',0,0);vctx.restore();
+  vctx.strokeStyle='#2563eb';vctx.lineWidth=2.2;vctx.beginPath();
+  for(let i=0;i<=220;i++){
+    const tt=T*i/220, vv=stateAt(tt).v;
+    if(i===0)vctx.moveTo(px(tt),py(vv));else vctx.lineTo(px(tt),py(vv));
+  }
+  vctx.stroke();
+  const tc=Math.min(t,T), sc=stateAt(tc);
+  vctx.fillStyle='#ef4444';vctx.beginPath();vctx.arc(px(tc),py(sc.v),4.5,0,6.2832);vctx.fill();
+}
+
+/* ================= 交互与主循环 ================= */
+const $=id=>document.getElementById(id);
+const btnPlay=$('btnPlay'), banner=$('banner');
+const tgForce=$('tgForce'), tgDecomp=$('tgDecomp'), tgStrobe=$('tgStrobe');
+let simT=0, playing=true, speed=0.5, finished=false, lastTs=null, ghosts=[], lastGhost=0;
+
+const tA=t1/2, tB=t1, tC=1.5*t1, tD=T;
+$('k0').onclick=()=>seek(0);
+$('kA').onclick=()=>seek(tA);
+$('kB').onclick=()=>seek(tB);
+$('kC').onclick=()=>seek(tC);
+$('kD').onclick=()=>seek(tD);
+function seek(t){simT=t;playing=false;finished=(t>=T-1e-9);ghosts=[];lastGhost=0;setPlayUI();}
+function reset(){simT=0;playing=false;finished=false;ghosts=[];lastGhost=0;setPlayUI();}
+function setPlayUI(){btnPlay.textContent=finished?'重播':(playing?'暂停':'播放');}
+btnPlay.onclick=()=>{
+  if(finished){simT=0;ghosts=[];lastGhost=0;finished=false;playing=true;}
+  else playing=!playing;
+  setPlayUI();
+};
+$('btnReset').onclick=reset;
+$('speedSeg').querySelectorAll('button').forEach(b=>{
+  b.onclick=()=>{
+    speed=parseFloat(b.dataset.s);
+    $('speedSeg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+  };
+});
+
+function bannerText(st){
+  if(st.phase===3)return '<b>最终静止于 d = 0.64 m</b>：重力沿杆分量 8 N − 弹力沿杆分量 6.4 N = 1.6 N = 最大静摩擦，恰好临界平衡。位移 0.64 m（C 对）；全程路程 1.92 m，W克摩 = 3.072 J（D 错）。答案：AC';
+  if(st.phase===1)return '<b>阶段① 下滑</b>：a = 6.4 − 10d（m/s²）。弹力沿杆分量 k·d 等效于锚在 H 点的轻弹簧；f = μN = 1.6 N 恒定（A 对）。最低点将由能量关系给出 d = 1.28 m';
+  return '<b>阶段② 上滑</b>：a = 10d − 9.6（m/s²）。摩擦力反向，等效平衡点移到 d = 0.96 m；滑块将上滑 0.64 m 后恰好停在 d = 0.64 m（临界平衡），不再下滑';
+}
+function updatePanel(st){
+  $('dT').textContent=st.t.toFixed(2);
+  $('dD').textContent=st.d.toFixed(2);
+  $('dX').textContent=QPlen(st.d).toFixed(2);
+  $('dV').textContent=st.v.toFixed(2);
+  $('dA').textContent=st.a.toFixed(2);
+  $('dF').textContent=(k*QPlen(st.d)).toFixed(1);
+  const tag=$('dPhase');
+  if(st.phase===1){tag.textContent='阶段① 下滑（a=6.4−10d）';tag.style.background='#2563eb';
+    $('dFric').innerHTML='1.6<small> N · 沿杆向上</small>';}
+  else if(st.phase===2){tag.textContent='阶段② 上滑（a=10d−9.6）';tag.style.background='#8b5cf6';
+    $('dFric').innerHTML='1.6<small> N · 沿杆向下</small>';}
+  else{tag.textContent='已静止（临界平衡）';tag.style.background='#059669';
+    $('dFric').innerHTML='1.6<small> N · 静摩擦沿杆向上</small>';}
+  const EMAX=10.3, Ek=0.5*st.v*st.v, dPe=5*st.d*st.d, dPg=Gs*st.d, Qh=fk*pathAt(st.t);
+  $('bEk').style.width=Math.min(100,Ek/EMAX*100)+'%';   $('nEk').textContent=Ek.toFixed(2)+' J';
+  $('bPe').style.width=Math.min(100,dPe/EMAX*100)+'%';  $('nPe').textContent=dPe.toFixed(2)+' J';
+  $('bPg').style.width=Math.min(100,dPg/EMAX*100)+'%';  $('nPg').textContent=dPg.toFixed(2)+' J';
+  $('bQ').style.width=Math.min(100,Qh/EMAX*100)+'%';    $('nQ').textContent=Qh.toFixed(2)+' J';
+  banner.innerHTML=bannerText(st);
+}
+function frame(ts){
+  if(lastTs===null)lastTs=ts;
+  const dt=Math.min(0.05,(ts-lastTs)/1000);lastTs=ts;
+  if(playing){
+    simT+=dt*speed;
+    if(simT>=T){simT=T;playing=false;finished=true;setPlayUI();}
+    if(simT>0&&simT<T){
+      const gi=Math.floor(simT/0.14);
+      if(gi>lastGhost){lastGhost=gi;ghosts.push(stateAt(simT).d);if(ghosts.length>60)ghosts.shift();}
+    }
+  }
+  const st=stateAt(simT);st.t=simT;
+  render(st);updatePanel(st);drawVT(simT);
+  requestAnimationFrame(frame);
+}
+setPlayUI();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

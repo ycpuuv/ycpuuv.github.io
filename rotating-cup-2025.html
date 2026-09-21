@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>2025江苏卷T4 · 原题精讲与轨迹图谱动画</title>
+<style>
+:root{--line:#cbd5e1;--txt:#0f172a;--sub:#64748b;}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#eef2f7;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;color:var(--txt);padding:24px 18px 44px}
+.sheet{max-width:1140px;margin:0 auto;background:#fff;padding:28px 32px 36px;box-shadow:0 1px 5px rgba(15,23,42,.13);border-radius:10px}
+h1{font-size:23px;text-align:center;letter-spacing:1px}
+h2{font-size:16.5px;margin:30px 0 13px;padding-left:11px;border-left:4px solid #1d9e75}
+h3{font-size:14.5px;margin:16px 0 8px;color:#0f766e}
+.sub1{text-align:center;color:var(--sub);font-size:13.5px;margin-top:7px}
+
+.orig{display:grid;grid-template-columns:1fr 380px;gap:22px;align-items:start}
+.stem{font-size:15px;line-height:2.05;text-align:justify}
+.stem .tag{display:inline-block;background:#0f766e;color:#fff;font-size:12.5px;padding:3px 10px;border-radius:5px;margin-right:8px;vertical-align:2px}
+.stem b{color:#b91c1c}
+.opts{margin-top:12px}
+.opts .o{font-size:15px;line-height:1.95;padding:7px 12px;border-radius:8px;margin:6px 0;border:1px solid #e2e8f0;background:#fbfdff;display:flex;gap:9px;align-items:flex-start;transition:.2s}
+.opts .o .lb{font-weight:bold;flex-shrink:0;width:22px}
+.opts .o:hover{background:#f0fdfa;border-color:#5eead4}
+.opts .o.right{background:#ccfbf1;border:2px solid #14b8a6}
+.opts .o.right .lb{color:#0f766e}
+.opts .o .tb{font-size:12.5px;color:#0f766e;margin-left:auto;flex-shrink:0;font-weight:bold;padding-top:2px}
+.opts .o .tb.x{color:#b91c1c}
+.origfig{background:#fcfdfe;border:1px solid var(--line);border-radius:10px;padding:12px}
+.origfig .cap{font-size:12.5px;color:var(--sub);text-align:center;margin-top:8px}
+.reveal{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{background:#0f766e;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:14px;cursor:pointer;font-family:inherit}
+.btn.gray{background:#475569}
+.btn:hover{filter:brightness(1.1)}
+mark{background:#fef08a;padding:1px 4px;border-radius:3px}
+.hide{display:none}
+.key{background:#0f766e;color:#fff;padding:1px 6px;border-radius:4px;font-size:13.5px}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:8px}
+.cell{border:1px solid var(--line);border-radius:10px;padding:9px;background:#fcfdfe;cursor:pointer;transition:.18s;position:relative}
+.cell:hover{border-color:#0f766e;box-shadow:0 0 0 2px #ccfbf1}
+.cell.sel{border-color:#0f766e;border-width:2px;box-shadow:0 0 0 3px #ccfbf1}
+.cell canvas{width:100%;height:268px;display:block}
+.cell .t{font-size:14px;font-weight:bold;margin-top:8px;text-align:center}
+.cell .s{font-size:12px;color:var(--sub);text-align:center;margin-top:3px;line-height:1.5;min-height:34px}
+.cell .sh{font-size:11.5px;color:#0f766e;text-align:center;margin-top:5px;background:#f0fdfa;border-radius:5px;padding:3px 5px}
+.cell .bar{height:3px;background:#e2e8f0;border-radius:2px;margin-top:7px;overflow:hidden}
+.cell .bar i{display:block;height:100%;background:#0f766e;width:0}
+#focus .bar{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+#focus .bar i{display:block;height:100%;width:100%;background:#0f766e;transform-origin:left center;transform:scaleX(0)}
+#focus.fullmode{position:fixed;inset:0;z-index:999;margin:0;border-radius:0;border:none;padding:16px;background:#fcfdfe;
+  grid-template-columns:minmax(0,1fr) 260px}
+#focus.fullmode #focusCv{height:calc(100vh - 108px)}
+.ctrl{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:14px 0 6px;font-size:13.5px}
+.ctrl .sp{color:var(--sub)}
+.pbox{margin-top:16px;border-top:1px dashed #cbd5e1;padding-top:12px}
+.prow{display:flex;align-items:center;gap:8px;font-size:12.5px;margin:7px 0}
+.prow span{width:62px;flex-shrink:0;color:#334155}
+.prow input[type=range]{flex:1;min-width:0;accent-color:#0f766e;height:14px;cursor:pointer}
+.prow b{width:46px;text-align:right;font-size:12.5px;color:#0f766e;font-variant-numeric:tabular-nums}
+.pdir{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;flex-wrap:wrap}
+.pdir .lb{color:#334155;width:62px;flex-shrink:0}
+.pbtn{border:1px solid #cbd5e1;background:#fff;border-radius:7px;padding:4px 10px;font-size:12.5px;cursor:pointer;font-family:inherit;color:#334155}
+.pbtn:hover{border-color:#0f766e;color:#0f766e}
+.pbtn.on{background:#0f766e;color:#fff;border-color:#0f766e}
+.pnote{font-size:11.5px;color:#94a3b8;margin-top:9px;line-height:1.65}
+.legend{display:flex;gap:18px;justify-content:center;font-size:12.5px;color:var(--sub);margin-top:12px;flex-wrap:wrap}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:5px;vertical-align:3px}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:center}
+th{background:#e2e8f0;font-weight:bold}
+td.left{text-align:left}
+.ok{color:#0f766e;font-weight:bold}
+.no{color:#b91c1c;font-weight:bold}
+.rulebox{border:1px solid var(--line);border-radius:10px;padding:6px 18px;background:#f8fafc;margin-top:10px}
+.rulebox .r{display:flex;gap:13px;padding:11px 0;border-bottom:1px dashed var(--line);font-size:13.8px;line-height:1.8}
+.rulebox .r:last-child{border-bottom:none}
+.rulebox .n{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:#1d9e75;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;margin-top:2px}
+.rulebox .n.q{background:#2563eb}
+.f{font-family:Cambria Math,Georgia,serif}
+.hl{background:#fef3c7;padding:1px 5px;border-radius:4px}
+.ans{margin-top:14px;text-align:center;font-size:16px;font-weight:bold;padding:11px;border-radius:9px;background:#ccfbf1;border:1px solid #14b8a6;color:#0f766e}
+.derive{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px 18px;font-size:14px;line-height:2.1;margin-top:10px}
+.hint{font-size:13px;color:#0f766e;background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:9px 13px;margin-top:10px;line-height:1.7}
+@media (max-width:900px){.orig{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
+@media print{body{background:#fff;padding:0}.sheet{box-shadow:none;max-width:none}.cell canvas{height:170px}}
+</style>
+</head>
+<body>
+<style>.siteback{display:inline-block;margin:0 0 14px;padding:6px 12px;border:1px solid #cbd5e1;border-radius:9px;color:#475569;font-size:13.5px;text-decoration:none;background:#fff}.siteback:hover{color:#2563eb;border-color:#93c5fd}.siteback .ar{opacity:.55;margin-left:4px}</style>
+<a class="siteback" href="jiaoxue.html">← 教学资源</a>
+
+<div class="sheet">
+  <h1>2025 · 江苏卷 · 第 4 题 ：旋转杯</h1>
+  <div class="sub1">原题精讲 ｜ 双匀速圆周运动的合成 ｜ 12 幅典型轨迹全部动画演示</div>
+
+  <h2>一、原题呈现</h2>
+  <div class="orig">
+    <div>
+      <div class="stem">
+        <span class="tag">题干</span>游乐设施“旋转杯”的底盘和转杯分别以 O、O′ 为转轴，在水平面内沿<b>顺时针方向</b>匀速转动。O′ 固定在底盘上。某时刻转杯转到如图所示位置，杯上 A 点与 O、O′ <b>恰好在同一条直线上</b>。则（　　）
+      </div>
+      <div class="opts" id="opts">
+        <div class="o" data-i="A"><span class="lb">A.</span><span>A 点做匀速圆周运动</span><span class="tb x hide">× 错</span></div>
+        <div class="o" data-i="B"><span class="lb">B.</span><span>O′ 点做匀速圆周运动</span><span class="tb hide">✓ 对</span></div>
+        <div class="o" data-i="C"><span class="lb">C.</span><span>此时 A 点的速度小于 O′ 点</span><span class="tb x hide">× 错</span></div>
+        <div class="o" data-i="D"><span class="lb">D.</span><span>此时 A 点的速度等于 O′ 点</span><span class="tb x hide">× 错</span></div>
+      </div>
+      <div class="reveal">
+        <button class="btn" id="revBtn" onclick="reveal()">显示答案与解析</button>
+        <span class="sp" id="revTip" style="color:#64748b;font-size:13px">先让学生独立判断，再点开对照</span>
+      </div>
+      <div id="analy" class="hide">
+        <div class="derive">
+          <b>🔑 模型：A 点的运动是两个匀速圆周运动的合成</b><br>
+          · 牵连：A 随 O′ 绕 O 做圆周运动，半径 OO′，角速度 ω₁<br>
+          · 相对：A 绕 O′ 做圆周运动，半径 O′A，角速度 ω₂<br>
+          · 合运动：<span class="f">v<sub>A</sub> = v<sub>O′</sub> + v<sub>A/O′</sub></span>，轨迹是两个旋转矢量叠加出的摆线族曲线
+        </div>
+        <div class="rulebox">
+          <div class="r"><div class="n">A</div><div><span class="no">错误。</span>A 做的是<b>变速曲线运动</b>。只有 ω₂ = ω₁ 且两轴同向时轨迹才退化为圆（下图第 1 幅），本题 ω₂ = 2ω₁，轨迹是心形类曲线，速率在 10 ~ 270 u/s 之间周期变化。</div></div>
+          <div class="r"><div class="n">B</div><div><span class="ok">正确。</span>O′ 固定在底盘上，它到转轴 O 的距离恒为 OO′，随底盘绕 O 做匀速圆周运动，r、v 大小均恒定。</div></div>
+          <div class="r"><div class="n">C</div><div><span class="no">错误。</span>题干说两轴<b>都沿顺时针</b>转动。此刻 A、O′、O 共线（A 在 OO′ 延长线上），两个分速度<b>方向相同</b>，可 <mark>直接相加</mark>：<span class="f">v<sub>A</sub> = v<sub>O′</sub> + v<sub>A/O′</sub> = ω₁·OO′ + ω₂·O′A ＞ v<sub>O′</sub></span>，并非小于。</div></div>
+          <div class="r"><div class="n">D</div><div><span class="no">错误。</span>由上式 v<sub>A</sub> ＞ v<sub>O′</sub>，两者不相等。</div></div>
+        </div>
+        <div class="ans">✅ 答案：B</div>
+        <div class="hint">📌 <b>本题的"题眼"就两个字：同向。</b>若两轴转向相反，则 A、O′、O 共线时两个分速度方向相反，v<sub>A</sub> = |ω₁·OO′ − ω₂·O′A|，C 选项就可能成立。<b>转向决定加减，比例决定轨迹形状。</b></div>
+      </div>
+    </div>
+    <div>
+      <div class="origfig">
+        <canvas id="origCv" style="width:100%;height:330px;display:block"></canvas>
+        <div class="cap">原题示意图 · 底盘与转杯均沿顺时针转动，A 与 O、O′ 共线</div>
+      </div>
+      <div class="ctrl" style="justify-content:center">
+        <button class="btn gray" id="origPlay" onclick="toggleOrig()">⏸ 暂停</button>
+        <button class="btn gray" onclick="resetOrig()">⟲ 回到题目时刻</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>二、12 幅典型轨迹 · 全部动画演示</h2>
+  <div class="ctrl">
+    <button class="btn" id="allBtn" onclick="toggleAll()">⏸ 全部暂停</button>
+    <button class="btn gray" onclick="replayAll()">⟲ 全部重播</button>
+    <span class="sp">速度</span>
+    <button class="btn gray spd" data-s="0.5" onclick="setAllSpeed(0.5,this)">0.5×（更慢）</button>
+    <button class="btn gray spd" data-s="1" onclick="setAllSpeed(1,this)">1×</button>
+    <button class="btn gray spd" data-s="2" onclick="setAllSpeed(2,this)">2×</button>
+    <span class="sp">每幅跑完会停留展示完整轨迹再重播 ｜ 点击任意一幅在大图中精看 ｜ 大图右侧滑杆可实时调参（ω₁、ω₂、d、R、转向）｜ 大图支持全屏放大（按 Esc 退出）</span>
+  </div>
+  <div id="focus" style="border:1px solid #cbd5e1;border-radius:12px;padding:14px;background:#fcfdfe;display:grid;grid-template-columns:minmax(0,1fr) 252px;gap:18px;align-items:stretch;margin-bottom:16px">
+    <div style="display:flex;flex-direction:column">
+      <canvas id="focusCv" style="width:100%;height:620px;display:block;background:#fff;border-radius:8px"></canvas>
+      <div style="display:flex;gap:9px;align-items:center;margin-top:10px;flex-wrap:wrap">
+        <button class="btn" id="fPlay" onclick="toggleFocus()">⏸ 暂停</button>
+        <button class="btn gray" onclick="replayFocus()">⟲ 重播</button>
+        <button class="btn gray" id="fSlow" onclick="toggleSlow()">🐢 超慢速</button>
+        <button class="btn gray" onclick="toggleFull()">⛶ 全屏放大</button>
+        <div class="bar" style="flex:1;min-width:120px"><i id="fBar"></i></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;justify-content:center">
+      <div id="fName" style="font-size:19px;font-weight:bold;line-height:1.4">同向 1:1</div>
+      <div id="fDesc" style="font-size:13px;color:#64748b;margin-top:9px;line-height:1.8">两轴同向、转速相等：两个分矢量夹角恒定，轨迹退化为圆</div>
+      <div style="margin-top:14px;font-size:13.5px;line-height:2.1" id="fInfo"></div>
+      <div class="pbox">
+        <div class="prow"><span>ω₁ 底盘</span><input type="range" id="cw1" min="0.2" max="3" step="0.05" value="1" oninput="applyCustom()"><b id="cv1">1.00</b></div>
+        <div class="prow"><span>ω₂ 转杯</span><input type="range" id="cw2" min="0.2" max="5" step="0.05" value="2" oninput="applyCustom()"><b id="cv2">2.00</b></div>
+        <div class="prow"><span>d = OO′</span><input type="range" id="cd" min="0" max="1.8" step="0.05" value="1.3" oninput="applyCustom()"><b id="cdv">1.30</b></div>
+        <div class="prow"><span>R = O′A</span><input type="range" id="cR" min="0" max="1.2" step="0.05" value="0.7" oninput="applyCustom()"><b id="cRv">0.70</b></div>
+        <div class="pdir">
+          <span class="lb">转向</span>
+          <button class="pbtn on" id="dirSame" onclick="setDir(1)">同向</button>
+          <button class="pbtn" id="dirRev" onclick="setDir(-1)">反向</button>
+          <button class="pbtn" id="resetP" onclick="resetParams()">⟲ 还原预设</button>
+        </div>
+        <div class="pnote">任意拖动即时生效；ω₁、ω₂ 同时缩放不改变轨迹形状（只有比值起作用）。还原预设 = 回到当前选中图谱的原参数。</div>
+      </div>
+    </div>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="legend">
+    <span><i style="background:#94a3b8"></i>O′ 轨迹圆（半径 d）</span>
+    <span><i style="background:#1d9e75"></i>A 点轨迹（左端为起点）</span>
+    <span><i style="background:#2563eb"></i>O 点（底盘自转轴）</span>
+    <span><i style="background:#dc2626"></i>A 点当前位置</span>
+    <span><i style="background:#f59e0b"></i>转杯（连 O′ 与 A）</span>
+  </div>
+
+  <h2>三、规律研究（七条，全部经数值实验验证）</h2>
+  <div class="rulebox">
+    <div class="r"><div class="n">1</div><div><b>两列旋转矢量的矢量和</b>：<span class="f">r<sub>A</sub> = r<sub>O′</sub> + r<sub>A/O′</sub></span>，两个矢量长度恒定（d 与 R）、角速度恒定（ω₁ 与 ω₂）。<span class="hl">轨迹形状只由 ω₂/ω₁ 的比值与两个转向决定</span>，把 ω₁、ω₂ 同时放大或缩小，形状完全不变，只改变跑完所需时间。</div></div>
+    <div class="r"><div class="n">2</div><div><b>是否为圆只有一个判据</b>：<span class="f">ω₂ = ω₁ 且转向相同</span>时两矢量夹角恒定，A 到 O 的距离恒为 |d − R| 或 d + R，轨迹退化为<b>圆</b>，此时才是匀速圆周运动。其余一切情形都不是圆——<b>这就是 A 选项的破绽</b>。</div></div>
+    <div class="r"><div class="n">3</div><div><b>速率周期性变化，下界不是零</b>：<span class="f">v<sub>A</sub> = |ω₁d·û₁ + ω₂R·û₂|</span>，夹角随时间变化，故 <span class="hl"><span class="f">|ω₁d − ω₂R| ≤ v<sub>A</sub> ≤ ω₁d + ω₂R</span></span>。只要 ω₂ ≠ ω₁，A 既不会停下也不会匀速，始终是变速曲线运动。本题即 10 ~ 270 u/s。</div></div>
+    <div class="r"><div class="n">4</div><div><b>闭合周期由转速比的有理数性质决定</b>：两矢量要同时回到初始相对位置，需底盘转 <span class="f">N</span> 圈且转杯转 <span class="f">(ω₂/ω₁)·N</span> 圈，取最小的整数 N。1:2、1:3、1:4 只需 <b>N = 1</b>；2:3、2:5 需 <b>N = 2</b>；反向 3:4 需 <b>N = 3</b>。<span class="hl">若 ω₂/ω₁ 为无理数，轨迹永不闭合</span>，长期均匀填满整个光环。</div></div>
+    <div class="r"><div class="n">5</div><div><b>轨迹被锁在圆环内，且必然触外边界</b>：<span class="f">|d − R| ≤ |r<sub>A</sub>| ≤ d + R</span>。所有花瓣尖端恰好落在半径 d + R 的圆上（12 幅图实测全为 2.000）。ω₂ ＞ ω₁ 时轨迹会探向内边界甚至穿过 O。</div></div>
+    <div class="r"><div class="n">6</div><div><b>外顶点（花瓣）数目规律</b>：设 ω₂ : ω₁ = m : n（最简整数比）。外顶点 = 两分矢量<b>同向对齐</b>的时刻数，此时 A 恰好触到半径 d + R 的外圈（12 幅图实测尖端全在 2.000 上）。<br>
+      • <b>反向</b>（两轴转向相反）：外顶点数 ＝ <span class="hl">m + n</span>（1:2→3，1:3→4，2:5→7，3:4→7）<br>
+      • <b>同向</b>（两轴转向相同）：外顶点数 ＝ <span class="hl">|m − n|</span>（1:2→1 类心形，1:3→2，1:4→3，2:3→1，2:5→3）——<b>本题（同向 1:2）即 |2−1| = 1</b>：整条曲线只有一个朝外的鼓包，习惯上称心形类曲线。</div></div>
+    <div class="r"><div class="n">7</div><div><b>对称与镜像</b>：反向情形的花瓣关于过 O 的若干条直线对称；把两个转向整体取反（同向 ↔ 反向），所得轨迹互为镜像，形状族相同、花瓣朝向相反。</div></div>
+  </div>
+
+  <h2>四、数值验证表</h2>
+  <table>
+    <tr><th style="width:96px">情形</th><th>ω₂:ω₁</th><th>闭合需底盘转</th><th>外顶点(花瓣)数</th><th>v<sub>min</sub></th><th>v<sub>max</sub></th><th>轨迹形态</th></tr>
+    <tr><td>同向 1:1</td><td>1:1</td><td>1 圈</td><td>整圆</td><td>0.60</td><td>2.00</td><td>正圆（唯一特例）</td></tr>
+    <tr style="background:#f0fdfa"><td><b>同向 1:2</b></td><td>2:1</td><td>1 圈</td><td>1（心形类）</td><td>0.10</td><td>2.70</td><td><b>心形类（本题）</b></td></tr>
+    <tr><td>同向 1:3</td><td>3:1</td><td>1 圈</td><td>2</td><td>0.80</td><td>3.40</td><td>双瓣花形</td></tr>
+    <tr><td>同向 1:4</td><td>4:1</td><td>1 圈</td><td>3</td><td>1.50</td><td>4.10</td><td>三瓣花形</td></tr>
+    <tr><td>同向 2:3</td><td>3:2</td><td>2 圈</td><td>1</td><td>0.25</td><td>2.35</td><td>类心形</td></tr>
+    <tr><td>同向 2:5</td><td>5:2</td><td>2 圈</td><td>3</td><td>0.45</td><td>3.05</td><td>三瓣花形</td></tr>
+    <tr><td>反向 1:2</td><td>2:1</td><td>1 圈</td><td>3</td><td>0.10</td><td>2.70</td><td>三瓣（m+n=3）</td></tr>
+    <tr><td>反向 1:3</td><td>3:1</td><td>1 圈</td><td>4</td><td>0.80</td><td>3.40</td><td>四瓣（m+n=4）</td></tr>
+    <tr><td>反向 2:5</td><td>5:2</td><td>2 圈</td><td>7</td><td>0.45</td><td>3.05</td><td>七瓣（m+n=7）</td></tr>
+    <tr><td>反向 3:4</td><td>4:3</td><td>3 圈</td><td>7</td><td>0.37</td><td>2.23</td><td>七瓣</td></tr>
+  </table>
+
+  <h2>五、课堂追问三连</h2>
+  <div class="rulebox">
+    <div class="r"><div class="n q">?</div><div>轨迹能不能是<b>圆</b>？——能，但仅限“两轴同向且转速相等”（第 1 幅）。让学生在图谱里自己找反例，比背结论有效。</div></div>
+    <div class="r"><div class="n q">?</div><div>红点处的速度会一直比 O′ 大吗？——不会。<b>只有在 A、O′、O 共线这一刻才是两分速度同向相加</b>，一般位置两者有夹角，合速度大小在 10 ~ 270 之间起伏，这正是“变速曲线运动”的直接证据。</div></div>
+    <div class="r"><div class="n q">?</div><div>为什么轨迹永远跑不出光环？——两个分矢量长度固定，能合成的最远距离就是 d + R；也正因如此，每个花瓣尖端都精确落在 d + R 那个圆上。</div></div>
+  </div>
+</div>
+<script>
+const d0=1.3,R0=0.7;
+const CASES=[
+ {m:1,n:1,s:1,name:'同向 1:1',desc:'两轴同向、转速相等，夹角恒定：轨迹退化为圆',shape:'正圆',pet:'整圆',c:'#0f766e'},
+ {m:2,n:1,s:1,name:'同向 1:2（本题）',desc:'同向 |m−n|=1：心形类曲线，本题即此',shape:'心形类',pet:'1',c:'#1d4ed8'},
+ {m:3,n:1,s:1,name:'同向 1:3',desc:'同向 |m−n|=2：双瓣花形',shape:'双瓣',pet:'2',c:'#6d28d9'},
+ {m:4,n:1,s:1,name:'同向 1:4',desc:'同向 |m−n|=3：三瓣花形',shape:'三瓣',pet:'3',c:'#0e7490'},
+ {m:3,n:2,s:1,name:'同向 2:3',desc:'同向 |m−n|=1：类心形单鼓包曲线',shape:'类心形',pet:'1',c:'#b45309'},
+ {m:5,n:2,s:1,name:'同向 2:5',desc:'同向 |m−n|=3：三瓣花形',shape:'三瓣',pet:'3',c:'#7c3aed'},
+ {m:2,n:1,s:-1,name:'反向 1:2',desc:'两轴反向：花瓣数 m + n = 3',shape:'三瓣',pet:'3',c:'#be123c'},
+ {m:3,n:1,s:-1,name:'反向 1:3',desc:'花瓣数 m + n = 4',shape:'四瓣',pet:'4',c:'#a21caf'},
+ {m:5,n:2,s:-1,name:'反向 2:5',desc:'花瓣数 m + n = 7，需 2 圈闭合',shape:'七瓣',pet:'7',c:'#c2410c'},
+ {m:4,n:3,s:-1,name:'反向 3:4',desc:'花瓣数 m + n = 7，需 3 圈闭合',shape:'七瓣',pet:'7',c:'#15803d'},
+ {m:0,n:1,s:1,name:'退化为圆（R = 0）',desc:'A 与 O′ 重合，只剩随底盘的一个圆周运动',shape:'正圆',pet:'整圆',c:'#0f766e',R:0},
+ {m:1,n:0,s:1,name:'静止的圆（d = 0）',desc:'两轴重合，A 走半径 R 的圆',shape:'正圆',pet:'整圆',c:'#475569',d:0}
+];
+function gcf(a,b){a=Math.abs(a);b=Math.abs(b);while(b>1e-9){const t=a%b;a=b;b=t;}return a;}
+function closeN(m,n,s){if(n===0||m===0)return 1;return n/gcf(m,n);}
+function w2of(m,n){return (n===0?1:m/n);}
+function vmin(m,n,d,R){return Math.abs(1*d-w2of(m,n)*R);}
+function vmax(m,n,d,R){return 1*d+w2of(m,n)*R;}
+
+const state={speed:1,playing:true,sel:1};
+const items=[];
+
+function makeTracer(cvs,cs){
+  const o={cs,cvs,ctx:cvs.getContext('2d'),d:(cs.d===undefined?d0:cs.d),R:(cs.R===undefined?R0:cs.R),
+           N:closeN(cs.m,cs.n,cs.s),t:0,w2:(cs.n===0?1:cs.m/cs.n),s:cs.s,drawN:0,playing:true,dpr:1,w:0,h:0};
+  o.T=function(){return 2*Math.PI*(o.drawN||o.N);};
+  o.sample=function(t){
+    const a1=Math.PI+t,a2=Math.PI+o.s*o.w2*t;
+    return[o.d*Math.sin(a1)+o.R*Math.sin(a2),-o.d*Math.cos(a1)-o.R*Math.cos(a2)];
+  };
+  o.recalc=function(){
+    const N=o.drawN||o.N,steps=Math.min(9000,Math.max(900,Math.round(480*N))),T=2*Math.PI*N,all=[];
+    for(let i=0;i<=steps;i++)all.push(o.sample(T*i/steps));
+    let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9,rmin=1e9,rmax=0;
+    const rs=[];
+    for(const p of all){
+      if(p[0]<x0)x0=p[0];if(p[0]>x1)x1=p[0];if(p[1]<y0)y0=p[1];if(p[1]>y1)y1=p[1];
+      const r=Math.hypot(p[0],p[1]);rs.push(r);if(r<rmin)rmin=r;if(r>rmax)rmax=r;
+    }
+    const isCircle=(rmax-rmin)<1e-6*Math.max(1,rmax);
+    let petals=0;
+    if(!isCircle){
+      const cnt=rs.length-1,thr=rmax*0.9985;
+      for(let i=0;i<cnt;i++){
+        const r0=rs[i],rp=rs[(i-1+cnt)%cnt],rn=rs[(i+1)%cnt];
+        if(r0>=thr&&r0>rp&&r0>=rn)petals++;
+      }
+    }
+    o.geo={all,steps,T,x0,x1,y0,y1,rmin,rmax,isCircle,petals};
+  };
+  o.setParams=function(p){
+    if(p.d!==undefined)o.d=p.d;if(p.R!==undefined)o.R=p.R;if(p.w2!==undefined)o.w2=p.w2;
+    if(p.s!==undefined)o.s=p.s;if(p.N!==undefined)o.N=p.N;if(p.drawN!==undefined)o.drawN=p.drawN;
+    o.recalc();o.t=0;o.hold=0;
+  };
+  o.paint=function(){
+    const w=cvs.clientWidth||300,h=cvs.clientHeight||190,dpr=window.devicePixelRatio||1;
+    if(w!==o.w||h!==o.h||dpr!==o.dpr){o.w=w;o.h=h;o.dpr=dpr;cvs.width=w*dpr;cvs.height=h*dpr;o.ctx.setTransform(dpr,0,0,dpr,0,0);}
+    const g=o.geo;if(!g)return;
+    const mg=o.big?22:16,sc=Math.min((w-2*mg)/Math.max(g.x1-g.x0,1e-6),(h-2*mg)/Math.max(g.y1-g.y0,1e-6));
+    const PX=x=>w/2+(x-(g.x0+g.x1)/2)*sc,PY=y=>h/2-(y-(g.y0+g.y1)/2)*sc;
+    o.PX=PX;o.PY=PY;o.sc=sc;
+    const c=o.ctx;
+    c.clearRect(0,0,w,h);c.fillStyle='#fcfdfe';c.fillRect(0,0,w,h);
+    if(o.d>0){c.setLineDash([4,5]);c.strokeStyle='#9aa8b8';c.lineWidth=1;c.beginPath();c.arc(PX(0),PY(0),o.d*sc,0,7);c.stroke();c.setLineDash([]);}
+    const lwTrail=o.big?3.0:2.1, lwWalk=o.big?4.6:2.9;
+    c.lineJoin='round';c.lineCap='round';
+    c.strokeStyle=cs.c;c.lineWidth=lwTrail;
+    c.beginPath();
+    const P0=g.all[0];c.moveTo(PX(P0[0]),PY(P0[1]));
+    for(let i=1;i<g.all.length;i++){const p=g.all[i];c.lineTo(PX(p[0]),PY(p[1]));}
+    c.stroke();
+    const seq=Math.min(1,Math.max(0,o.t/g.T)),head=Math.floor(g.steps*seq);
+    if(head>1){
+      c.strokeStyle='rgba(13,148,136,.62)';c.lineWidth=lwWalk;
+      c.beginPath();
+      const q0=g.all[0];c.moveTo(PX(q0[0]),PY(q0[1]));
+      for(let i=1;i<=head;i++){const q=g.all[i];c.lineTo(PX(q[0]),PY(q[1]));}
+      c.stroke();
+    }
+    const cur=o.t;
+    const a1=Math.PI+cur,a2=Math.PI+o.s*o.w2*cur;
+    const ax=o.d*Math.sin(a1)+o.R*Math.sin(a2),ay=-o.d*Math.cos(a1)-o.R*Math.cos(a2);
+    const ox=o.d*Math.sin(a1),oy=-o.d*Math.cos(a1);
+    const sg=o.big?1.5:1;
+    c.strokeStyle='rgba(245,158,11,.9)';c.lineWidth=2.4*sg;
+    c.beginPath();c.moveTo(PX(ox),PY(oy));c.lineTo(PX(ax),PY(ay));c.stroke();
+    if(o.R>0){c.fillStyle='rgba(251,191,36,.22)';c.beginPath();c.arc(PX(ox),PY(oy),o.R*sc,0,7);c.fill();
+      c.strokeStyle='rgba(245,158,11,.5)';c.lineWidth=1.3*sg;c.stroke();}
+    c.fillStyle='#2563eb';c.beginPath();c.arc(PX(0),PY(0),2.6*sg,0,7);c.fill();
+    c.fillStyle='#f59e0b';c.beginPath();c.arc(PX(ox),PY(oy),3.2*sg,0,7);c.fill();
+    c.fillStyle='#dc2626';c.beginPath();c.arc(PX(ax),PY(ay),4.4*sg,0,7);c.fill();
+    c.strokeStyle='rgba(220,38,38,.35)';c.lineWidth=1.4*sg;c.beginPath();c.arc(PX(ax),PY(ay),8*sg,0,7);c.stroke();
+    if(o.big){
+      c.font="bold 14px 'Microsoft YaHei'";c.textAlign='left';c.textBaseline='middle';
+      const put=(txt,x,y,col)=>{const tw=c.measureText(txt).width;
+        c.fillStyle='rgba(255,255,255,.88)';c.fillRect(x-3,y-9,tw+6,18);c.fillStyle=col;c.fillText(txt,x,y);};
+      put('O',PX(0)+10,PY(0)-13,'#2563eb');
+      put("O′",PX(ox)+12,PY(oy)+16,'#b45309');
+      put('A',PX(ax)+12,PY(ay)-14,'#dc2626');
+      if(o.d>0){c.setLineDash([3,4]);c.strokeStyle='rgba(148,163,184,.75)';c.lineWidth=1;
+        c.beginPath();c.moveTo(PX(0),PY(0));c.lineTo(PX(ox),PY(oy));c.stroke();c.setLineDash([]);}
+    }
+  };
+  o.step=function(dt){
+    if(!o.playing)return;
+    const T=o.T(),Np=Math.min(o.drawN||o.N,5);
+    if(o.t>=T){
+      o.hold=(o.hold||0)+dt*state.speed;
+      if(o.hold>1.4){o.t=0;o.hold=0;}
+      return;
+    }
+    o.t+=dt*state.speed*(0.185/(1+0.22*Np));
+    if(o.t>=T){o.t=T;o.hold=0;}
+  };
+  o.reset=function(){o.t=0;o.hold=0;};
+  o.recalc();
+  return o;
+}
+
+const gridEl=document.getElementById('grid');
+CASES.forEach((cs,i)=>{
+  const cell=document.createElement('div');cell.className='cell'+(i===1?' sel':'');
+  cell.innerHTML='<canvas></canvas><div class="t">'+cs.name+'</div><div class="s">'+cs.desc+'</div>'+
+    '<div class="sh">花瓣 '+cs.pet+' ｜ 闭合 N = '+closeN(cs.m,cs.n,cs.s)+' 圈 ｜ v: '+vmin(cs.m,cs.n,(cs.d===undefined?d0:cs.d),(cs.R===undefined?R0:cs.R)).toFixed(2)+'~'+vmax(cs.m,cs.n,(cs.d===undefined?d0:cs.d),(cs.R===undefined?R0:cs.R)).toFixed(2)+'</div>'+
+    '<div class="bar"><i></i></div>';
+  gridEl.appendChild(cell);
+  const o=makeTracer(cell.querySelector('canvas'),cs);
+  o.cell=cell;o.bar=cell.querySelector('.bar i');
+  cell.onclick=()=>selectCase(i);
+  items.push(o);
+});
+
+const focusCv=document.getElementById('focusCv');
+const fo=makeTracer(focusCv,CASES[1]);
+fo.big=true;fo.slowMul=1;
+function syncFocusInfo(){
+  const cs=CASES[state.sel];
+  const d=(cs.d===undefined?d0:cs.d),R=(cs.R===undefined?R0:cs.R);
+  document.getElementById('fName').textContent=cs.name+(cs.m===2&&cs.n===1&&cs.s===1?'  ← 2025江苏卷T4 的轨迹':'');
+  document.getElementById('fDesc').textContent=cs.desc;
+  document.getElementById('fInfo').innerHTML=
+    '轨迹形态：<b>'+cs.shape+'</b>　外顶点：<b>'+cs.pet+'</b><br>'+
+    '闭合需底盘转 <b>'+closeN(cs.m,cs.n,cs.s)+'</b> 圈<br>'+
+    '速率范围：<b>'+vmin(cs.m,cs.n,d,R).toFixed(2)+' ~ '+vmax(cs.m,cs.n,d,R).toFixed(2)+'</b>　'+(cs.n===0||cs.m===0?'（退化情形）':'（是否匀速：<b style="color:#b91c1c">否</b>）');
+}
+function syncSliders(cs){
+  const d=(cs.d===undefined?d0:cs.d),R=(cs.R===undefined?R0:cs.R);
+  let w2v=(cs.n===0?1:cs.m/cs.n);if(cs.R===0)w2v=0;
+  document.getElementById('cw1').value=1;
+  document.getElementById('cw2').value=Math.max(0.2,w2v);
+  document.getElementById('cd').value=d;
+  document.getElementById('cR').value=R;
+  document.getElementById('cv1').textContent='1.00';
+  document.getElementById('cv2').textContent=w2v<0.2?'0.00':w2v.toFixed(2);
+  document.getElementById('cdv').textContent=d.toFixed(2);
+  document.getElementById('cRv').textContent=R.toFixed(2);
+  state.cdir=cs.s;
+  document.getElementById('dirSame').classList.toggle('on',cs.s===1);
+  document.getElementById('dirRev').classList.toggle('on',cs.s===-1);
+}
+function selectCase(i){
+  state.sel=i;state.custom=false;
+  items.forEach((o,k)=>o.cell.classList.toggle('sel',k===i));
+  fo.cs=CASES[i];
+  fo.setParams({d:items[i].d,R:items[i].R,w2:items[i].w2,s:CASES[i].s,N:items[i].N,drawN:0});
+  syncSliders(CASES[i]);
+  syncFocusInfo();
+}
+selectCase(1);
+
+function fracN(w1,w2){
+  const a=Math.round(w2*100),b=Math.round(w1*100);
+  if(!a||!b)return{m:1,n:1};
+  const g=gcf(a,b);
+  return{m:Math.round(a/g),n:Math.round(b/g)};
+}
+function applyCustom(){
+  state.custom=true;
+  const w1=+document.getElementById('cw1').value,w2=+document.getElementById('cw2').value,
+        d=+document.getElementById('cd').value,R=+document.getElementById('cR').value,s=state.cdir;
+  document.getElementById('cv1').textContent=w1.toFixed(2);
+  document.getElementById('cv2').textContent=w2.toFixed(2);
+  document.getElementById('cdv').textContent=d.toFixed(2);
+  document.getElementById('cRv').textContent=R.toFixed(2);
+  const f=fracN(w1,w2);
+  let N=f.n;if(R===0||d===0)N=1;
+  const capped=N>8,drawN=Math.min(N,8);
+  fo.cs={name:'自定义',desc:'',shape:'',pet:'',c:'#7c3aed'};
+  fo.setParams({d,R,w2:w2/w1,s,N,drawN});
+  const an=fo.geo;
+  const vr=Math.abs(w1*d-w2*R),vx=w1*d+w2*R;
+  document.getElementById('fName').textContent='自定义参数'+(capped?'（先演示前 '+drawN+' 圈）':'');
+  document.getElementById('fDesc').textContent='拖动滑杆或切换转向，轨迹实时重算；点击下方任意图谱可回到预设。轨迹形状只取决于 ω₂:ω₁ 的比值与转向。';
+  document.getElementById('fInfo').innerHTML=
+    'ω₂ : ω₁ = <b>'+f.m+' : '+f.n+'</b>　转向：<b>'+(s===1?'同向':'反向')+'</b><br>'+
+    '轨迹形态：<b>'+(an.isCircle?'圆（唯一匀速圆周情形）':(capped?'未闭合预览（完整闭合需 '+N+' 圈，当前演示前 '+drawN+' 圈）':N+' 圈闭合曲线'))+'</b><br>'+
+    '闭合需底盘转 <b>'+N+'</b> 圈'+(capped?'（先演示前 '+drawN+' 圈）':'')+'　外顶点：<b>'+(an.isCircle?'—':an.petals)+'</b><br>'+
+    '速率范围：<b>'+vr.toFixed(2)+' ~ '+vx.toFixed(2)+'</b>　'+(an.isCircle?'<b style="color:#0f766e">匀速</b>圆周运动':'<b style="color:#b91c1c">变速</b>曲线运动');
+}
+function setDir(s){
+  state.cdir=s;
+  document.getElementById('dirSame').classList.toggle('on',s===1);
+  document.getElementById('dirRev').classList.toggle('on',s===-1);
+  applyCustom();
+}
+function resetParams(){selectCase(state.sel);}
+
+const ocv=document.getElementById('origCv');
+const orig={t:0,playing:true,d:150,R:78,w1:1,w2:2,dpr:1,w:0,h:0};
+function paintOrig(){
+  const w=ocv.clientWidth||340,h=ocv.clientHeight||330,dpr=window.devicePixelRatio||1;
+  if(w!==orig.w||h!==orig.h||dpr!==orig.dpr){orig.w=w;orig.h=h;orig.dpr=dpr;ocv.width=w*dpr;ocv.height=h*dpr;orig.ctx=ocv.getContext('2d');orig.ctx.setTransform(dpr,0,0,dpr,0,0);}
+  const c=orig.ctx;
+  const reach=orig.d+orig.R+18,sc=Math.min(w,h)/2/reach;
+  const CX=w/2,CY=h/2;
+  const X=x=>CX+x*sc,Y=y=>CY+y*sc;
+  c.clearRect(0,0,w,h);c.fillStyle='#fcfdfe';c.fillRect(0,0,w,h);
+  const t=orig.t,a1=Math.PI+orig.w1*t,a2=Math.PI+orig.w2*t;
+  const ox=orig.d*Math.sin(a1),oy=-orig.d*Math.cos(a1);
+  const ax=ox+orig.R*Math.sin(a2),ay=oy-orig.R*Math.cos(a2);
+  const Rb=(orig.d+orig.R+18)*sc;
+  c.fillStyle='#f8fafc';c.beginPath();c.arc(CX,CY,Rb,0,7);c.fill();
+  c.strokeStyle='#cbd5e1';c.lineWidth=2;c.stroke();
+  for(let k=0;k<3;k++){const a=a1+k*2.0944;c.strokeStyle='rgba(148,163,184,.55)';c.lineWidth=1;
+    c.beginPath();c.moveTo(CX,CY);c.lineTo(CX+Rb*Math.sin(a),CY-Rb*Math.cos(a));c.stroke();}
+  c.setLineDash([4,5]);c.strokeStyle='#94a3b8';c.lineWidth=1;
+  c.beginPath();c.arc(CX,CY,orig.d*sc,0,7);c.stroke();c.setLineDash([]);
+  c.strokeStyle='#b45309';c.lineWidth=1.6;
+  c.beginPath();c.moveTo(CX,CY);c.lineTo(X(ox),Y(oy));c.lineTo(X(ax),Y(ay));c.stroke();
+  c.fillStyle='rgba(251,191,36,.22)';c.beginPath();c.arc(X(ox),Y(oy),orig.R*sc,0,7);c.fill();
+  c.strokeStyle='#f59e0b';c.lineWidth=2;c.stroke();
+  const tx=Math.sin(a2),ty=-Math.cos(a2);
+  c.strokeStyle='rgba(245,158,11,.7)';c.lineWidth=1.4;
+  c.beginPath();c.moveTo(X(ox)-tx*orig.R*sc,Y(oy)-ty*orig.R*sc);c.lineTo(X(ox)+tx*orig.R*sc,Y(oy)+ty*orig.R*sc);c.stroke();
+  const mark=(x,y,col,r,txt,dx,dy)=>{
+    c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,7);c.fill();
+    c.font="bold 14px 'Microsoft YaHei'";c.fillStyle=col;c.textAlign='left';c.textBaseline='middle';
+    c.fillStyle='rgba(255,255,255,.9)';const tw=c.measureText(txt).width;
+    c.fillRect(x+dx-3,y+dy-9,tw+6,18);
+    c.fillStyle=col;c.fillText(txt,x+dx,y+dy);
+  };
+  mark(CX,CY,'#2563eb',5,'O',-52,-18);
+  mark(X(ox),Y(oy),'#b45309',5,"O′",12,16);
+  mark(X(ax),Y(ay),'#dc2626',7,'A',12,-18);
+  const m1=Math.hypot(orig.w1*orig.d*Math.cos(a1),orig.w1*orig.d*Math.sin(a1));
+  const v2x=orig.w2*orig.R*Math.cos(a2),v2y=orig.w2*orig.R*Math.sin(a2);
+  const vx=orig.w1*orig.d*Math.cos(a1)+v2x,vy=orig.w1*orig.d*Math.sin(a1)+v2y;
+  const s2=95/Math.max(Math.hypot(vx,vy),m1,1e-9);
+  const arrow=(x,y,dx,dy,col,w,label)=>{
+    const L=Math.hypot(dx,dy);if(L<2)return;const ux=dx/L,uy=dy/L,hs=Math.min(10,L*.4);
+    c.strokeStyle=col;c.fillStyle=col;c.lineWidth=w;c.lineCap='round';
+    c.beginPath();c.moveTo(x,y);c.lineTo(x+dx-ux*hs,y+dy-uy*hs);c.stroke();
+    c.beginPath();c.moveTo(x+dx,y+dy);
+    c.lineTo(x+dx-ux*hs-uy*hs*.5,y+dy-uy*hs+ux*hs*.5);
+    c.lineTo(x+dx-ux*hs+uy*hs*.5,y+dy-uy*hs-ux*hs*.5);c.closePath();c.fill();
+    if(label){c.font="bold 13px 'Microsoft YaHei'";c.textAlign='left';c.textBaseline='middle';
+      c.fillStyle='rgba(255,255,255,.85)';const tw=c.measureText(label).width;
+      c.fillRect(x+dx+5,y+dy-9,tw+6,18);c.fillStyle=col;c.fillText(label,x+dx+8,y+dy);}
+  };
+  arrow(X(ox),Y(oy),orig.w1*orig.d*Math.cos(a1)*s2,orig.w1*orig.d*Math.sin(a1)*s2,'#0f766e',3,"v(O′)=ω₁·OO′");
+  arrow(X(ax),Y(ay),vx*s2,vy*s2,'#b91c1c',3.4,'v(A)');
+  c.font="bold 13px 'Microsoft YaHei'";
+  const tip=orig.t<0.03?'题目时刻：A、O、O′ 共线，两分速度同向 → v(A) 更大':'';
+  if(tip){const tw=c.measureText(tip).width;c.textAlign='left';
+    c.fillStyle='rgba(15,118,110,.1)';c.fillRect(w/2-tw/2-10,h-34,tw+20,26);
+    c.fillStyle='#0f766e';c.fillText(tip,w/2-tw/2,h-21);}
+}
+function toggleOrig(){orig.playing=!orig.playing;document.getElementById('origPlay').textContent=orig.playing?'⏸ 暂停':'▶ 播放';}
+function resetOrig(){orig.t=0;orig.hold=0;orig.playing=false;document.getElementById('origPlay').textContent='▶ 播放';paintOrig();}
+function toggleAll(){
+  state.playing=!state.playing;
+  items.forEach(o=>o.playing=state.playing);fo.playing=state.playing;
+  document.getElementById('allBtn').textContent=state.playing?'⏸ 全部暂停':'▶ 全部播放';
+}
+function replayAll(){state.playing=true;items.forEach(o=>{o.reset();o.playing=true;});fo.reset();fo.playing=true;
+  document.getElementById('allBtn').textContent='⏸ 全部暂停';}
+fo.step=function(dt){
+  if(!fo.playing)return;
+  const T=fo.T(),Np=Math.min(fo.drawN||fo.N,5);
+  if(fo.t>=T){fo.hold=(fo.hold||0)+dt*state.speed;if(fo.hold>2.6){fo.t=0;fo.hold=0;}return;}
+  fo.t+=dt*state.speed*fo.slowMul*(0.115/(1+0.18*Np));
+  if(fo.t>=T){fo.t=T;fo.hold=0;}
+};
+function toggleFull(){
+  const el=document.getElementById('focus');
+  const on=el.classList.toggle('fullmode');
+  document.documentElement.style.overflow=on?'hidden':'';
+  fo.w=0;fo.h=0;
+}
+function toggleSlow(){
+  fo.slowMul=(fo.slowMul===1)?0.4:1;
+  const b=document.getElementById('fSlow');
+  b.textContent=(fo.slowMul===1)?'🐢 超慢速':'🐇 恢复常速';
+  b.style.background=(fo.slowMul===1)?'#475569':'#b45309';
+}
+function setAllSpeed(s,b){state.speed=s;document.querySelectorAll('.spd').forEach(x=>x.style.background='#475569');b.style.background='#0f766e';}
+function toggleFocus(){fo.playing=!fo.playing;document.getElementById('fPlay').textContent=fo.playing?'⏸ 暂停':'▶ 播放';}
+function replayFocus(){fo.reset();fo.playing=true;document.getElementById('fPlay').textContent='⏸ 暂停';}
+function reveal(){
+  document.getElementById('analy').classList.remove('hide');
+  document.querySelectorAll('#opts .o').forEach(el=>{
+    const i=el.dataset.i;
+    if(i==='B'){el.classList.add('right');}else{el.style.opacity='.62';}
+    el.querySelector('.tb').classList.remove('hide');
+  });
+  document.getElementById('revBtn').textContent='已显示';
+  document.getElementById('revTip').textContent='✓ 正确答案 B —— 此时 v(A) = 130 + 140 = 270 u/s ＞ v(O′) = 130 u/s';
+}
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(orig.playing){
+    const T1=2*Math.PI;
+    if(orig.t>=T1){orig.hold=(orig.hold||0)+dt*state.speed;if(orig.hold>1.8){orig.t=0;orig.hold=0;}}
+    else{orig.t+=dt*state.speed*0.42;if(orig.t>=T1){orig.t=T1;orig.hold=0;}}
+  }
+  paintOrig();
+  items.forEach(o=>{o.paint();o.step(dt);
+    const p=Math.min(1,o.t/o.T());
+    o.bar.style.width=(p*100)+'%';
+  });
+  fo.paint();fo.step(dt);
+  const fb=document.getElementById('fBar');
+  fb.style.transform='scaleX('+Math.min(1,fo.t/fo.T()).toFixed(4)+')';
+  requestAnimationFrame(loop);
+}
+if(!CanvasRenderingContext2D.prototype.roundRect){CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);};}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&document.getElementById('focus').classList.contains('fullmode'))toggleFull();
+});
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
