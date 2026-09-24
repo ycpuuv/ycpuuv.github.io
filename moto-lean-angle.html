@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>摩托车压弯角的动力学分析</title>
+<style>
+  :root{
+    --bg:#f2f0f0; --card:#ffffff; --ink:#1b1b1f; --muted:#5f5e5a;
+    --line:#e2e0dc; --blue:#2b6cb8; --blue-d:#0c447c; --blue-l:#e6f1fb;
+    --red:#c8322f; --red-l:#fcebeb; --amber:#c47a10; --amber-l:#faeeda;
+    --green:#2b7a3d; --teal-d:#0f6e56;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:26px 16px 60px; background:var(--bg); color:var(--ink);
+    font-family:"Microsoft YaHei","PingFang SC","Hiragino Sans GB",system-ui,-apple-system,"Segoe UI",sans-serif;
+    line-height:1.9; font-size:17px;
+  }
+  .wrap{max-width:1120px; margin:0 auto}
+  h1{font-size:31px; line-height:1.45; margin:0 0 10px; letter-spacing:.5px}
+  .sub{color:var(--muted); font-size:15px; margin:0 0 26px}
+  h2{
+    font-size:22px; margin:44px 0 14px; padding-left:14px;
+    border-left:6px solid var(--blue); line-height:1.5;
+  }
+  h3{font-size:18px; margin:26px 0 8px; color:var(--blue-d)}
+  p{margin:10px 0}
+  .card{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:24px 30px; margin:20px 0;
+  }
+  .lead{background:var(--blue-l); border:1px solid #b5d4f4; border-radius:14px; padding:18px 24px; margin:0 0 8px}
+  .lead .big{font-size:26px; font-weight:700; color:var(--blue-d); letter-spacing:1px}
+  .lead .big i{font-style:normal; color:var(--red); font-size:15px; font-weight:400; padding:0 6px}
+  .fml{
+    text-align:center; margin:20px 0; font-family:"Cambria Math","Times New Roman",Georgia,serif;
+    font-size:23px; letter-spacing:1px;
+  }
+  .fml .frac{display:inline-block; vertical-align:middle; text-align:center; margin:0 5px}
+  .fml .frac .nu{display:block; padding:0 7px; border-bottom:2px solid var(--ink); line-height:1.35}
+  .fml .frac .de{display:block; padding:0 7px; line-height:1.35}
+  .fml.tagged{display:flex; align-items:center; justify-content:center; gap:24px}
+  .fml.tagged .eq{margin:0}
+  .fml.tagged .tag{font-size:15px; color:var(--muted); font-family:"Microsoft YaHei",sans-serif; letter-spacing:0}
+  .frames{display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin:18px 0 6px}
+  .frames figure{margin:0; flex:1 1 300px; max-width:340px}
+  .frames svg{width:100%; height:auto; display:block}
+  .frames figcaption{text-align:center; font-size:14px; color:var(--muted); margin-top:6px}
+  .note{
+    border-left:5px solid var(--amber); background:var(--amber-l);
+    border-radius:0 12px 12px 0; padding:12px 20px; margin:16px 0; font-size:16px;
+  }
+  .note b{color:#8a5400}
+  .warn{border-left-color:var(--red); background:var(--red-l)}
+  .warn b{color:#8a211f}
+  .grid2{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px}
+  .mini{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 20px}
+  .mini h3{margin-top:0}
+  ul{margin:8px 0 8px 4px; padding-left:22px}
+  li{margin:6px 0}
+  table{border-collapse:collapse; width:100%; margin:16px 0; font-size:16px}
+  th,td{border:1px solid var(--line); padding:10px 12px; text-align:center}
+  th{background:var(--blue-l); color:var(--blue-d); font-weight:700}
+  tr:nth-child(even) td{background:#fafaf8}
+  /* 模拟器 */
+  .sim{display:grid; grid-template-columns:minmax(0,0.9fr) minmax(0,1.1fr); gap:26px; align-items:start}
+  .sim .stage{background:#fbfbf9; border:1px solid var(--line); border-radius:14px; padding:6px}
+  .sim .stage svg{width:100%; height:auto; display:block}
+  .ctrl{margin-bottom:16px}
+  .ctrl .lab{display:flex; justify-content:space-between; font-size:15px; margin-bottom:4px}
+  .ctrl .lab span:last-child{color:var(--blue-d); font-weight:700; font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%; accent-color:var(--blue); height:26px}
+  .metrics{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:16px}
+  .metric{background:#f7f7f5; border-radius:12px; padding:12px 16px}
+  .metric .k{font-size:13px; color:var(--muted)}
+  .metric .v{font-size:26px; font-weight:700; font-variant-numeric:tabular-nums; line-height:1.35}
+  .btns{display:flex; gap:12px; margin-top:16px; flex-wrap:wrap}
+  button{
+    font:inherit; font-size:15px; padding:8px 20px; border-radius:10px; cursor:pointer;
+    background:var(--blue-l); color:var(--blue-d); border:1px solid #85b7eb;
+  }
+  button:hover{background:#d5e7f8}
+  .tabs{display:flex; gap:10px; flex-wrap:wrap; margin:0 0 14px}
+  .tabs button.on{background:var(--blue); color:#fff; border-color:var(--blue)}
+  .hide{display:none}
+  .kv{font-family:"Cambria Math",Georgia,serif; font-size:18px}
+  code{background:#f2f1ee; padding:1px 6px; border-radius:5px; font-size:15px}
+  .steps{counter-reset:s; margin:0; padding:0; list-style:none}
+  .steps>li{position:relative; padding:0 0 20px 46px; border-left:2px dashed #cfcdc7; margin-left:12px}
+  .steps>li:last-child{border-left-color:transparent; padding-bottom:0}
+  .steps>li::before{
+    counter-increment:s; content:counter(s);
+    position:absolute; left:-14px; top:0; width:26px; height:26px; border-radius:50%;
+    background:var(--blue); color:#fff; font-size:14px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  footer{text-align:center; color:var(--muted); font-size:14px; margin-top:50px}
+  @media (max-width:760px){
+    body{padding:18px 12px 40px; font-size:16px}
+    h1{font-size:24px}
+    .sim{grid-template-columns:1fr}
+    .card{padding:18px 16px}
+    .fml{font-size:19px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>摩托车压弯的角度和什么有关系？</h1>
+  <p class="sub">—— 一个刚体圆周运动的动力学推导 + 可交互仿真 · 高中物理力学拓展</p>
+
+  <div class="lead">
+    <div class="big">tan&thinsp;θ = v² / (gR)</div>
+    <p style="margin:12px 0 0; font-size:16px">
+      压弯角 θ 只由 <b>车速 v</b> 和 <b>转弯半径 R</b> 决定，与人车质量无关。<br>
+      但能否压得下去，还受 <b>轮胎与路面的摩擦因数 μ</b> 约束：必须满足 <span class="kv">tan&thinsp;θ ≤ μ</span>，否则打滑。
+    </p>
+  </div>
+
+  <h2>一、先建立物理模型</h2>
+  <p>把人和车看作一个刚体，做<strong>水平面内的匀速圆周运动</strong>。用「后视图」看，车身与竖直方向夹角就是压弯角 θ。</p>
+
+  <div class="frames">
+    <figure>
+      <svg viewBox="0 0 340 300" role="img" aria-label="后视图受力分析：重力向下、地面支持力与摩擦力作用在接地点">
+        <line x1="20" y1="250" x2="320" y2="250" stroke="#888780" stroke-width="2"/>
+        <line x1="60" y1="250" x2="210" y2="70" stroke="#b7b5af" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <line x1="60" y1="250" x2="60" y2="40" stroke="#b7b5af" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <line x1="60" y1="250" x2="210" y2="70" stroke="#2b6cb8" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="60" cy="250" r="5" fill="#c8322f"/>
+        <defs>
+          <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="2" stroke-linecap="round"/>
+          </marker>
+        </defs>
+        <line x1="135" y1="160" x2="135" y2="232" stroke="#c8322f" stroke-width="2.5" marker-end="url(#a1)"/>
+        <text x="146" y="215" font-size="15" fill="#c8322f" font-weight="700">mg</text>
+        <line x1="60" y1="250" x2="60" y2="196" stroke="#2b7a3d" stroke-width="2.5" marker-end="url(#a1)"/>
+        <text x="68" y="196" font-size="15" fill="#2b7a3d" font-weight="700">N</text>
+        <line x1="60" y1="250" x2="112" y2="250" stroke="#c47a10" stroke-width="2.5" marker-end="url(#a1)"/>
+        <text x="96" y="272" font-size="15" fill="#c47a10" font-weight="700">f</text>
+        <line x1="160" y1="250" x2="230" y2="250" stroke="#8a8880" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#a1)"/>
+        <text x="176" y="268" font-size="13" fill="#5f5e5a">圆心方向</text>
+        <text x="118" y="130" font-size="15" fill="#2b6cb8" font-weight="700">车身</text>
+      </svg>
+      <figcaption>图 1　受力图：三个力——重力 mg、支持力 N、摩擦力 f</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 340 300" role="img" aria-label="正交分解：重力与支持力合成后必须沿车身向下，摩擦力与支持力的合力指向圆心">
+        <line x1="20" y1="250" x2="320" y2="250" stroke="#888780" stroke-width="2"/>
+        <line x1="60" y1="250" x2="60" y2="40" stroke="#b7b5af" stroke-width="1.5" stroke-dasharray="6 5"/>
+        <line x1="60" y1="250" x2="218" y2="62" stroke="#2b6cb8" stroke-width="6" stroke-linecap="round"/>
+        <line x1="60" y1="250" x2="218" y2="62" stroke="#2b6cb8" stroke-width="6" stroke-linecap="round" opacity="0"/>
+        <circle cx="60" cy="250" r="5" fill="#c8322f"/>
+        <line x1="60" y1="250" x2="60" y2="150" stroke="#2b7a3d" stroke-width="3" marker-end="url(#a1)"/>
+        <text x="30" y="150" font-size="15" fill="#2b7a3d" font-weight="700">N</text>
+        <line x1="60" y1="250" x2="152" y2="250" stroke="#c47a10" stroke-width="3" marker-end="url(#a1)"/>
+        <text x="112" y="272" font-size="15" fill="#c47a10" font-weight="700">f</text>
+        <line x1="60" y1="150" x2="152" y2="150" stroke="#7f77dd" stroke-width="2" stroke-dasharray="5 4"/>
+        <line x1="152" y1="250" x2="152" y2="150" stroke="#7f77dd" stroke-width="2" stroke-dasharray="5 4"/>
+        <line x1="60" y1="250" x2="152" y2="150" stroke="#7f77dd" stroke-width="2.5" marker-end="url(#a1)"/>
+        <text x="156" y="172" font-size="13" fill="#534ab7" font-weight="700">地面合力（N 与 f）</text>
+        <text x="156" y="190" font-size="12" fill="#534ab7">必须沿车身轴线</text>
+        <line x1="252" y1="56" x2="252" y2="100" stroke="#c8322f" stroke-width="2.5" marker-end="url(#a1)"/>
+        <text x="260" y="82" font-size="15" fill="#c8322f" font-weight="700">mg</text>
+        <text x="196" y="140" font-size="13" fill="#5f5e5a">竖直：N 与 mg 抵消</text>
+        <text x="196" y="160" font-size="13" fill="#5f5e5a">水平：只剩 f 指向圆心</text>
+      </svg>
+      <figcaption>图 2　地面合力（N 与 f）必须沿车身轴线、穿过质心；竖直方向 N = mg</figcaption>
+    </figure>
+  </div>
+
+  <h2>二、完整推导（四步）</h2>
+  <div class="card">
+    <ol class="steps">
+      <li>
+        <h3>竖直方向：受力平衡</h3>
+        <p>竖直方向没有加速度，合力为零。重力 mg 向下，支持力 N 向上：</p>
+        <div class="fml">N = mg</div>
+        <p>注意：<strong>N 并不等于 mg 在车身方向上的分量</strong>，它始终竖直向上，大小等于 mg。这是很多同学的第一处误区。</p>
+      </li>
+      <li>
+        <h3>水平方向：合力提供向心力</h3>
+        <p>向心力由<strong>静摩擦力 f</strong> 提供（轮胎没有沿地面滑动，所以是静摩擦）：</p>
+        <div class="fml tagged">
+          <span class="eq">f = m</span>
+          <span class="frac"><span class="nu">v²</span><span class="de">R</span></span>
+          <span class="tag">① 向心力方程</span>
+        </div>
+      </li>
+      <li>
+        <h3>几何：合力方向决定倾角</h3>
+        <p>对「人 + 车」这个刚体，若地面作用力的方向不通过质心，就会产生绕质心的力矩，车会被“放倒”、人必须死死拉住车把。因此<strong>稳定压弯时，地面给人的作用力（支持力 N 与摩擦力 f 的合力）一定沿车身轴线、穿过质心</strong>；竖直方向 N 与 mg 大小相等方向相反、互相抵消，水平方向只剩下 f 提供向心力。</p>
+        <p>由几何关系，车身轴线与竖直方向夹角为 θ，则：</p>
+        <div class="fml tagged">
+          <span class="eq">tan&thinsp;θ =</span>
+          <span class="frac"><span class="nu">f</span><span class="de">N</span></span>
+          <span class="tag">② 几何关系</span>
+        </div>
+      </li>
+      <li>
+        <h3>联立求解</h3>
+        <p>把 ① 代入 ②，并代入 N = mg：</p>
+        <div class="fml tagged">
+          <span class="eq">tan&thinsp;θ =</span>
+          <span class="frac"><span class="nu">mv²/R</span><span class="de">mg</span></span>
+          <span class="eq">=</span>
+          <span class="frac"><span class="nu">v²</span><span class="de">gR</span></span>
+          <span class="tag">③ 主结果</span>
+        </div>
+        <p><strong>质量 m 被约掉了</strong>——这就是为什么重型机车和小型踏板以同样速度过同一个弯，压弯角度完全相同。</p>
+      </li>
+    </ol>
+  </div>
+
+  <h2>三、结论：压弯角由什么决定</h2>
+  <table>
+    <tr><th>影响因素</th><th>与 θ 的关系</th><th>物理含义</th></tr>
+    <tr><td>车速 v</td><td>v 增大为 2 倍，tan&thinsp;θ 变为 4 倍</td><td>速度影响最剧烈（平方关系）</td></tr>
+    <tr><td>转弯半径 R</td><td>R 减半，tan&thinsp;θ 加倍</td><td>弯道越急，压得越狠</td></tr>
+    <tr><td>重力加速度 g</td><td>g 越小 θ 越大</td><td>月球上骑摩托会压得更狠</td></tr>
+    <tr><td>质量 m</td><td style="color:var(--red);font-weight:700">无关</td><td>分子分母同时含 m，约分掉</td></tr>
+    <tr><td>摩擦因数 μ</td><td>不影响所需 θ，<br>但决定能否实现</td><td>约束条件 tan&thinsp;θ ≤ μ</td></tr>
+  </table>
+
+  <h3>三个特例（可以直接记）</h3>
+  <ul>
+    <li><b>θ = 45°</b> 时，tan&thinsp;θ = 1，即 v² = gR，此时需要的摩擦因数 μ ≥ 1（接近干燥沥青的极限）。</li>
+    <li><b>v = √(gR)</b> 是压在 45° 的速度门槛。例如 R = 100 m 时，v ≈ 31 m/s ≈ 113 km/h。</li>
+    <li><b>极限压弯角</b> θ<sub>max</sub> = arctan(μ)。μ = 1 时 θ<sub>max</sub> = 45°；湿地 μ ≈ 0.5，极限只有约 27°。</li>
+  </ul>
+
+  <div class="note warn">
+    <b>安全边界的正确直觉：</b>打滑的临界条件是 <span class="kv">v²/(gR) ≤ μ</span>，也就是 <span class="kv">tan&thinsp;θ ≤ μ</span>——这<b>不是两个条件，是同一个条件的两种写法</b>。真正要分清的是因果：你选定了车速 v 和弯道半径 R，倾角 θ 就被唯一确定；<strong>倾角是结果，不是能单独拧的旋钮</strong>。所以危险的从来不是「压得低」，而是「速度太高 / 弯太急」；但反过来，倾角是骑手最顺手的实时仪表——θ 越接近 arctan(μ)，抓地余量越小。
+  </div>
+
+    <div class="note">
+    <b>数字校准（避免后面的例子自相矛盾）：</b>极限角 θ<sub>max</sub> = arctan(μ) 是硬约束，但 μ 不是一个固定值——<b>街车轮胎</b>干地约 0.9~1.1，对应极限 42°~48°；<b>赛道光头胎</b>在工作温度下可达 1.4~1.6，对应 54°~58°。MotoGP 车手能压到 60° 以上，并不是轮胎 μ 超过了 2——而是<b>「侧挂」把人车共同质心线压到了 50° 出头</b>，轮胎实际承担的只是那条质心线的角度。这条才是本模型最本质的一句：<b>决定命运的是质心在哪，不是车身斜成什么样。</b>
+  </div>
+
+<h2>四、动态仿真：拖一拖就明白了</h2>
+  <p>下面这个模型是严格按上面的公式实时计算的。拖动滑块观察车身姿态、压弯角和轮胎极限方向（红色虚线）如何变化：</p>
+
+  <div class="card">
+    <div class="sim">
+      <div class="stage">
+        <svg id="leanSvg" viewBox="0 0 360 300" role="img" aria-label="后视图：摩托车随参数实时压弯">
+          <line x1="16" y1="255" x2="344" y2="255" stroke="#888780" stroke-width="1.5"/>
+          <line id="limTick" x1="200" y1="255" x2="69.2" y2="124.2" stroke="#c8322f" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <line x1="200" y1="70" x2="200" y2="255" stroke="#c9c7c1" stroke-width="1" stroke-dasharray="5 4"/>
+          <g id="bikeGrp" transform="rotate(-19.5 200 255)">
+            <rect id="tire" x="191.5" y="176" width="17" height="79" rx="8.5" fill="#fff" stroke="#2b6cb8" stroke-width="2"/>
+            <rect id="body" x="181" y="146" width="38" height="44" rx="13" fill="#fff" stroke="#2b6cb8" stroke-width="2"/>
+            <rect id="rider" x="185" y="100" width="30" height="54" rx="14" fill="#fff" stroke="#2b6cb8" stroke-width="2"/>
+            <circle id="helmet" cx="200" cy="85" r="15" fill="#fff" stroke="#2b6cb8" stroke-width="2"/>
+          </g>
+          <path id="thArc" d="M 200 150 A 105 105 0 0 0 164.9 156.1" fill="none" stroke="#8a8880" stroke-width="1"/>
+          <text id="thLbl" x="176" y="132" font-size="14" fill="#5f5e5a" text-anchor="middle" font-weight="700">19.5°</text>
+          <circle cx="200" cy="255" r="4" fill="#c8322f"/>
+          <text x="28" y="278" font-size="12" fill="#8a8880">路面</text>
+          <text x="212" y="112" font-size="12" fill="#c8322f">摩擦极限方向</text>
+        </svg>
+      </div>
+      <div>
+        <div class="ctrl">
+          <div class="lab"><span>车速 v</span><span id="vOut">60 km/h</span></div>
+          <input id="vIn" type="range" min="10" max="160" step="1" value="60">
+        </div>
+        <div class="ctrl">
+          <div class="lab"><span>转弯半径 R</span><span id="rOut">80 m</span></div>
+          <input id="rIn" type="range" min="15" max="300" step="1" value="80">
+        </div>
+        <div class="ctrl" style="margin-bottom:10px">
+          <div class="lab"><span>轮胎—路面摩擦因数 μ</span><span id="mOut">1.00</span></div>
+          <input id="mIn" type="range" min="0.3" max="1.6" step="0.05" value="1">
+        </div>
+        <div class="metrics">
+          <div class="metric"><div class="k">压弯角 θ</div><div class="v" id="mTheta">19.5°</div></div>
+          <div class="metric"><div class="k">所需最小摩擦因数</div><div class="v" id="mNeeded">0.35</div></div>
+          <div class="metric"><div class="k">向心加速度</div><div class="v" id="mAcc">3.5<span style="font-size:14px"> m/s²</span></div></div>
+          <div class="metric"><div class="k">抓地状态</div><div class="v" id="mState" style="color:#2b6cb8">安全</div></div>
+        </div>
+        <div class="btns">
+          <button id="autoBtn" type="button">自动扫描车速</button>
+          <button data-preset="40,30,1.0" type="button">城市路口</button>
+          <button data-preset="90,80,1.0" type="button">山路巡航</button>
+          <button data-preset="130,100,1.0" type="button">赛道高速弯</button>
+          <button data-preset="120,60,0.5" type="button">雨天急弯</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>五、θ 随速度的变化曲线</h2>
+  <p>固定 R 和 μ 后，压弯角随车速的增长是<strong>反正切型</strong>：低速段近似线性，高速段迅速逼近极限角 arctan(μ)，一旦曲线撞上极限线就打滑。</p>
+  <div class="card">
+    <div class="tabs" id="tabs">
+      <button data-r="40" type="button">R = 40 m</button>
+      <button data-r="80" class="on" type="button">R = 80 m</button>
+      <button data-r="160" type="button">R = 160 m</button>
+      <button data-r="300" type="button">R = 300 m</button>
+    </div>
+    <div id="chartWrap" style="position:relative; width:100%; height:340px">
+      <canvas id="curveChart" role="img" aria-label="压弯角随车速变化曲线">压弯角随车速变化曲线</canvas>
+    </div>
+    <p style="font-size:14px; color:var(--muted); margin-bottom:0">
+      横轴车速，纵轴压弯角。蓝色曲线为 tan&thinsp;θ = v²/(gR)；红色虚线为极限角 arctan(μ)，可用上面的 μ 滑块调整。
+    </p>
+  </div>
+
+  <h2>六、物理直觉：为什么一定要压</h2>
+  <p>你可能会想：不压车，只把车把转一下不行吗？不行。原因在第 3 步——<strong>作用在车上的合力必须沿车身轴线方向</strong>，否则合力对质心产生力矩，车会被"放倒"。</p>
+  <p>更直观地说：转弯是一个"人与惯性打架"的过程。人车整体想沿切线直着飞出去（惯性），必须由地面提供向内的摩擦力把它拉回来。这个拉回来的力和竖直的支持力合成后，方向是<strong>朝内下方</strong>的。车身只有朝着这个合力方向压过去，才能让合力恰好从质心指向接地点，力矩为零，人车才平稳。</p>
+
+  <div class="note">
+    <b>换一种说法（更好记）：</b>压弯角 θ 的物理意义是「<b>向心加速度与重力加速度的比值</b>」。tan&thinsp;θ = a<sub>向心</sub> / g。压弯角就是「几个 g 的横向加速度」的直观换算表：压弯 45° = 横向 1 g，压弯 63° = 横向 2 g。赛道车手压到 60° 以上，身体承受的就是 2 倍体重的横向载荷。
+  </div>
+
+  <h2>七、现实中的修正（拓展）</h2>
+  <div class="grid2">
+    <div class="mini">
+      <h3>轮胎不是刀尖</h3>
+      <p>轮胎有宽度，「接地点」会随压弯角向内侧偏移，实际倾角比刚体模型算出的略大一点。赛道轮胎的胎冠弧度就是为此设计的。</p>
+    </div>
+    <div class="mini">
+      <h3>侧挂与转移重心</h3>
+      <p>车手把身体向弯内挂出，等效于降低了「人 + 车」整体质心高度并让质心向弯内偏移，可在相同车速下减小实际倾角、增大余量。</p>
+    </div>
+    <div class="mini">
+      <h3>加速出弯</h3>
+      <p>出弯加油时，后轮还要提供向前的驱动力，轮胎摩擦圆里被驱动力占用的份额越多，可用于转弯的横向份额越少，所以高速出弯容易甩尾。</p>
+    </div>
+    <div class="mini">
+      <h3>制动入弯（Trail braking）</h3>
+      <p>带着刹车入弯时，前轮同时承担制动力与转向力，摩擦圆被分割，倾角余量必须留得更多——这也是新手最常见的低速摔车原因。</p>
+    </div>
+  </div>
+
+  <h2>八、课件小结</h2>
+  <div class="card">
+    <ul style="font-size:17px">
+      <li>核心公式：<span class="kv">tan&thinsp;θ = v²/(gR)</span>，θ 只由 v、R 决定，与质量无关。</li>
+      <li>受力本质：重力、支持力、摩擦力三力平衡，合力提供向心力。</li>
+      <li>安全条件：<span class="kv">tan&thinsp;θ ≤ μ</span>，即 <span class="kv">v² ≤ μgR</span>。</li>
+      <li>物理直觉：压弯角 = 横向加速度与 g 的比值，45° 对应 1 g。</li>
+      <li>课堂实验建议：用手机慢动作拍摄自行车/摩托车压弯，测倾角反推转弯半径；或用这个仿真页面拖动滑块验证公式。</li>
+    </ul>
+  </div>
+
+  <footer>摩托车压弯动力学 · 供高中物理力学拓展教学使用</footer>
+</div>
+
+<script src="chart.min.js"></script>
+<script>
+(function(){
+  var G = 9.8, D2R = Math.PI/180;
+
+  /* ---------- 仿真 ---------- */
+  var vIn=document.getElementById('vIn');
+  if(vIn){
+    var rIn=document.getElementById('rIn'), mIn=document.getElementById('mIn');
+    var vOut=document.getElementById('vOut'), rOut=document.getElementById('rOut'), mOut=document.getElementById('mOut');
+    var mTheta=document.getElementById('mTheta'), mNeeded=document.getElementById('mNeeded');
+    var mAcc=document.getElementById('mAcc'), mState=document.getElementById('mState');
+    var grp=document.getElementById('bikeGrp'), arc=document.getElementById('thArc');
+    var lbl=document.getElementById('thLbl'), tick=document.getElementById('limTick');
+    var parts=['tire','body','rider','helmet'].map(function(id){return document.getElementById(id);});
+    var RAD=105, LRAD=185;
+
+    function upd(){
+      var vmh=+vIn.value, R=+rIn.value, mu=+mIn.value;
+      var v=vmh/3.6;
+      var k=v*v/(G*R);
+      var th=Math.atan(k)/D2R;
+      var thMax=Math.atan(mu)/D2R;
+
+      vOut.textContent=vmh+' km/h';
+      rOut.textContent=R+' m';
+      mOut.textContent=mu.toFixed(2);
+      mTheta.textContent=th.toFixed(1)+'°';
+      mNeeded.textContent=k.toFixed(2);
+      mAcc.innerHTML=(v*v/R).toFixed(1)+'<span style="font-size:14px"> m/s²</span>';
+
+      var over=th>thMax, near=(!over && th>thMax-4);
+      var col=over?'#c8322f':(near?'#c47a10':'#2b6cb8');
+      for(var i=0;i<parts.length;i++){ parts[i].setAttribute('stroke',col); }
+      mState.textContent=over?'打滑':(near?'接近极限':'安全');
+      mState.style.color=col;
+
+      grp.setAttribute('transform','rotate('+(-th)+' 200 255)');
+      var x2=200-RAD*Math.sin(th*D2R), y2=255-RAD*Math.cos(th*D2R);
+      arc.setAttribute('d','M 200 '+(255-RAD)+' A '+RAD+' '+RAD+' 0 0 0 '+x2.toFixed(1)+' '+y2.toFixed(1));
+      lbl.setAttribute('x',(200-126*Math.sin(th/2*D2R)).toFixed(1));
+      lbl.setAttribute('y',(255-126*Math.cos(th/2*D2R)).toFixed(1));
+      lbl.textContent=th.toFixed(1)+'°';
+      tick.setAttribute('x2',(200-LRAD*Math.sin(thMax*D2R)).toFixed(1));
+      tick.setAttribute('y2',(255-LRAD*Math.cos(thMax*D2R)).toFixed(1));
+
+      if(chart){ chart.data.datasets[1].data=[{x:0,y:thMax},{x:46,y:thMax}]; chart.update('none'); }
+    }
+
+    [vIn,rIn,mIn].forEach(function(el){ el.addEventListener('input',upd); });
+
+    var timer=null, dir=1, btn=document.getElementById('autoBtn');
+    btn.addEventListener('click',function(){
+      if(timer){ clearInterval(timer); timer=null; btn.textContent='自动扫描车速'; return; }
+      btn.textContent='暂停扫描';
+      timer=setInterval(function(){
+        var nv=+vIn.value+dir*2;
+        if(nv>=160){ nv=160; dir=-1; }
+        if(nv<=10){ nv=10; dir=1; }
+        vIn.value=nv; upd();
+      },50);
+    });
+
+    var presets=document.querySelectorAll('[data-preset]');
+    for(var p=0;p<presets.length;p++){
+      presets[p].addEventListener('click',function(){
+        var a=this.getAttribute('data-preset').split(',');
+        vIn.value=a[0]; rIn.value=a[1]; mIn.value=a[2]; upd();
+      });
+    }
+
+    window.__updSim=upd;
+  }
+
+  /* ---------- 曲线 ---------- */
+  var chart=null;
+  function buildChart(R){
+    var pts=[], vmax=46;
+    for(var x=0;x<=vmax;x+=1){
+      pts.push({x:x, y:Math.atan(x*x/(G*R))/D2R});
+    }
+    var cvs=document.getElementById('curveChart');
+    if(chart){ chart.destroy(); }
+    chart=new Chart(cvs,{
+      type:'line',
+      data:{
+        datasets:[
+          { label:'压弯角 θ', data:pts, borderColor:'#2b6cb8', backgroundColor:'rgba(43,108,184,0.08)',
+            borderWidth:2.5, pointRadius:0, fill:true, tension:0.15 },
+          { label:'极限角 arctan μ', data:[{x:0,y:45},{x:46,y:45}], borderColor:'#c8322f',
+            borderWidth:2, borderDash:[7,5], pointRadius:0, fill:false }
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:false,
+        plugins:{
+          legend:{ display:false },
+          tooltip:{ callbacks:{ label:function(c){
+            return c.datasetIndex===0
+              ? Math.round(c.parsed.x*3.6)+' km/h → '+c.parsed.y.toFixed(1)+'°'
+              : '极限角 '+c.parsed.y.toFixed(1)+'°';
+          } } }
+        },
+        scales:{
+          x:{ type:'linear', min:0, max:vmax, title:{display:true, text:'车速 v (m/s)', color:'#5f5e5a'},
+              ticks:{ color:'#5f5e5a', callback:function(v){ return Math.round(v*3.6)+'km/h'; } },
+              grid:{ color:'rgba(0,0,0,0.06)' } },
+          y:{ min:0, max:90, title:{display:true, text:'压弯角 θ (度)', color:'#5f5e5a'},
+              ticks:{ color:'#5f5e5a', stepSize:15 }, grid:{ color:'rgba(0,0,0,0.06)' } }
+        }
+      }
+    });
+  }
+
+  var tabs=document.querySelectorAll('#tabs button');
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].addEventListener('click',function(){
+      for(var j=0;j<tabs.length;j++){ tabs[j].classList.remove('on'); }
+      this.classList.add('on');
+      buildChart(+this.getAttribute('data-r'));
+    });
+  }
+  buildChart(80);
+  if(window.__updSim){ window.__updSim(); }
+})();
+</script>
+</body>
+</html>
