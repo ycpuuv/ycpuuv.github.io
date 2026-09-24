@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>斜上抛 · 全向喷泉三维演示</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:100%;height:100%;overflow:hidden;background:#080b14;font-family:"Microsoft YaHei","PingFang SC",system-ui,sans-serif;color:#e8edf7}
+  #c{display:block;width:100%;height:100%}
+
+  .panel{
+    position:fixed;backdrop-filter:blur(14px);
+    background:rgba(16,22,38,.78);border:1px solid rgba(120,160,255,.22);
+    border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.55);
+  }
+
+  /* 左侧控制台 */
+  #ctrl{top:14px;left:14px;width:274px;padding:14px 15px 16px;max-height:calc(100vh - 28px);overflow-y:auto}
+  #ctrl::-webkit-scrollbar{width:5px}
+  #ctrl::-webkit-scrollbar-thumb{background:rgba(120,160,255,.35);border-radius:3px}
+  #ctrl h1{font-size:15px;font-weight:700;letter-spacing:.5px;
+    background:linear-gradient(90deg,#5ff0ff,#8f7bff 45%,#ffb45f);
+    -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px}
+  #ctrl .sub{font-size:10.5px;color:#7b89a8;margin-bottom:12px;letter-spacing:.4px}
+
+  .sec{margin-bottom:13px}
+  .sec-t{font-size:11px;color:#8fa3c8;letter-spacing:1.4px;margin-bottom:7px;
+    display:flex;align-items:center;gap:6px;font-weight:600}
+  .sec-t::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,rgba(120,160,255,.28),transparent)}
+
+  .row{display:flex;align-items:center;justify-content:space-between;font-size:12px;margin-bottom:5px;color:#b6c4de}
+  .val{font-family:Consolas,monospace;color:#5ff0ff;font-size:12px;font-weight:600}
+  input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;
+    background:rgba(120,160,255,.18);outline:none;margin-bottom:9px}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#8ff6ff,#2c7bff);cursor:pointer;
+    box-shadow:0 0 9px rgba(80,200,255,.75);border:1.5px solid #cdf3ff}
+
+  .btns{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .btns.b3{grid-template-columns:repeat(3,1fr)}
+  button{
+    padding:7px 4px;font-size:11.5px;border-radius:9px;cursor:pointer;
+    background:rgba(70,110,200,.2);border:1px solid rgba(120,160,255,.28);
+    color:#c6d4ee;transition:.16s;font-family:inherit;white-space:nowrap
+  }
+  button:hover{background:rgba(90,140,255,.34);color:#fff;transform:translateY(-1px)}
+  button.on{background:linear-gradient(135deg,#2f6bff,#00c8d8);border-color:#6fe6ff;color:#fff;
+    box-shadow:0 0 14px rgba(60,190,255,.5)}
+
+  .chk{display:flex;align-items:center;gap:7px;font-size:11.5px;color:#b6c4de;cursor:pointer;padding:3px 0}
+  .chk input{accent-color:#2f9dff;width:13px;height:13px;cursor:pointer}
+
+  /* 右侧信息 */
+  #info{top:14px;right:14px;width:212px;padding:13px 15px}
+  #info .ttl{font-size:11px;color:#8fa3c8;letter-spacing:1.4px;margin-bottom:9px;font-weight:600}
+  .kv{display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px}
+  .kv span:first-child{color:#8896b4}
+  .kv b{font-family:Consolas,monospace;color:#ffd98f;font-weight:600}
+  .hint{font-size:10.5px;color:#68779a;line-height:1.65;margin-top:10px;
+    padding-top:9px;border-top:1px dashed rgba(120,160,255,.2)}
+
+  /* 底部图例 */
+  #legend{bottom:14px;left:50%;transform:translateX(-50%);padding:9px 16px;
+    display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:center;max-width:min(720px,92vw)}
+  .lg{display:flex;align-items:center;gap:5px;font-size:11px;color:#9fb0cd;padding:2px 6px}
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+
+  #backSite{position:fixed;bottom:14px;left:14px;z-index:5;font-size:11.5px;color:#8ecfff;text-decoration:none;
+    padding:7px 14px;border-radius:9px;background:rgba(16,22,38,.78);border:1px solid rgba(120,160,255,.28);
+    backdrop-filter:blur(14px);transition:.16s;white-space:nowrap}
+  #backSite:hover{background:rgba(90,140,255,.34);color:#fff}
+
+  #tip{position:fixed;bottom:14px;right:14px;font-size:10.5px;color:#5d6b8a;
+    background:rgba(16,22,38,.7);padding:6px 11px;border-radius:8px;border:1px solid rgba(120,160,255,.16)}
+
+  /* 依赖加载失败提示 */
+  #loadErr{position:fixed;inset:0;display:none;align-items:center;justify-content:center;
+    background:rgba(8,11,20,.94);z-index:99;text-align:center;padding:30px}
+  #loadErr .box{max-width:470px}
+  #loadErr h2{font-size:16px;color:#ff9a9a;margin-bottom:10px}
+  #loadErr p{font-size:12.5px;color:#9fb0cd;line-height:1.8}
+  @media(max-width:820px){
+    #info{display:none}#ctrl{width:224px;padding:11px 12px}#legend{display:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="panel" id="ctrl">
+  <h1>斜上抛 · 全向喷泉</h1>
+  <div class="sub">THREE-DIMENSIONAL PROJECTILE FOUNTAIN</div>
+
+  <div class="sec">
+    <div class="sec-t">视角</div>
+    <div class="btns b3">
+      <button id="vTop">俯视</button>
+      <button id="vSide" class="on">侧视</button>
+      <button id="vPersp">立体</button>
+    </div>
+    <div class="btns" style="margin-top:6px">
+      <button id="v45">45° 斜视</button>
+      <button id="vSpin" class="on">自动旋转</button>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">立体展开</div>
+    <div class="row"><span>展开角 φ</span><span class="val" id="fV">0°</span></div>
+    <input type="range" id="fSpread" min="0" max="180" value="0">
+    <div class="row"><span>圆周分组 N</span><span class="val" id="nV">1</span></div>
+    <input type="range" id="fCount" min="1" max="24" value="1">
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">抛体参数</div>
+    <div class="row"><span>喷发速度 v₀</span><span class="val" id="v0V">20 m/s</span></div>
+    <input type="range" id="fV0" min="8" max="34" value="20" step="0.5">
+    <div class="row"><span>发射倾角 θ₀</span><span class="val" id="t0V">45°</span></div>
+    <input type="range" id="fT0" min="5" max="85" value="45">
+    <div class="row"><span>重力 g</span><span class="val" id="gV">9.8 m/s²</span></div>
+    <input type="range" id="fG" min="1.6" max="20" value="9.8" step="0.1">
+    <div class="row"><span>时间流速</span><span class="val" id="spV">1.0×</span></div>
+    <input type="range" id="fSpeed" min="0" max="3" value="1" step="0.1">
+  </div>
+
+  <div class="sec">
+    <div class="sec-t">显示</div>
+    <label class="chk"><input type="checkbox" id="cTrail" checked>粒子拖尾</label>
+    <label class="chk"><input type="checkbox" id="cCurve" checked>理论抛物轨迹</label>
+    <label class="chk"><input type="checkbox" id="cLine" checked>等距母线</label>
+    <label class="chk"><input type="checkbox" id="cAxis" checked>坐标网格与坐标轴</label>
+    <label class="chk"><input type="checkbox" id="cProj" checked>地面投影环</label>
+  </div>
+
+  <div class="sec" style="margin-bottom:0">
+    <div class="btns b3">
+      <button id="bFire">重新喷发</button>
+      <button id="bPause">暂停</button>
+      <button id="bReset">复位</button>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="info">
+  <div class="ttl">实时数据</div>
+  <div class="kv"><span>包络面半径</span><b id="iR">—</b></div>
+  <div class="kv"><span>最大高度 H</span><b id="iH">—</b></div>
+  <div class="kv"><span>水平射程 R</span><b id="iX">—</b></div>
+  <div class="kv"><span>最长滞空 t</span><b id="iT">—</b></div>
+  <div class="kv"><span>在飞粒子</span><b id="iN">—</b></div>
+  <div class="hint" id="iHint">拖动画面即可绕场景旋转，滚轮缩放，右键平移。</div>
+</div>
+
+<div class="panel" id="legend"></div>
+<div id="tip">鼠标左键拖拽旋转 · 滚轮缩放 · 右键平移</div>
+<a id="backSite" href="jiaoxue.html">← 教学资源</a>
+
+<div id="loadErr"><div class="box">
+  <h2>三维引擎未能加载</h2>
+  <p>本页三维引擎为本地文件（three.min.js、OrbitControls.js）。<br>
+  请确认这两个文件与本页在同一目录后刷新；若文件缺失，可自 threejs.org 或 npm 取 r147 版本放入同目录。</p>
+</div></div>
+
+<script src="three.min.js"></script>
+<script src="OrbitControls.js"></script>
+<script>
+/* ============ 基础场景 ============ */
+if(typeof THREE==='undefined' || !THREE.OrbitControls){
+  document.getElementById('loadErr').style.display='flex';
+  throw new Error('three.js / OrbitControls 未加载');
+}
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080b14);
+scene.fog = new THREE.FogExp2(0x080b14, 0.0032);
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, 0.1, 3000);
+camera.position.set(0, 42, 118);
+
+/* 控制器：自由立体调节 */
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 22, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 25;
+controls.maxDistance = 420;
+controls.maxPolarAngle = Math.PI * 0.497;   // 不穿到地面以下
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.55;
+
+/* ============ 光源 ============ */
+scene.add(new THREE.AmbientLight(0x8899cc, 1.5));
+const d1 = new THREE.DirectionalLight(0xffffff, 1.5); d1.position.set(60,120,80); scene.add(d1);
+const d2 = new THREE.DirectionalLight(0x4488ff, 1.1); d2.position.set(-80,50,-70); scene.add(d2);
+const pl = new THREE.PointLight(0x00ddff, 2.2, 220, 2); pl.position.set(0,26,0); scene.add(pl);
+
+/* ============ 坐标系（物理量：米） ============ */
+/* ============ 坐标系（物理量：1 世界单位 = 1 m） ============ */
+const axisGroup = new THREE.Group(); scene.add(axisGroup);
+let grid, axes = [];
+
+function buildGrid(range, maxH){
+  // 清旧
+  axisGroup.children.slice().forEach(o=>{axisGroup.remove(o); if(o.geometry)o.geometry.dispose(); if(o.material)o.material.dispose();});
+  axes = [];
+  const size = Math.ceil(range*1.35/10)*10*2;
+  const div = Math.round(size/10);
+  grid = new THREE.GridHelper(size, div, 0x35507a, 0x1a2a48);
+  grid.material.transparent = true; grid.material.opacity = 0.55;
+  grid.position.y = -0.05;
+  axisGroup.add(grid);
+
+  // X 轴（距离轴）
+  const xg = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(-size/2,0,0), new THREE.Vector3(size/2,0,0)]);
+  const xl = new THREE.Line(xg, new THREE.LineBasicMaterial({color:0xff6b8a, transparent:true, opacity:.9}));
+  axisGroup.add(xl);
+  // Z 轴
+  const zg = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0,0,-size/2), new THREE.Vector3(0,0,size/2)]);
+  const zl = new THREE.Line(zg, new THREE.LineBasicMaterial({color:0x6bff9e, transparent:true, opacity:.9}));
+  axisGroup.add(zl);
+  // Y 轴（高度轴）
+  const yh = Math.ceil((maxH*1.4)/10)*10;
+  const yg = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0,0,0), new THREE.Vector3(0,yh,0)]);
+  const yl = new THREE.Line(yg, new THREE.LineBasicMaterial({color:0x6bb8ff, transparent:true, opacity:.9}));
+  axisGroup.add(yl);
+
+  // 轴刻度标签
+  const step = size>=240?40:(size>=140?20:10);
+  for(let v=step; v<=size/2; v+=step){
+    axes.push(makeLabel(v+' m', new THREE.Vector3(v, 1.4, 0), '#ff98ad', 2.6));
+    axes.push(makeLabel(v+' m', new THREE.Vector3(-v, 1.4, 0), '#ff98ad', 2.6, true));
+  }
+  for(let v=10; v<=yh; v+= (yh>80?20:10)){
+    axes.push(makeLabel(v+' m', new THREE.Vector3(0, v, 0), '#8ecfff', 2.6, true));
+  }
+  axes.forEach(o=>axisGroup.add(o));
+  axisGroup.visible = document.getElementById('cAxis').checked;
+  document.getElementById('iHint').textContent = '拖动画面即可绕场景旋转，滚轮缩放，右键平移。';
+  return size;
+}
+
+/* 文字标签（Canvas 贴图 Sprite） */
+function makeLabel(text, pos, color, scale, leftAlign){
+  const cvs = document.createElement('canvas');
+  const W = 256, H = 64; cvs.width=W; cvs.height=H;
+  const ctx = cvs.getContext('2d');
+  ctx.font = 'bold 40px Consolas, monospace';
+  ctx.fillStyle = color; ctx.textAlign = leftAlign?'right':'left';
+  ctx.textBaseline='middle';
+  ctx.fillText(text, leftAlign? W-6 : 6, H/2);
+  const tex = new THREE.CanvasTexture(cvs);
+  tex.minFilter = THREE.LinearFilter;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, opacity:.85, depthWrite:false}));
+  sp.position.copy(pos);
+  sp.scale.set(scale*4, scale, 1);
+  return sp;
+}
+
+/* ============ 泡利颜色：按发射方位角 & 倾角着色 ============ */
+const HUE_BASE = [
+  {a:0.00, c:0xff4d6d}, {a:0.17, c:0xffa64d}, {a:0.33, c:0xffe14d},
+  {a:0.50, c:0x5cff8f}, {a:0.67, c:0x4dd2ff}, {a:0.83, c:0x8f7bff},
+  {a:1.00, c:0xff4d6d}
+];
+function azColor(t){
+  t = ((t%1)+1)%1;
+  for(let i=0;i<HUE_BASE.length-1;i++){
+    const A=HUE_BASE[i], B=HUE_BASE[i+1];
+    if(t>=A.a && t<=B.a){
+      const k=(t-A.a)/(B.a-A.a);
+      return new THREE.Color(A.c).lerp(new THREE.Color(B.c), k);
+    }
+  }
+  return new THREE.Color(HUE_BASE[0].c);
+}
+
+/* ============ 参数 ============ */
+const P = {
+  v0: 20, theta0: 45, g: 9.8, spread: 0, N: 1,
+  speed: 1, paused:false, showTrail:true, showCurve:true, showLine:true, showProj:true
+};
+
+/* ============ 粒子系统 ============ */
+const MAXP = 9000;
+const pPos = new Float32Array(MAXP*3);
+const pCol = new Float32Array(MAXP*3);
+const p0   = new Float32Array(MAXP*3);   // 发射点（解析解基准）
+const pV0  = new Float32Array(MAXP*3);   // 发射速度（解析解基准）
+const pAge = new Float32Array(MAXP);
+const pLife = new Float32Array(MAXP);
+const pClr = new Float32Array(MAXP*3);
+let head = 0;
+
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos,3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pCol,3));
+pGeo.setDrawRange(0, MAXP);
+
+// 柔和圆形贴图
+function discTexture(){
+  const s=64, cv=document.createElement('canvas'); cv.width=cv.height=s;
+  const x=cv.getContext('2d');
+  const gg=x.createRadialGradient(s/2,s/2,0,s/2,s/2,s/2);
+  gg.addColorStop(0,'rgba(255,255,255,1)');
+  gg.addColorStop(.35,'rgba(255,255,255,.85)');
+  gg.addColorStop(1,'rgba(255,255,255,0)');
+  x.fillStyle=gg; x.fillRect(0,0,s,s);
+  return new THREE.CanvasTexture(cv);
+}
+const pMat = new THREE.PointsMaterial({
+  size: 1.5, map: discTexture(), vertexColors: true,
+  transparent:true, opacity:0.94, depthWrite:false,
+  blending: THREE.AdditiveBlending, sizeAttenuation:true
+});
+const points = new THREE.Points(pGeo, pMat);
+points.frustumCulled = false;
+scene.add(points);
+
+/* 拖尾：为每个「母线」保留一条折线轨迹（抽样粒子画轨迹线） */
+const TRAIL_N = 240;            // 母线数量
+let trails = [];                // {line, pts[], i, active}
+function buildTrails(){
+  trails.forEach(t=>{scene.remove(t.line); t.line.geometry.dispose();});
+  trails = [];
+  for(let k=0;k<TRAIL_N;k++){
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(90*3),3));
+    g.setDrawRange(0,0);
+    const m = new THREE.LineBasicMaterial({transparent:true, opacity:0, blending:THREE.AdditiveBlending});
+    const line = new THREE.Line(g,m); line.frustumCulled=false;
+    scene.add(line);
+    trails.push({line, n:0, max:90});
+  }
+}
+buildTrails();
+
+/* 理论轨迹曲线组 */
+const curveGroup = new THREE.Group(); scene.add(curveGroup);
+/* 母线（等距射线） */
+const lineGroup = new THREE.Group(); scene.add(lineGroup);
+/* 地面投影环 */
+const projGroup = new THREE.Group(); scene.add(projGroup);
+
+/* ============ 发射器（喷泉源头） ============ */
+const srcGroup = new THREE.Group(); scene.add(srcGroup);
+{
+  const core = new THREE.Mesh(new THREE.SphereGeometry(1.5,24,18),
+    new THREE.MeshBasicMaterial({color:0xffffff}));
+  srcGroup.add(core);
+  const glowTex = discTexture();
+  const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:glowTex, color:0x66e6ff,
+    transparent:true, opacity:.95, blending:THREE.AdditiveBlending, depthWrite:false}));
+  spr.scale.set(14,14,1); srcGroup.add(spr);
+  const halo = new THREE.Mesh(new THREE.RingGeometry(2.2, 2.9, 64),
+    new THREE.MeshBasicMaterial({color:0x66e6ff, transparent:true, opacity:.55, side:THREE.DoubleSide}));
+  halo.rotation.x = -Math.PI/2; srcGroup.add(halo);
+}
+srcGroup.position.set(0,0.8,0);
+
+/* ============ 关键物理量 ============ */
+function rho(){ // 包络半径（临界角 45° 的水平射程）
+  return P.v0*P.v0/P.g;
+}
+function rangeOf(th){ return P.v0*P.v0*Math.sin(2*th)/P.g; }
+function heightOf(th){ return Math.pow(P.v0*Math.sin(th),2)/(2*P.g); }
+function flightOf(th){ return 2*P.v0*Math.sin(th)/P.g; }
+
+/* 采样一系列倾角用于绘制扇形/圆环曲线 —— 用黄金角分层让视觉最饱满 */
+function anglesList(){
+  // 从 3° 到 87°，按 sin 分布取点，密度在低角度更高（形状差异大）
+  const list=[]; const M = 26;
+  for(let i=0;i<M;i++){
+    const t = 0.05 + 0.90*Math.pow(i/(M-1), 0.85);
+    list.push(t*Math.PI/2);
+  }
+  return list;
+}
+
+/* 母线：某倾角下、方位角均匀的直线射线 */
+function buildLines(){
+  lineGroup.children.slice().forEach(o=>{lineGroup.remove(o); o.geometry.dispose(); o.material.dispose();});
+  if(!P.showLine) return;
+  const M = 15;
+  for(let i=0;i<M;i++){
+    const az = i/M*Math.PI*2;
+    const dir = new THREE.Vector3(Math.cos(az),0,Math.sin(az));
+    const len = rho()*1.02;
+    const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), dir.multiplyScalar(len)]);
+    const c = azColor(i/M);
+    const l = new THREE.Line(g, new THREE.LineBasicMaterial({color:c, transparent:true, opacity:.22}));
+    lineGroup.add(l);
+  }
+}
+
+/* 理论曲线：在展开区域内绘制一族抛物线（按方位角 & 倾角） */
+function buildCurves(){
+  curveGroup.children.slice().forEach(o=>{curveGroup.remove(o); o.geometry.dispose(); o.material.dispose();});
+  if(!P.showCurve){
+    const M=26;  // 仍保留「全向包络圆」提示
+    return;
+  }
+  const AN = Math.max(1, P.N);            // 方位向分组
+  const angles = anglesList();
+  const spread = P.spread*Math.PI/180;
+  const totalAz = spread;                  // 总展开角
+  const azN = spread < 1e-6 ? 1 : Math.max(2, P.N*2);
+
+  for(let ai=0; ai<azN; ai++){
+    const frac = azN===1 ? 0 : (ai/(azN-1) - 0.5);        // -0.5 ~ 0.5
+    const az = frac * totalAz;
+    const ca = Math.cos(az), sa = Math.sin(az);
+    const azCol = azColor(spread<1e-6 ? 0.16 : (ai/azN));
+    for(const th of angles){
+      const vx = P.v0*Math.cos(th), vy = P.v0*Math.sin(th);
+      const T = 2*vy/P.g;
+      const NPT = 46;
+      const pts=[];
+      for(let k=0;k<=NPT;k++){
+        const t = T*k/NPT;
+        const d = vx*t;                    // 沿发射方向水平距离
+        pts.push(new THREE.Vector3(d*ca, vy*t-0.5*P.g*t*t + 0.8, d*sa));
+      }
+      const g = new THREE.BufferGeometry().setFromPoints(pts);
+      // 45° 黄金角高亮（在展开角内取中间那条）
+      const is45 = Math.abs(th-Math.PI/4)<0.03;
+      const col = is45 && Math.abs(frac)<0.02 ? new THREE.Color(0xffd93d) : azCol;
+      const m = new THREE.LineBasicMaterial({
+        color: col, transparent:true,
+        opacity: is45 && Math.abs(frac)<0.02 ? 0.95 : 0.28,
+        blending: THREE.AdditiveBlending
+      });
+      curveGroup.add(new THREE.Line(g,m));
+    }
+  }
+  buildLines();
+}
+
+/* 地面投影环（各倾角射程环，全向） */
+function buildProj(){
+  projGroup.children.slice().forEach(o=>{projGroup.remove(o); o.geometry.dispose(); o.material.dispose();});
+  if(!P.showProj) return;
+  const angles = anglesList();
+  for(const th of angles){
+    const r = rangeOf(th);
+    if(r<0.4) continue;
+    const N=128, pts=[];
+    for(let k=0;k<=N;k++){
+      const a=k/N*Math.PI*2;
+      pts.push(new THREE.Vector3(r*Math.cos(a), 0.05, r*Math.sin(a)));
+    }
+    const g=new THREE.BufferGeometry().setFromPoints(pts);
+    const is45 = Math.abs(th-Math.PI/4)<0.03;
+    const m=new THREE.LineBasicMaterial({color: is45?0xffd93d:0x4dd2ff,
+      transparent:true, opacity: is45?0.75:0.16, blending:THREE.AdditiveBlending});
+    projGroup.add(new THREE.Line(g,m));
+  }
+  // 包络最大圆
+  const R=rho(); const N=160, pts=[];
+  for(let k=0;k<=N;k++){const a=k/N*Math.PI*2;
+    pts.push(new THREE.Vector3(R*Math.cos(a),0.12,R*Math.sin(a)));}
+  projGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),
+    new THREE.LineBasicMaterial({color:0xff8f4d, transparent:true, opacity:.5})));
+}
+
+/* ============ 发射 ============ */
+let emitAccum = 0;
+function emit(dt){
+  const spread = P.spread*Math.PI/180;
+  const N = Math.max(1, P.N);
+  // 每秒发射束数（母线数）
+  const raysPerSec = 56 * (1 + P.spread/90*0.6);
+  emitAccum += raysPerSec*dt;
+  const rays = Math.floor(emitAccum);
+  emitAccum -= rays;
+
+  for(let r=0;r<rays;r++){
+    // 方位角：展开区域内均匀（spread=0 时全向）
+    let az;
+    if(spread < 1e-6){
+      az = Math.random()*Math.PI*2;
+    }else{
+      az = (Math.random()-0.5)*spread;
+    }
+    const ca=Math.cos(az), sa=Math.sin(az);
+    // 倾角：围绕 θ₀ 做三角分布抖动，模拟喷头散射，同时保证各向都壮
+    let th = P.theta0*Math.PI/180 + (Math.random()+Math.random()-1)*22*Math.PI/180;
+    // 少量偏心大角/小角，让上下边缘丰满
+    if(Math.random()<0.10) th = (5 + Math.random()*80)*Math.PI/180;
+    th = Math.max(2*Math.PI/180, Math.min(88*Math.PI/180, th));
+
+    // 速度抖动
+    const v = P.v0 * (0.90 + Math.random()*0.10);
+    const vx = v*Math.cos(th), vy = v*Math.sin(th);
+
+    const idx = head; head = (head+1)%MAXP;
+    pPos[idx*3]   = (Math.random()-0.5)*1.2;
+    pPos[idx*3+1] = 0.9 + (Math.random()-0.5)*1.2;
+    pPos[idx*3+2] = (Math.random()-0.5)*1.2;
+    pV0[idx*3]   = vx*ca;
+    pV0[idx*3+1] = vy;
+    pV0[idx*3+2] = vx*sa;
+    p0[idx*3]    = pPos[idx*3];
+    p0[idx*3+1]  = pPos[idx*3+1];
+    p0[idx*3+2]  = pPos[idx*3+2];
+
+    // 颜色按方位角变化（展开时形成彩虹扇形），全向时按角度轮转
+    const c = spread<1e-6 ? azColor(az/(Math.PI*2))
+                          : azColor(0.10 + 0.85*(az/spread + 0.5));
+    pClr[idx*3]=c.r; pClr[idx*3+1]=c.g; pClr[idx*3+2]=c.b;
+    pCol[idx*3]=c.r; pCol[idx*3+1]=c.g; pCol[idx*3+2]=c.b;
+
+    pAge[idx]=0;
+    pLife[idx]= 2*vy/P.g;
+  }
+
+  // 母线拖尾采样（每隔若干帧挑一支头粒子生成轨迹）
+  if(P.showTrail && Math.random()<0.5){
+    const t = trails[Math.floor(Math.random()*trails.length)];
+    t.n = 0; t.max = 90;
+  }
+}
+
+/* 用解析解推进粒子（不累积误差） */
+function stepParticles(dt){
+  for(let i=0;i<MAXP;i++){
+    if(pLife[i]<=0) continue;
+    pAge[i]+=dt;
+    if(pAge[i] >= pLife[i]){
+      pLife[i]=0; pCol[i*3]=pCol[i*3+1]=pCol[i*3+2]=0; continue;
+    }
+    // 解析位置：r(t) = r0 + v0·t − ½g t² ŷ（不是欧拉步进，故与「理论抛物轨迹」严格重合、无累积误差）
+    const t=pAge[i];
+    pPos[i*3]   = p0[i*3]   + pV0[i*3]  *t;
+    pPos[i*3+1] = p0[i*3+1] + pV0[i*3+1]*t - 0.5*P.g*t*t;
+    pPos[i*3+2] = p0[i*3+2] + pV0[i*3+2]*t;
+    // 落地
+    if(pPos[i*3+1] < 0){ pPos[i*3+1]=0; pLife[i]=Math.min(pLife[i], pAge[i]); }
+    // 交点淡出
+    const k = 1 - t/pLife[i];
+    const f = Math.min(1, k*2.6);
+    pCol[i*3]   = pClr[i*3]*f;
+    pCol[i*3+1] = pClr[i*3+1]*f;
+    pCol[i*3+2] = pClr[i*3+2]*f;
+  }
+  pGeo.attributes.position.needsUpdate = true;
+  pGeo.attributes.color.needsUpdate = true;
+}
+
+/* 拖尾更新：为当前活跃的少量粒子记录轨迹 */
+let trailTick = 0;
+const trailPool = [];   // {x,y,z,life,c}
+function spawnTrailFromRay(){
+  const spread=P.spread*Math.PI/180;
+  const az = spread<1e-6 ? Math.random()*Math.PI*2 : (Math.random()-0.5)*spread;
+  const th = P.theta0*Math.PI/180;
+  const v = P.v0;
+  const vx=v*Math.cos(th), vy=v*Math.sin(th);
+  const c = spread<1e-6 ? azColor(az/(Math.PI*2)) : azColor(0.1+0.85*(az/spread+0.5));
+  // 用解析解预生成一条完整轨迹折线
+  const T = 2*vy/P.g;
+  const N = 88, pts=[];
+  for(let k=0;k<=N;k++){
+    const t=T*k/N, d=vx*t;
+    pts.push(new THREE.Vector3(d*Math.cos(az), vy*t-0.5*P.g*t*t+0.9, d*Math.sin(az)));
+  }
+  const t = trails[trailIdx++ % trails.length];
+  const arr = t.line.geometry.attributes.position.array;
+  for(let k=0;k<=N;k++){
+    arr[k*3]=pts[k].x; arr[k*3+1]=pts[k].y; arr[k*3+2]=pts[k].z;
+  }
+  t.line.geometry.attributes.position.needsUpdate = true;
+  t.line.geometry.setDrawRange(0, N+1);
+  t.line.material.color = c;
+  t.line.material.opacity = 0.34;
+  t.lifeT = 0; t.T = T;
+}
+let trailIdx = 0;
+
+/* ============ 主循环 ============ */
+const clock = new THREE.Clock();
+let simTime = 0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const raw = Math.min(clock.getDelta(), 0.05);
+  const dt = P.paused ? 0 : raw*P.speed;
+
+  if(dt>0){
+    simTime += dt;
+    stepParticles(dt);
+    emit(dt);
+
+    if(P.showTrail){
+      trailTick += dt;
+      if(trailTick > 0.035){ trailTick = 0; spawnTrailFromRay(); }
+      trails.forEach(t=>{
+        if(t.lifeT!==undefined){
+          t.lifeT += dt;
+          t.line.material.opacity = Math.max(0, 0.34*(1 - t.lifeT/(t.T*1.35)));
+        }
+      });
+    }
+  }
+
+  // 光源呼吸
+  pl.intensity = 1.8 + Math.sin(simTime*3)*0.6;
+  srcGroup.scale.setScalar(1 + Math.sin(simTime*6)*0.06);
+
+  controls.update();
+  renderer.render(scene, camera);
+  if(frame++%6===0) updateInfo();
+}
+let frame=0;
+
+/* ============ 数据面板 ============ */
+function updateInfo(){
+  const th = P.theta0*Math.PI/180;
+  document.getElementById('iR').textContent = rho().toFixed(1)+' m';
+  document.getElementById('iH').textContent = heightOf(th).toFixed(1)+' m';
+  document.getElementById('iX').textContent = rangeOf(th).toFixed(1)+' m';
+  document.getElementById('iT').textContent = flightOf(th).toFixed(2)+' s';
+  let n=0; for(let i=0;i<MAXP;i++) if(pLife[i]>0) n++;
+  document.getElementById('iN').textContent = n;
+}
+
+/* ============ 图例 ============ */
+(function(){
+  const lg = document.getElementById('legend');
+  const names = ['0°','60°','120°','180°','240°','300°'];
+  for(let i=0;i<6;i++){
+    const c = azColor(i/6);
+    const d = document.createElement('div'); d.className='lg';
+    d.innerHTML = `<i class="dot" style="background:#${c.getHexString()};box-shadow:0 0 8px #${c.getHexString()}"></i>方位 ${names[i]}`;
+    lg.appendChild(d);
+  }
+  const d2=document.createElement('div'); d2.className='lg';
+  d2.innerHTML = `<i class="dot" style="background:#ffd93d;box-shadow:0 0 8px #ffd93d"></i>45° 黄金角`;
+  lg.appendChild(d2);
+})();
+
+/* ============ 重建（参数变化时） ============ */
+function rebuildAll(reposition){
+  const R = rho();
+  const H = heightOf(P.theta0*Math.PI/180);
+  // 缩放范围随尺度自适应（月球 g=1.6 时包络半径可到数百米，写死的 420 会把喷泉关在视野外）
+  controls.minDistance = Math.max(4, R*0.06);
+  controls.maxDistance = Math.max(420, R*2.4);
+  const size = buildGrid(Math.max(R,1), Math.max(H,1));
+  buildCurves();
+  buildProj();
+  // 相机距离自适应
+  if(reposition){
+    const need = Math.max(R*1.2, H*1.3, 40);
+    const dir = camera.position.clone().sub(controls.target).normalize();
+    camera.position.copy(controls.target.clone().add(dir.multiplyScalar(need*1.75)));
+    controls.target.set(0, Math.max(H*0.42, 8), 0);
+  }
+  updateInfo();
+}
+
+/* ============ UI 绑定 ============ */
+const $ = id=>document.getElementById(id);
+
+function bindRange(id, valId, key, fmt, rebuild){
+  const el=$(id);
+  el.addEventListener('input', ()=>{
+    P[key] = parseFloat(el.value);
+    $(valId).textContent = fmt(P[key]);
+    if(rebuild) rebuildAll(false);
+  });
+}
+bindRange('fV0','v0V','v0', v=>v.toFixed(1)+' m/s', true);
+bindRange('fT0','t0V','theta0', v=>v+'°', true);
+bindRange('fG','gV','g', v=>v.toFixed(1)+' m/s²', true);
+bindRange('fSpeed','spV','speed', v=>v.toFixed(1)+'×', false);
+
+$('fSpread').addEventListener('input', e=>{
+  P.spread = parseFloat(e.target.value);
+  $('fV').textContent = P.spread+'°';
+  buildCurves(); buildProj(); updateInfo();
+});
+$('fCount').addEventListener('input', e=>{
+  P.N = parseInt(e.target.value);
+  $('nV').textContent = P.N;
+  buildCurves(); updateInfo();
+});
+
+// 视角按钮
+function setView(name){
+  const R=rho(), H=heightOf(P.theta0*Math.PI/180);
+  controls.minDistance = Math.max(4, R*0.06);
+  controls.maxDistance = Math.max(420, R*2.4);
+  const dist = Math.max(R*1.2, H*1.3, 40)*1.75;
+  const tgt = new THREE.Vector3(0, Math.max(H*0.42,8), 0);
+  controls.target.copy(tgt);
+  if(name==='top')   camera.position.set(tgt.x+0.01, tgt.y+dist*1.05, tgt.z+0.01);
+  if(name==='side')  camera.position.set(tgt.x, tgt.y+dist*0.22, tgt.z+dist);
+  if(name==='persp') camera.position.set(tgt.x+dist*0.72, tgt.y+dist*0.62, tgt.z+dist*0.72);
+  if(name==='45'){   camera.position.set(tgt.x+dist*0.62, tgt.y+dist*0.52, tgt.z+dist*0.62); }
+  // 同步按钮态
+  ['vTop','vSide','vPersp','v45'].forEach(id=>$(id).classList.remove('on'));
+  $({top:'vTop',side:'vSide',persp:'vPersp','45':'v45'}[name]).classList.add('on');
+  // 俯视时自动旋转更顺畅
+  controls.update();
+}
+$('vTop').onclick  = ()=>setView('top');
+$('vSide').onclick = ()=>setView('side');
+$('vPersp').onclick= ()=>setView('persp');
+$('v45').onclick   = ()=>setView('45');
+
+$('vSpin').onclick = ()=>{
+  controls.autoRotate = !controls.autoRotate;
+  $('vSpin').classList.toggle('on', controls.autoRotate);
+};
+
+$('cTrail').onchange = e=>{ P.showTrail=e.target.checked;
+  trails.forEach(t=>{t.line.visible=P.showTrail;}); };
+$('cCurve').onchange = e=>{ P.showCurve=e.target.checked; buildCurves(); };
+$('cLine').onchange  = e=>{ P.showLine =e.target.checked; buildLines(); };
+$('cProj').onchange  = e=>{ P.showProj =e.target.checked; buildProj(); };
+$('cAxis').onchange  = e=>{ P.showAxis =e.target.checked; axisGroup.visible=e.target.checked; };
+
+$('bFire').onclick = ()=>{
+  // 快速重喷：把当前粒子全部过期，瞬间补一批新粒子
+  for(let i=0;i<MAXP;i++) pLife[i]=0;
+  pCol.fill(0); pGeo.attributes.color.needsUpdate=true;
+  emitAccum = 0;
+  for(let k=0;k<14;k++) emit(1/60);
+  for(let k=0;k<40;k++) stepParticles(1/60);
+  for(let k=0;k<10;k++) spawnTrailFromRay();
+};
+$('bPause').onclick = ()=>{
+  P.paused = !P.paused;
+  $('bPause').textContent = P.paused?'继续':'暂停';
+  $('bPause').classList.toggle('on', P.paused);
+};
+$('bReset').onclick = ()=>{
+  P.v0=20; P.theta0=45; P.g=9.8; P.spread=0; P.N=1; P.speed=1;
+  $('fV0').value=20; $('v0V').textContent='20.0 m/s';
+  $('fT0').value=45; $('t0V').textContent='45°';
+  $('fG').value=9.8; $('gV').textContent='9.8 m/s²';
+  $('fSpeed').value=1; $('spV').textContent='1.0×';
+  $('fSpread').value=0; $('fV').textContent='0°';
+  $('fCount').value=1; $('nV').textContent='1';
+  P.paused=false; $('bPause').textContent='暂停'; $('bPause').classList.remove('on');
+  for(let i=0;i<MAXP;i++) pLife[i]=0;
+  pCol.fill(0); pGeo.attributes.color.needsUpdate=true;
+  trails.forEach(t=>{t.line.geometry.setDrawRange(0,0);});
+  rebuildAll(true);
+  setView('side');
+};
+
+/* ============ 启动 ============ */
+// 预生成轨迹说明：初始用侧视 + 自动旋转
+rebuildAll(true);
+setView('side');
+controls.autoRotate = true;
+
+// 首屏快速喷满，避免空场
+for(let k=0;k<120;k++) emit(1/60);
+for(let k=0;k<45;k++) stepParticles(1/60);
+for(let k=0;k<26;k++) spawnTrailFromRay();
+
+animate();
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
