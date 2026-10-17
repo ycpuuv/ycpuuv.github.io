@@ -3,28 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>开环 vs 闭环</title>
+<title>同一个目标：26℃</title>
 <style>
-  html,body{margin:0;padding:0;background:#0b111c;color:#e8eefc;
+  html,body{margin:0;padding:0;background:#080d17;color:#e8eefc;
     font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
     -webkit-text-size-adjust:100%;overflow-x:hidden;}
-  #wrap{max-width:1100px;margin:0 auto;padding:10px 12px 16px;}
+  #wrap{max-width:1100px;margin:0 auto;padding:8px 12px 14px;}
   canvas{display:block;width:100%;border-radius:14px;touch-action:manipulation;}
-  #bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;
-    margin-top:12px;padding:0 4px;}
+  #bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;margin-top:11px;}
   button{flex:0 0 auto;min-height:46px;padding:0 18px;border-radius:12px;border:1px solid #2b3a55;
-    background:#182236;color:#e8eefc;font-size:16px;font-weight:600;letter-spacing:.5px;
-    font-family:inherit;cursor:pointer;}
+    background:#182236;color:#e8eefc;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;}
   button:active{transform:scale(.97);background:#22314c;}
   button.primary{background:#1d6ef2;border-color:#1d6ef2;color:#fff;}
   button.on{background:#13b58a;border-color:#13b58a;color:#fff;}
-
+  #hint{width:100%;text-align:center;font-size:13px;color:#7f92b3;margin-top:7px;line-height:1.6;}
   @media (max-width:480px){
-    button{min-height:42px;padding:0 12px;font-size:14.5px;letter-spacing:0;}
-    #bar{gap:8px;}
-    #hint{font-size:12.5px;}
+    button{min-height:42px;padding:0 12px;font-size:14.5px;}
+    #bar{gap:8px;} #hint{font-size:12.5px;}
   }
-  #hint{width:100%;text-align:center;font-size:13.5px;color:#7f92b3;margin-top:6px;line-height:1.6;}
 </style>
 </head>
 <body>
@@ -35,358 +31,396 @@
     <button id="btnReplay">重新演示</button>
     <button id="btnSlow" class="on">速度：正常</button>
   </div>
-  <div id="hint">同一套输入，只差一个"看结果"的动作 —— 两条曲线就分开了</div>
+  <div id="hint">两边输入一样，唯一的差别是：右边有一条回到起点的回路</div>
 </div>
 <script>
 (function(){
-  var cv = document.getElementById('cv'), ctx = cv.getContext('2d');
-  var W = 900, H = 620, DPR = 1;
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  var W=900,H=610,DPR=1;
+  var C={bg:'#080d17',panel:'#111a2a',room:'#0d1626',
+    line:'#22314a',text:'#e8eefc',dim:'#93a7c8',faint:'#5f7396',
+    hot:'#ff7a48',cool:'#3fd6ac',gold:'#ffd166'};
 
-  var C = {
-    bg:'#0b111c', panel:'#141d2e', panel2:'#101828', line:'#23304a',
-    text:'#e8eefc', dim:'#8fa3c4', faint:'#5b6f92',
-    hot:'#ff8a5b', cool:'#4dd4ac', gold:'#ffd166', blue:'#6ea8ff'
-  };
+  var mode=(location.hash==='#study')?'study':'temp';
+  var t=0,speed=1,target=26;
+  var T1=20,T2=20,s1=62,s2=62,acOn=false;
+  var hist1=[],hist2=[],lastPush=0;
 
-  var mode = (location.hash === '#study') ? 'study' : 'temp';
-  var t = 0;                   // 模拟时间(秒)
-  var speed = 1;
-  var target = 26;             // 目标温度
-  var T1 = 20, T2 = 20;        // 开环/闭环 温度
-  var s1 = 62, s2 = 62;        // 学习版 成绩
-  var hist1 = [], hist2 = [];  // 曲线历史
-  var acOn = false;
-  var flash = 0;
-
-  /* ---------- 尺寸 ---------- */
   function resize(){
-    var cssW = Math.min(1100, window.innerWidth) - 24;
-    if (cssW < 300) cssW = 300;
-    var mobile = cssW < 780;
-    W = cssW;
-    H = mobile ? 650 : 600;
-    DPR = Math.min(window.devicePixelRatio || 1, 2.5);
-    cv.width = Math.round(W * DPR);
-    cv.height = Math.round(H * DPR);
-    cv.style.height = H + 'px';
-    ctx.setTransform(DPR,0,0,DPR,0,0);
-    draw();
+    var cssW=Math.min(1100,window.innerWidth)-24; if(cssW<300)cssW=300;
+    var mobile=cssW<780; W=cssW; H=mobile?690:610;
+    DPR=Math.min(window.devicePixelRatio||1,2.5);
+    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR); cv.style.height=H+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0); draw();
   }
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize',resize);
 
-  /* ---------- 工具 ---------- */
-  function rr(x,y,w,h,r){
-    ctx.beginPath();
-    ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  function rr(x,y,w,h,r){ if(w<0)w=0; if(h<0)h=0; r=Math.min(r,w/2,h/2);
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
     ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
     ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
-  }
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
   function txt(s,x,y,size,color,align,weight){
-    ctx.font = (weight||'500') + ' ' + size + 'px -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
-    ctx.fillStyle = color || C.text;
-    ctx.textAlign = align || 'left';
-    ctx.textBaseline = 'alphabetic';
-    ctx.fillText(s, x, y);
-  }
-  function fmt(v,d){ return v.toFixed(d===undefined?1:d); }
+    ctx.font=(weight||'500')+' '+size+'px -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+    ctx.fillStyle=color||C.text; ctx.textAlign=align||'left'; ctx.textBaseline='alphabetic';
+    ctx.fillText(s,x,y); }
+  function f(v,d){ return v.toFixed(d===undefined?1:d); }
 
-  /* ---------- 布局 ---------- */
   function layout(){
-    var mobile = W < 780;
-    var pad = 14;
-    var headH = mobile ? 58 : 66;
-    var chartH = mobile ? 158 : 186;
-    var bottomH = 34;
-    var bodyTop = headH + 6;
-    var bodyH = H - bodyTop - chartH - bottomH - 10;
-    var gx = 10;
-    var pw = mobile ? (W - pad*2) : (W - pad*2 - gx)/2;
-    var ph = mobile ? (bodyH - gx)/2 : bodyH;
-    var p1 = {x:pad, y:bodyTop, w:pw, h:ph};
-    var p2 = mobile ? {x:pad, y:bodyTop+ph+gx, w:pw, h:ph} : {x:pad+pw+gx, y:bodyTop, w:pw, h:ph};
-    var chart = {x:pad, y:bodyTop + (mobile ? bodyH : bodyH) + 8, w:W-pad*2, h:chartH};
-    if (mobile) chart.y = bodyTop + bodyH + 8;
-    return {p1:p1, p2:p2, chart:chart, bottom: H - bottomH};
+    var mobile=W<780, pad=14, gap=12;
+    if(!mobile){
+      var top=70, roomH=226, loopH=62;
+      var cw=(W-pad*2-gap)/2;
+      var c1={room:{x:pad,y:top,w:cw,h:roomH},loop:{x:pad,y:top+roomH+6,w:cw,h:loopH}};
+      var c2={room:{x:pad+cw+gap,y:top,w:cw,h:roomH},loop:{x:pad+cw+gap,y:top+roomH+6,w:cw,h:loopH}};
+      var chartY=top+roomH+6+loopH+8;
+      return {cols:[c1,c2],chart:{x:pad,y:chartY,w:W-pad*2,h:H-chartY-26},bottom:H-9,mobile:false};
+    }
+    var top2=56, roomH2=128, loopH2=50;
+    var a={room:{x:pad,y:top2,w:W-pad*2,h:roomH2},loop:{x:pad,y:top2+roomH2+5,w:W-pad*2,h:loopH2}};
+    var y2=top2+roomH2+5+loopH2+10;
+    var b={room:{x:pad,y:y2,w:W-pad*2,h:roomH2},loop:{x:pad,y:y2+roomH2+5,w:W-pad*2,h:loopH2}};
+    var chY=y2+roomH2+5+loopH2+9;
+    return {cols:[a,b],chart:{x:pad,y:chY,w:W-pad*2,h:H-chY-24},bottom:H-8,mobile:true};
   }
 
-  /* ---------- 画面：温度版 ---------- */
-  function drawPanelTemp(box, closed, T, isOn){
-    var x=box.x, y=box.y, w=box.w, h=box.h;
-    ctx.fillStyle = C.panel; rr(x,y,w,h,14); ctx.fill();
-    ctx.strokeStyle = closed ? 'rgba(77,212,172,.45)' : 'rgba(255,138,91,.45)';
-    ctx.lineWidth = 1.4; rr(x,y,w,h,14); ctx.stroke();
+  function drawBed(x,y,w,h,hot){
+    ctx.fillStyle='#22304a'; rr(x,y,w,h*0.62,6); ctx.fill();
+    ctx.fillStyle='#2b3b58'; rr(x+3,y+3,w-6,h*0.34,5); ctx.fill();
+    ctx.fillStyle='#4a5d80'; rr(x+6,y+h*0.10,Math.min(26,w*0.18),h*0.20,4); ctx.fill();
+    ctx.fillStyle=hot?'#5a3348':'#2f6f66';
+    if(hot) rr(x+w*0.30,y+h*0.34,w*0.66,h*0.26,5);
+    else rr(x+w*0.20,y+h*0.20,w*0.76,h*0.40,6);
+    ctx.fill();
+  }
+  function drawPerson(cx,cy,sc,hot){
+    // 手臂（伸出被子）
+    ctx.fillStyle='#f0c9a4';
+    rr(cx-2*sc, cy+5*sc, 4*sc, 9*sc, 2*sc); ctx.fill();
+    // 头
+    ctx.beginPath(); ctx.arc(cx,cy,8.5*sc,0,Math.PI*2); ctx.fill();
+    // 头发
+    ctx.fillStyle='#3a2a1e';
+    ctx.beginPath(); ctx.arc(cx,cy-1.5*sc,8.5*sc, Math.PI*1.05, Math.PI*1.95); ctx.fill();
+    ctx.strokeStyle='#4a3423'; ctx.lineWidth=Math.max(1,1.1*sc);
+    if(!hot){
+      ctx.beginPath(); ctx.moveTo(cx-3*sc,cy-1*sc); ctx.lineTo(cx-1*sc,cy-1*sc); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+1*sc,cy-1*sc); ctx.lineTo(cx+3*sc,cy-1*sc); ctx.stroke();
+    } else {
+      ctx.fillStyle='#4a3423';
+      ctx.beginPath(); ctx.arc(cx-2.2*sc,cy-1*sc,0.9*sc,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+2.2*sc,cy-1*sc,0.9*sc,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#8a4a3a'; ctx.beginPath(); ctx.ellipse(cx,cy+3*sc,1.6*sc,1.9*sc,0,0,Math.PI*2); ctx.fill();
+    }
+  }
 
-    var accent = closed ? C.cool : C.hot;
-    var title = closed ? '空调 · 闭环' : '电热毯 · 开环';
-    txt(title, x+14, y+26, w<420?15:17, accent, 'left', '700');
-    txt('目标 '+fmt(target,0)+'℃', x+w-14, y+26, 12, C.gold, 'right','700');
+  function drawRoom(box,closed,T){
+    var x=box.x,y=box.y,w=box.w,h=box.h, hot=!closed;
+    var accent=closed?C.cool:C.hot;
+    ctx.fillStyle=C.panel; rr(x,y,w,h,14); ctx.fill();
+    ctx.strokeStyle=closed?'rgba(63,214,172,.42)':'rgba(255,122,72,.42)';
+    ctx.lineWidth=1.5; rr(x,y,w,h,14); ctx.stroke();
+
+    var g=ctx.createLinearGradient(x,y,x,y+h);
+    if(hot){ g.addColorStop(0,'#141a28'); g.addColorStop(1,'#2b1712'); }
+    else { g.addColorStop(0,'#101a26'); g.addColorStop(1,'#0c2420'); }
+    ctx.fillStyle=g; rr(x+8,y+32,w-16,h-42,10); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(x+8,y+32,w-16,h-42,10); ctx.stroke();
+
+    txt(hot?'电热毯 · 只知道加热':'空调 · 会看温度', x+14,y+23, w<430?13:14.5, accent,'left','800');
+    txt('目标 '+f(target,0)+'℃', x+w-14,y+23, 11.5, C.gold,'right','700');
+
+    var ix=x+8,iy=y+32,iw=w-16,ih=h-42;
+    var bigW=Math.max(52,Math.min(92, iw*0.30));
+
+    // 床与人
+    var bw=Math.max(60, iw-bigW-22), bh=Math.max(34,Math.min(74, ih*0.50));
+    var bx=x+14, by=iy+ih-bh-8;
+    drawBed(bx,by,bw,bh,hot);
+    var px=bx+18+bw*0.10, py=by+bh*0.18;
+    drawPerson(px,py, w<430?1.05:1.35, hot);
+
+    // 热浪 / 冷汗
+    if(hot){
+      ctx.fillStyle='rgba(255,122,72,'+(0.20+0.10*Math.sin(t*3))+')';
+      rr(bx+4, by+bh*0.52, bw-8, 6, 3); ctx.fill();
+      for(var i=0;i<4;i++){
+        var a=0.26+0.20*Math.sin(t*2.4+i*1.3);
+        ctx.strokeStyle='rgba(255,122,72,'+a+')'; ctx.lineWidth=1.7;
+        ctx.beginPath();
+        for(var k=0;k<=10;k++){
+          var xx=bx+bw*0.56+i*9, yy=by-4-k*3.2;
+          var dx=Math.sin(k*0.8+t*2+i)*3;
+          if(k===0) ctx.moveTo(xx+dx,yy); else ctx.lineTo(xx+dx,yy);
+        }
+        ctx.stroke();
+      }
+      var sy=py-14+((t*26+i*4)%18);
+      ctx.fillStyle='rgba(120,200,255,.85)';
+      ctx.beginPath(); ctx.ellipse(px+9, sy, 1.7,2.6,0,0,Math.PI*2); ctx.fill();
+    } else {
+      for(var j=0;j<3;j++){
+        ctx.strokeStyle='rgba(63,214,172,'+(0.40-j*0.10)+')'; ctx.lineWidth=1.5;
+        var yy2=iy+22+j*7;
+        ctx.beginPath(); ctx.moveTo(bx+bw*0.34,yy2); ctx.lineTo(bx+bw*0.94,yy2); ctx.stroke();
+      }
+      for(var z=0;z<3;z++){
+        var ph=((t*0.55+z*0.33)%1);
+        txt('z', px+11+ph*11, py-4-ph*15, 7.5+ph*4, 'rgba(63,214,172,'+(0.65-ph*0.55)+')','left','700');
+      }
+    }
+
+    // 大温度
+    txt(f(T,0)+'℃', x+14, w<430?iy+26:iy+40, w<430?25:30, accent,'left','800');
+
+    // 空调
+    if(closed){
+      var ax=x+w-14-bigW, ay=iy+6, aw=bigW-4, ah=17;
+      ctx.fillStyle=acOn?'rgba(63,214,172,.85)':'#2c3a52';
+      rr(ax,ay,aw,ah,5); ctx.fill();
+      txt(acOn?'制冷':'停机', ax+aw/2,ay+12.5, 10.5, acOn?'#06231c':C.dim,'center','800');
+    }
 
     // 温度计
-    var gx = x+18, gy = y+40, gw = w<420?14:16, gh = h-72;
-    ctx.fillStyle = '#0c1422'; rr(gx-3,gy-3,gw+6,gh+6,8); ctx.fill();
-    ctx.strokeStyle = C.line; ctx.lineWidth=1; rr(gx-3,gy-3,gw+6,gh+6,8); ctx.stroke();
-    var frac = Math.max(0, Math.min(1, (T-16)/(44-16)));
-    var barH = gh*frac;
-    var grd = ctx.createLinearGradient(0, gy+gh, 0, gy);
-    grd.addColorStop(0, closed?'#1f7a63':'#8a3f22');
-    grd.addColorStop(1, accent);
-    ctx.fillStyle = grd;
-    rr(gx, gy+gh-barH, gw, barH, gw/2); ctx.fill();
-    // 目标线
-    var ty = gy + gh*(1-(target-16)/(44-16));
-    ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.6;
-    ctx.beginPath(); ctx.moveTo(gx-8, ty); ctx.lineTo(gx+gw+8, ty); ctx.stroke(); ctx.restore();
-    // 目标值标在标题行右侧（避免压边）
-    // 当前温度
-    txt(fmt(T,1)+'℃', gx+gw+12, gy+16, w<420?18:20, accent, 'left','700');
-
-    // 房间
-    var rx = gx+gw+72, ry = y+46, rw = w - (rx-x) - 16, rh = h-96;
-    if (rw < 60) { rx = gx+gw+58; rw = w-(rx-x)-14; }
-    ctx.fillStyle = C.panel2; rr(rx,ry,rw,rh,10); ctx.fill();
-    ctx.strokeStyle = C.line; ctx.lineWidth=1; rr(rx,ry,rw,rh,10); ctx.stroke();
-
-    if (!closed){
-      // 电热毯：地上一条发热带，一直亮
-      var heatA = 0.55 + 0.2*Math.sin(t*3);
-      ctx.fillStyle = 'rgba(255,138,91,'+heatA+')';
-      rr(rx+12, ry+rh-16, rw-24, 8, 4); ctx.fill();
-      for (var i=0;i<3;i++){
-        var a = 0.14 + 0.10*Math.sin(t*2 + i*1.1);
-        ctx.fillStyle = 'rgba(255,138,91,'+a+')';
-        rr(rx+18+i*6, ry+rh-30-i*12, rw-36-i*12, 7, 4); ctx.fill();
-      }
-      txt('开关：一直开', rx+12, ry+22, w<420?12.5:13.5, C.hot, 'left','600');
-      txt('它不知道房间几度', rx+12, ry+42, w<420?12:13, C.dim, 'left','400');
-      if (T > 32) txt('已经 '+fmt(T,0)+'℃ 了，它还在加热', rx+12, ry+rh-28, w<420?11.5:12.5, C.hot,'left','600');
-    } else {
-      // 空调：墙上挂机，开/停机
-      var ax = rx+12, ay = ry+12, aw = Math.min(84, rw*0.52), ah = 22;
-      ctx.fillStyle = acOn ? 'rgba(77,212,172,.85)' : '#2c3a52';
-      rr(ax, ay, aw, ah, 6); ctx.fill();
-      txt(acOn?'制冷中':'已停机', ax+aw/2, ay+15.5, 11.5, acOn?'#0b111c':C.dim, 'center','700');
-      // 冷风
-      if (acOn){
-        for (var k=0;k<4;k++){
-          var yy = ay+ah+8+k*9;
-          ctx.strokeStyle = 'rgba(77,212,172,'+(0.5-k*0.1)+')';
-          ctx.lineWidth = 1.6;
-          ctx.beginPath(); ctx.moveTo(ax+10+ (k%2)*8, yy); ctx.lineTo(ax+aw-10-(k%2)*8, yy); ctx.stroke();
-        }
-      }
-      // 反馈回路文字
-      var ly = ry + rh - 46;
-      txt('测温', rx+10, ly, 12, C.dim,'left','600');
-      txt('→ 比较 → 修正', rx+10, ly+17, 12, C.cool,'left','600');
-      txt(acOn ? 'T 高于目标，开制冷' : 'T 接近目标，停机', rx+10, ly+34, w<420?11.5:12, C.dim,'left','400');
+    var gx=x+w-14-bigW*0.45, gy=iy+30, gw=8, gh=ih-78;
+    if(gh>14){
+      ctx.fillStyle='#0a1220'; rr(gx-3,gy-3,gw+6,gh+6,6); ctx.fill();
+      ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(gx-3,gy-3,gw+6,gh+6,6); ctx.stroke();
+      var fr=Math.max(0,Math.min(1,(T-16)/28));
+      ctx.fillStyle=accent; rr(gx,gy+gh-gh*fr,gw,Math.max(2,gh*fr),gw/2); ctx.fill();
+      var ty=gy+gh*(1-(target-16)/28);
+      ctx.save(); ctx.setLineDash([4,3]); ctx.strokeStyle=C.gold; ctx.lineWidth=1.3;
+      ctx.beginPath(); ctx.moveTo(gx-5,ty); ctx.lineTo(gx+gw+5,ty); ctx.stroke(); ctx.restore();
     }
   }
 
-  /* ---------- 画面：学习版 ---------- */
-  function drawPanelStudy(box, closed, score, step){
-    var x=box.x, y=box.y, w=box.w, h=box.h;
-    ctx.fillStyle = C.panel; rr(x,y,w,h,14); ctx.fill();
-    var accent = closed ? C.cool : C.hot;
-    ctx.strokeStyle = closed ? 'rgba(77,212,172,.45)' : 'rgba(255,138,91,.45)';
-    ctx.lineWidth=1.4; rr(x,y,w,h,14); ctx.stroke();
+  function drawLoop(box,closed,phase){
+    var x=box.x,y=box.y,w=box.w,h=box.h;
+    var accent=closed?C.cool:C.hot, small=W<780;
+    ctx.fillStyle='#0c1524'; rr(x,y,w,h,12); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(x,y,w,h,12); ctx.stroke();
 
-    txt(closed?'闭环的学生':'开环的学生', x+14, y+26, w<420?15:17, accent,'left','700');
-    txt(closed?'卡住 → 归因 → 改法 → 检验':'做题 → 对答案 → 下一题', x+14, y+48,
-        w<420?12.5:13.5, C.dim,'left','500');
+    var isT=(mode==='temp');
+    var chain = isT ? (closed?'测温 → 比较 → 制冷/停机 → 温度变 → 再测温'
+                             :'加热 → 房间变热 → 结束')
+                    : (closed?'做题 → 归因 → 改法 → 同类题检验 → 再做题'
+                             :'做题 → 对答案 → 下一题');
+    var fs = small?10:11.2;
 
-    // 分数
-    txt(fmt(score,0)+' 分', x+14, y+80, w<420?22:24, accent,'left','700');
+    // 上：一行链条
+    txt(chain, x+12, y+(small?17:19), fs, accent, 'left','700');
+    // 右上：状态
+    txt(closed?'回路闭合 ✓':'回路断开 ✗', x+w-12, y+(small?17:19), fs, closed?C.cool:C.hot,'right','800');
 
-    // 进度条
-    var bx = x+14, by = y+96, bw = w-28, bh = 10;
-    ctx.fillStyle = '#0c1422'; rr(bx,by,bw,bh,5); ctx.fill();
-    ctx.fillStyle = accent; rr(bx,by,bw*Math.max(0,Math.min(1,(score-50)/55)),bh,5); ctx.fill();
+    // 下：回路图形
+    var top2 = y+(small?26:30), bot2 = y+h-(small?8:10);
+    var lx0 = x+30, lx1 = x+w-30;
+    ctx.strokeStyle=accent; ctx.lineWidth=2;
 
-    // 流程格子
-    var items = closed ? ['卡在哪一步','当时怎么想','下次怎么动','同类题检验']
-                       : ['做','对答案','抄下来','下一题'];
-    var n = items.length, cy = y+118, chh = Math.min(34, h-138);
-    var cw = (w-28-8*(n-1))/n;
-    for (var i=0;i<n;i++){
-      var cx2 = x+14 + i*(cw+8);
-      var active = (i === step);
-      ctx.fillStyle = active ? (closed?'rgba(77,212,172,.22)':'rgba(255,138,91,.22)') : '#0e1626';
-      rr(cx2, cy, cw, chh, 7); ctx.fill();
-      ctx.strokeStyle = active ? accent : C.line; ctx.lineWidth = active?1.6:1;
-      rr(cx2, cy, cw, chh, 7); ctx.stroke();
-      var fs = (w<420?11:12);
-      txt(items[i], cx2+cw/2, cy+chh/2+4, fs, active?accent:C.dim,'center','600');
-    }
-    // 「我的规则」清单：空洞版 vs 沉淀版
-    if (h > 240){
-      var ry2 = y+162, rh2 = h-162-30;
-      ctx.fillStyle = '#0e1626'; rr(x+14, ry2, w-28, rh2, 10); ctx.fill();
-      ctx.strokeStyle = C.line; ctx.lineWidth = 1; rr(x+14, ry2, w-28, rh2, 10); ctx.stroke();
-      txt('我的规则', x+26, ry2+22, 12.5, C.faint, 'left','700');
-      var rules = closed
-        ? ['① 大题先画受力图，再列式','② 阅读先看题干，再读文章','③ 单位先统一，再代数字']
-        : ['（空）'];
-      for (var ri=0; ri<rules.length; ri++){
-        txt(rules[ri], x+26, ry2+46+ri*21, w<420?11.5:12.5,
-            closed?C.cool:C.faint, 'left', closed?'600':'400');
-      }
-      if (!closed) txt('抄了 12 道题，没有一条能用来做下一道', x+26, ry2+rh2-12, 11, C.faint,'left','400');
-    }
-    var note = closed ? '每次错误都变成一条能用的规则' : '错误只是被搬了个地方';
-    txt(note, x+14, y+h-14, w<420?12:12.5, C.faint,'left','400');
-  }
+    // 上边线 + 箭头
+    ctx.beginPath(); ctx.moveTo(lx0,top2); ctx.lineTo(lx1,top2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(lx1,top2); ctx.lineTo(lx1-7,top2-4); ctx.lineTo(lx1-7,top2+4);
+    ctx.closePath(); ctx.fillStyle=accent; ctx.fill();
 
-  /* ---------- 曲线 ---------- */
-  function drawChart(box){
-    var x=box.x, y=box.y, w=box.w, h=box.h;
-    ctx.fillStyle = C.panel2; rr(x,y,w,h,14); ctx.fill();
-    ctx.strokeStyle = C.line; ctx.lineWidth=1; rr(x,y,w,h,14); ctx.stroke();
-
-    var pl = 44, pr = 14, pt = 26, pb = 30;
-    var x0 = x+pl, y0 = y+pt, x1 = x+w-pr, y1 = y+h-pb;
-    var isTemp = (mode==='temp');
-    var lo = isTemp ? 16 : 45, hi = isTemp ? 44 : 100;
-
-    txt(isTemp?'温度 / ℃':'成绩 / 分', x+12, y+16, 12, C.faint,'left','600');
-    txt('时间 →', x+w-pr, y+h-10, 11.5, C.faint,'right','500');
-
-    // 网格
-    ctx.strokeStyle = '#1b2740'; ctx.lineWidth = 1;
-    for (var g=0; g<=4; g++){
-      var yy = y0 + (y1-y0)*g/4;
-      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x1,yy); ctx.stroke();
-      txt(fmt(hi-(hi-lo)*g/4,0), x0-7, yy+4, (W<780?11:10.5), C.faint,'right','500');
-    }
-    // 目标线
-    var tv = isTemp ? target : 90;
-    var tyy = y1 - (y1-y0)*((tv-lo)/(hi-lo));
-    ctx.save(); ctx.setLineDash([6,5]); ctx.strokeStyle = C.gold; ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.moveTo(x0,tyy); ctx.lineTo(x1,tyy); ctx.stroke(); ctx.restore();
-    txt(isTemp?('目标 '+fmt(target,0)+'℃'):'目标 90 分', x1-4, tyy-7, 11, C.gold,'right','600');
-
-    function curve(hist, color){
-      if (hist.length < 2) return;
+    if(closed){
+      // 回到起点：右边下来、左边上去 —— 闭合
       ctx.beginPath();
-      for (var i=0;i<hist.length;i++){
-        var px = x0 + (x1-x0)*Math.min(1, i/120);
-        var py = y1 - (y1-y0)*((Math.max(lo,Math.min(hi,hist[i]))-lo)/(hi-lo));
-        if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      ctx.moveTo(lx1,top2); ctx.lineTo(lx1,bot2); ctx.lineTo(lx0,bot2); ctx.lineTo(lx0,top2);
+      ctx.stroke();
+      // 光点绕圈
+      var per=2*(lx1-lx0)+(bot2-top2)*2, d=(((phase%1)+1)%1)*per, px,py;
+      if(d<=lx1-lx0){ px=lx0+d; py=top2; }
+      else if(d<=lx1-lx0+(bot2-top2)){ px=lx1; py=top2+(d-(lx1-lx0)); }
+      else if(d<=2*(lx1-lx0)+(bot2-top2)){ px=lx1-(d-(lx1-lx0)-(bot2-top2)); py=bot2; }
+      else { px=lx0; py=bot2-(d-(2*(lx1-lx0)+(bot2-top2))); }
+      var grd=ctx.createRadialGradient(px,py,0,px,py,8);
+      grd.addColorStop(0,'rgba(63,214,172,.95)'); grd.addColorStop(1,'rgba(63,214,172,0)');
+      ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(px,py,8,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#e6fff8'; ctx.beginPath(); ctx.arc(px,py,2.8,0,Math.PI*2); ctx.fill();
+    } else {
+      // 断口：线到中途就停，没有下边线
+      var bx2=lx1-26;
+      ctx.fillStyle='#0c1524'; ctx.fillRect(bx2-8,top2-5,16,10);
+      ctx.strokeStyle='rgba(255,122,72,.65)'; ctx.lineWidth=1.7;
+      ctx.beginPath(); ctx.moveTo(bx2-4,top2-6); ctx.lineTo(bx2+4,top2+6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bx2+4,top2-6); ctx.lineTo(bx2-4,top2+6); ctx.stroke();
+      // 光点跑到断口消失
+      var span=lx1-30-lx0, ph2=(((phase%1)+1)%1), dx2=lx0+span*ph2;
+      var fade=1-Math.max(0,(ph2-0.70)/0.30);
+      if(fade>0.03){
+        var g2=ctx.createRadialGradient(dx2,top2,0,dx2,top2,8);
+        g2.addColorStop(0,'rgba(255,122,72,'+(0.9*fade)+')'); g2.addColorStop(1,'rgba(255,122,72,0)');
+        ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(dx2,top2,8,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='rgba(255,228,215,'+fade+')';
+        ctx.beginPath(); ctx.arc(dx2,top2,2.8,0,Math.PI*2); ctx.fill();
       }
-      ctx.strokeStyle = color; ctx.lineWidth = 2.4; ctx.lineJoin='round'; ctx.stroke();
+      // 下方留白 + 提示"没有回来的箭头"
+      ctx.setLineDash([3,4]); ctx.strokeStyle='rgba(255,122,72,.30)'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(lx1,bot2); ctx.lineTo(lx0,bot2); ctx.stroke();
+      ctx.setLineDash([]);
+      txt('没有回到起点', (lx0+lx1)/2, bot2-4, small?8.5:9.5, 'rgba(255,122,72,.65)','center','600');
     }
-    curve(hist1, C.hot);
-    curve(hist2, C.cool);
-
-    // 图例
-    var lx = x1-150, ly = y+16;
-    ctx.fillStyle = C.hot; rr(lx, ly-8, 10, 10, 3); ctx.fill();
-    txt('开环', lx+15, ly+1, 11.5, C.dim,'left','600');
-    ctx.fillStyle = C.cool; rr(lx+56, ly-8, 10, 10, 3); ctx.fill();
-    txt('闭环', lx+71, ly+1, 11.5, C.dim,'left','600');
   }
 
-  /* ---------- 主绘制 ---------- */
-  function draw(){
-    var L = layout();
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle = C.bg; ctx.fillRect(0,0,W,H);
+  function drawChart(box){
+    var x=box.x,y=box.y,w=box.w,h=box.h;
+    ctx.fillStyle='#0b1322'; rr(x,y,w,h,12); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(x,y,w,h,12); ctx.stroke();
+    var pl=40,pr=10,pt=18,pb=20;
+    var x0=x+pl,y0=y+pt,x1=x+w-pr,y1=y+h-pb;
+    var isT=(mode==='temp'), lo=isT?16:45, hi=isT?44:100;
+    txt(isT?'℃':'分', x+9,y+13, 10.5, C.faint,'left','700');
+    for(var g=0;g<=4;g++){
+      var yy=y0+(y1-y0)*g/4;
+      ctx.strokeStyle='#182338'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x1,yy); ctx.stroke();
+      txt(f(hi-(hi-lo)*g/4,0), x0-5,yy+3.5, W<780?9.5:10, C.faint,'right','500');
+    }
+    var tv=isT?target:90, tyy=y1-(y1-y0)*((tv-lo)/(hi-lo));
+    ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle=C.gold; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(x0,tyy); ctx.lineTo(x1,tyy); ctx.stroke(); ctx.restore();
+    txt(isT?('目标 '+f(target,0)+'℃'):'目标 90 分', x1-3,tyy-5, 10, C.gold,'right','700');
 
-    // 标题
-    var mobile = W < 780;
-    txt('开环 vs 闭环', 14, mobile?30:34, mobile?22:26, C.text,'left','800');
-    txt(mode==='temp'
-        ? '同样在加热：一个只管加热，一个会看温度'
-        : '同样在努力：一个只做题，一个会归因',
-        14, mobile?50:58, mobile?13:14, C.dim,'left','500');
+    function curve(hist,color){
+      if(hist.length<2) return;
+      ctx.beginPath();
+      for(var i=0;i<hist.length;i++){
+        var px=x0+(x1-x0)*Math.min(1,i/120);
+        var v=Math.max(lo,Math.min(hi,hist[i]));
+        var py=y1-(y1-y0)*((v-lo)/(hi-lo));
+        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+      }
+      ctx.strokeStyle=color; ctx.lineWidth=2.2; ctx.lineJoin='round'; ctx.stroke();
+    }
+    curve(hist1,C.hot); curve(hist2,C.cool);
 
-    if (mode==='temp'){
-      drawPanelTemp(L.p1, false, T1, false);
-      drawPanelTemp(L.p2, true, T2, acOn);
+    var lx=x1-92,ly=y+12;
+    ctx.fillStyle=C.hot; rr(lx,ly-7,9,9,2); ctx.fill(); txt('开环',lx+13,ly+1,10.5,C.dim,'left','600');
+    ctx.fillStyle=C.cool; rr(lx+44,ly-7,9,9,2); ctx.fill(); txt('闭环',lx+57,ly+1,10.5,C.dim,'left','600');
+  }
+
+  function drawStudyRoom(box,closed,score){
+    var x=box.x,y=box.y,w=box.w,h=box.h, accent=closed?C.cool:C.hot;
+    ctx.fillStyle=C.panel; rr(x,y,w,h,14); ctx.fill();
+    ctx.strokeStyle=closed?'rgba(63,214,172,.42)':'rgba(255,122,72,.42)';
+    ctx.lineWidth=1.5; rr(x,y,w,h,14); ctx.stroke();
+
+    var g=ctx.createLinearGradient(x,y,x,y+h);
+    if(closed){ g.addColorStop(0,'#101a26'); g.addColorStop(1,'#0c2420'); }
+    else { g.addColorStop(0,'#141a28'); g.addColorStop(1,'#241612'); }
+    ctx.fillStyle=g; rr(x+8,y+32,w-16,h-42,10); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(x+8,y+32,w-16,h-42,10); ctx.stroke();
+
+    txt(closed?'会归因的学生':'只刷题的学生', x+14,y+23, w<430?13:14.5, accent,'left','800');
+    txt('目标 90 分', x+w-14,y+23, 11.5, C.gold,'right','700');
+
+    var ix=x+8,iy=y+32,iw=w-16,ih=h-42;
+    var dw=Math.min(iw*0.55,175), dh=Math.min(50,ih*0.42);
+    var dx=x+16, dy=iy+ih-dh-6;
+
+    ctx.fillStyle='#26344e'; rr(dx,dy+dh*0.60,dw,6,2); ctx.fill();
+    ctx.fillRect(dx+4,dy+dh*0.60+6,4,dh*0.34);
+    ctx.fillRect(dx+dw-8,dy+dh*0.60+6,4,dh*0.34);
+
+    // 卷子
+    ctx.save(); ctx.translate(dx+dw*0.32,dy+dh*0.46); ctx.rotate(-0.07);
+    ctx.fillStyle='#e7eef7'; rr(-15,-10,30,19,2); ctx.fill();
+    ctx.strokeStyle='#9fb0c8'; ctx.lineWidth=0.9;
+    for(var l=0;l<3;l++){ ctx.beginPath(); ctx.moveTo(-11,-5+l*5.5); ctx.lineTo(9,-5+l*5.5); ctx.stroke(); }
+    ctx.restore();
+
+    // 学生
+    ctx.fillStyle='#f0c9a4'; ctx.beginPath(); ctx.arc(dx+dw*0.60,dy+dh*0.14,7,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=closed?'#1f6f60':'#5a3a2a';
+    rr(dx+dw*0.55,dy+dh*0.26,14,dh*0.50,4); ctx.fill();
+
+    // 错题本 / 卷子堆
+    var nx=x+w-16-Math.min(iw*0.30,80), nw=Math.min(iw*0.30,80);
+    if(closed){
+      ctx.fillStyle='#12332c'; rr(nx,iy+ih-56,nw,50,6); ctx.fill();
+      ctx.strokeStyle='rgba(63,214,172,.55)'; ctx.lineWidth=1; rr(nx,iy+ih-56,nw,50,6); ctx.stroke();
+      txt('我的规则', nx+6,iy+ih-42, 9.5, C.cool,'left','700');
+      txt('①先画受力图', nx+6,iy+ih-29, 9, C.dim,'left','500');
+      txt('②先看题干', nx+6,iy+ih-17, 9, C.dim,'left','500');
     } else {
-      drawPanelStudy(L.p1, false, s1, 1 + (Math.floor(t/4)%3));
-      drawPanelStudy(L.p2, true, s2, Math.floor(t/3)%4);
+      for(var s=0;s<4;s++){
+        ctx.save(); ctx.translate(nx+12+s*2,iy+ih-13-s*10); ctx.rotate(-0.05*s);
+        ctx.fillStyle='#e7eef7'; rr(-18,-8,36,15,2); ctx.fill(); ctx.restore();
+      }
+      txt('抄了12道', nx-4,iy+ih-56, 9, C.faint,'left','600');
+      txt('0条规则', nx+38,iy+ih-56, 9, C.hot,'left','700');
+    }
+    txt(f(score,0)+' 分', x+14, iy+(w<430?20:26), w<430?22:26, accent,'left','800');
+  }
+
+  function draw(){
+    var L=layout(), m=L.mobile;
+    ctx.clearRect(0,0,W,H); ctx.fillStyle=C.bg; ctx.fillRect(0,0,W,H);
+
+    txt(mode==='temp'?'同一个目标：26℃':'同一个目标：90 分', 14, m?24:30, m?18:23, C.text,'left','800');
+    txt(mode==='temp'?'左右两个房间，都想睡个凉快觉':'两个学生，都想考 90 分',
+        14, m?42:52, m?11.5:12.8, C.dim,'left','500');
+
+    if(mode==='temp'){
+      drawRoom(L.cols[0].room,false,T1); drawLoop(L.cols[0].loop,false,t*0.42);
+      drawRoom(L.cols[1].room,true,T2);  drawLoop(L.cols[1].loop,true,t*0.28);
+    } else {
+      drawStudyRoom(L.cols[0].room,false,s1); drawLoop(L.cols[0].loop,false,t*0.42);
+      drawStudyRoom(L.cols[1].room,true,s2);  drawLoop(L.cols[1].loop,true,t*0.28);
     }
     drawChart(L.chart);
-
-    // 底部过渡语
-    var msg = mode==='temp'
-      ? '开环只看输入，闭环看结果 —— 差别不在功率，在"知不知道自己几度"'
-      : '差距不在刷了多少题，在错的那道题有没有被追问过';
-    txt(msg, W/2, H-10, mobile?11.5:12.5, C.gold,'center','600');
+    txt(mode==='temp'?'开环：只知道加热　　闭环：加热—看温度—再决定'
+                    :'开环：做了—对了—忘了　　闭环：做了—归因—改法—再检验',
+        W/2, L.bottom, m?10.5:11.5, C.gold,'center','700');
   }
 
-  /* ---------- 物理 ---------- */
   function step(dt){
-    t += dt*speed;
-    if (mode==='temp'){
-      // 开环：恒定功率加热，对流失温
-      T1 += dt*speed*(1.15 - 0.055*(T1-20));
-      // 闭环：测量-比较-执行
-      var err = T2 - target;
-      if (err > 0.35){ T2 -= dt*speed*0.85; acOn = true; }
-      else if (err < -0.35){ T2 += dt*speed*0.55; acOn = false; }
-      else { acOn = false; T2 += (Math.random()-0.5)*dt*speed*0.12; }
-      T2 = Math.max(16, Math.min(44, T2));
-      T1 = Math.max(16, Math.min(44, T1));
-      if (hist1.length===0 || t - lastPush > 0.5){ hist1.push(T1); hist2.push(T2); lastPush = t; }
+    t+=dt*speed;
+    if(mode==='temp'){
+      T1+=dt*speed*(1.15-0.055*(T1-20));
+      var err=T2-target;
+      if(err>0.35){ T2-=dt*speed*0.85; acOn=true; }
+      else if(err<-0.35){ T2+=dt*speed*0.55; acOn=false; }
+      else { acOn=false; T2+=(Math.random()-0.5)*dt*speed*0.12; }
+      T1=Math.max(16,Math.min(44,T1)); T2=Math.max(16,Math.min(44,T2));
+      if(t-lastPush>0.5){ hist1.push(T1); hist2.push(T2); lastPush=t; }
     } else {
-      // 学习版：开环成绩在 62 附近波动；闭环阶梯上升
-      s1 = 62 + Math.sin(t*0.9)*3 + (Math.random()-0.5)*1.6;
-      var cap = Math.min(88, 62 + Math.floor(t/6)*3.2);
-      s2 += (cap - s2)*0.06;
-      if (hist1.length===0 || t - lastPush > 0.5){ hist1.push(s1); hist2.push(s2); lastPush = t; }
+      s1=62+Math.sin(t*0.9)*3+(Math.random()-0.5)*1.6;
+      var cap=Math.min(88,62+Math.floor(t/6)*3.2);
+      s2+=(cap-s2)*0.06;
+      if(t-lastPush>0.5){ hist1.push(s1); hist2.push(s2); lastPush=t; }
     }
-    // 历史长度封顶
-    if (hist1.length > 126){ hist1.shift(); hist2.shift(); }
-    // 循环
-    if (t > 60){ t = 0; hist1.length = 0; hist2.length = 0;
-      if (mode==='temp'){ T1 = 20; T2 = 20; } else { s1 = 62; s2 = 62; } }
+    if(hist1.length>126){ hist1.shift(); hist2.shift(); }
+    if(t>60){ t=0; hist1.length=0; hist2.length=0; lastPush=0;
+      if(mode==='temp'){ T1=20;T2=20; } else { s1=62;s2=62; } }
   }
-  var lastPush = 0;
 
-  /* ---------- 循环 ---------- */
-  var last = 0;
+  var last=0;
   function loop(ts){
-    if (!last) last = ts;
-    var dt = Math.min(0.05, (ts-last)/1000);
-    last = ts;
-    step(dt);
-    draw();
-    requestAnimationFrame(loop);
+    if(!last) last=ts;
+    var dt=Math.min(0.05,(ts-last)/1000); last=ts;
+    step(dt); draw(); requestAnimationFrame(loop);
   }
 
-  /* ---------- 交互 ---------- */
-  var btnMode = document.getElementById('btnMode');
-  var btnReplay = document.getElementById('btnReplay');
-  var btnSlow = document.getElementById('btnSlow');
-
-  btnMode.addEventListener('click', function(){
-    mode = (mode==='temp') ? 'study' : 'temp';
-    t = 0; hist1.length = 0; hist2.length = 0; lastPush = 0;
-    if (mode==='temp'){ T1 = 20; T2 = 20; btnMode.textContent='切到：学习版'; }
-    else { s1 = 62; s2 = 62; btnMode.textContent='切到：温度版'; }
-    draw();
+  var btnMode=document.getElementById('btnMode'), btnReplay=document.getElementById('btnReplay'),
+      btnSlow=document.getElementById('btnSlow');
+  function resetSim(){ t=0; hist1.length=0; hist2.length=0; lastPush=0;
+    if(mode==='temp'){ T1=20;T2=20; } else { s1=62;s2=62; } }
+  btnMode.addEventListener('click',function(){
+    mode=(mode==='temp')?'study':'temp'; resetSim();
+    btnMode.textContent=(mode==='temp')?'切到：学习版':'切到：温度版'; draw();
   });
-  btnReplay.addEventListener('click', function(){
-    t = 0; hist1.length = 0; hist2.length = 0; lastPush = 0;
-    if (mode==='temp'){ T1 = 20; T2 = 20; } else { s1 = 62; s2 = 62; }
-    draw();
-  });
-  btnSlow.addEventListener('click', function(){
-    speed = (speed === 1) ? 0.55 : 1;
-    btnSlow.textContent = (speed===1) ? '速度：正常' : '速度：慢放';
-    btnSlow.classList.toggle('on', speed===1);
+  btnReplay.addEventListener('click',function(){ resetSim(); draw(); });
+  btnSlow.addEventListener('click',function(){
+    speed=(speed===1)?0.55:1;
+    btnSlow.textContent=(speed===1)?'速度：正常':'速度：慢放';
+    btnSlow.classList.toggle('on',speed===1);
   });
 
-  // 快进（?t=秒，用于演示和截图）
-  var pre = parseFloat((location.search.match(/[?&]t=([\d.]+)/)||[])[1] || 0);
-  if (pre > 0){ for (var pi=0; pi<pre/0.05; pi++) step(0.05); }
-
-  if (mode === 'study'){ btnMode.textContent = '切到：温度版'; }
-
-  resize();
-  requestAnimationFrame(loop);
+  var pre=parseFloat((location.search.match(/[?&]t=([\d.]+)/)||[])[1]||0);
+  if(pre>0){ for(var pi=0;pi<pre/0.05;pi++) step(0.05); }
+  if(mode==='study') btnMode.textContent='切到：温度版';
+  resize(); requestAnimationFrame(loop);
 })();
 </script>
 </body>
