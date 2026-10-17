@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>第四十道题</title>
+<style>
+  html,body{margin:0;padding:0;background:#060a12;color:#eaf1fb;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    -webkit-text-size-adjust:100%;overflow:hidden;}
+  #wrap{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:8px 10px 12px;}
+  canvas{display:block;border-radius:16px;touch-action:manipulation;}
+  #bar{display:flex;gap:10px;margin-top:10px;}
+  button{min-height:44px;padding:0 20px;border-radius:12px;border:1px solid #2b3a55;background:#17202f;
+    color:#eaf1fb;font-size:15.5px;font-weight:600;font-family:inherit;cursor:pointer;}
+  button:active{transform:scale(.97);}
+  button.primary{background:#1d6ef2;border-color:#1d6ef2;color:#fff;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="bar">
+    <button id="btnPause" class="primary">暂停</button>
+    <button id="btnReplay">重播</button>
+  </div>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  var LW=520, LH=700, s=1, DPR=1;
+
+  var C={bg:'#070c16', wall:'#0d1420', wall2:'#0a1018', desk:'#2a2036', desk2:'#1d1626',
+    lamp:'#ffd98a', text:'#eaf1fb', dim:'#9fb2cc', faint:'#5d708e',
+    red:'#ff6b5e', hot:'#ff8a4c', cool:'#3fe0b4', gold:'#ffd166', paper:'#f2f5fa'};
+
+  var TOTAL=48.0, t=0, playing=true;
+  var S=[
+    {a:0,  b:8.2,  sub:'晚上十一点，第四十道题。'},
+    {a:8.2,b:15.5, sub:'月考下来，62 分。和上次一样。'},
+    {a:15.5,b:24.0,sub:'错题抄进本子，就翻过去了。'},
+    {a:24.0,b:33.0,sub:'如果……让这条信息回到起点呢？'},
+    {a:33.0,b:41.5,sub:'卡在哪一步？当时怎么想？下次怎么动？'},
+    {a:41.5,b:48.0,sub:'努力决定你走多远，闭环决定你走对方向。'}
+  ];
+
+  function resize(){
+    var availW=Math.min(window.innerWidth-20, 900);
+    var availH=window.innerHeight-118;
+    s=Math.min(availW/LW, availH/LH, 1.7);
+    if(s<0.42) s=0.42;
+    DPR=Math.min(window.devicePixelRatio||1,2.5);
+    cv.width=Math.round(LW*s*DPR); cv.height=Math.round(LH*s*DPR);
+    cv.style.width=(LW*s)+'px'; cv.style.height=(LH*s)+'px';
+    ctx.setTransform(s*DPR,0,0,s*DPR,0,0);
+    draw();
+  }
+  window.addEventListener('resize',resize);
+
+  function rr(x,y,w,h,r){ if(w<0)w=0; if(h<0)h=0; r=Math.min(r,w/2,h/2);
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
+  function txt(str,x,y,size,color,align,weight){
+    ctx.font=(weight||'500')+' '+size+'px -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+    ctx.fillStyle=color||C.text; ctx.textAlign=align||'left'; ctx.textBaseline='alphabetic';
+    ctx.fillText(str,x,y); }
+  function ease(v){ return v<0?0:v>1?1:v*v*(3-2*v); }
+  function clamp01(v){ return v<0?0:v>1?1:v; }
+
+  /* ---------- 背景：夜里的房间 + 台灯 ---------- */
+  function drawRoom(){
+    var g=ctx.createLinearGradient(0,0,0,LH);
+    g.addColorStop(0,'#0a101c'); g.addColorStop(1,'#060a12');
+    ctx.fillStyle=g; ctx.fillRect(0,0,LW,LH);
+
+    // 台灯光锥
+    var lg=ctx.createLinearGradient(150,120,150,420);
+    lg.addColorStop(0,'rgba(255,217,138,.16)');
+    lg.addColorStop(1,'rgba(255,217,138,0)');
+    ctx.fillStyle=lg;
+    ctx.beginPath(); ctx.moveTo(140,110); ctx.lineTo(300,110); ctx.lineTo(430,430); ctx.lineTo(20,430);
+    ctx.closePath(); ctx.fill();
+
+    // 台灯
+    ctx.strokeStyle='#3a4a63'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(120,410); ctx.lineTo(120,300); ctx.lineTo(178,250); ctx.stroke();
+    ctx.fillStyle=C.lamp;
+    ctx.beginPath(); ctx.moveTo(160,246); ctx.lineTo(206,232); ctx.lineTo(214,262); ctx.lineTo(172,272);
+    ctx.closePath(); ctx.fill();
+    // 桌面
+    ctx.fillStyle=C.desk; rr(30,404,460,16,6); ctx.fill();
+    ctx.fillStyle=C.desk2; ctx.fillRect(54,420,12,120); ctx.fillRect(456,420,12,120);
+  }
+
+  /* ---------- 钟 ---------- */
+  function drawClock(hh,mm){
+    var cx=430, cy=96, r=26;
+    ctx.fillStyle='#0e1726'; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#31425c'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    var ah=(hh%12+mm/60)/12*Math.PI*2-Math.PI/2;
+    var am=(mm/60)*Math.PI*2-Math.PI/2;
+    ctx.strokeStyle='#dce6f5'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(ah)*12,cy+Math.sin(ah)*12); ctx.stroke();
+    ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(am)*17,cy+Math.sin(am)*17); ctx.stroke();
+    txt('23:00', cx, cy+r+17, 13, C.dim,'center','700');
+  }
+
+  /* ---------- 学生 ---------- */
+  function drawStudent(mood,t2){
+    var hx=250, hy=250, r=30;
+    // 身体
+    ctx.fillStyle='#2b3a52'; rr(hx-30,hy+22,60,86,16); ctx.fill();
+    // 手臂
+    ctx.fillStyle='#f0c9a4';
+    if(mood==='think'){ rr(hx-6,hy+40,10,42,5); ctx.fill(); }
+    else { rr(hx+16,hy+44,10,46,5); ctx.fill(); }
+    // 头
+    ctx.fillStyle='#f3cfa9'; ctx.beginPath(); ctx.arc(hx,hy,r,0,Math.PI*2); ctx.fill();
+    // 头发
+    ctx.fillStyle='#2e2018';
+    ctx.beginPath(); ctx.arc(hx,hy-3,r,Math.PI*1.02,Math.PI*1.98); ctx.fill();
+    // 眼睛
+    ctx.fillStyle='#2b1f16';
+    if(mood==='tired'){
+      ctx.strokeStyle='#2b1f16'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(hx-13,hy+1); ctx.lineTo(hx-4,hy+1); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx+4,hy+1); ctx.lineTo(hx+13,hy+1); ctx.stroke();
+    } else if(mood==='sad'){
+      ctx.beginPath(); ctx.arc(hx-9,hy+2,3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx+9,hy+2,3,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#2b1f16'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(hx-15,hy-8); ctx.lineTo(hx-4,hy-3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx+15,hy-8); ctx.lineTo(hx+4,hy-3); ctx.stroke();
+    } else if(mood==='wow'){
+      ctx.beginPath(); ctx.arc(hx-9,hy,4.2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx+9,hy,4.2,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#2b1f16'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(hx-16,hy-11); ctx.lineTo(hx-4,hy-9); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx+16,hy-11); ctx.lineTo(hx+4,hy-9); ctx.stroke();
+    } else if(mood==='think'){
+      ctx.beginPath(); ctx.arc(hx-9,hy-1,3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(hx+9,hy-1,3,0,Math.PI*2); ctx.fill();
+    } else { // happy
+      ctx.strokeStyle='#2b1f16'; ctx.lineWidth=2.6;
+      ctx.beginPath(); ctx.arc(hx-9,hy+2,5,Math.PI*1.15,Math.PI*1.85); ctx.stroke();
+      ctx.beginPath(); ctx.arc(hx+9,hy+2,5,Math.PI*1.15,Math.PI*1.85); ctx.stroke();
+    }
+    // 嘴
+    ctx.strokeStyle='#8a4a3a'; ctx.lineWidth=2.4;
+    if(mood==='wow'){ ctx.fillStyle='#8a4a3a'; ctx.beginPath(); ctx.ellipse(hx,hy+15,5,6,0,0,Math.PI*2); ctx.fill(); }
+    else if(mood==='happy'){ ctx.beginPath(); ctx.arc(hx,hy+10,10,0.15*Math.PI,0.85*Math.PI); ctx.stroke(); }
+    else if(mood==='sad'){ ctx.beginPath(); ctx.arc(hx,hy+22,9,1.2*Math.PI,1.8*Math.PI); ctx.stroke(); }
+    else { ctx.beginPath(); ctx.moveTo(hx-6,hy+15); ctx.lineTo(hx+6,hy+15); ctx.stroke(); }
+    // 汗
+    if(mood==='tired'||mood==='sad'){
+      var sy=hy-26+((t2*16)%14);
+      ctx.fillStyle='rgba(130,200,255,.9)';
+      ctx.beginPath(); ctx.ellipse(hx+r-4,sy,3,4.6,0,0,Math.PI*2); ctx.fill();
+    }
+  }
+
+  /* ---------- 卷子堆 ---------- */
+  function drawDesk(){
+    // 桌上摊开的卷子
+    ctx.save(); ctx.translate(180,392); ctx.rotate(-0.04);
+    ctx.fillStyle='#e9eef6'; rr(-46,-8,92,16,3); ctx.fill();
+    ctx.strokeStyle='#b9c6d6'; ctx.lineWidth=1;
+    for(var l=0;l<3;l++){ ctx.beginPath(); ctx.moveTo(-38,-2+l*5); ctx.lineTo(20,-2+l*5); ctx.stroke(); }
+    // 笔
+    ctx.strokeStyle='#6ea8ff'; ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(24,4); ctx.lineTo(44,-6); ctx.stroke();
+    ctx.restore();
+  }
+  function drawPapers(n){
+    // 桌角一叠批改过的卷子（薄片堆叠）
+    for(var i=0;i<n;i++){
+      ctx.save(); ctx.translate(392,388-i*3.2); ctx.rotate(0.02*(i%3)-0.02);
+      ctx.fillStyle=(i%2)?'#dfe7f2':'#cfdaea'; rr(-22,-3.2,44,6,1.5); ctx.fill();
+      ctx.restore();
+    }
+    if(n>0){
+      txt('第 '+(38+n)+' 道', 396, 404, 11, C.faint,'left','600');
+    }
+  }
+
+  /* ---------- 分数卷 ---------- */
+  function drawScoreSheet(score,alpha){
+    ctx.save(); ctx.globalAlpha=alpha;
+    ctx.save(); ctx.translate(LW/2,150); ctx.rotate(-0.03);
+    ctx.fillStyle=C.paper; rr(-110,-58,220,116,8); ctx.fill();
+    ctx.strokeStyle='#c3cfdd'; ctx.lineWidth=1; rr(-110,-58,220,116,8); ctx.stroke();
+    txt('月 考 成 绩',0,-30,14,'#6b7c92','center','700');
+    txt(String(score), 0, 34, 58, C.red, 'center','800');
+    txt('分', 62, 34, 18, C.red, 'center','700');
+    txt(score>=75?'进步了':'和上次一样', 0, 52, 12, score>=75?C.cool:'#9aa9bd','center','600');
+    ctx.restore(); ctx.restore();
+  }
+
+  /* ---------- 回路 ---------- */
+  function drawLoop(closedAmt,phase,dotAlpha){
+    // closedAmt: 0=断开 1=闭合
+    var x=LW/2-190, w=380, yTop=438, yBot=542;
+    var accent=closedAmt>0.5?C.cool:C.hot;
+    ctx.strokeStyle=accent; ctx.lineWidth=3;
+    // 上边
+    ctx.beginPath(); ctx.moveTo(x,yTop); ctx.lineTo(x+w,yTop); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x+w,yTop); ctx.lineTo(x+w-10,yTop-6); ctx.lineTo(x+w-10,yTop+6);
+    ctx.closePath(); ctx.fillStyle=accent; ctx.fill();
+
+    if(closedAmt<0.99){
+      // 断口位置：右侧
+      var gapX=x+w-40;
+      ctx.fillStyle=C.bg; ctx.fillRect(gapX-13,yTop-8,26,16);
+    }
+    if(closedAmt>0.01){
+      // 下边（逐渐接上）
+      var prog=closedAmt;
+      var bx1=x+w, by1=yTop;
+      var seg1=yBot-yTop, seg2=w, seg3=yBot-yTop;
+      var path=[{len:seg1},{len:seg2},{len:seg3}];
+      ctx.strokeStyle=accent; ctx.lineWidth=3;
+      ctx.beginPath(); ctx.moveTo(bx1,by1);
+      var remain=(seg1+seg2+seg3)*prog;
+      if(remain>0){ var d=Math.min(remain,seg1); ctx.lineTo(bx1,by1+d); remain-=d; }
+      if(remain>0){ var d2=Math.min(remain,seg2); ctx.lineTo(bx1-d2,yBot); remain-=d2; }
+      if(remain>0){ var d3=Math.min(remain,seg3); ctx.lineTo(x,yBot-d3); }
+      ctx.stroke();
+      if(prog>0.98){
+        // 闭合箭头
+        ctx.beginPath(); ctx.moveTo(x,yTop+2); ctx.lineTo(x-6,yTop+12); ctx.lineTo(x+6,yTop+12);
+        ctx.closePath(); ctx.fillStyle=accent; ctx.fill();
+      }
+    }
+    if(closedAmt<0.5){
+      // 断开标记 ×
+      ctx.strokeStyle=C.red; ctx.lineWidth=3;
+      var gx=x+w-40;
+      ctx.beginPath(); ctx.moveTo(gx-8,yTop-8); ctx.lineTo(gx+8,yTop+8); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(gx+8,yTop-8); ctx.lineTo(gx-8,yTop+8); ctx.stroke();
+      // 虚线回程（不存在的路）
+      ctx.setLineDash([6,7]); ctx.strokeStyle='rgba(255,107,94,.35)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x+w,yBot); ctx.lineTo(x,yBot); ctx.stroke(); ctx.setLineDash([]);
+      txt('没有回到起点', LW/2, yBot+16, 12.5, 'rgba(255,107,94,.8)','center','600');
+    }
+
+    // 光点
+    if(dotAlpha>0.02){
+      ctx.globalAlpha=dotAlpha;
+      if(closedAmt>0.9){
+        var seg=yBot-yTop, per=2*seg+w, dd=(((phase%1)+1)%1)*per, px,py;
+        if(dd<=seg){ px=x+w; py=yTop+dd; }
+        else if(dd<=seg+w){ px=x+w-(dd-seg); py=yBot; }
+        else { px=x; py=yBot-(dd-seg-w); }
+        var grd=ctx.createRadialGradient(px,py,0,px,py,13);
+        grd.addColorStop(0,'rgba(63,224,180,.95)'); grd.addColorStop(1,'rgba(63,224,180,0)');
+        ctx.fillStyle=grd; ctx.beginPath(); ctx.arc(px,py,13,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#e9fff8'; ctx.beginPath(); ctx.arc(px,py,4.4,0,Math.PI*2); ctx.fill();
+      } else {
+        var span=w-50, ph=(((phase%1)+1)%1), dx=x+span*ph;
+        var fade=1-Math.max(0,(ph-0.66)/0.34);
+        ctx.globalAlpha=dotAlpha*fade;
+        var g2=ctx.createRadialGradient(dx,yTop,0,dx,yTop,13);
+        g2.addColorStop(0,'rgba(255,138,76,.95)'); g2.addColorStop(1,'rgba(255,138,76,0)');
+        ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(dx,yTop,13,0,Math.PI*2); ctx.fill();
+        ctx.fillStyle='#fff0e6'; ctx.beginPath(); ctx.arc(dx,yTop,4.4,0,Math.PI*2); ctx.fill();
+      }
+      ctx.globalAlpha=1;
+    }
+  }
+
+  /* ---------- 三问 / 规则卡 ---------- */
+  function drawQuestions(p){
+    var qs=['卡在哪一步？','当时怎么想？','下次怎么动？'];
+    for(var i=0;i<3;i++){
+      var a=clamp01((p-i*0.28)/0.30);
+      if(a<=0) continue;
+      var y=420+i*58;
+      ctx.globalAlpha=a;
+      ctx.fillStyle='rgba(63,224,180,.14)'; rr(70,y-30,LW-140,42,12); ctx.fill();
+      ctx.strokeStyle='rgba(63,224,180,'+(0.5*a)+')'; ctx.lineWidth=1.6; rr(70,y-30,LW-140,42,12); ctx.stroke();
+      txt('✓ '+qs[i], 88, y-2, 19, C.cool,'left','700');
+      ctx.globalAlpha=1;
+    }
+  }
+  function drawRules(p){
+    var items=['① 大题，先画受力图','② 阅读，先看题干','③ 单位，先统一'];
+    ctx.fillStyle='#0e2a24'; rr(70,432,LW-140,150,14); ctx.fill();
+    ctx.strokeStyle='rgba(63,224,180,.55)'; ctx.lineWidth=1.8; rr(70,432,LW-140,150,14); ctx.stroke();
+    txt('我的规则', 92, 462, 15, C.cool,'left','800');
+    for(var i=0;i<3;i++){
+      var a=clamp01((p*3)-i);
+      if(a<=0) continue;
+      txt(items[i], 96, 496+i*28, 18, 'rgba(220,245,238,'+a+')','left','600');
+    }
+  }
+
+  function drawRules2(p){
+    var items=['① 大题，先画受力图','② 阅读，先看题干','③ 单位，先统一'];
+    var x=40,y=414,w=280,h=150;
+    ctx.fillStyle='#0e2a24'; rr(x,y,w,h,14); ctx.fill();
+    ctx.strokeStyle='rgba(63,224,180,'+(0.35+0.25*p)+')'; ctx.lineWidth=1.8; rr(x,y,w,h,14); ctx.stroke();
+    txt('我的规则', x+20, y+28, 14, C.cool,'left','800');
+    for(var i=0;i<3;i++){
+      var a=clamp01(p*3-i);
+      if(a<=0) continue;
+      ctx.globalAlpha=a;
+      txt(items[i], x+22, y+64+i*30, 15.5, '#d8f5ee','left','600');
+      ctx.globalAlpha=1;
+    }
+  }
+  function drawFinalScore(p){
+    var x=336,y=414,w=144,h=150;
+    ctx.globalAlpha=p;
+    ctx.fillStyle=C.paper; rr(x,y,w,h,12); ctx.fill();
+    ctx.strokeStyle='#c3cfdd'; ctx.lineWidth=1; rr(x,y,w,h,12); ctx.stroke();
+    txt('月考', x+w/2, y+30, 13, '#6b7c92','center','700');
+    txt('78', x+w/2, y+96, 54, C.cool,'center','800');
+    txt('分', x+w/2, y+120, 14, C.cool,'center','700');
+    txt('比上次 +16', x+w/2, y+140, 11.5, '#8aa0b8','center','600');
+    ctx.globalAlpha=1;
+  }
+
+  /* ---------- 小曲线 ---------- */
+  function drawMiniCurve(p){
+    var x=150,y=430,w=300,h=130;
+    ctx.fillStyle='rgba(10,20,32,.85)'; rr(x,y,w,h,10); ctx.fill();
+    ctx.strokeStyle='#243450'; ctx.lineWidth=1; rr(x,y,w,h,10); ctx.stroke();
+    // 目标线
+    ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle=C.gold; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(x+12,y+38); ctx.lineTo(x+w-12,y+38); ctx.stroke(); ctx.restore();
+    txt('90 分', x+w-14, y+32, 11, C.gold,'right','700');
+    // 曲线 62→78
+    var pts=[[0,62],[0.35,63],[0.6,70],[1,78]];
+    ctx.beginPath();
+    for(var i=0;i<=40;i++){
+      var u=i/40*clamp01(p);
+      var v=interp(pts,u);
+      var px2=x+12+u*(w-24);
+      var py2=y+h-16-((v-55)/40)*(h-34);
+      if(i===0) ctx.moveTo(px2,py2); else ctx.lineTo(px2,py2);
+    }
+    ctx.strokeStyle=C.cool; ctx.lineWidth=3; ctx.lineJoin='round'; ctx.stroke();
+  }
+  function interp(pts,u){
+    for(var i=0;i<pts.length-1;i++){
+      if(u<=pts[i+1][0]){
+        var r=(u-pts[i][0])/(pts[i+1][0]-pts[i][0]);
+        return pts[i][1]+(pts[i+1][1]-pts[i][1])*r;
+      }
+    }
+    return pts[pts.length-1][1];
+  }
+
+  /* ---------- 字幕 ---------- */
+  function drawSub(text,alpha){
+    ctx.globalAlpha=alpha*0.92;
+    var boxY=LH-92, boxH=66;
+    ctx.fillStyle='rgba(4,8,14,.86)'; rr(24,boxY,LW-48,boxH,14); ctx.fill();
+    ctx.strokeStyle='rgba(90,120,160,.35)'; ctx.lineWidth=1; rr(24,boxY,LW-48,boxH,14); ctx.stroke();
+    txt(text, LW/2, boxY+41, 21, C.text,'center','700');
+    ctx.globalAlpha=1;
+  }
+
+  /* ---------- 主循环 ---------- */
+  function sceneIndex(){
+    for(var i=0;i<S.length;i++){ if(t<S[i].b) return i; }
+    return S.length-1;
+  }
+  function draw(){
+    var i=sceneIndex(), sc=S[i], local=t-sc.a, dur=sc.b-sc.a;
+
+    // 底色铺满整幅
+    var bgG=ctx.createLinearGradient(0,0,0,LH);
+    bgG.addColorStop(0,'#0a0f1a'); bgG.addColorStop(1,'#05080f');
+    ctx.fillStyle=bgG; ctx.fillRect(0,0,LW,LH);
+    // 镜头：前两幕正常，第三幕起拉远上移，给回路腾地方
+    var zoom = (i>=2) ? 0.74 : 1;
+    var dy   = (i>=2) ? -30 : 0;
+    ctx.save();
+    ctx.translate(LW*(1-zoom)/2, dy);
+    ctx.scale(zoom, zoom);
+
+    drawRoom();
+    drawClock(23, 0);
+    if(i<=1) drawDesk();
+    if(i<=1) drawPapers(Math.min(9, 2+Math.floor(local*1.1)));
+    // 学生情绪
+    var mood='tired';
+    if(i===0) mood='tired';
+    else if(i===1) mood='sad';
+    else if(i===2) mood='think';
+    else if(i===3) mood=(local<4?'wow':'think');
+    else if(i===4) mood='think';
+    else mood='happy';
+    drawStudent(mood,t);
+    ctx.restore();
+
+    // 道具区
+    if(i===1){
+      drawScoreSheet(62, clamp01(local/0.8));
+    } else if(i===2){
+      drawLoop(0, t*0.30, 1);
+      // 卷子还在桌上
+      drawPapers(4);
+    } else if(i===3){
+      var closeP=clamp01((local-2.2)/1.6);
+      drawLoop(closeP, t*0.34, closeP>0.5?1:0.9);
+      if(closeP>0.95){
+        // 接上瞬间的闪光
+        var fl=Math.max(0,1-(local-3.9)*2.2);
+        if(fl>0.02){
+          ctx.globalAlpha=fl*0.5; ctx.fillStyle=C.cool;
+          ctx.beginPath(); ctx.arc(LW/2,490,180*(1-fl),0,Math.PI*2); ctx.fill();
+          ctx.globalAlpha=1;
+        }
+        txt('接上了', LW/2, 410, 20, C.cool,'center','800');
+      }
+    } else if(i===4){
+      drawQuestions(local/ (dur*0.8));
+    } else if(i===5){
+      drawRules2(clamp01(local/1.4));
+      drawFinalScore(clamp01((local-1.2)/1.2));
+    }
+
+    // 字幕：淡入淡出
+    var aIn=clamp01(local/0.55), aOut=clamp01((sc.b-t)/0.5);
+    drawSub(sc.sub, Math.min(aIn,aOut));
+  }
+
+  var last=0;
+  function loop(ts){
+    if(!last) last=ts;
+    var dt=Math.min(0.05,(ts-last)/1000); last=ts;
+    if(playing && t<TOTAL) t+=dt;
+    draw(); requestAnimationFrame(loop);
+  }
+
+  var btnPause=document.getElementById('btnPause'), btnReplay=document.getElementById('btnReplay');
+  btnPause.addEventListener('click',function(){
+    playing=!playing;
+    btnPause.textContent=playing?'暂停':'继续';
+  });
+  btnReplay.addEventListener('click',function(){
+    t=0; playing=true; btnPause.textContent='暂停'; draw();
+  });
+
+  var pre=parseFloat((location.search.match(/[?&]t=([\d.]+)/)||[])[1]||0);
+  if(pre>0) t=pre;
+  resize(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
