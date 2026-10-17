@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>同样是这件事，两种做法</title>
+<style>
+  html,body{margin:0;padding:0;background:#060a12;color:#eaf1fb;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    -webkit-text-size-adjust:100%;overflow:hidden;}
+  #wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:8px 10px 12px;box-sizing:border-box;}
+  canvas{display:block;border-radius:16px;touch-action:manipulation;}
+  #bar{display:flex;gap:10px;margin-top:10px;}
+  button{min-height:44px;padding:0 18px;border-radius:12px;border:1px solid #2b3a55;background:#17202f;
+    color:#eaf1fb;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
+  button:active{transform:scale(.97);}
+  button.primary{background:#1d6ef2;border-color:#1d6ef2;color:#fff;}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="bar">
+    <button id="btnPause" class="primary">暂停</button>
+    <button id="btnReplay">重播</button>
+  </div>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  var LW=520, LH=700, s=1, DPR=1;
+  var C={bg:'#070c16',card:'#0f1826',cardOpen:'#1b1410',cardClose:'#0c1f1c',
+    text:'#eaf1fb',dim:'#9fb2cc',faint:'#5d708e',
+    hot:'#ff7a48',cool:'#3fe0b4',gold:'#ffd166',red:'#ff6b5e',
+    skin:'#f3cfa9',hair:'#2e2018'};
+
+  var TOTAL=46, t=0, playing=true;
+  var S=[
+    {a:0,  b:9,  name:'洗澡调水温', open:'拧到"大概"就不管了', close:'手一直试着水温',
+     sub:'同样是调水温：一个靠猜，一个靠手'},
+    {a:9,  b:18, name:'做菜放盐', open:'照菜谱，一勺倒下去', close:'尝一口，再加一点',
+     sub:'同样是放盐：一个按菜谱，一个按舌头'},
+    {a:18, b:27, name:'打 BOSS', open:'一直按同一个键', close:'盯着血条随时改',
+     sub:'同样是打 BOSS：一个只管输出，一个看着血条'},
+    {a:27, b:36, name:'骑车上路', open:'只看前面，不回头', close:'看一眼后视镜，再修正方向',
+     sub:'同样是骑车：一个只往前冲，一个随时调方向'},
+    {a:36, b:46, name:'错了一道题', open:'抄进本子，翻过去', close:'问清楚，下次改做法',
+     sub:'同样是错了一道题 —— 你的学习，是哪一种？'}
+  ];
+
+  function resize(){
+    var availW=Math.min(window.innerWidth-20,900), availH=window.innerHeight-116;
+    s=Math.min(availW/LW, availH/LH, 1.7); if(s<0.42) s=0.42;
+    DPR=Math.min(window.devicePixelRatio||1,2.5);
+    cv.width=Math.round(LW*s*DPR); cv.height=Math.round(LH*s*DPR);
+    cv.style.width=(LW*s)+'px'; cv.style.height=(LH*s)+'px';
+    ctx.setTransform(s*DPR,0,0,s*DPR,0,0);
+    draw();
+  }
+  window.addEventListener('resize',resize);
+
+  function rr(x,y,w,h,r){ if(w<0)w=0; if(h<0)h=0; r=Math.min(r,w/2,h/2);
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
+  function txt(str,x,y,size,color,align,weight){
+    ctx.font=(weight||'500')+' '+size+'px -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+    ctx.fillStyle=color||C.text; ctx.textAlign=align||'left'; ctx.textBaseline='alphabetic';
+    ctx.fillText(str,x,y); }
+  function c01(v){ return v<0?0:v>1?1:v; }
+
+  /* ============ 通用：一个格子 ============ */
+  function cell(x,y,w,h,closed,label){
+    ctx.fillStyle=closed?C.cardClose:C.cardOpen;
+    rr(x,y,w,h,16); ctx.fill();
+    ctx.strokeStyle=closed?'rgba(63,224,180,.40)':'rgba(255,122,72,.38)';
+    ctx.lineWidth=1.6; rr(x,y,w,h,16); ctx.stroke();
+    // 顶标
+    ctx.fillStyle=closed?'rgba(63,224,180,.16)':'rgba(255,122,72,.16)';
+    rr(x+10,y+9,w-20,28,8); ctx.fill();
+    txt(closed?'✓ 「看着结果」':'✗ 「做完就不管」', x+w/2, y+29, 15,
+        closed?C.cool:'#ffb08c','center','800');
+  }
+  function bubble(x,y,str,color,fs){
+    ctx.font='800 '+(fs||13)+'px -apple-system,"PingFang SC","Microsoft YaHei",sans-serif';
+    var w=ctx.measureText(str).width+18, h=(fs||13)+14;
+    ctx.fillStyle=color==='red'?'rgba(255,107,94,.92)':'rgba(63,224,180,.92)';
+    rr(x-w/2,y-h,w,h,8); ctx.fill();
+    txt(str,x,y-7,fs||13,color==='red'?'#2b0b08':'#052018','center','800');
+  }
+
+  /* ============ 1 洗澡 ============ */
+  function sceneBath(x,y,w,h,closed,lt){
+    cell(x,y,w,h,closed);
+    var cx=x+w/2, top=y+58;
+    // 花洒
+    ctx.strokeStyle='#4c5f7c'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(cx,top-6); ctx.lineTo(cx,top+10); ctx.stroke();
+    ctx.fillStyle='#5a6f8e'; rr(cx-22,top+8,44,10,4); ctx.fill();
+    // 水流
+    var wob=closed?Math.sin(lt*4)*2:0;
+    for(var i=0;i<5;i++){
+      ctx.strokeStyle=closed?'rgba(120,200,255,.55)':'rgba(255,150,90,.65)';
+      ctx.lineWidth=2;
+      var xx=cx-16+i*8+wob;
+      ctx.beginPath(); ctx.moveTo(xx,top+20); ctx.lineTo(xx+ (closed?0:2), top+44); ctx.stroke();
+    }
+    // 人
+    var hy=y+h*0.55;
+    ctx.fillStyle=C.skin; ctx.beginPath(); ctx.arc(cx,hy,26,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=C.hair; ctx.beginPath(); ctx.arc(cx,hy-3,26,Math.PI*1.02,Math.PI*1.98); ctx.fill();
+    ctx.fillStyle=closed?'#2f6f66':'#5a3340';
+    rr(cx-26,hy+26,52,64,14); ctx.fill();
+    if(!closed){
+      // 烫：脸红 + 张嘴 + 冒气
+      ctx.fillStyle='rgba(255,90,70,.55)'; ctx.beginPath(); ctx.arc(cx,hy,26,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#3a1f16';
+      ctx.beginPath(); ctx.arc(cx-9,hy-3,3,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+9,hy-3,3,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle='#7a2418'; ctx.beginPath(); ctx.ellipse(cx,hy+12,7,9,0,0,Math.PI*2); ctx.fill();
+      for(var k=0;k<3;k++){
+        var a=0.20+0.16*Math.sin(lt*5+k);
+        ctx.strokeStyle='rgba(255,140,100,'+a+')'; ctx.lineWidth=2;
+        ctx.beginPath();
+        for(var j=0;j<=8;j++){
+          var yy2=hy-32-j*5, dx=Math.sin(j*0.8+lt*3+k)*4;
+          if(j===0) ctx.moveTo(cx-14+k*12+dx,yy2); else ctx.lineTo(cx-14+k*12+dx,yy2);
+        }
+        ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle='#3a1f16';
+      ctx.strokeStyle='#3a1f16'; ctx.lineWidth=2.6;
+      ctx.beginPath(); ctx.arc(cx-9,hy-2,4.5,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+9,hy-2,4.5,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx,hy+10,7,0.1*Math.PI,0.9*Math.PI); ctx.stroke();
+      // 手试水
+      ctx.fillStyle=C.skin;
+      rr(cx+30,top+30,8,34,4); ctx.fill();
+      txt('试试', cx+52, top+44, 11, C.cool,'left','700');
+    }
+    bubble(cx, closed?hy-46:hy-40, closed?'舒服':'烫！', closed?'none':'red', 14);
+  }
+
+  /* ============ 2 做菜 ============ */
+  function sceneCook(x,y,w,h,closed,lt){
+    cell(x,y,w,h,closed);
+    var cx=x+w/2, py=y+h*0.62;
+    // 锅
+    ctx.fillStyle='#2c3a52'; rr(cx-62,py,124,44,10); ctx.fill();
+    ctx.fillStyle='#3b4c69'; rr(cx-62,py,124,10,6); ctx.fill();
+    ctx.strokeStyle='#3b4c69'; ctx.lineWidth=7;
+    ctx.beginPath(); ctx.moveTo(cx+62,py+18); ctx.lineTo(cx+92,py+4); ctx.stroke();
+    // 蒸汽
+    for(var i=0;i<2;i++){
+      ctx.strokeStyle='rgba(160,190,220,'+(0.20+0.10*Math.sin(lt*3+i))+')'; ctx.lineWidth=2;
+      ctx.beginPath();
+      for(var j=0;j<=8;j++){ var yy=py-6-j*4, dx=Math.sin(j*0.9+lt*2.5+i*2)*4;
+        if(j===0) ctx.moveTo(cx-20+i*40+dx,yy); else ctx.lineTo(cx-20+i*40+dx,yy); }
+      ctx.stroke();
+    }
+    // 盐勺
+    var sx=cx-6, sy=py-56;
+    ctx.strokeStyle='#8fa3c4'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(sx-16,sy-14); ctx.lineTo(sx+14,sy+12); ctx.stroke();
+    ctx.fillStyle='#c9d6e6'; ctx.beginPath(); ctx.ellipse(sx+18,sy+16,12,8,0.6,0,Math.PI*2); ctx.fill();
+    if(!closed){
+      // 一大勺倒下去
+      for(var k=0;k<14;k++){
+        var px=cx-14+((k*7)%28), pv=((lt*90+k*13)%46);
+        ctx.fillStyle='rgba(240,246,255,.9)';
+        ctx.fillRect(px, sy+22+pv, 2.6,2.6);
+      }
+      txt('一 大 勺', cx, py-84, 14, C.red,'center','800');
+      bubble(cx+56, py-10, '咸了！','red',13);
+    } else {
+      for(var k2=0;k2<4;k2++){
+        var px2=cx+8+((k2*6)%16), pv2=((lt*70+k2*11)%40);
+        ctx.fillStyle='rgba(240,246,255,.85)';
+        ctx.fillRect(px2, sy+22+pv2, 2.4,2.4);
+      }
+      txt('一 点 点', cx, py-84, 14, C.cool,'center','800');
+      // 尝一口：伸勺子到嘴边
+      ctx.fillStyle=C.skin; ctx.beginPath(); ctx.arc(x+w-52,y+h*0.40,20,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=C.hair; ctx.beginPath(); ctx.arc(x+w-52,y+h*0.40-3,20,Math.PI*1.02,Math.PI*1.98); ctx.fill();
+      ctx.fillStyle='#3a1f16'; ctx.beginPath(); ctx.arc(x+w-58,y+h*0.40-2,2.6,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x+w-46,y+h*0.40-2,2.6,0,Math.PI*2); ctx.fill();
+      textSmallY(x+w-52,y+h*0.40,closed);
+    }
+  }
+  function textSmallY(cx,cy,closed){
+    ctx.strokeStyle='#3a1f16'; ctx.lineWidth=2.2;
+    ctx.beginPath(); ctx.arc(cx,cy+11,6,0.15*Math.PI,0.85*Math.PI); ctx.stroke();
+  }
+
+  /* ============ 3 打 BOSS ============ */
+  function sceneGame(x,y,w,h,closed,lt){
+    cell(x,y,w,h,closed);
+    // 手机/屏幕
+    var dx=x+w/2-62, dy=y+52, dw=124, dh=232;
+    ctx.fillStyle='#0a1120'; rr(dx,dy,dw,dh,12); ctx.fill();
+    ctx.strokeStyle='#33415c'; ctx.lineWidth=2; rr(dx,dy,dw,dh,12); ctx.stroke();
+    // 血条
+    var bw=dw-28, bx=dx+14, by=dy+16;
+    ctx.fillStyle='#1c2740'; rr(bx,by,bw,12,5); ctx.fill();
+    var fr=closed? (0.55+0.35*Math.abs(Math.sin(lt*1.6))) : Math.max(0, 1-lt/6);
+    ctx.fillStyle=closed?C.cool:C.red;
+    rr(bx,by,bw*fr,12,5); ctx.fill();
+    txt(closed?'血量 '+Math.round(fr*100)+'%':'血量 '+Math.round(fr*100)+'%',
+        dx+dw/2, by+28, 10.5, closed?C.cool:C.red,'center','700');
+    // 怪物
+    ctx.fillStyle=closed? '#7a3a3a':'#6a2a2a';
+    rr(dx+28,dy+62,dw-56,84,10); ctx.fill();
+    ctx.fillStyle='#ffd166';
+    ctx.beginPath(); ctx.arc(dx+46,dy+96,5,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(dx+dw-46,dy+96,5,0,Math.PI*2); ctx.fill();
+    // 按键
+    var kx=dx+dw/2, ky=dy+dh-34;
+    ctx.fillStyle=closed?'rgba(63,224,180,.22)':'rgba(255,107,94,.22)';
+    ctx.beginPath(); ctx.arc(kx,ky,20,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=closed?C.cool:C.red; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.arc(kx,ky,20,0,Math.PI*2); ctx.stroke();
+    txt('A', kx, ky+5, 13, closed?C.cool:C.red,'center','800');
+    if(closed){
+      // 血条低 → 按 B 回血
+      ctx.fillStyle='rgba(63,224,180,.18)'; ctx.beginPath(); ctx.arc(kx-46,ky,16,0,Math.PI*2); ctx.fill();
+      txt('B', kx-46, ky+5, 12, C.cool,'center','800');
+      txt('低血就补', kx, dy+dh+18, 11, C.cool,'center','700');
+    } else {
+      txt('GAME OVER', kx, dy+dh+18, 13, C.red,'center','800');
+    }
+  }
+
+  /* ============ 4 骑车 ============ */
+  function sceneBike(x,y,w,h,closed,lt){
+    cell(x,y,w,h,closed);
+    var gy=y+h*0.72;
+    // 路
+    ctx.fillStyle='#1b2740'; rr(x+14,gy,x+w-28,10,5); ctx.fill();
+    // 障碍（石头）
+    var ox=x+w-88;
+    ctx.fillStyle='#5d6b82';
+    ctx.beginPath(); ctx.moveTo(ox,gy); ctx.lineTo(ox+16,gy-26); ctx.lineTo(ox+34,gy); ctx.closePath(); ctx.fill();
+    // 自行车
+    var bx=x+72, by=gy-16;
+    ctx.strokeStyle=closed?C.cool:C.red; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.arc(bx-22,by,13,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(bx+22,by,13,0,Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(bx-22,by); ctx.lineTo(bx-2,by-20); ctx.lineTo(bx+22,by); ctx.stroke();
+    // 骑手
+    ctx.fillStyle=C.skin; ctx.beginPath(); ctx.arc(bx,by-40,11,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=C.hair; ctx.beginPath(); ctx.arc(bx,by-42,11,Math.PI*1.02,Math.PI*1.98); ctx.fill();
+    ctx.fillStyle='#2f6f66'; rr(bx-9,by-30,18,20,6); ctx.fill();
+    if(!closed){
+      // 撞上：星爆 + 前倾
+      var flash=0.6+0.4*Math.sin(lt*8);
+      ctx.strokeStyle='rgba(255,107,94,'+flash+')'; ctx.lineWidth=2.4;
+      for(var i=0;i<8;i++){
+        var a=i/8*Math.PI*2;
+        ctx.beginPath();
+        ctx.moveTo(ox+16+Math.cos(a)*10, gy-16+Math.sin(a)*10);
+        ctx.lineTo(ox+16+Math.cos(a)*20, gy-16+Math.sin(a)*20);
+        ctx.stroke();
+      }
+      bubble(ox+16, gy-56, '撞了','red',13);
+    } else {
+      // 绕过：弧线
+      ctx.strokeStyle='rgba(63,224,180,.65)'; ctx.lineWidth=2.2; ctx.setLineDash([5,5]);
+      ctx.beginPath(); ctx.moveTo(bx+30,by); ctx.quadraticCurveTo(ox-16,gy-64,ox+56,by); ctx.stroke();
+      ctx.setLineDash([]);
+      txt('先看一眼，再绕', x+w/2, gy+34, 11.5, C.cool,'center','700');
+    }
+  }
+
+  /* ============ 5 错题 ============ */
+  function sceneStudy(x,y,w,h,closed,lt){
+    cell(x,y,w,h,closed);
+    var bx=x+22, by=y+66, bw=w-44, bh=h-104;
+    // 本子
+    ctx.fillStyle='#eef2f8'; rr(bx,by,bw,bh,10); ctx.fill();
+    ctx.strokeStyle='#c3cfdd'; ctx.lineWidth=1.2; rr(bx,by,bw,bh,10); ctx.stroke();
+    // 中缝
+    ctx.strokeStyle='#d5dfea'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(bx+bw/2,by+6); ctx.lineTo(bx+bw/2,by+bh-6); ctx.stroke();
+    var lines=['我卡在哪一步？','当时怎么想的？','关键那一步是啥？','下次我要怎么动？'];
+    for(var i=0;i<4;i++){
+      var yy=by+34+i*((bh-50)/4);
+      ctx.strokeStyle=closed?'rgba(63,224,180,.35)':'#dde5ef';
+      ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(bx+14,yy+8); ctx.lineTo(bx+bw-14,yy+8); ctx.stroke();
+      if(closed){
+        var a=c01((lt-i*0.5));
+        if(a>0) txt(lines[i], bx+18, yy, 12.5, 'rgba(30,60,55,'+(0.85*a)+')','left','600');
+      } else {
+        // 抄题：一长串乱码
+        for(var k=0;k<6;k++){
+          ctx.fillStyle='#b8c5d6'; ctx.fillRect(bx+16+k*15, yy-6, 11,2.4);
+        }
+      }
+    }
+    txt(closed?'我的规则':'错题本', bx+bw/2, by-12, 13, closed?C.cool:C.dim,'center','800');
+    if(!closed){
+      txt('抄完就翻页', bx+bw/2, by+bh+22, 12, C.faint,'center','600');
+    } else {
+      txt('第 2 天，同类题对了', bx+bw/2, by+bh+22, 12, C.cool,'center','700');
+    }
+  }
+
+  /* ============ 主绘制 ============ */
+  var DRAW=[sceneBath,sceneCook,sceneGame,sceneBike,sceneStudy];
+
+  function draw(){
+    var bg=ctx.createLinearGradient(0,0,0,LH);
+    bg.addColorStop(0,'#0a101c'); bg.addColorStop(1,'#05080f');
+    ctx.fillStyle=bg; ctx.fillRect(0,0,LW,LH);
+
+    var i=0; for(var k=0;k<S.length;k++){ if(t<S[k].b){ i=k; break; } if(k===S.length-1) i=k; }
+    var sc=S[i], local=t-sc.a;
+
+    // 标题
+    txt(sc.name, LW/2, 56, 27, C.text, 'center','800');
+    txt('同一件事，两种做法', LW/2, 80, 13, C.dim,'center','500');
+
+    // 两格
+    var gap=12, cw=(LW-40-gap)/2, chh=380, cy=104;
+    var x1=20, x2=20+cw+gap;
+    DRAW[i](x1,cy,cw,chh,false,local);
+    DRAW[i](x2,cy,cw,chh,true,local);
+
+    // 两格下面的说明
+    txt(sc.open, x1+cw/2, cy+chh+32, 14.5, '#ffb08c','center','700');
+    txt(sc.close, x2+cw/2, cy+chh+32, 14.5, C.cool,'center','700');
+
+    // 字幕
+    var aIn=c01(local/0.5), aOut=c01((sc.b-t)/0.5), a=Math.min(aIn,aOut);
+    ctx.globalAlpha=a*0.94;
+    ctx.fillStyle='rgba(4,8,14,.88)'; rr(24,LH-96,LW-48,64,14); ctx.fill();
+    ctx.strokeStyle='rgba(90,120,160,.35)'; ctx.lineWidth=1; rr(24,LH-96,LW-48,64,14); ctx.stroke();
+    txt(sc.sub, LW/2, LH-56, 18.5, C.text,'center','700');
+    ctx.globalAlpha=1;
+
+    // 进度点
+    for(var p2=0;p2<S.length;p2++){
+      ctx.fillStyle=(p2===i)?C.gold:'rgba(120,140,170,.35)';
+      ctx.beginPath(); ctx.arc(LW/2-(S.length-1)*9+p2*18, LH-14, 3.4, 0, Math.PI*2); ctx.fill();
+    }
+  }
+
+  var last=0;
+  function loop(ts){
+    if(!last) last=ts;
+    var dt=Math.min(0.05,(ts-last)/1000); last=ts;
+    if(playing && t<TOTAL) t+=dt;
+    draw(); requestAnimationFrame(loop);
+  }
+
+  var btnPause=document.getElementById('btnPause'), btnReplay=document.getElementById('btnReplay');
+  btnPause.addEventListener('click',function(){ playing=!playing; btnPause.textContent=playing?'暂停':'继续'; });
+  btnReplay.addEventListener('click',function(){ t=0; playing=true; btnPause.textContent='暂停'; draw(); });
+
+  var pre=parseFloat((location.search.match(/[?&]t=([\d.]+)/)||[])[1]||0);
+  if(pre>0) t=pre;
+  resize(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
