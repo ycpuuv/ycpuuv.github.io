@@ -269,7 +269,7 @@
       if (hist.length < 2) return;
       ctx.beginPath();
       for (var i=0;i<hist.length;i++){
-        var px = x0 + (x1-x0)*(i/Math.max(1,hist.length-1));
+        var px = x0 + (x1-x0)*Math.min(1, i/120);
         var py = y1 - (y1-y0)*((Math.max(lo,Math.min(hi,hist[i]))-lo)/(hi-lo));
         if (i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
       }
@@ -329,16 +329,16 @@
       else { acOn = false; T2 += (Math.random()-0.5)*dt*speed*0.12; }
       T2 = Math.max(16, Math.min(44, T2));
       T1 = Math.max(16, Math.min(44, T1));
-      if (hist1.length===0 || t - lastPush > 0.12){ hist1.push(T1); hist2.push(T2); lastPush = t; }
+      if (hist1.length===0 || t - lastPush > 0.5){ hist1.push(T1); hist2.push(T2); lastPush = t; }
     } else {
       // 学习版：开环成绩在 62 附近波动；闭环阶梯上升
       s1 = 62 + Math.sin(t*0.9)*3 + (Math.random()-0.5)*1.6;
       var cap = Math.min(88, 62 + Math.floor(t/6)*3.2);
       s2 += (cap - s2)*0.06;
-      if (hist1.length===0 || t - lastPush > 0.12){ hist1.push(s1); hist2.push(s2); lastPush = t; }
+      if (hist1.length===0 || t - lastPush > 0.5){ hist1.push(s1); hist2.push(s2); lastPush = t; }
     }
     // 历史长度封顶
-    if (hist1.length > 70){ hist1.shift(); hist2.shift(); }
+    if (hist1.length > 126){ hist1.shift(); hist2.shift(); }
     // 循环
     if (t > 60){ t = 0; hist1.length = 0; hist2.length = 0;
       if (mode==='temp'){ T1 = 20; T2 = 20; } else { s1 = 62; s2 = 62; } }
