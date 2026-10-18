@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>简谐运动与圆周运动</title>
+<style>
+  html,body{margin:0;padding:0;background:#070c16;color:#eaf1fb;
+    font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+    -webkit-text-size-adjust:100%;overflow-x:hidden;}
+  #wrap{max-width:1100px;margin:0 auto;padding:8px 10px 14px;}
+  canvas{display:block;width:100%;border-radius:14px;touch-action:manipulation;}
+  #ctl{margin-top:10px;display:flex;flex-direction:column;gap:9px;}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center;}
+  button{min-height:44px;padding:0 16px;border-radius:11px;border:1px solid #2b3a55;background:#17202f;
+    color:#eaf1fb;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
+  button:active{transform:scale(.97);}
+  button.primary{background:#1d6ef2;border-color:#1d6ef2;color:#fff;}
+  button.on{background:#13b58a;border-color:#13b58a;color:#fff;}
+  .sl{display:flex;align-items:center;gap:8px;font-size:14px;color:#9fb2cc;}
+  input[type=range]{width:118px;-webkit-appearance:none;height:22px;background:transparent;}
+  input[type=range]::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:#26344e;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:#1d6ef2;margin-top:-7px;}
+  .val{color:#ffd166;font-weight:700;min-width:56px;display:inline-block;}
+  #hint{text-align:center;font-size:13px;color:#7f92b3;margin-top:6px;line-height:1.6;}
+  @media (max-width:480px){
+    button{min-height:40px;padding:0 12px;font-size:14px;}
+    .sl{font-size:13px;} input[type=range]{width:96px;}
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="cv"></canvas>
+  <div id="ctl">
+    <div class="row">
+      <button id="btnPlay" class="primary">暂停</button>
+      <button id="btnReset">重来</button>
+      <button id="btnVec" class="on">速度/加速度</button>
+      <button id="btnPhase">显示相位角</button>
+    </div>
+    <div class="row">
+      <span class="sl">振幅 A <input id="sA" type="range" min="0.6" max="1.6" step="0.05" value="1.2"><span class="val" id="vA">1.2</span></span>
+      <span class="sl">角速度 ω <input id="sW" type="range" min="0.6" max="3.0" step="0.05" value="1.6"><span class="val" id="vW">1.60</span></span>
+      <span class="sl">初相 φ <input id="sP" type="range" min="0" max="360" step="5" value="0"><span class="val" id="vP">0°</span></span>
+    </div>
+  </div>
+  <div id="hint">圆上一点匀速转，它在直径上的投影就是简谐运动 —— 同一个 ω、同一个 A、同一个相位</div>
+</div>
+<script>
+(function(){
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  var W=900,H=620,DPR=1;
+  var C={bg:'#070c16',panel:'#0f1826',line:'#22304a',grid:'#182338',
+    text:'#eaf1fb',dim:'#9fb2cc',faint:'#5d708e',
+    dot:'#6ea8ff',proj:'#ff6b5e',vel:'#3fe0b4',acc:'#c58cff',gold:'#ffd166'};
+
+  var A=1.2, om=1.6, phi=0;     // 振幅(单位)、角速度 rad/s、初相 rad
+  var t=0, playing=true, showVec=true, showPhase=true;
+  var hist=[];                   // x-t 历史
+  var lastPush=0;
+
+  function resize(){
+    var cssW=Math.min(1100,window.innerWidth)-20;
+    if(cssW<300) cssW=300;
+    var narrow=cssW<760;
+    W=cssW; H=narrow?660:600;
+    DPR=Math.min(window.devicePixelRatio||1,2.5);
+    cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+    cv.style.height=H+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    draw();
+  }
+  window.addEventListener('resize',resize);
+
+  function rr(x,y,w,h,r){ if(w<0)w=0; if(h<0)h=0; r=Math.min(r,w/2,h/2);
+    ctx.beginPath(); ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath(); }
+  function txt(s,x,y,size,color,align,weight){
+    ctx.font=(weight||'500')+' '+size+'px -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';
+    ctx.fillStyle=color||C.text; ctx.textAlign=align||'left'; ctx.textBaseline='alphabetic';
+    ctx.fillText(s,x,y); }
+  function f(v,d){ return v.toFixed(d===undefined?2:d); }
+
+  function layout(){
+    var narrow=W<760, pad=12;
+    if(narrow){
+      var circleH=Math.min(W*0.88, 318);
+      var cvRect={x:pad,y:60,w:W-pad*2,h:circleH};
+      var curveRect={x:pad,y:60+circleH+44,w:W-pad*2,h:H-60-circleH-44-56};
+      return {circle:cvRect,curve:curveRect,formula:{x:pad,y:H-52,w:W-pad*2,h:44},narrow:true};
+    }
+    var cw=Math.min(W*0.44, 430);
+    var circleRect={x:pad+10,y:56,w:cw,h:H-56-64};
+    var curveRect={x:pad+cw+30,y:56,w:W-(pad+cw+30)-pad,h:H-56-64};
+    return {circle:circleRect,curve:curveRect,formula:{x:pad,y:H-56,w:W-pad*2,h:48},narrow:false};
+  }
+
+  /* ============ 参考圆 ============ */
+  function drawCircle(rect){
+    var cx=rect.x+rect.w/2, cy=rect.y+rect.h/2;
+    var R=Math.min(rect.w,rect.h)*0.39;      // A=1.6 时的最大像素半径基准
+    var ppu=R/1.6;                            // 每单位像素
+    var r=A*ppu;                              // 当前半径
+
+    ctx.fillStyle=C.panel; rr(rect.x,rect.y,rect.w,rect.h,14); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(rect.x,rect.y,rect.w,rect.h,14); ctx.stroke();
+    txt('参考圆：匀速圆周运动', rect.x+14, rect.y+24, rect.w<420?13:15, C.dot,'left','800');
+
+    // 圆
+    ctx.strokeStyle='rgba(110,168,255,.55)'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+    // 直径（x 轴）
+    ctx.strokeStyle=C.line; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(cx-r-26,cy); ctx.lineTo(cx+r+26,cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-r-26,cy-4); ctx.lineTo(cx-r-34,cy); ctx.lineTo(cx-r-26,cy+4);
+    ctx.closePath(); ctx.fillStyle=C.line; ctx.fill();
+    txt('x', cx+r+30, cy+5, 14, C.dim,'left','700');
+    // 竖直直径（y）
+    ctx.strokeStyle='rgba(34,48,74,.9)';
+    ctx.beginPath(); ctx.moveTo(cx,cy-r-22); ctx.lineTo(cx,cy+r+22); ctx.stroke();
+
+    var th=om*t+phi;
+    var px=cx + r*Math.cos(th), py=cy - r*Math.sin(th);   // 圆上点
+    var fx=cx + r*Math.cos(th);                            // 投影点（在 x 轴上）
+
+    // 半径（虚线，避免与加速度矢量重叠）
+    ctx.save(); ctx.setLineDash([6,5]);
+    ctx.strokeStyle='rgba(110,168,255,.55)'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py); ctx.stroke(); ctx.restore();
+    // A 标注（沿半径垂直方向外移）
+    var mxp=(cx+px)/2, myp=(cy+py)/2;
+    var nx=-(py-cy)/Math.max(1,r), ny=(px-cx)/Math.max(1,r);
+    txt('A', mxp+nx*16, myp+ny*16+5, 15, C.dot,'center','800');
+
+    // 相位角
+    if(showPhase){
+      ctx.strokeStyle='rgba(255,209,102,.85)'; ctx.lineWidth=2;
+      var rr2=Math.min(r*0.34, 46);
+      var a1=0, a2=-th;   // canvas 角度向下为正，取反
+      ctx.beginPath();
+      if(th%(2*Math.PI)>=0) ctx.arc(cx,cy,rr2, 0, -th, th>0?true:false);
+      else ctx.arc(cx,cy,rr2, 0, -th, false);
+      ctx.stroke();
+      var la=-th/2;
+      txt('θ', cx+Math.cos(la)*(rr2+14), cy+Math.sin(la)*(rr2+14)+5, 14, C.gold,'center','800');
+    }
+
+    // 投影虚线
+    ctx.save(); ctx.setLineDash([5,4]); ctx.strokeStyle='rgba(255,107,94,.6)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(fx,cy); ctx.stroke(); ctx.restore();
+
+    // 速度矢量（切向）
+    if(showVec){
+      var vlen=r*om*0.42;
+      var vx=-Math.sin(th)*vlen, vy=-Math.cos(th)*vlen;   // 切向（逆时针）
+      arrow(px,py, px+vx, py+vy, C.vel, 2.6, 8);
+      txt('v', px+vx*1.16, py+vy*1.16, 14, C.vel,'center','800');
+      // 速度在 x 轴上的投影
+      var vxp=vx;
+      arrow(fx,cy, fx+vxp, cy, C.vel, 2.6, 8);
+      // 加速度（指向圆心）
+      var alen=r*om*om*0.30;
+      arrow(px,py, px+ (cx-px)/r*alen, py+(cy-py)/r*alen, C.acc, 2.6, 8);
+      var axl=px+(cx-px)*0.55, ayl=py+(cy-py)*0.55;
+      var anx=-(cy-py)/Math.max(1,r), any=(cx-px)/Math.max(1,r);
+      txt('a', axl-anx*14, ayl-any*14, 14, C.acc,'center','800');
+      // 加速度投影
+      var axp=(cx-px)/r*alen;
+      arrow(fx,cy, fx+axp, cy, C.acc, 2.6, 8);
+    }
+
+    // 圆上点
+    ctx.fillStyle=C.dot; ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#dce9ff'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(px,py,7,0,Math.PI*2); ctx.stroke();
+    // 投影点
+    ctx.fillStyle=C.proj; ctx.beginPath(); ctx.arc(fx,cy,7,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#ffd9d4'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(fx,cy,7,0,Math.PI*2); ctx.stroke();
+    txt('投影', fx, cy+26, 12, C.proj,'center','700');
+
+    // 平衡位置 O
+    ctx.fillStyle=C.dim; ctx.beginPath(); ctx.arc(cx,cy,3.4,0,Math.PI*2); ctx.fill();
+    txt('O', cx-6, cy+20, 13, C.dim,'right','700');
+  }
+  function arrow(x1,y1,x2,y2,color,lw,head){
+    ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    var ang=Math.atan2(y2-y1,x2-x1), L=Math.hypot(x2-x1,y2-y1);
+    if(L<6) return;
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-head*Math.cos(ang-0.4), y2-head*Math.sin(ang-0.4));
+    ctx.lineTo(x2-head*Math.cos(ang+0.4), y2-head*Math.sin(ang+0.4));
+    ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+  }
+
+  /* ============ x-t 曲线 ============ */
+  function drawCurve(rect){
+    ctx.fillStyle=C.panel; rr(rect.x,rect.y,rect.w,rect.h,14); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(rect.x,rect.y,rect.w,rect.h,14); ctx.stroke();
+    txt('位移—时间图像', rect.x+14, rect.y+24, rect.w<420?13:15, C.proj,'left','800');
+    txt('x = A cos(ωt+φ)', rect.x+rect.w-14, rect.y+24, 13, C.gold,'right','700');
+
+    var pl=44,pr=16,pt=40,pb=30;
+    var x0=rect.x+pl, y0=rect.y+pt, x1=rect.x+rect.w-pr, y1=rect.y+rect.h-pb;
+    var T=2*Math.PI/om;
+    var win=T*2;                       // 显示 2 个周期
+    if(x1-x0<20||y1-y0<20) return;
+
+    // 网格
+    ctx.strokeStyle=C.grid; ctx.lineWidth=1;
+    for(var g=0;g<=4;g++){
+      var yy=y0+(y1-y0)*g/4;
+      ctx.beginPath(); ctx.moveTo(x0,yy); ctx.lineTo(x1,yy); ctx.stroke();
+    }
+    // 值域 ±1.6
+    var vmax=1.6;
+    function yOf(v){ return y0+(y1-y0)*0.5 - (v/vmax)*(y1-y0)*0.47; }
+    // 平衡轴
+    ctx.strokeStyle='rgba(159,178,204,.5)'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(x0,yOf(0)); ctx.lineTo(x1,yOf(0)); ctx.stroke();
+    txt('0', x0-8, yOf(0)+4, 11.5, C.faint,'right','600');
+    txt('+A', x0-8, yOf(A)+4, 11.5, C.faint,'right','600');
+    txt('−A', x0-8, yOf(-A)+4, 11.5, C.faint,'right','600');
+    // ±A 参考线
+    ctx.save(); ctx.setLineDash([4,5]); ctx.strokeStyle='rgba(255,107,94,.28)';
+    ctx.beginPath(); ctx.moveTo(x0,yOf(A)); ctx.lineTo(x1,yOf(A)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0,yOf(-A)); ctx.lineTo(x1,yOf(-A)); ctx.stroke(); ctx.restore();
+
+    // 曲线（最近 2T）
+    var t0=Math.max(0, t-win);
+    ctx.beginPath();
+    var started=false;
+    for(var i=0;i<hist.length;i++){
+      var pt=hist[i];
+      if(pt.t<t0) continue;
+      var X=x0+(x1-x0)*((pt.t-t0)/win);
+      var Y=yOf(pt.x);
+      if(!started){ ctx.moveTo(X,Y); started=true; } else ctx.lineTo(X,Y);
+    }
+    ctx.strokeStyle=C.proj; ctx.lineWidth=2.6; ctx.lineJoin='round'; ctx.stroke();
+
+    // 当前点
+    if(hist.length){
+      var last=hist[hist.length-1];
+      var Xc=x0+(x1-x0)*((last.t-t0)/win);
+      ctx.fillStyle=C.proj; ctx.beginPath(); ctx.arc(Xc,yOf(last.x),6,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(255,107,94,.35)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(Xc,yOf(last.x)); ctx.lineTo(Xc,y1); ctx.stroke();
+    }
+    txt('t', x1+4, y1+16, 12, C.faint,'left','700');
+    txt('T = 2π/ω = '+f(T,2)+' s', x0+4, y1+18, 11.5, C.faint,'left','600');
+  }
+
+  /* ============ 公式条 ============ */
+  function drawFormula(rect){
+    var th=om*t+phi;
+    var x=A*Math.cos(th), v=-A*om*Math.sin(th), a=-om*om*x;
+    ctx.fillStyle='#0c1524'; rr(rect.x,rect.y,rect.w,rect.h,12); ctx.fill();
+    ctx.strokeStyle=C.line; ctx.lineWidth=1; rr(rect.x,rect.y,rect.w,rect.h,12); ctx.stroke();
+
+    if(W<760){
+      txt('x = '+f(A,1)+'·cos('+f(om,2)+'t) = '+f(x,2), rect.x+14, rect.y+20, 15, C.proj,'left','700');
+      txt('v = '+f(v,2)+'    a = '+f(a,2), rect.x+14, rect.y+38, 15, C.vel,'left','700');
+    } else {
+      txt('x = A cos(ωt+φ) = '+f(A,1)+'·cos('+f(om,2)+'t+'+f(phi,2)+') = '+f(x,2), 
+          rect.x+16, rect.y+20, 16, C.proj,'left','700');
+      txt('v = −Aω sin(ωt+φ) = '+f(v,2), rect.x+16, rect.y+40, 16, C.vel,'left','700');
+      txt('a = −ω²x = '+f(a,2), rect.x+rect.w*0.60, rect.y+40, 16, C.acc,'left','700');
+    }
+  }
+
+  function draw(){
+    var L=layout();
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle=C.bg; ctx.fillRect(0,0,W,H);
+    txt('简谐运动 = 匀速圆周运动的投影', 14, 30, W<760?17:21, C.text,'left','800');
+    txt('同一个 ω、同一个 A、同一个相位', 14, W<760?48:50, W<760?11.5:13, C.dim,'left','500');
+    drawCircle(L.circle);
+    drawCurve(L.curve);
+    drawFormula(L.formula);
+  }
+
+  /* ============ 运动 ============ */
+  var last=0;
+  function loop(ts){
+    if(!last) last=ts;
+    var dt=Math.min(0.05,(ts-last)/1000); last=ts;
+    if(playing){
+      t+=dt;
+      hist.push({t:t, x:A*Math.cos(om*t+phi)});
+      var win=2*(2*Math.PI/om);
+      while(hist.length && hist[0].t < t-win) hist.shift();
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  /* ============ 交互 ============ */
+  var btnPlay=document.getElementById('btnPlay'), btnReset=document.getElementById('btnReset'),
+      btnVec=document.getElementById('btnVec'), btnPhase=document.getElementById('btnPhase');
+  var sA=document.getElementById('sA'), sW=document.getElementById('sW'), sP=document.getElementById('sP');
+  var vA=document.getElementById('vA'), vW=document.getElementById('vW'), vP=document.getElementById('vP');
+
+  function resetCurve(){ hist=[]; }
+  btnPlay.addEventListener('click',function(){
+    playing=!playing; btnPlay.textContent=playing?'暂停':'继续';
+  });
+  btnReset.addEventListener('click',function(){ t=0; resetCurve(); playing=true; btnPlay.textContent='暂停'; draw(); });
+  btnVec.addEventListener('click',function(){
+    showVec=!showVec; btnVec.classList.toggle('on',showVec); draw();
+  });
+  btnPhase.addEventListener('click',function(){
+    showPhase=!showPhase; btnPhase.classList.toggle('on',showPhase); draw();
+  });
+  sA.addEventListener('input',function(){
+    A=parseFloat(sA.value); vA.textContent=A.toFixed(1); resetCurve(); draw();
+  });
+  sW.addEventListener('input',function(){
+    om=parseFloat(sW.value); vW.textContent=om.toFixed(2); resetCurve(); draw();
+  });
+  sP.addEventListener('input',function(){
+    phi=parseFloat(sP.value)*Math.PI/180; vP.textContent=sP.value+'°'; resetCurve(); draw();
+  });
+
+  var pre=parseFloat((location.search.match(/[?&]t=([\d.]+)/)||[])[1]||0);
+  if(pre>0){
+    for(var i=0;i<pre*20;i++){ t+=0.05; hist.push({t:t, x:A*Math.cos(om*t+phi)}); }
+  }
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
