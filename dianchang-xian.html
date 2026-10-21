@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>电荷的电场线 · 为什么它不是轨迹</title>
+<style>
+:root{--bg:#0b0f14;--panel:#131b25;--line:#243040;--txt:#e9eef5;--dim:#8c9bb0;
+--pos:#ff6b6b;--neg:#5eb0ff;--line1:#3ddc84;--path:#ffc857}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:radial-gradient(900px 500px at 50% -10%,#16223a,#0b0f14 60%);color:var(--txt);
+font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+padding:10px 12px calc(12px + env(safe-area-inset-bottom))}
+h1{font-size:17px;margin:0 0 3px}
+.sub{font-size:12px;color:var(--dim);margin-bottom:9px;line-height:1.5}
+.modes{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.modes button{flex:0 0 auto;border:1px solid var(--line);background:#16202c;color:#c8d4e3;
+border-radius:20px;padding:7px 13px;font-size:12.5px;white-space:nowrap}
+.modes button.on{background:var(--line1);color:#04150b;border-color:var(--line1);font-weight:700}
+#wrap{position:relative;width:100%;max-width:520px;margin:0 auto}
+canvas{width:100%;display:block;border-radius:14px;background:#080c11;border:1px solid var(--line);touch-action:manipulation}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:520px;margin:9px auto 0}
+.tools button{border:0;border-radius:11px;padding:12px;font-size:14px;font-weight:600;background:#1e2a38;color:var(--txt)}
+.tools button.on{background:var(--path);color:#2a1e00}
+.tools button:active{opacity:.8}
+.readout{max-width:520px;margin:9px auto 0;background:var(--panel);border:1px solid var(--line);
+border-radius:12px;padding:9px 11px;font-size:12.5px;color:#b9c6d6;line-height:1.65;min-height:52px}
+.readout b{color:#fff}
+.readout .k{color:var(--path);font-weight:700}
+.tips{max-width:520px;margin:10px auto 0;font-size:12.5px;line-height:1.7;color:#a8b6c8}
+.tips div{padding:3px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.tips div:last-child{border:0}
+.tips b{color:#fff}
+</style>
+</head>
+<body>
+<h1>电荷的电场线</h1>
+<div class="sub">点画布任意位置看该点的场强方向；点「投放试探电荷」看它怎么走——<b style="color:#ffc857">和电场线不是一条路</b>。</div>
+
+<div class="modes" id="modes"></div>
+<div id="wrap"><canvas id="cv"></canvas></div>
+
+<div class="tools">
+  <button id="drop">投放试探电荷</button>
+  <button id="clear">清除轨迹</button>
+</div>
+
+<div class="readout" id="out">点一下画布，这里会显示该点的电场方向与相对大小。</div>
+
+<div class="tips">
+  <div><b>电场线不是轨迹。</b>电场线画的是“每一点的受力方向”，试探电荷走到下一点时，方向已经变了，所以它走的是一条新曲线。</div>
+  <div><b>疏密表示强弱。</b>线密的地方场强大——不是线越多场越强，而是线画得越挤场越强。</div>
+  <div><b>切线表示方向。</b>某点电场线的切线，就是正电荷放在那里受力的方向。</div>
+</div>
+
+<script>
+(function(){
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = 520, H = 520;          // 逻辑尺寸（正方形）
+let DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+function resize(){
+  const rect = cv.getBoundingClientRect();
+  const cssW = rect.width || 340;
+  cv.width = Math.round(cssW * DPR);
+  cv.height = Math.round(cssW * DPR);   // 正方形
+  cv.style.height = cssW + 'px';
+}
+const cvSize = () => cv.width / DPR;
+
+// 世界坐标：中心为原点，半宽 = 1
+let R = 1;
+function toPx(p){ const s = cvSize(); return [s/2 + p[0]*s/2, s/2 - p[1]*s/2]; }
+function toWorld(px, py){ const s = cvSize(); return [(px - s/2)/(s/2), (s/2 - py)/(s/2)]; }
+
+// ---- 场 ----
+let charges = [];
+let uniform = 0;    // 平行板：竖直向下场，强度
+
+function field(p){
+  let ex = 0, ey = 0;
+  if (uniform) { ey = -uniform; }
+  for (const c of charges){
+    const dx = p[0]-c.x, dy = p[1]-c.y;
+    const r2 = dx*dx + dy*dy + 0.0009;   // 软化，避免奇点
+    const r = Math.sqrt(r2);
+    const k = c.q / r2;
+    ex += k*dx/r; ey += k*dy/r;
+  }
+  return [ex, ey];
+}
+
+// ---- 电场线预计算 ----
+let lines = [];   // 每条线：点数组 + 箭头位置
+function buildLines(){
+  lines = [];
+  const DS = 0.006, MAX = 2600;
+  const seeds = [];
+  // 正电荷播种；若没有正电荷，则从负电荷反向播种
+  const pos = charges.filter(c=>c.q>0), neg = charges.filter(c=>c.q<0);
+  if (uniform && !pos.length && !neg.length){
+    for (let x=-0.96; x<=0.96; x+=0.16) seeds.push({p:[x, 1.04], q:1});
+  }
+  const src = pos.length ? pos : neg;
+  for (const c of src){
+    const N = Math.round(6 + 10*Math.abs(c.q));
+    for (let i=0;i<N;i++){
+      const a = 2*Math.PI*i/N;
+      // 方向：正电荷向外，负电荷向内（反向追踪）
+      const dir = c.q>0 ? 1 : -1;
+      seeds.push({p:[c.x + dir*0.02*Math.cos(a), c.y + dir*0.02*Math.sin(a)], q:dir});
+    }
+  }
+  for (const s of seeds){
+    let p = s.p.slice(), pts = [p.slice()], hit = false;
+    for (let i=0;i<MAX;i++){
+      let [ex,ey] = field(p);
+      const m = Math.hypot(ex,ey);
+      if (!isFinite(m) || m < 1e-4) break;
+      // RK2
+      const d1 = [ex/m, ey/m];
+      const mid = [p[0] + d1[0]*DS*0.5, p[1] + d1[1]*DS*0.5];
+      const [mx,my] = field(mid); const mm = Math.hypot(mx,my) || 1e-6;
+      p = [p[0] + mx/mm*DS, p[1] + my/mm*DS];
+      pts.push(p.slice());
+      if (Math.abs(p[0])>1.25 || Math.abs(p[1])>1.25){ hit = true; break; }
+      // 撞到异号电荷（起点附近的自身电荷不算）
+      if (i > 10){
+        for (const c of charges){
+          if (Math.sign(c.q) === Math.sign(s.q)) continue;
+          if (Math.hypot(p[0]-c.x, p[1]-c.y) < 0.026) { hit = true; break; }
+        }
+      }
+      if (hit) break;
+    }
+    if (pts.length > 6) lines.push(pts);
+  }
+}
+
+// ---- 绘图 ----
+let dropMode = false;
+let probe = null;        // {p, E}
+let path = [];           // 试探电荷轨迹（世界坐标）
+let testCharge = null;   // {p, v}
+let running = false;
+
+function draw(){
+  const s = cvSize();
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  ctx.clearRect(0,0,s,s);
+
+  // 电场线
+  ctx.lineWidth = 1.2;
+  ctx.strokeStyle = 'rgba(61,220,132,' + (uniform?1:1) + ')';
+  for (const pts of lines){
+    ctx.beginPath();
+    for (let i=0;i<pts.length;i++){
+      const [x,y] = toPx(pts[i]);
+      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+    // 箭头：沿线均匀放几个
+    const step = Math.max(14, Math.floor(pts.length/3));
+    for (let i=step; i<pts.length-2; i+=step) drawArrowHead(pts[i], pts[i+1], 5.5, 'rgba(61,220,132,.95)');
+  }
+
+  // 轨迹
+  if (path.length>1){
+    ctx.save();
+    ctx.strokeStyle = '#ffc857'; ctx.lineWidth = 2.4; ctx.setLineDash([7,5]);
+    ctx.beginPath();
+    for (let i=0;i<path.length;i++){
+      const [x,y] = toPx(path[i]);
+      i ? ctx.lineTo(x,y) : ctx.moveTo(x,y);
+    }
+    ctx.stroke(); ctx.restore();
+  }
+  if (testCharge){
+    const [x,y] = toPx(testCharge.p);
+    ctx.beginPath(); ctx.arc(x,y,6,0,7); ctx.fillStyle='#ffc857'; ctx.fill();
+    ctx.strokeStyle='#0b0f14'; ctx.lineWidth=2; ctx.stroke();
+  }
+
+  // 电荷
+  for (const c of charges){
+    const [x,y] = toPx([c.x,c.y]);
+    const r = 15;
+    ctx.beginPath(); ctx.arc(x,y,r,0,7);
+    ctx.fillStyle = c.q>0 ? 'rgba(255,107,107,.18)' : 'rgba(94,176,255,.18)';
+    ctx.fill();
+    ctx.lineWidth = 2.4; ctx.strokeStyle = c.q>0 ? '#ff6b6b' : '#5eb0ff'; ctx.stroke();
+    ctx.fillStyle = c.q>0 ? '#ff6b6b' : '#5eb0ff';
+    ctx.font = 'bold 18px -apple-system,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(c.q>0?'+':'−', x, y+1);
+  }
+
+  // 探测点
+  if (probe){
+    const [x,y] = toPx(probe.p);
+    ctx.beginPath(); ctx.arc(x,y,3.5,0,7); ctx.fillStyle='#ffffff'; ctx.fill();
+    const m = Math.hypot(probe.E[0], probe.E[1]);
+    if (m>1e-6){
+      const len = Math.min(0.55, 0.16*Math.log10(1+m*300)+0.12);
+      const tip = [probe.p[0] + probe.E[0]/m*len, probe.p[1] + probe.E[1]/m*len];
+      ctx.beginPath();
+      const [x2,y2] = toPx(tip);
+      ctx.moveTo(x,y); ctx.lineTo(x2,y2);
+      ctx.strokeStyle='#ffc857'; ctx.lineWidth=2.6; ctx.stroke();
+      drawArrowHead(probe.p, tip, 8, '#ffc857');
+    }
+  }
+}
+
+function drawArrowHead(a, b, size, color){
+  const [x1,y1] = toPx(a), [x2,y2] = toPx(b);
+  const ang = Math.atan2(y2-y1, x2-x1);
+  ctx.save();
+  ctx.translate(x2,y2); ctx.rotate(ang);
+  ctx.beginPath();
+  ctx.moveTo(0,0); ctx.lineTo(-size*1.6, size*0.75); ctx.lineTo(-size*1.6, -size*0.75);
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill();
+  ctx.restore();
+}
+
+// ---- 模式 ----
+const MODES = [
+  {n:'单个正电荷', make:()=>({ch:[{x:0,y:0,q:1}], u:0})},
+  {n:'单个负电荷', make:()=>({ch:[{x:0,y:0,q:-1}], u:0})},
+  {n:'等量异种',   make:()=>({ch:[{x:-0.38,y:0,q:1},{x:0.38,y:0,q:-1}], u:0})},
+  {n:'等量同种',   make:()=>({ch:[{x:-0.38,y:0,q:1},{x:0.38,y:0,q:1}], u:0})},
+  {n:'平行板（匀强）', make:()=>({ch:[], u:1})},
+];
+let mode = 0;
+
+function setMode(i){
+  mode = i;
+  const m = MODES[i].make();
+  charges = m.ch; uniform = m.u;
+  probe = null; path = []; testCharge = null; running = false;
+  document.querySelectorAll('#modes button').forEach((b,j)=>b.classList.toggle('on', j===i));
+  buildLines(); draw();
+  document.getElementById('out').innerHTML = i===4
+    ? '平行板之间是<b>匀强电场</b>：电场线平行且等距——疏密不变，说明各处场强相同。'
+    : '点一下画布，这里会显示该点的电场方向与相对大小。';
+}
+
+// ---- 交互 ----
+const modesEl = document.getElementById('modes');
+MODES.forEach((m,i)=>{
+  const b = document.createElement('button');
+  b.textContent = m.n; b.onclick = ()=>setMode(i);
+  modesEl.appendChild(b);
+});
+
+cv.addEventListener('click', e=>{
+  const rect = cv.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (cvSize()/rect.width);
+  const py = (e.clientY - rect.top) * (cvSize()/rect.width);
+  const p = toWorld(px, py);
+
+  if (dropMode){
+    // 投放试探电荷（正电荷）
+    testCharge = {p:[p[0],p[1]], v:[0,0]};
+    path = [p.slice()];
+    running = true; dropMode = false;
+    document.getElementById('drop').classList.remove('on');
+    document.getElementById('out').innerHTML = '<b>试探电荷已投放。</b>看它走的路——它<b class="k">不会</b>沿着某条电场线走，因为每走到新位置，受力方向就变了。';
+    last = performance.now();
+    return;
+  }
+
+  const E = field(p);
+  probe = {p, E};
+  const m = Math.hypot(E[0],E[1]);
+  const ang = Math.atan2(E[1],E[0]) * 180/Math.PI;
+  document.getElementById('out').innerHTML =
+    `该点场强方向 <b>${ang.toFixed(0)}°</b>（从 +x 起逆时针），相对大小 <b>${m>100? m.toExponential(1) : m.toFixed(2)}</b>（只做同屏比较，不是真实单位）。` +
+    `<br>箭头就是正电荷放在这里受力的方向。`;
+  draw();
+});
+
+document.getElementById('drop').onclick = function(){
+  dropMode = !dropMode;
+  this.classList.toggle('on', dropMode);
+  document.getElementById('out').innerHTML = dropMode
+    ? '现在<b>点画布任意位置</b>，把试探电荷投放在那里。'
+    : '点一下画布，这里会显示该点的电场方向与相对大小。';
+};
+document.getElementById('clear').onclick = ()=>{
+  path = []; testCharge = null; running = false; draw();
+};
+
+// ---- 物理积分（试探电荷，q>0, m=1）----
+let last = 0;
+function step(now){
+  const dt = Math.min(0.02, (now - last)/1000) * 0.9;
+  last = now;
+  if (running && testCharge){
+    const E = field(testCharge.p);
+    testCharge.v[0] += E[0]*dt*0.55;
+    testCharge.v[1] += E[1]*dt*0.55;
+    testCharge.p[0] += testCharge.v[0]*dt;
+    testCharge.p[1] += testCharge.v[1]*dt;
+    path.push([testCharge.p[0], testCharge.p[1]]);
+    if (path.length>1400) path.shift();
+    if (Math.abs(testCharge.p[0])>1.2 || Math.abs(testCharge.p[1])>1.2) running = false;
+    draw();
+  }
+  requestAnimationFrame(step);
+}
+
+window.addEventListener('resize', ()=>{ resize(); buildLines(); draw(); });
+DPR = Math.min(window.devicePixelRatio || 1, 2);
+resize();
+setMode(2);
+requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>
