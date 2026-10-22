@@ -21,6 +21,27 @@ button.on{background:#1d5cff;border-color:#1d5cff;color:#fff}
 .hl{color:#ffd166;font-weight:700}.key{color:#3ddc84;font-weight:700}.bad{color:#ff7b7b}
 .note{font-size:13px;color:#93a6c6;line-height:1.65;margin-top:8px}
 .chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:20px;background:#1b2c48;color:#9fc2f0;margin-right:6px}
+/* —— 动态板演 —— */
+#board{min-height:120px}
+.bq{opacity:0;transform:translateY(8px);transition:.35s;font-size:15px;line-height:1.7;color:#ffd166;font-weight:700;margin-top:14px}
+.bq.show{opacity:1;transform:none}
+.qn{display:inline-block;font-size:12px;font-weight:700;background:#3a2f10;color:#ffd166;border-radius:20px;padding:1px 9px;margin-right:8px;vertical-align:2px}
+.ba{opacity:0;max-height:0;overflow:hidden;transition:opacity .4s,max-height .45s;font-size:14.5px;line-height:2;font-family:ui-monospace,monospace;color:#cfe0ff;border-left:3px solid #2b3f60;padding-left:10px;margin-top:2px}
+.ba.show{opacity:1;max-height:720px;padding-top:5px;padding-bottom:5px;border-left-color:#3ddc84}
+.bhint{font-size:12px;color:#5f7ba3;margin-top:6px;text-align:center;min-height:16px}
+.bline{opacity:0;transform:translateY(10px);transition:opacity .38s ease,transform .38s ease;font-size:15px;line-height:2;font-family:ui-monospace,monospace;color:#cfe0ff;padding:1px 0}
+.bline.show{opacity:1;transform:none}
+.bline.note{font-size:13.5px;color:#93a6c6;font-family:system-ui,sans-serif;line-height:1.7;margin-top:4px}
+.bline.step{font-size:14.5px;color:#7fd0ff;font-weight:700;font-family:system-ui,sans-serif;margin-top:10px}
+.bline.conc{font-size:14.5px;color:#3ddc84;font-weight:700;font-family:system-ui,sans-serif;margin-top:12px;line-height:1.75;border-left:3px solid #3ddc84;padding-left:9px}
+.bline.hl{color:#ffd166}
+.term{transition:color .3s,opacity .3s,text-decoration-color .3s}
+.killed .term{color:#ff7b7b;text-decoration:line-through;text-decoration-thickness:2px;opacity:.45}
+.bctl{display:flex;gap:8px;margin-top:12px}
+.bctl button{flex:1;padding:11px 6px;font-size:14.5px;border-radius:10px;border:1px solid #2b3f60;background:#152440;color:#dce7fb}
+.bctl button:disabled{opacity:.35}
+.bctl button.pri{background:#1d5cff;border-color:#1d5cff;color:#fff}
+.bprog{font-size:12px;color:#5f7ba3;margin-top:8px;text-align:right}
 </style>
 </head>
 <body>
@@ -60,33 +81,16 @@ button.on{background:#1d5cff;border-color:#1d5cff;color:#fff}
 </div>
 
 <div class="panel">
-  <h3>不用相对运动，怎么算（板演全程）</h3>
-  <div class="note">取地面为原点，向上为正。t = 0 时球在 H 处、管底在地面。</div>
-  <div class="eq" style="font-size:14.5px;line-height:2.1">
-    球　　　y₁ = H − ½gt²<br>
-    管顶　　y₂ = L + v₀t − ½gt²<br>
-    管底　　y₃ = v₀t − ½gt²
+  <h3>不用相对运动，怎么算（点一步走一步）</h3>
+  <div id="board"></div>
+  <div class="bctl">
+    <button id="bprev">← 上一步</button>
+    <button id="bnext" class="pri">下一步 →</button>
+    <button id="bauto">自动</button>
+    <button id="breset">重来</button>
   </div>
-  <div class="note" style="margin-top:10px"><b>① 球碰到管顶：令 y₁ = y₂</b></div>
-  <div class="eq" style="font-size:14.5px">
-    H − ½gt² = L + v₀t − ½gt²<br>
-    <span class="hl">两边的 ½gt² 一模一样，直接消掉</span><br>
-    H − L = v₀t　→　t₁ = (H−L)/v₀ = <span class="key">0.583 s</span>
-  </div>
-  <div class="note" style="margin-top:12px"><b>② 球到达管底：令 y₁ = y₃</b></div>
-  <div class="eq" style="font-size:14.5px">
-    H − ½gt² = v₀t − ½gt²<br>
-    H = v₀t　→　t₂ = H/v₀ = <span class="key">0.833 s</span>
-  </div>
-  <div class="note" style="margin-top:12px"><b>③ 相减</b></div>
-  <div class="eq" style="font-size:14.5px">
-    Δt = t₂ − t₁ = L/v₀ = <span class="hl">0.250 s</span>
-  </div>
-  <div class="note" style="margin-top:12px;border-left:3px solid #3ddc84;padding-left:9px">
-    <b>关键</b>：两个 ½gt² 消掉的那一刻，方程已经变成了相对运动方程——<br>
-    H − L = v₀t 就是“相对位移 = 相对速度 × 时间”。<br>
-    <b>不是两种方法，是同一种方法的两种写法。</b>
-  </div>
+  <div class="bprog" id="bprog"></div>
+  <div class="bhint" id="bhint"></div>
 </div>
 
 <div class="panel">
@@ -259,6 +263,84 @@ function drawRel(){
   c2.fillStyle = '#7fd0ff'; c2.font = 'bold 11px system-ui';
   c2.fillText('管顶相对球 ' + yRelTop.toFixed(2) + ' m', W - 130, PAD_T - 6);
 }
+
+
+/* ===== 引导式板演：先问，再答 ===== */
+const QA = [
+ {q:'球在落、管在升，两个都在动。要描述“球正好到达管顶”，最直接的办法是什么？',
+  a:'让两个物体的<b>位置相等</b>——同一时刻，位于同一高度。'},
+ {q:'那得先写出三个位置。取地面为原点、向上为正，t=0 时球在 H、管底在地面。三个位置分别是什么？',
+  a:'球　　y₁ = H − <span class="term">½gt²</span><br>管顶　y₂ = L + v₀t − <span class="term">½gt²</span><br>管底　y₃ = v₀t − <span class="term">½gt²</span>'},
+ {q:'令 y₁ = y₂，写出来是什么？',
+  a:'H − <span class="term">½gt²</span> = L + v₀t − <span class="term">½gt²</span>'},
+ {q:'盯着这个式子看三秒 —— 有没有一项在两边同时出现，而且完全一样？',
+  a:'有：<b class="hl">½gt²</b>。两边一模一样，可以同时去掉。', kill:true},
+ {q:'去掉它以后剩什么？能解出什么？',
+  a:'H − L = v₀t　→　t₁ = (H−L)/v₀ = <b class="hl">0.583 s</b>'},
+ {q:'接下来“球到达管底”，该令谁等于谁？',
+  a:'y₁ = y₃：H − <span class="term">½gt²</span> = v₀t − <span class="term">½gt²</span><br>→ H = v₀t　→　t₂ = H/v₀ = <b class="hl">0.833 s</b>'},
+ {q:'两次时刻相减，就是穿过所用的时间。算出来是多少？',
+  a:'Δt = t₂ − t₁ = L/v₀ = <b class="hl">0.250 s</b>'},
+ {q:'再想一步：<b>H 为什么不见了？</b>它明明在最开始的式子里。',
+  a:'因为 ½gt² 抵消后，方程里只剩“相对”的量：相对位移 L、相对速度 v₀。<br>H 只决定<b>什么时候开始穿</b>，不决定<b>穿多久</b>。'},
+ {q:'最后一问，先别点：只把 H 从 10 m 改成 20 m，穿过时间变吗？',
+  a:'<b>不变</b>，仍是 0.25 s。<br>但相遇会更晚：t₁ = (20−3)/12 = <b class="hl">1.42 s</b>（原来 0.58 s）。'}
+];
+
+let k = 0;                       // 0..2N，偶数=刚出问题，奇数=刚给答案
+let bTimer = null;
+const board = document.getElementById('board');
+
+function renderBoard(){
+  board.innerHTML = '';
+  QA.forEach((it, i) => {
+    const qd = document.createElement('div');
+    qd.className = 'bq' + (i * 2 < k ? ' show' : '');
+    qd.innerHTML = '<span class="qn">问 ' + (i + 1) + '</span>' + it.q;
+    board.appendChild(qd);
+
+    const ad = document.createElement('div');
+    ad.className = 'ba' + (i * 2 + 1 < k ? ' show' : '') + (it.kill ? ' killed' : '');
+    if (it.kill && i * 2 + 1 < k){
+      const prevA = board.querySelectorAll('.ba')[i - 1];
+      if (prevA) prevA.classList.add('killed');
+    }
+    ad.innerHTML = it.a;
+    board.appendChild(ad);
+  });
+  document.getElementById('bprog').textContent =
+    '已答 ' + Math.floor(k / 2) + ' / ' + QA.length + ' 问';
+  document.getElementById('bprev').disabled = k === 0;
+  document.getElementById('bnext').disabled = k >= QA.length * 2;
+  const hint = document.getElementById('bhint');
+  if (hint) hint.textContent = (k % 2 === 0 && k < QA.length * 2)
+    ? '▸ 想好了再点「下一步」，答案才出现' : '';
+}
+
+function bStep(n){
+  k = Math.max(0, Math.min(QA.length * 2, k + n));
+  renderBoard();
+  const shown = board.querySelectorAll('.ba.show');
+  if (shown.length) shown[shown.length - 1].scrollIntoView({block:'center', behavior:'smooth'});
+}
+
+document.getElementById('bnext').onclick = () => { if (bTimer) return; bStep(1); };
+document.getElementById('bprev').onclick = () => { if (bTimer) return; bStep(-1); };
+document.getElementById('breset').onclick = () => {
+  clearInterval(bTimer); bTimer = null;
+  document.getElementById('bauto').textContent = '自动'; k = 0; renderBoard();
+};
+document.getElementById('bauto').onclick = e => {
+  if (bTimer){ clearInterval(bTimer); bTimer = null; e.target.textContent = '自动'; return; }
+  if (k >= QA.length * 2){ k = 0; renderBoard(); }
+  e.target.textContent = '⏸ 停';
+  bTimer = setInterval(() => {
+    if (k >= QA.length * 2){ clearInterval(bTimer); bTimer = null;
+      document.getElementById('bauto').textContent = '自动'; return; }
+    bStep(1);
+  }, 2400);
+};
+renderBoard();
 
 function drawAll(){
   drawGround(); drawRel();
