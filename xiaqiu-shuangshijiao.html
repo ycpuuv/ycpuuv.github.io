@@ -60,6 +60,57 @@ button.on{background:#1d5cff;border-color:#1d5cff;color:#fff}
 </div>
 
 <div class="panel">
+  <h3>不用相对运动，怎么算（板演全程）</h3>
+  <div class="note">取地面为原点，向上为正。t = 0 时球在 H 处、管底在地面。</div>
+  <div class="eq" style="font-size:14.5px;line-height:2.1">
+    球　　　y₁ = H − ½gt²<br>
+    管顶　　y₂ = L + v₀t − ½gt²<br>
+    管底　　y₃ = v₀t − ½gt²
+  </div>
+  <div class="note" style="margin-top:10px"><b>① 球碰到管顶：令 y₁ = y₂</b></div>
+  <div class="eq" style="font-size:14.5px">
+    H − ½gt² = L + v₀t − ½gt²<br>
+    <span class="hl">两边的 ½gt² 一模一样，直接消掉</span><br>
+    H − L = v₀t　→　t₁ = (H−L)/v₀ = <span class="key">0.583 s</span>
+  </div>
+  <div class="note" style="margin-top:12px"><b>② 球到达管底：令 y₁ = y₃</b></div>
+  <div class="eq" style="font-size:14.5px">
+    H − ½gt² = v₀t − ½gt²<br>
+    H = v₀t　→　t₂ = H/v₀ = <span class="key">0.833 s</span>
+  </div>
+  <div class="note" style="margin-top:12px"><b>③ 相减</b></div>
+  <div class="eq" style="font-size:14.5px">
+    Δt = t₂ − t₁ = L/v₀ = <span class="hl">0.250 s</span>
+  </div>
+  <div class="note" style="margin-top:12px;border-left:3px solid #3ddc84;padding-left:9px">
+    <b>关键</b>：两个 ½gt² 消掉的那一刻，方程已经变成了相对运动方程——<br>
+    H − L = v₀t 就是“相对位移 = 相对速度 × 时间”。<br>
+    <b>不是两种方法，是同一种方法的两种写法。</b>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>什么时候必须硬算</h3>
+  <div class="note">加速度不同时，½(…)t² 消不掉，就变成一元二次方程：</div>
+  <div class="eq" style="font-size:14px;margin-top:6px">½(a₁−a₂)t² − v₀t + (H−L) = 0</div>
+  <div class="note" style="margin-top:8px">
+    例：a₁=−10（球）、a₂=−4（管受很大阻尼）→ 相遇 t ≈ <span class="key">0.517 s</span><br>
+    a₂=0（管匀速上升，比如挂在气球上）→ t ≈ <span class="key">0.485 s</span><br>
+    <b>高一不考这种，但边界要说清：消得掉就是相对运动，消不掉才必须硬算。</b>
+  </div>
+</div>
+
+<div class="panel">
+  <h3>第三种：v–t 图（不用公式）</h3>
+  <div class="note">
+    两条 v–t 线斜率都是 −g → <b>完全平行</b> → 竖直间距恒等于 v₀。<br>
+    位移 = 线下面积 → 位移差 = 两条线之间那块面积 = v₀·Δt。<br>
+    而位移差 = H − (H−L) = L。<br>
+    → <span class="hl">Δt = L/v₀</span>。黑板上画两条平行线，学生一眼就懂。
+  </div>
+</div>
+
+<div class="panel">
   <h3>选项对照</h3>
   <div class="eq" style="font-size:14px">
     <span class="chip">A ✓</span>t=(H−L)/v₀ 对<br>
