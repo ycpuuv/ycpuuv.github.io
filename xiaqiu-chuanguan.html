@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>小球穿管 · 为什么穿过时间等于 L/v₀</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b1220;color:#e8eefc;font-family:system-ui,-apple-system,"Noto Sans CJK SC",sans-serif;padding:10px 12px 24px}
+h1{font-size:19px;margin:2px 0 2px;font-weight:700}
+.sub{font-size:13px;color:#8fa3c8;line-height:1.5;margin-bottom:8px}
+.wrap{position:relative;background:#0f1a2e;border:1px solid #1e2d47;border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto}
+.row{display:flex;gap:8px;margin-top:10px}
+button{flex:1;padding:12px 6px;font-size:15px;border-radius:10px;border:1px solid #2b3f60;background:#152440;color:#dce7fb}
+button.on{background:#1d5cff;border-color:#1d5cff;color:#fff}
+.panel{margin-top:12px;background:#101d33;border:1px solid #1e2d47;border-radius:12px;padding:12px}
+.panel h3{font-size:15px;margin:0 0 8px;color:#7fd0ff}
+.eq{font-size:15px;line-height:1.9;font-family:ui-monospace,monospace;color:#cfe0ff}
+.hl{color:#ffd166;font-weight:700}
+.key{color:#3ddc84;font-weight:700}
+.bad{color:#ff7b7b}
+.note{font-size:13px;color:#93a6c6;line-height:1.6;margin-top:8px}
+.chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:20px;background:#1b2c48;color:#9fc2f0;margin-right:6px}
+</style>
+</head>
+<body>
+<h1>小球穿金属管</h1>
+<div class="sub">球自由落体，管竖直上抛。两者都只受重力 —— <b>加速度完全相同</b>，这是全题的钥匙。</div>
+
+<div class="wrap"><canvas id="cv"></canvas></div>
+
+<div class="row">
+  <button id="play" class="on">▶ 播放</button>
+  <button id="slow">慢放 ×0.35</button>
+  <button id="reset">↺ 重来</button>
+</div>
+
+<div class="panel">
+  <h3>此刻</h3>
+  <div class="eq" id="live"></div>
+</div>
+
+<div class="panel">
+  <h3>三个数，一眼看懂</h3>
+  <div class="eq">
+    t<sub>相遇</sub> = (H−L)/v₀ = 7/12 = <span class="key">0.583 s</span><br>
+    t<sub>穿出</sub> = H/v₀ = 10/12 = <span class="key">0.833 s</span><br>
+    穿过用时 = L/v₀ = 3/12 = <span class="hl">0.250 s</span>
+  </div>
+  <div class="note">穿过用时里没有 H。<b>H 只管什么时候开始穿，不管穿多久。</b></div>
+</div>
+
+<div class="panel">
+  <h3>为什么</h3>
+  <div class="note">
+    两者加速度都是 g（向下），所以<b>相对加速度为零</b>，相对速度永远保持 v₀。<br>
+    球相对管要走的距离，从头到尾就是管的长度 L。<br>
+    → <span class="hl">t = L / v₀</span>，与 H 无关。
+  </div>
+</div>
+
+<div class="panel">
+  <h3>选项对照</h3>
+  <div class="eq" style="font-size:14px">
+    <span class="chip">A ✓</span>t=(H−L)/v₀ 对<br>
+    <span class="chip">B ✓</span>穿过时间 L/v₀ 对 ← <span class="bad">你漏了这个</span><br>
+    <span class="chip">C ✓</span>v₀&gt;√(gH) 时在上升阶段穿过<br>
+    <span class="chip">D ✗</span>增大 H 时间不变，不会变短<br>
+    <span style="color:#ffd166">答案 ABC</span>
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const G = 10, H = 10, L = 3, V0 = 12;
+const T_MEET = (H - L) / V0, T_OUT = H / V0, T_MAX = 1.6;
+let t = 0, playing = false, speed = 0.35, last = 0;
+
+// 世界 → 屏幕
+const W_TOP = 13.2;              // 世界高度(m)
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.parentElement.clientWidth, h = Math.round(w * 1.28);
+  cv.width = w * dpr; cv.height = h * dpr;
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cv._w = w; cv._h = h;
+  draw();
+}
+const PAD_T = 26, PAD_B = 34;
+function Y(y){ return PAD_T + (W_TOP - y) * ((cv._h - PAD_T - PAD_B) / W_TOP); }
+function X(xm){ return cv._w * 0.5 + xm * ((cv._h - PAD_T - PAD_B) / W_TOP); }
+
+function state(tt){
+  const yA = H - 0.5 * G * tt * tt;            // 球
+  const yb = V0 * tt - 0.5 * G * tt * tt;      // 管底
+  const yt = yb + L;                            // 管顶
+  const vA = G * tt, vB = V0 - G * tt;          // 速度(取向下/向上为正各自)
+  return { yA, yb, yt, vA, vB };
+}
+
+function draw(){
+  const s = state(t), Wm = cv._w, Hm = cv._h;
+  ctx.clearRect(0, 0, Wm, Hm);
+
+  // 地面
+  const gy = Y(0);
+  ctx.fillStyle = '#16233a'; ctx.fillRect(0, gy, Wm, Hm - gy);
+    ctx.strokeStyle = '#2e4463'; ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(Wm, gy); ctx.stroke();
+
+  // 刻度
+  ctx.font = '11px ui-monospace,monospace'; ctx.fillStyle = '#5a729a';
+  for (let m = 2; m <= 12; m += 2){
+    const y = Y(m);
+    ctx.strokeStyle = '#1a2740'; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(Wm, y); ctx.stroke();
+    ctx.fillText(m + 'm', 4, y - 3);
+  }
+
+  const tubeW = 0.9;
+  const x1 = X(-tubeW / 2), x2 = X(tubeW / 2);
+
+  // 管
+  const yTop = Y(s.yt), yBot = Y(s.yb);
+  ctx.fillStyle = 'rgba(90,150,255,0.16)';
+  ctx.strokeStyle = '#5a96ff'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.rect(x1, yTop, x2 - x1, yBot - yTop); ctx.fill(); ctx.stroke();
+
+  // 球
+  const bx = X(0), by = Y(s.yA), r = 13;
+  const grad = ctx.createRadialGradient(bx - 4, by - 4, 2, bx, by, r);
+  grad.addColorStop(0, '#ffe08a'); grad.addColorStop(1, '#e8a01e');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(bx, by, r, 0, 7); ctx.fill();
+
+  // 轨迹线
+  ctx.setLineDash([4, 4]); ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255,209,102,0.5)';
+  ctx.beginPath();
+  for (let k = 0; k <= t; k += 0.02){ const ss = state(k); ctx.lineTo(X(0) - 26, Y(ss.yA)); }
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(90,150,255,0.45)';
+  ctx.beginPath();
+  for (let k = 0; k <= t; k += 0.02){ const ss = state(k); ctx.lineTo(X(0) + 26, Y(ss.yb)); }
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 标注：球到管顶的初始距离 H−L
+  if (t < T_MEET){
+    ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 2;
+    const xx = X(0) + 42;
+    ctx.beginPath(); ctx.moveTo(xx, Y(H)); ctx.lineTo(xx, Y(L + 0));
+    const topOfTube = Y(L);
+    ctx.moveTo(xx, Y(H)); ctx.lineTo(xx, topOfTube);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd166'; ctx.font = 'bold 13px system-ui';
+    ctx.fillText('H−L = 7m', xx + 6, (Y(H) + topOfTube) / 2);
+  }
+
+  // 强调：穿过阶段
+  if (t > T_MEET && t < T_OUT){
+    ctx.strokeStyle = 'rgba(61,220,132,0.9)'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(X(0) - 60, by); ctx.lineTo(X(0) + 60, by); ctx.stroke();
+    ctx.fillStyle = '#3ddc84'; ctx.font = 'bold 13px system-ui';
+    ctx.fillText('穿过中', X(0) + 64, by + 4);
+  }
+
+  // 初速度箭头（管）
+  if (t < 0.45){
+    const ax = X(0) + (X(0.9/2) - X(0)) + 14, ay = (yTop + yBot) / 2;
+    const len = 34 * (1 - t / 0.45);
+    ctx.strokeStyle = '#5a96ff'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, ay - len); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ax - 5, ay - len + 7); ctx.lineTo(ax, ay - len); ctx.lineTo(ax + 5, ay - len + 7); ctx.stroke();
+    ctx.fillStyle = '#5a96ff'; ctx.font = 'bold 12px system-ui';
+    ctx.fillText('v₀', ax + 5, ay - len / 2);
+  }
+
+  // 相对速度提示
+  const midY = (Y(s.yA) + Y(s.yt)) / 2;
+  ctx.fillStyle = 'rgba(61,220,132,0.95)'; ctx.font = 'bold 12px system-ui';
+  ctx.fillText('相对速度恒为 v₀', X(0) + 62, Y(0) - 16);
+
+  // 时间轴
+  const tbx = 20, tby = Hm - 14, tbw = Wm - 40;
+  ctx.strokeStyle = '#24405f'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(tbx, tby); ctx.lineTo(tbx + tbw, tby); ctx.stroke();
+  const px = x => tbx + tbw * Math.min(x / T_MAX, 1);
+  ctx.strokeStyle = '#3ddc84'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(px(T_MEET), tby); ctx.lineTo(px(T_OUT), tby); ctx.stroke();
+  ctx.fillStyle = '#ffd166';
+  ctx.beginPath(); ctx.arc(px(t), tby, 5, 0, 7); ctx.fill();
+
+  // 实时数值
+  const inTube = t > T_MEET && t < T_OUT;
+  const rel = s.yA - s.yt;   // 球在管顶上方多高
+  document.getElementById('live').innerHTML =
+    `t = <b>${t.toFixed(3)} s</b>　｜　球高 <b>${Math.max(s.yA,0).toFixed(2)} m</b>　｜　` +
+    `管顶 <b>${s.yt.toFixed(2)} m</b><br>` +
+    (t < T_MEET ? `球还差 <span class="key">${rel.toFixed(2)} m</span> 够到管顶`
+     : inTube ? `<span class="hl">正在管里</span>，已穿 <span class="key">${(s.yt - s.yA).toFixed(2)} m</span> / 3 m`
+     : `<span class="key">已经穿出</span>`);
+}
+
+function loop(ts){
+  if (!last) last = ts;
+  const dt = Math.min((ts - last) / 1000, 0.05); last = ts;
+  if (playing){
+    t += dt * speed;
+    if (t >= T_MAX){ t = T_MAX; playing = false; document.getElementById('play').textContent = '▶ 播放'; }
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+
+document.getElementById('play').onclick = e => {
+  if (t >= T_MAX - 0.01) t = 0;
+  playing = !playing; e.target.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+};
+document.getElementById('slow').onclick = e => {
+  speed = speed === 0.35 ? 0.12 : 0.35;
+  e.target.textContent = speed === 0.35 ? '慢放 ×0.35' : '极慢 ×0.12';
+};
+document.getElementById('reset').onclick = () => { t = 0; playing = false; document.getElementById('play').textContent = '▶ 播放'; };
+
+window.addEventListener('resize', resize);
+resize(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
