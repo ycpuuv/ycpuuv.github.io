@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>小球穿管 · 学生版（点一下出答案）</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b1220;color:#e8eefc;font-family:system-ui,-apple-system,"Noto Sans CJK SC",sans-serif;padding:12px 14px 130px}
+h1{font-size:19px;margin:0 0 4px;font-weight:700}
+.meta{font-size:13px;color:#8fa3c8;line-height:1.6;background:#101d33;border:1px solid #1e2d47;border-radius:10px;padding:9px 11px;margin-bottom:12px}
+.meta b{color:#ffd166}
+.sec{margin:16px 0 6px;font-size:13px;color:#7fd0ff;font-weight:700;letter-spacing:.5px;border-left:3px solid #7fd0ff;padding-left:8px}
+.card{background:#101d33;border:1px solid #1e2d47;border-radius:12px;padding:12px 13px;margin-bottom:10px;transition:border-color .25s}
+.card.open{border-color:#2f6f4d}
+.q{font-size:15.5px;line-height:1.65;color:#ffd166;font-weight:700}
+.qn{display:inline-block;font-size:12px;background:#3a2f10;color:#ffd166;border-radius:20px;padding:1px 9px;margin-right:7px;vertical-align:2px}
+.a{font-size:14.5px;line-height:1.95;color:#cfe0ff;margin-top:9px;border-left:3px solid #3ddc84;padding-left:11px;display:none;font-family:ui-monospace,monospace}
+.card.open .a{display:block;animation:fi .3s ease}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.a.note{font-family:system-ui,sans-serif;font-size:14px;line-height:1.75}
+.hl{color:#ffd166;font-weight:700}.key{color:#3ddc84;font-weight:700}.bad{color:#ff7b7b;font-weight:700}
+.term{color:#ff7b7b;text-decoration:line-through;opacity:.55;text-decoration-thickness:2px}
+.bar{position:fixed;left:0;right:0;bottom:0;background:rgba(11,18,32,.94);backdrop-filter:blur(8px);border-top:1px solid #1e2d47;padding:10px 14px 14px}
+.bar .stat{font-size:12px;color:#5f7ba3;text-align:center;margin-bottom:8px}
+.bar .btns{display:flex;gap:8px}
+.bar button{flex:1;padding:14px 6px;font-size:16px;font-weight:700;border-radius:12px;border:1px solid #2b3f60;background:#152440;color:#dce7fb}
+.bar button.pri{background:#1d5cff;border-color:#1d5cff;color:#fff}
+.bar button:disabled{opacity:.3}
+</style>
+</head>
+<body>
+<h1>小球穿金属管 · 学生版</h1>
+<div class="meta">球从高 <b>H=10 m</b> 处自由下落，管长 <b>L=3 m</b>，管底从地面以 <b>v₀=12 m/s</b> 竖直上抛，g=10 m/s²。<br>每张卡先出问题，自己想完再点“看答案”。</div>
+<div id="app"></div>
+
+<div class="bar">
+  <div class="stat" id="stat"></div>
+  <div class="btns">
+    <button id="reveal" class="pri">看答案</button>
+    <button id="reset">重新开始</button>
+  </div>
+</div>
+
+<script>
+const DATA = [
+ {sec:'第一部分 · 先把坐标系建对（这一步最容易被跳过）', items:[
+  {q:'球在落、管在升，两个都在动。动笔之前，第一步该做什么？',
+   a:'<b class="key">建坐标系</b>：先定原点、正方向、单位。<br>不先定这个，后面每一个符号都可能写反。', note:true},
+  {q:'为什么不能直接列式？',
+   a:'因为“位置”是相对的。不说原点在哪，“球在 8 m 处”这句话没有意义。', note:true},
+  {q:'原点选哪儿？为什么选它？',
+   a:'选<b class="key">地面</b>。<br>管底正好从地面出发，y=0 就是它的初始位置，式子最干净。', note:true},
+  {q:'正方向选向上还是向下？为什么？',
+   a:'选<b class="key">向上</b>。<br>管向上抛，向上为正时 v₀ 是正数，不用写负号，g 直接写 −g。', note:true},
+  {q:'如果非要把正方向选成向下，会怎样？',
+   a:'能算，答案一样，但管的速度要写成 −v₀、重力加速度写成 +g ——<br><b class="bad">每个符号都要多一个负号</b>。坐标系选得不好，不是算错，是算难。', note:true},
+  {q:'那如果把原点选在球上呢？（球不动，管子动）',
+   a:'管相对球以 v₀ <b class="key">匀速</b>向上滑过。<br>换一个坐标系，难题直接变成简单题——<b>这就是相对运动的由来</b>。', note:true}
+ ]},
+ {sec:'第二部分 · 写出三个位置', items:[
+  {q:'取地面为原点、向上为正，t=0 时球在 H 处、管底在地面。写出三个物体的位置。',
+   a:'球　　y₁ = H − <span class="term">½gt²</span><br>管顶　y₂ = L + v₀t − <span class="term">½gt²</span><br>管底　y₃ = v₀t − <span class="term">½gt²</span>'},
+  {q:'“球正好到达管顶”这句话，翻译成方程是什么？',
+   a:'令两个位置相等：<b class="key">y₁ = y₂</b><br>同一时刻，位于同一高度。'}
+ ]},
+ {sec:'第三部分 · 消去那一项', items:[
+  {q:'写出 y₁ = y₂ 的完整式子。',
+   a:'H − <span class="term">½gt²</span> = L + v₀t − <span class="term">½gt²</span>'},
+  {q:'盯着这个式子看几秒 —— 有没有一项在两边同时出现，而且完全一样？',
+   a:'有：<b class="hl">½gt²</b>。两边一模一样，可以同时去掉。<br>（去掉它不是技巧，是等式两边同减一个数。）'},
+  {q:'去掉之后剩什么？解出什么？',
+   a:'H − L = v₀t<br>t₁ = (H−L)/v₀ = 7/12 = <b class="hl">0.583 s</b>'}
+ ]},
+ {sec:'第四部分 · 穿出', items:[
+  {q:'接着是“球到达管底”。这次该令谁等于谁？',
+   a:'y₁ = y₃<br>H − <span class="term">½gt²</span> = v₀t − <span class="term">½gt²</span><br>→ H = v₀t　→　t₂ = H/v₀ = <b class="hl">0.833 s</b>'}
+  ,{q:'两次时刻相减，穿过用了多久？',
+   a:'Δt = t₂ − t₁ = L/v₀ = 3/12 = <b class="hl">0.250 s</b>'}
+ ]},
+ {sec:'第五部分 · 想透它', items:[
+  {q:'H 为什么不见了？它明明在最开始的式子里。',
+   a:'因为 ½gt² 抵消后，方程里只剩“相对”的量：<br>相对位移 L、相对速度 v₀。<br><b>H 只决定什么时候开始穿，不决定穿多久。</b>', note:true},
+  {q:'只把 H 从 10 m 改成 20 m，穿过时间变吗？',
+   a:'<b class="key">不变</b>，仍是 0.25 s。<br>但相遇会更晚：t₁ = (20−3)/12 = <b class="hl">1.42 s</b>（原来 0.58 s）。', note:true},
+  {q:'为什么换到球上看，管是匀速的？',
+   a:'两者加速度都是 g（向下），相对加速度 = g − g = <b class="key">0</b>。<br>加速度为零 → 相对速度不变，一直等于 v₀。', note:true},
+  {q:'最后一问：如果两者加速度不同（比如管在液体里受阻尼），还能“消掉 ½gt²”吗？',
+   a:'<b class="bad">不能</b>。会变成一元二次方程：<br>½(a₁−a₂)t² − v₀t + (H−L) = 0<br>必须解方程、挑物理上说得通的根。<br><b>消得掉就是相对运动，消不掉才必须硬算。</b>', note:true}
+ ]}
+];
+
+let flat = [];
+DATA.forEach((s, si) => s.items.forEach((it, ii) => flat.push({...it, si, ii})));
+let cur = 0;   // 下一个要揭示的下标
+
+const app = document.getElementById('app');
+function build(){
+  app.innerHTML = '';
+  DATA.forEach((s, si) => {
+    const h = document.createElement('div');
+    h.className = 'sec'; h.textContent = s.sec; app.appendChild(h);
+    s.items.forEach((it, ii) => {
+      const idx = flat.findIndex(f => f.si === si && f.ii === ii);
+      const c = document.createElement('div');
+      c.className = 'card'; c.id = 'c' + idx;
+      c.innerHTML = '<div class="q"><span class="qn">' + (idx + 1) + '</span>' + it.q + '</div>' +
+                    '<div class="a' + (it.note ? ' note' : '') + '">' + it.a + '</div>';
+      c.onclick = () => toggle(idx);
+      app.appendChild(c);
+    });
+  });
+  update();
+}
+function update(){
+  document.getElementById('stat').textContent =
+    '已看 ' + cur + ' / ' + flat.length + ' 条' + (cur < flat.length ? '　·　还剩 ' + (flat.length - cur) + ' 条' : '　·　全部看完');
+  document.getElementById('reveal').textContent = cur >= flat.length ? '全部看完了' : '看答案 →';
+  document.getElementById('reveal').disabled = cur >= flat.length;
+}
+function reveal(){
+  if (cur >= flat.length) return;
+  const c = document.getElementById('c' + cur);
+  c.classList.add('open');
+  cur++;
+  update();
+  c.scrollIntoView({block:'center', behavior:'smooth'});
+}
+function toggle(i){
+  const c = document.getElementById('c' + i);
+  const wasOpen = c.classList.contains('open');
+  c.classList.toggle('open');
+  if (!wasOpen && i >= cur){ cur = i + 1; update(); }
+  else if (wasOpen && i < cur){ cur = i; update(); }
+}
+document.getElementById('reveal').onclick = reveal;
+document.getElementById('reset').onclick = () => {
+  cur = 0; document.querySelectorAll('.card').forEach(c => c.classList.remove('open'));
+  update(); window.scrollTo({top:0, behavior:'smooth'});
+};
+build();
+</script>
+</body>
+</html>
