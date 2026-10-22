@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>水柱为什么越往下越细</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b1220;color:#e8eefc;font-family:system-ui,-apple-system,"Noto Sans CJK SC",sans-serif;padding:10px 12px 26px}
+h1{font-size:19px;margin:2px 0 4px;font-weight:700}
+.sub{font-size:13px;color:#8fa3c8;line-height:1.55;margin-bottom:8px}
+.wrap{background:#0f1a2e;border:1px solid #1e2d47;border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto}
+.ctl{margin-top:10px;background:#101d33;border:1px solid #1e2d47;border-radius:12px;padding:12px}
+.ctl label{font-size:14px;color:#cfe0ff;display:flex;justify-content:space-between;margin-bottom:6px}
+input[type=range]{width:100%;height:34px;accent-color:#1d5cff}
+.panel{margin-top:10px;background:#101d33;border:1px solid #1e2d47;border-radius:12px;padding:12px}
+.panel h3{font-size:15px;margin:0 0 8px;color:#7fd0ff}
+.eq{font-size:15px;line-height:2;font-family:ui-monospace,monospace;color:#cfe0ff}
+.hl{color:#ffd166;font-weight:700}.key{color:#3ddc84;font-weight:700}.bad{color:#ff7b7b;font-weight:700}
+.note{font-size:13.5px;color:#93a6c6;line-height:1.7;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>水柱为什么越往下越细</h1>
+<div class="sub">水不可压缩，同一秒流过每一个横截面的水量必然相同：<b>S₁v₁ = S₂v₂</b>。往下速度变快，面积就只能变小。</div>
+
+<div class="wrap"><canvas id="cv"></canvas></div>
+
+<div class="ctl">
+  <label><span>出水速度 v₀</span><b id="v0v">0.6 m/s</b></label>
+  <input id="v0" type="range" min="0.2" max="2.0" step="0.1" value="0.6">
+</div>
+
+<div class="panel">
+  <h3>两个位置的实测值</h3>
+  <div class="eq" id="nums"></div>
+</div>
+
+<div class="panel">
+  <h3>答案就是它</h3>
+  <div class="eq">
+    S₁/S₂ = v₂/v₁ =
+    <span class="hl">√(v₀²+2gh₂) / √(v₀²+2gh₁)</span>
+  </div>
+  <div class="note">全程只用了一次 v² = v₀² + 2gh，和一次 S·v = 常量。<b>不需要知道流量，也不需要知道管子多粗。</b></div>
+</div>
+
+<div class="panel">
+  <h3>三个容易踩的坑</h3>
+  <div class="note">
+    ① <span class="bad">不是 1/v²</span>。连续方程是 Sv = 常量，一次方，所以 S ∝ 1/v。<br>
+    ② <span class="bad">不是 1/v 的平方根再开方</span>。半径 r ∝ 1/√v，那是半径，别把半径比当面积比。<br>
+    ③ <span class="bad">h 要量到出水口</span>。h=0 处 v=v₀≠0，不是自由落体。
+  </div>
+</div>
+
+<script>
+const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const G = 9.8, HM = 1.0;      // 水柱高度 1 m
+let v0 = 0.6;
+const H1 = 0.18, H2 = 0.80;   // 两个观察位置（m）
+
+const vel = h => Math.sqrt(v0 * v0 + 2 * G * h);
+// 半径比 = (v0/v)^(1/2) = (v0²/(v0²+2gh))^(1/4)
+const radRatio = h => Math.pow(v0 * v0 / (v0 * v0 + 2 * G * h), 0.25);
+
+function resize(){
+  const dpr = window.devicePixelRatio || 1;
+  const w = cv.parentElement.clientWidth, h = Math.round(w * 1.30);
+  cv.width = w * dpr; cv.height = h * dpr;
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  cv._w = w; cv._h = h; draw();
+}
+
+function draw(){
+  const W = cv._w, H = cv._h;
+  ctx.clearRect(0, 0, W, H);
+  const TOP = 46, BOT = H - 26;
+  const yOf = m => TOP + (m / HM) * (BOT - TOP);
+  const cx = W * 0.21;
+  const r0 = 24;
+
+  // 水槽背景条
+  ctx.fillStyle = 'rgba(40,80,140,0.10)';
+  ctx.fillRect(cx - 40, TOP - 34, 80, BOT - TOP + 40);
+
+  // 水龙头
+  ctx.fillStyle = '#8fa3c8';
+  ctx.fillRect(cx - 20, TOP - 40, 40, 12);
+  ctx.fillRect(cx - 8, TOP - 30, 16, 30);
+  ctx.fillStyle = '#cfe0ff'; ctx.font = 'bold 12px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('水龙头', cx, TOP - 48);
+  ctx.textAlign = 'left';
+
+  // 水柱本体（按半径曲线画左右边界）
+  const pts = 90;
+  ctx.beginPath();
+  for (let i = 0; i <= pts; i++){
+    const m = HM * i / pts, y = yOf(m), r = r0 * radRatio(m);
+    i ? ctx.lineTo(cx - r, y) : ctx.moveTo(cx - r, y);
+  }
+  for (let i = pts; i >= 0; i--){
+    const m = HM * i / pts, y = yOf(m), r = r0 * radRatio(m);
+    ctx.lineTo(cx + r, y);
+  }
+  ctx.closePath();
+  const g1 = ctx.createLinearGradient(cx - r0, 0, cx + r0, 0);
+  g1.addColorStop(0, 'rgba(90,180,255,0.35)');
+  g1.addColorStop(0.35, 'rgba(150,220,255,0.75)');
+  g1.addColorStop(0.55, 'rgba(210,240,255,0.95)');
+  g1.addColorStop(1, 'rgba(90,180,255,0.35)');
+  ctx.fillStyle = g1; ctx.fill();
+  ctx.strokeStyle = 'rgba(160,220,255,0.55)'; ctx.lineWidth = 1; ctx.stroke();
+
+  // 两个截面 + 标注
+  [[H1, '#ffd166', 'h₁'], [H2, '#3ddc84', 'h₂']].forEach(([m, col, name]) => {
+    const y = yOf(m), r = r0 * radRatio(m);
+    ctx.strokeStyle = col; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(cx - r - 10, y); ctx.lineTo(cx + r + 10, y); ctx.stroke();
+    // 半径箭头
+    ctx.beginPath(); ctx.moveTo(cx, y); ctx.lineTo(cx + r + 10, y); ctx.stroke();
+    ctx.fillStyle = col; ctx.font = 'bold 13px ui-monospace,monospace';
+    ctx.fillText(name, cx + r + 18, y + 4);
+    ctx.font = '12px ui-monospace,monospace';
+    ctx.fillText('r = ' + (r / r0).toFixed(2) + ' r₀', cx + r + 18, y + 20);
+  });
+
+  // 右侧：v 与 S 随高度变化（都向右，各自归一化）
+  const gx = W * 0.44, gw = W * 0.50;
+  const yTo = m => TOP + (m / HM) * (BOT - TOP);
+  const vmax = vel(HM);
+
+  ctx.strokeStyle = '#5a96ff'; ctx.lineWidth = 3; ctx.beginPath();
+  for (let i = 0; i <= 60; i++){
+    const m = HM * i / 60, y = yTo(m);
+    const x = gx + (vel(m) / vmax) * gw;
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.stroke();
+
+  ctx.strokeStyle = '#3ddc84'; ctx.lineWidth = 3; ctx.beginPath();
+  for (let i = 0; i <= 60; i++){
+    const m = HM * i / 60, y = yTo(m);
+    const x = gx + radRatio(m) * radRatio(m) * gw;   // S/S0
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  }
+  ctx.stroke();
+
+  // 图例
+  ctx.font = 'bold 12px system-ui';
+  ctx.fillStyle = '#5a96ff'; ctx.fillText('v ↗', gx + gw - 4, TOP - 6);
+  ctx.fillStyle = '#3ddc84'; ctx.fillText('S ↘', gx + 2, TOP - 6);
+  ctx.fillStyle = '#7d92b5'; ctx.font = '11px system-ui';
+  ctx.fillText('同一高度处读数', gx + gw * 0.18, BOT + 18);
+
+  // 一行提示
+  ctx.fillStyle = '#7d92b5'; ctx.font = '12px system-ui';
+  ctx.fillText('往下：v 变大 ↑   S 变小 ↓', gx - gw * 0.7, BOT + 18);
+}
+
+function update(){
+  const v1 = vel(H1), v2 = vel(H2);
+  const s1 = 1 / v1, s2 = 1 / v2, s0 = 1 / v0;
+  document.getElementById('v0v').textContent = v0.toFixed(1) + ' m/s';
+  document.getElementById('nums').innerHTML =
+    `h₁ = 0.18 m　v₁ = ${v1.toFixed(2)} m/s　S₁ = <b>${(s1/s0*100).toFixed(0)}%</b> S₀<br>` +
+    `h₂ = 0.80 m　v₂ = ${v2.toFixed(2)} m/s　S₂ = <b>${(s2/s0*100).toFixed(0)}%</b> S₀<br>` +
+    `S₁/S₂ = <b class="key">${(s1/s2).toFixed(3)}</b>　（= v₂/v₁ = ${(v2/v1).toFixed(3)}）`;
+  draw();
+}
+
+document.getElementById('v0').oninput = e => { v0 = parseFloat(e.target.value); update(); };
+window.addEventListener('resize', resize);
+resize(); update();
+</script>
+</body>
+</html>
