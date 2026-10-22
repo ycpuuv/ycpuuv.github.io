@@ -23,6 +23,8 @@ button.on{background:#1d5cff;border-color:#1d5cff;color:#fff}
 .chip{display:inline-block;font-size:12px;padding:2px 8px;border-radius:20px;background:#1b2c48;color:#9fc2f0;margin-right:6px}
 /* —— 动态板演 —— */
 #board{min-height:120px}
+.bsec{font-size:13px;color:#7fd0ff;font-weight:700;border-left:3px solid #7fd0ff;padding-left:8px;margin-top:16px;opacity:0;transform:translateY(8px);transition:.35s}
+.bsec.show{opacity:1;transform:none}
 .bq{opacity:0;transform:translateY(8px);transition:.35s;font-size:15px;line-height:1.7;color:#ffd166;font-weight:700;margin-top:14px}
 .bq.show{opacity:1;transform:none}
 .qn{display:inline-block;font-size:12px;font-weight:700;background:#3a2f10;color:#ffd166;border-radius:20px;padding:1px 9px;margin-right:8px;vertical-align:2px}
@@ -267,9 +269,21 @@ function drawRel(){
 
 /* ===== 引导式板演：先问，再答 ===== */
 const QA = [
- {q:'球在落、管在升，两个都在动。要描述“球正好到达管顶”，最直接的办法是什么？',
-  a:'让两个物体的<b>位置相等</b>——同一时刻，位于同一高度。'},
- {q:'那得先写出三个位置。取地面为原点、向上为正，t=0 时球在 H、管底在地面。三个位置分别是什么？',
+ {sec:'第一步 · 建坐标系（最容易被跳过的一步）',
+  q:'球在落、管在升，两个都在动。动笔之前，第一步该做什么？',
+  a:'<b>建坐标系</b>：先定原点、正方向、单位。不定这个，后面每个符号都可能写反。'},
+ {q:'为什么不能直接列式？',
+  a:'因为“位置”是相对的。不说原点在哪，“球在 8 m 处”这句话没有意义。'},
+ {q:'原点选哪儿？为什么选它？',
+  a:'选<b>地面</b>。管底正好从地面出发，y=0 就是它的初始位置，式子最干净。'},
+ {q:'正方向选向上还是向下？为什么？',
+  a:'选<b>向上</b>。管向上抛，向上为正时 v₀ 是正数，不用写负号。'},
+ {q:'如果非要把正方向选成向下，会怎样？',
+  a:'能算，答案一样，但管的速度写成 −v₀、重力加速度写成 +g——<b>每个符号多一个负号</b>。<br>坐标系选得不好，不是算错，是算难。'},
+ {q:'那如果原点选在球上呢？（球不动、管在动）',
+  a:'管相对球以 v₀ <b>匀速</b>向上滑过。<br>换一个坐标系，难题直接变成简单题——<b>这就是相对运动的由来</b>。'},
+ {sec:'第二步 · 写出三个位置',
+  q:'取地面为原点、向上为正，t=0 时球在 H 处、管底在地面。三个位置分别是什么？',
   a:'球　　y₁ = H − <span class="term">½gt²</span><br>管顶　y₂ = L + v₀t − <span class="term">½gt²</span><br>管底　y₃ = v₀t − <span class="term">½gt²</span>'},
  {q:'令 y₁ = y₂，写出来是什么？',
   a:'H − <span class="term">½gt²</span> = L + v₀t − <span class="term">½gt²</span>'},
@@ -294,6 +308,12 @@ const board = document.getElementById('board');
 function renderBoard(){
   board.innerHTML = '';
   QA.forEach((it, i) => {
+    if (it.sec){
+      const sh = document.createElement('div');
+      sh.className = 'bsec' + (i * 2 <= k ? ' show' : '');
+      sh.textContent = it.sec;
+      board.appendChild(sh);
+    }
     const qd = document.createElement('div');
     qd.className = 'bq' + (i * 2 < k ? ' show' : '');
     qd.innerHTML = '<span class="qn">问 ' + (i + 1) + '</span>' + it.q;
