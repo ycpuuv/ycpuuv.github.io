@@ -28,6 +28,11 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 #stepBox p{margin:0 0 8px}
 #stepBox .k{color:#7fe0a0;font-weight:700}
 #stepBox .w{color:#ff9b7b;font-weight:700}
+#stepBox .cf{background:#3a1f21;border-left:3px solid #ff6b6b;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;font-size:14.5px;color:#ffc9c9;line-height:1.75}
+#stepBox .cf b{color:#ff8f8f}
+#stepBox .ask{background:#3a331c;border-left:3px solid #ffd166;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;font-size:14.5px;color:#ffe6a8;line-height:1.75}
+#stepBox .sol{background:#183226;border-left:3px solid #5fd68a;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;font-size:14.5px;color:#c4f2d8;line-height:1.75}
+#stepBox .sol b{color:#8fe0b0}
 #stepBox .q{background:#1a2431;border-left:3px solid #ffd166;padding:8px 10px;border-radius:0 8px 8px 0;margin:8px 0;font-size:14px;color:#ffd9a0}
 .ctrl{display:flex;gap:8px;margin-bottom:10px}
 .ctrl button{flex:1;padding:11px;font-size:15px;font-weight:700;border-radius:10px;border:none;background:#1f6f9c;color:#fff}
@@ -42,7 +47,7 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 </head>
 <body>
 <h1>传送带上的能量去哪了</h1>
-<div class="sub">一道传送带题，算出 1.6 J 的能量凭空消失。<br>层层拆开看，它去了一个你想不到的地方。</div>
+<div class="sub">一道传送带题，能挖出五个让高三学生当场卡住的矛盾。<br>每一个,都先别急着给答案。</div>
 
 <div class="card">
   <canvas id="cv" width="760" height="560"></canvas>
@@ -63,7 +68,7 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 </div>
 
 <div class="card">
-  <div class="ttl">六步看懂</div>
+  <div class="ttl">五个矛盾，逐个破解</div>
   <div class="steps" id="steps"></div>
   <div id="stepBox"></div>
 </div>
@@ -260,39 +265,64 @@ document.getElementById('reset').onclick=()=>{ T=0; playing=false; last=0; docum
 
 /* ============ 六步 ============ */
 const STEPS=[
- {k:'① 谜题', h:'先算一遍，然后卡住',
-  body:`<p>木块滑到低端，重力势能减少 <span class="k">mgLsin37° = 16.8 J</span>。</p>
-  <p>动能增加 <span class="k">½mv² = 12.8 J</span>，木块与带之间生热 <span class="w">2.4 J</span>。</p>
-  <p>12.8 + 2.4 = 15.2 J。可是势能明明少了 16.8 J。</p>
-  <div class="q">差额 1.6 J 去哪了？能量不守恒了吗？</div>`},
- {k:'② 分段', h:'为什么必须分两段',
-  body:`<p>木块刚放上去速度是 0，皮带是 4 m/s 往下走。木块比皮带慢，摩擦力把木块拉住——<b>方向沿斜面向下</b>。</p>
-  <p>加速到 4 m/s 时，木块与皮带同速。此后还能一起走吗？看 μ 和 tanθ：</p>
-  <p>μ = 0.25，tan37° = 0.75。<b>μ &lt; tanθ</b>，最大静摩擦力不够，木块继续加速下滑。</p>
-  <p>两个阶段：<span class="k">a₁ = g(sin37°+μcos37°) = 8 m/s²</span>，<span class="k">a₂ = g(sin37°−μcos37°) = 4 m/s²</span>。</p>`},
- {k:'③ 木块的账', h:'摩擦力做了多少功',
-  body:`<p>阶段①：t₁ = 0.5 s，木块走 s₁ = 1 m。摩擦力向下，做正功 <span class="k">+0.8 J</span>。</p>
-  <p>阶段②：t₂ = 1 s，木块走 s₂ = 6 m。摩擦力向上，做负功 <span class="w">−4.8 J</span>。</p>
-  <p>全过程摩擦力对木块做功 <b>−4.0 J</b>。</p>
-  <p>验证木块的收支：16.8（重力做功）− 4.0（摩擦）= <b>12.8 J</b>，正好等于动能增加。</p>
-  <div class="q">木块自己是收支平衡的。那 1.6 J 的问题不在木块身上。</div>`},
- {kk:1, k:'④ 生热', h:'2.4 J 怎么来的',
-  body:`<p>生热 = 摩擦力 × <b>相对路程</b>，不是木块位移。</p>
-  <p>阶段①皮带比木块多走 1 m，阶段②木块比皮带多走 2 m，相对路程合计 <b>3 m</b>。</p>
-  <p>Q = 0.8 N × 3 m = <span class="w">2.4 J</span>。</p>
-  <p>动画里那个红点就是记号：皮带走 6 m、木块走 7 m，红点跑到木块前面去了——<b>那个差距就是相对位移</b>。</p>`},
- {k:'⑤ 换对象', h:'该问传送带了',
-  body:`<p>摩擦力是相互的。木块受 0.8 N，皮带也受 0.8 N，方向相反。</p>
-  <p>阶段①：皮带受摩擦力<b>向上</b>，皮带向下走 2 m → 做功 <span class="w">−1.6 J</span>。</p>
-  <p>阶段②：皮带受摩擦力<b>向下</b>，皮带向下走 4 m → 做功 <span class="k">+3.2 J</span>。</p>
-  <p>全过程皮带从摩擦中净得 <b>1.6 J</b>。</p>
-  <div class="q">找到了。就是那 1.6 J。</div>`},
- {k:'⑥ 闭合', h:'能量守恒，一分不少',
-  body:`<p>皮带是被电动机拖着匀速转的。皮带从摩擦里拿到 1.6 J，电动机就<b>少输出 1.6 J</b>。</p>
-  <p>完整账本：<br>16.8 J（势能减少）= 12.8 J（动能）+ 2.4 J（生热）+ 1.6 J（电动机少做的功）</p>
-  <p class="k">左边 16.8，右边 16.8。平了。</p>
-  <p>所谓“消失的能量”，只是<b>换了一个账户</b>——从木块的机械能账户，转到了电动机的电能账户。</p>
-  <div class="q">三条通用结论：<br>① 摩擦生热 = f × 相对路程<br>② 多消耗的电能 = f × 皮带位移<br>③ 功是能量转化的量度，换对象就换账户</div>`}
+ {k:'矛盾①', h:'负功，怎么还加速了？',
+  body:`<div class="cf">把全过程算一遍：摩擦力对木块做功 <b>−4.0 J</b>。<br>可木块的速度，从 0 变成了 8 m/s。</div>
+  <div class="ask">做负功，动能反而增加？这一步很多学生当场卡住。</div>
+  <div class="sol">负功不是"倒扣"，是<b>少给</b>。<br>
+  重力给了 16.8 J，摩擦拿走 4.0 J，净到手 12.8 J——正好等于动能增加量。<br>
+  就像工资 16.8、扣税 4.0、到手 12.8。不能说"扣了税你怎么还涨工资"。<br>
+  <b>功要一项一项算，动能只看净功。</b></div>
+  <p class="tips">看动画：绿箭头是速度，橙条是生热，蓝条是势能减少。</p>`},
+
+ {k:'矛盾②', h:'做正功，怎么还生热？',
+  body:`<div class="cf">阶段①，摩擦力对木块做 <b>正功 +0.8 J</b>。<br>可这同一段时间里，木块和皮带之间<b>生了 0.8 J 的热</b>。</div>
+  <div class="ask">课本上说"克服摩擦力做功才生热"。这里摩擦明明在帮忙，怎么还发热？</div>
+  <div class="sol">因为这是<b>两把不同的尺子</b>：<br>
+  · <b>做功</b>看物体<b>对地的位移</b><br>
+  · <b>生热</b>看两物体之间的<b>相对路程</b><br>
+  摩擦做正功、做负功、不做功，都可能生热。生热只看有没有<b>相对滑动</b>。</div>
+  <div class="cf">⚠ 陷阱：阶段①两个数都是 0.8，<b>纯属巧合</b>。<br>别把它记成"做功 = 生热"，阶段②立刻就不相等了。</div>`},
+
+ {k:'矛盾③', h:'4.0 还是 2.4？',
+  body:`<div class="cf">"摩擦生热 = 克服摩擦力做的功"——按这句话算，Q = <b>4.0 J</b>。<br>可是正确答案是 <b>2.4 J</b>。差 1.6 J。</div>
+  <div class="ask">同一件事，两个算法，两个结果。哪个错了？</div>
+  <div class="sol">都错在那个前提上。正确式子只有一条：<br>
+  <b>Q = f × 相对路程 = 0.8 × 3 = 2.4 J</b><br>
+  相对路程：阶段① 皮带多走 1 m，阶段② 木块多走 2 m，合计 3 m。</div>
+  <div class="sol">还有一条更漂亮的等价关系：<br>
+  <b>摩擦力对木块做功 + 对皮带做功 = −Q</b><br>
+  (−4.0) + (+1.6) = <b>−2.4</b> ✓</div>
+  <div class="cf">"克服摩擦力做功"只在<b>皮带静止</b>时才对。<br>皮带一动，就必须换成相对路程。<b>这是本题的命门。</b></div>`},
+
+ {k:'矛盾④', h:'匀速，怎么还获得能量？',
+  body:`<div class="cf">皮带是<b>匀速</b>运动的。<br>匀速 → 合力为零 → 合力做功为零。<br>那它凭什么"获得 1.6 J"？</div>
+  <div class="ask">合力为零的物体，能量怎么会变？</div>
+  <div class="sol"><b>净功为零，不等于每个力都不做功。</b><br>
+  皮带身上有两个力：电动机的牵引、木块给的摩擦。大小相等、方向相反，<b>合力为零</b>，但两个力<b>都在做功</b>。<br>
+  · 阶段① 摩擦 −1.6 J<br>
+  · 阶段② 摩擦 +3.2 J<br>
+  · 摩擦净给皮带 <b>+1.6 J</b><br>
+  · 电动机净做 <b>−1.6 J</b>（阶段②它在被倒拖，相当于回收）<br>
+  两者相加正好为零——皮带能量没变，<b>但电机少出了 1.6 J</b>。</div>
+  <div class="sol">所以"皮带获得 1.6 J"这句话要说得更准：<br><b>皮带替电动机省了 1.6 J。</b></div>`},
+
+ {k:'矛盾⑤', h:'少了 1.6 J，守恒破了吗？',
+  body:`<div class="cf">势能减少 <b>16.8 J</b><br>动能增加 <b>12.8 J</b>，生热 <b>2.4 J</b><br>12.8 + 2.4 = <b>15.2 J</b></div>
+  <div class="ask">还有 1.6 J 呢？能量守恒是错的吗？</div>
+  <div class="sol">账本没算全。漏了第四个账户：<b>电动机少输出的 1.6 J</b>。<br><br>
+  <b>16.8 = 12.8 + 2.4 + 1.6</b><br><br>
+  左边右边都是 16.8。能量一分没少，只是从"机械能账户"转到了"电能账户"。</div>
+  <div class="cf">记住这一句：<b>所谓能量消失，都是账户没找全。</b><br>找不到的时候，就问一句——<b>还有谁在受力？还有谁在动？</b></div>`},
+
+ {k:'收束', h:'三条能带走的结论',
+  body:`<p class="sol"><b>① 摩擦生热 = f × 相对路程</b><br>永远不是位移。</p>
+  <p class="sol"><b>② 多消耗的电能 = f × 皮带位移</b></p>
+  <p class="sol"><b>③ 功是能量转化的量度</b><br>换一个对象，就换一个账户；账不平，就说明还有对象没算。</p>
+  <div class="cf">四个常见情境对照：<br>
+  水平同向 × 倾斜同向 → 摩擦总功为正，电动机多出力<br>
+  水平反向 × 倾斜反向 → 摩擦总功为负，机械能转成内能<br>
+  <b>不管哪种，Q 都是 f × 相对路程，能量永远守恒。</b></div>
+  <p class="tips">课堂用法：每个矛盾先让学生自己算、自己发现不对，再点下一步。别一次讲完。</p>`}
 ];
 let cur=0;
 const box=document.getElementById('stepBox'), stepsEl=document.getElementById('steps');
@@ -305,7 +335,7 @@ function go(i){
   const st=STEPS[cur];
   box.innerHTML='<h3>'+st.h+'</h3>'+st.body;
   // 切到对应的物理时刻
-  const marks=[0, T1, TEND, TEND, TEND, TEND];
+  const marks=[TEND, T1, TEND, TEND, TEND, TEND];
   T=marks[cur]; playing=false; last=0;
   document.getElementById('play').textContent='▶ 播放全程';
   drawAll(T); updatePanel(T);
