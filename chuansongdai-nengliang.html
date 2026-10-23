@@ -186,9 +186,8 @@ function drawRel(t){
   });
   const d=Math.abs(sB-sM);
   if(d>0.22){
-    ctx.fillStyle='#ffb3b3'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
-    const mid=ptOn((sB+sM)/2,0.72);
-    ctx.fillText('此刻相距 '+d.toFixed(1)+' m', mid.x, mid.y);
+    ctx.fillStyle='#ffb3b3'; ctx.font='bold 17px sans-serif'; ctx.textAlign='left';
+    ctx.fillText('● 记号与木块相距 '+d.toFixed(1)+' m', 24, H-28);
   }
 }
 function drawRuler(t){
