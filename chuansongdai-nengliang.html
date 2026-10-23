@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>传送带上的能量去哪了 · 功与能的关系</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b1118;color:#e8eef6;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:14px 12px 90px}
+h1{font-size:20px;margin:0 0 4px;font-weight:800;letter-spacing:.5px}
+.sub{font-size:13px;color:#7f92a8;margin-bottom:14px;line-height:1.6}
+.card{background:#131c26;border:1px solid #22303f;border-radius:12px;padding:12px;margin-bottom:12px}
+canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
+.ttl{font-size:14px;color:#7fd0ff;font-weight:700;margin-bottom:8px}
+.row{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:14px}
+.row .nm{width:96px;color:#9fb3c8;flex:0 0 auto;font-size:13px}
+.bar{flex:1;height:16px;background:#1b2836;border-radius:8px;overflow:hidden;position:relative}
+.bar i{display:block;height:100%;width:0;border-radius:8px;transition:width .12s linear}
+.val{width:62px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:14px}
+.check{margin-top:10px;padding-top:10px;border-top:1px dashed #2a3a4d;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+.check b{font-size:19px;font-variant-numeric:tabular-nums}
+.steps{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.steps button{flex:1 1 auto;min-width:44px;padding:8px 4px;font-size:13px;border-radius:8px;border:1px solid #2a3a4d;background:#172230;color:#8fa4ba;font-weight:700}
+.steps button.on{background:#1c4d6e;border-color:#2f89b8;color:#bfe9ff}
+.steps button.done{background:#1a3a2a;border-color:#2d6b48;color:#8fe0b0}
+#stepBox{font-size:15px;line-height:1.85}
+#stepBox h3{font-size:16px;margin:0 0 8px;color:#ffd166}
+#stepBox p{margin:0 0 8px}
+#stepBox .k{color:#7fe0a0;font-weight:700}
+#stepBox .w{color:#ff9b7b;font-weight:700}
+#stepBox .q{background:#1a2431;border-left:3px solid #ffd166;padding:8px 10px;border-radius:0 8px 8px 0;margin:8px 0;font-size:14px;color:#ffd9a0}
+.ctrl{display:flex;gap:8px;margin-bottom:10px}
+.ctrl button{flex:1;padding:11px;font-size:15px;font-weight:700;border-radius:10px;border:none;background:#1f6f9c;color:#fff}
+.ctrl button.ghost{background:#22303f;color:#9fb3c8}
+.foot{position:fixed;left:0;right:0;bottom:0;background:#0b1118ee;border-top:1px solid #22303f;padding:10px 12px;display:flex;gap:8px;backdrop-filter:blur(6px)}
+.foot button{flex:1;padding:12px;font-size:15px;font-weight:800;border-radius:10px;border:none}
+#prev{background:#22303f;color:#9fb3c8}
+#next{background:#1f6f9c;color:#fff}
+.tips{font-size:12px;color:#6b7f95;line-height:1.7;margin-top:8px}
+.hl{background:#2a3a20;color:#c8f08a;padding:1px 4px;border-radius:4px}
+</style>
+</head>
+<body>
+<h1>传送带上的能量去哪了</h1>
+<div class="sub">一道传送带题，算出 1.6 J 的能量凭空消失。<br>层层拆开看，它去了一个你想不到的地方。</div>
+
+<div class="card">
+  <canvas id="cv" width="760" height="560"></canvas>
+  <div class="ctrl" style="margin-top:10px">
+    <button id="play">▶ 播放全程</button>
+    <button id="reset" class="ghost">↺ 重来</button>
+  </div>
+  <div class="tips">红点是木块刚放上去时在皮带上做的记号——看它跑到哪去了，那就是「相对位移」。</div>
+</div>
+
+<div class="card">
+  <div class="ttl">能量账本（实时）</div>
+  <div class="row"><span class="nm">重力势能减少</span><div class="bar"><i id="b1" style="background:#4fa3d1"></i></div><span class="val" id="v1">0.0</span></div>
+  <div class="row"><span class="nm">动能增加</span><div class="bar"><i id="b2" style="background:#5fd68a"></i></div><span class="val" id="v2">0.0</span></div>
+  <div class="row"><span class="nm">摩擦生热</span><div class="bar"><i id="b3" style="background:#f0a04b"></i></div><span class="val" id="v3">0.0</span></div>
+  <div class="row"><span class="nm">传给皮带</span><div class="bar"><i id="b4" style="background:#e8d44d"></i></div><span class="val" id="v4">0.0</span></div>
+  <div class="check"><span>差额（消失的能量）</span><b id="gap" style="color:#ff7b7b">0.00 J</b></div>
+</div>
+
+<div class="card">
+  <div class="ttl">六步看懂</div>
+  <div class="steps" id="steps"></div>
+  <div id="stepBox"></div>
+</div>
+
+<div class="foot">
+  <button id="prev">上一步</button>
+  <button id="next">下一步 →</button>
+</div>
+
+<script>
+/* ============ 物理参数 ============ */
+const TH=37*Math.PI/180, L=7, m=0.4, MU=0.25, V0=4, G=10;
+const SIN=0.6, COS=0.8;   /* 教材取值 sin37°=0.6, cos37°=0.8 */
+const f=MU*m*G*COS;                 // 0.8 N
+const a1=G*(SIN+MU*COS);            // 8
+const a2=G*(SIN-MU*COS);            // 4
+const T1=V0/a1;                     // 0.5 s
+const S1=0.5*a1*T1*T1;              // 1 m
+const T2=(Math.sqrt(V0*V0+2*a2*(L-S1))-V0)/a2;  // 1 s
+const TEND=T1+T2;                   // 1.5 s
+const VEND=V0+a2*T2;                // 8
+const EP=m*G*L*SIN;                 // 16.8
+const EK=0.5*m*VEND*VEND;           // 12.8
+const Q=f*(V0*T1-S1)*1 ;            // stage1 part
+const QEND=f*((V0*T1-S1)+( (S1+V0*T2+0.5*a2*T2*T2) - S1 - V0*T2 ) + 0); // placeholder
+/* 相对路程：stage1 = v0*t - s ; stage2 = s - v0*t 的增量 */
+const R1=V0*T1-S1;                                  // 1 m
+const S2=L-S1;                                       // 6 m
+const R2=S2-V0*T2;                                   // 2 m
+const REND=R1+R2;                                    // 3 m
+const QALL=f*REND;                                   // 2.4 J
+const Wb1=-f*V0*T1;                                  // -1.6 J
+const Wb2= f*V0*T2;                                  // +3.2 J
+const WbEND=Wb1+Wb2;                                 // +1.6 J
+
+function s(t){ if(t<=T1) return 0.5*a1*t*t; const d=t-T1; return S1+V0*d+0.5*a2*d*d; }
+function v(t){ if(t<=T1) return a1*t; return V0+a2*(t-T1); }
+function rel(t){ if(t<=T1) return V0*t-0.5*a1*t*t; const d=t-T1; return R1+0.5*a2*d*d; }
+function wb(t){ if(t<=T1) return -f*V0*t; const d=t-T1; return Wb1+f*V0*d; }
+
+/* ============ 画布 ============ */
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const W=760,H=560;
+const P0={x:110,y:110}, P1={x:660,y:110+550*Math.tan(TH)};
+const MAT=Math.tan(TH);
+/* 斜面两点：从左上到右下 */
+const PX=62;                       // 1 m = 62 px
+const A={x:56,y:96};               // 斜面顶端
+const U={x:0.8,y:0.6};             // 沿斜面向下单位矢量
+const N={x:-0.6,y:0.8};            // 法向（正=外/上侧）
+function ptOn(d,off){ return {x:A.x+U.x*d*PX+N.x*off*PX, y:A.y+U.y*d*PX+N.y*off*PX}; }
+function drawBelt(t){
+  const beltS=V0*t;
+  // 皮带主体
+  ctx.save();
+  ctx.lineCap='round';
+  const c1=ptOn(0,-0.16), c2=ptOn(L+1.35,-0.16);
+  const c3=ptOn(0,0.16), c4=ptOn(L+1.35,0.16);
+  ctx.strokeStyle='#243447'; ctx.lineWidth=26;
+  ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y); ctx.stroke();
+  ctx.strokeStyle='#3c5872'; ctx.lineWidth=22;
+  ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y); ctx.stroke();
+  // 纹理：随带速向"下坡"移动（v0 向下）
+  ctx.strokeStyle='#5c7c99'; ctx.lineWidth=3;
+  for(let i=0;i<40;i++){
+    const d=((i*0.30 + beltS) % (L+2)) - 0.5;
+    if(d<-0.4||d>L+1.4) continue;
+    const q1=ptOn(d,-0.16), q2=ptOn(d,0.16);
+    ctx.beginPath(); ctx.moveTo(q1.x,q1.y); ctx.lineTo(q2.x,q2.y); ctx.stroke();
+  }
+  ctx.restore();
+  // 端点滚轮
+  
+  [0,L+1.35].forEach(d=>{
+    const c=ptOn(d,0);
+    ctx.beginPath(); ctx.arc(c.x,c.y,13,0,7); ctx.fillStyle='#1a2531'; ctx.fill();
+    ctx.strokeStyle='#48627d'; ctx.lineWidth=3; ctx.stroke();
+  });
+}
+function drawBlock(t){
+  const d=s(t);
+  const c=ptOn(d,-0.52);
+  ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(TH);
+  ctx.fillStyle='#e8c26a'; ctx.strokeStyle='#fff3c4'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.roundRect(-19,-19,38,38,5); ctx.fill(); ctx.stroke();
+  ctx.restore();
+  // 速度箭头
+  const vv=v(t);
+  const p1=ptOn(d,-1.05), p2=ptOn(d+vv*0.085,-1.05);
+  ctx.strokeStyle='#7fe0a0'; ctx.lineWidth=4; ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  const ang=Math.atan2(p2.y-p1.y,p2.x-p1.x);
+  ctx.beginPath(); ctx.moveTo(p2.x,p2.y);
+  ctx.lineTo(p2.x-11*Math.cos(ang-0.4),p2.y-11*Math.sin(ang-0.4));
+  ctx.lineTo(p2.x-11*Math.cos(ang+0.4),p2.y-11*Math.sin(ang+0.4));
+  ctx.closePath(); ctx.fillStyle='#7fe0a0'; ctx.fill();
+  ctx.fillStyle='#7fe0a0'; ctx.font='bold 17px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('v='+vv.toFixed(1)+' m/s', p2.x+8, p2.y+5);
+  // 皮带速度
+  ctx.fillStyle='#8fa4ba'; ctx.font='bold 15px sans-serif';
+  const q=ptOn(L+1.5,0); ctx.textAlign='right'; ctx.fillText('皮带 4 m/s ↓', q.x-24, q.y+44);
+}
+function drawMark(t){
+  // 木块放上去那一刻，皮带上做的记号
+  const beltS=V0*t;
+  const dMark=beltS;               // 记号沿带走过的距离
+  if(dMark>L+1.35) return;
+  const c=ptOn(dMark,0);
+  ctx.beginPath(); ctx.arc(c.x,c.y,7,0,7); ctx.fillStyle='#ff5f5f'; ctx.fill();
+  ctx.strokeStyle='#ff9d9d'; ctx.lineWidth=2; ctx.stroke();
+}
+function drawRel(t){
+  const sB=s(t), sM=Math.min(V0*t, L+1.35);
+  const a1=ptOn(sB,0.46), b1=ptOn(sM,0.46);
+  ctx.strokeStyle='#ff9d9d'; ctx.lineWidth=2.5; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(a1.x,a1.y); ctx.lineTo(b1.x,b1.y); ctx.stroke();
+  ctx.setLineDash([]);
+  [[a1,U],[b1,U]].forEach(([p0,u])=>{
+    ctx.beginPath(); ctx.moveTo(p0.x-N.x*6,p0.y-N.y*6); ctx.lineTo(p0.x+N.x*6,p0.y+N.y*6);
+    ctx.strokeStyle='#ff9d9d'; ctx.lineWidth=2.5; ctx.stroke();
+  });
+  const d=Math.abs(sB-sM);
+  if(d>0.22){
+    ctx.fillStyle='#ffb3b3'; ctx.font='bold 15px sans-serif'; ctx.textAlign='center';
+    const mid=ptOn((sB+sM)/2,0.72);
+    ctx.fillText('此刻相距 '+d.toFixed(1)+' m', mid.x, mid.y);
+  }
+}
+function drawRuler(t){
+  // 标出 7 m 与当前位移
+  const p1=ptOn(0,1.0), p2=ptOn(L,1.0);
+  ctx.strokeStyle='#2f4459'; ctx.lineWidth=2; ctx.setLineDash([6,5]);
+  ctx.beginPath(); ctx.moveTo(p1.x,p1.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='#5c7288'; ctx.font='bold 14px sans-serif'; ctx.textAlign='center';
+  const mid=ptOn(L/2,1.3); ctx.fillText('L = 7 m', mid.x, mid.y);
+  const pc=ptOn(s(t),1.0);
+  ctx.fillStyle='#4fa3d1'; ctx.beginPath(); ctx.arc(pc.x,pc.y,5,0,7); ctx.fill();
+}
+function drawAll(t){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#0e151d'; ctx.fillRect(0,0,W,H);
+  // 地面/背景
+  ctx.fillStyle='#131c26'; ctx.fillRect(0,H-70,W,70);
+  ctx.fillStyle='#5c7288'; ctx.font='bold 15px sans-serif'; ctx.textAlign='left';
+  ctx.fillText('θ = 37°', 26, 128);
+  // 角度弧
+  ctx.strokeStyle='#3c5872'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(A.x,A.y,58,0,Math.atan2(U.y,U.x)); ctx.stroke();
+  drawBelt(t); drawRuler(t); drawMark(t); drawRel(t); drawBlock(t);
+  // 阶段提示
+  const st = t<=T1 ? '阶段①：木块比皮带慢 → 摩擦力对木块向下（做正功）'
+                   : '阶段②：木块比皮带快 → 摩擦力对木块向上（做负功）';
+  ctx.fillStyle = t<=T1 ? '#8fe0b0' : '#ffd166';
+  ctx.font='bold 17px sans-serif'; ctx.textAlign='left';
+  ctx.fillText(st, 24, 40);
+  // 时间
+  ctx.fillStyle='#7f92a8'; ctx.font='bold 16px sans-serif'; ctx.textAlign='right';
+  ctx.fillText('t = '+t.toFixed(2)+' s', W-24, 40);
+}
+
+/* ============ 能量面板 ============ */
+const MAXE=EP;
+function setBar(id,val,frac){ document.getElementById(id).style.width=Math.min(100,frac*100)+'%'; }
+function updatePanel(t){
+  const ep=m*G*s(t)*SIN, ek=0.5*m*v(t)*v(t), q=f*rel(t), w=wb(t);
+  document.getElementById('v1').textContent=ep.toFixed(1);
+  document.getElementById('v2').textContent=ek.toFixed(1);
+  document.getElementById('v3').textContent=q.toFixed(1);
+  document.getElementById('v4').textContent=(w>=0?'+':'')+w.toFixed(1);
+  setBar('b1',ep,ep/MAXE); setBar('b2',ek,ek/MAXE); setBar('b3',q,q/MAXE); setBar('b4',Math.abs(w),Math.abs(w)/MAXE);
+  const gap=ep-ek-q-w;      // 应为 0
+  const g=document.getElementById('gap');
+  g.textContent=(Math.abs(gap)<0.05?'0.00':gap.toFixed(2))+' J';
+  g.style.color=Math.abs(gap)<0.05?'#7fe0a0':'#ff7b7b';
+}
+
+/* ============ 播放 ============ */
+let T=0, playing=false, last=0, SPEED=0.55;
+function loop(ts){
+  if(!playing) return;
+  if(!last) last=ts;
+  const dt=(ts-last)/1000; last=ts;
+  T+=dt*SPEED;
+  if(T>=TEND){ T=TEND; playing=false; document.getElementById('play').textContent='▶ 播放全程'; }
+  drawAll(T); updatePanel(T);
+  if(playing) requestAnimationFrame(loop);
+}
+document.getElementById('play').onclick=()=>{
+  if(playing){ playing=false; last=0; document.getElementById('play').textContent='▶ 继续'; return; }
+  if(T>=TEND) T=0;
+  playing=true; last=0; document.getElementById('play').textContent='⏸ 暂停';
+  requestAnimationFrame(loop);
+};
+document.getElementById('reset').onclick=()=>{ T=0; playing=false; last=0; document.getElementById('play').textContent='▶ 播放全程'; drawAll(0); updatePanel(0); };
+
+/* ============ 六步 ============ */
+const STEPS=[
+ {k:'① 谜题', h:'先算一遍，然后卡住',
+  body:`<p>木块滑到低端，重力势能减少 <span class="k">mgLsin37° = 16.8 J</span>。</p>
+  <p>动能增加 <span class="k">½mv² = 12.8 J</span>，木块与带之间生热 <span class="w">2.4 J</span>。</p>
+  <p>12.8 + 2.4 = 15.2 J。可是势能明明少了 16.8 J。</p>
+  <div class="q">差额 1.6 J 去哪了？能量不守恒了吗？</div>`},
+ {k:'② 分段', h:'为什么必须分两段',
+  body:`<p>木块刚放上去速度是 0，皮带是 4 m/s 往下走。木块比皮带慢，摩擦力把木块拉住——<b>方向沿斜面向下</b>。</p>
+  <p>加速到 4 m/s 时，木块与皮带同速。此后还能一起走吗？看 μ 和 tanθ：</p>
+  <p>μ = 0.25，tan37° = 0.75。<b>μ &lt; tanθ</b>，最大静摩擦力不够，木块继续加速下滑。</p>
+  <p>两个阶段：<span class="k">a₁ = g(sin37°+μcos37°) = 8 m/s²</span>，<span class="k">a₂ = g(sin37°−μcos37°) = 4 m/s²</span>。</p>`},
+ {k:'③ 木块的账', h:'摩擦力做了多少功',
+  body:`<p>阶段①：t₁ = 0.5 s，木块走 s₁ = 1 m。摩擦力向下，做正功 <span class="k">+0.8 J</span>。</p>
+  <p>阶段②：t₂ = 1 s，木块走 s₂ = 6 m。摩擦力向上，做负功 <span class="w">−4.8 J</span>。</p>
+  <p>全过程摩擦力对木块做功 <b>−4.0 J</b>。</p>
+  <p>验证木块的收支：16.8（重力做功）− 4.0（摩擦）= <b>12.8 J</b>，正好等于动能增加。</p>
+  <div class="q">木块自己是收支平衡的。那 1.6 J 的问题不在木块身上。</div>`},
+ {kk:1, k:'④ 生热', h:'2.4 J 怎么来的',
+  body:`<p>生热 = 摩擦力 × <b>相对路程</b>，不是木块位移。</p>
+  <p>阶段①皮带比木块多走 1 m，阶段②木块比皮带多走 2 m，相对路程合计 <b>3 m</b>。</p>
+  <p>Q = 0.8 N × 3 m = <span class="w">2.4 J</span>。</p>
+  <p>动画里那个红点就是记号：皮带走 6 m、木块走 7 m，红点跑到木块前面去了——<b>那个差距就是相对位移</b>。</p>`},
+ {k:'⑤ 换对象', h:'该问传送带了',
+  body:`<p>摩擦力是相互的。木块受 0.8 N，皮带也受 0.8 N，方向相反。</p>
+  <p>阶段①：皮带受摩擦力<b>向上</b>，皮带向下走 2 m → 做功 <span class="w">−1.6 J</span>。</p>
+  <p>阶段②：皮带受摩擦力<b>向下</b>，皮带向下走 4 m → 做功 <span class="k">+3.2 J</span>。</p>
+  <p>全过程皮带从摩擦中净得 <b>1.6 J</b>。</p>
+  <div class="q">找到了。就是那 1.6 J。</div>`},
+ {k:'⑥ 闭合', h:'能量守恒，一分不少',
+  body:`<p>皮带是被电动机拖着匀速转的。皮带从摩擦里拿到 1.6 J，电动机就<b>少输出 1.6 J</b>。</p>
+  <p>完整账本：<br>16.8 J（势能减少）= 12.8 J（动能）+ 2.4 J（生热）+ 1.6 J（电动机少做的功）</p>
+  <p class="k">左边 16.8，右边 16.8。平了。</p>
+  <p>所谓“消失的能量”，只是<b>换了一个账户</b>——从木块的机械能账户，转到了电动机的电能账户。</p>
+  <div class="q">三条通用结论：<br>① 摩擦生热 = f × 相对路程<br>② 多消耗的电能 = f × 皮带位移<br>③ 功是能量转化的量度，换对象就换账户</div>`}
+];
+let cur=0;
+const box=document.getElementById('stepBox'), stepsEl=document.getElementById('steps');
+STEPS.forEach((st,i)=>{
+  const b=document.createElement('button'); b.textContent=st.k; b.onclick=()=>go(i); stepsEl.appendChild(b);
+});
+function go(i){
+  cur=Math.max(0,Math.min(STEPS.length-1,i));
+  [...stepsEl.children].forEach((b,j)=>{ b.className = j===cur?'on':(j<cur?'done':''); });
+  const st=STEPS[cur];
+  box.innerHTML='<h3>'+st.h+'</h3>'+st.body;
+  // 切到对应的物理时刻
+  const marks=[0, T1, TEND, TEND, TEND, TEND];
+  T=marks[cur]; playing=false; last=0;
+  document.getElementById('play').textContent='▶ 播放全程';
+  drawAll(T); updatePanel(T);
+}
+document.getElementById('next').onclick=()=>go(cur+1);
+document.getElementById('prev').onclick=()=>go(cur-1);
+
+/* 初始化 */
+drawAll(0); updatePanel(0); go(0);
+</script>
+</body>
+</html>
