@@ -143,11 +143,11 @@ function drawBelt(t){
   ctx.strokeStyle='#3c5872'; ctx.lineWidth=22;
   ctx.beginPath(); ctx.moveTo(c1.x,c1.y); ctx.lineTo(c2.x,c2.y); ctx.stroke();
   // 纹理：随带速向"下坡"移动（v0 向下）
-  ctx.strokeStyle='#5c7c99'; ctx.lineWidth=3;
+  ctx.strokeStyle='#3c5872'; ctx.lineWidth=3;
   for(let i=0;i<40;i++){
-    const d=((i*0.30 + beltS) % (L+2)) - 0.5;
+    const d=((i*0.55 + beltS) % (L+2)) - 0.5;
     if(d<-0.4||d>L+1.4) continue;
-    const q1=ptOn(d,-0.16), q2=ptOn(d,0.16);
+    const q1=ptOn(d-0.09,-0.16), q2=ptOn(d+0.09,0.16);
     ctx.beginPath(); ctx.moveTo(q1.x,q1.y); ctx.lineTo(q2.x,q2.y); ctx.stroke();
   }
   ctx.restore();
