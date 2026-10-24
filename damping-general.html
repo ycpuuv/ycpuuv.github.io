@@ -50,8 +50,8 @@ h4{font-size:15px;margin:14px 0 6px;color:#ffd166}
     把振子压缩到 A 点后由静止释放。
   </div>
   <div class="legend" style="margin-top:10px">
-    <span><i style="background:#5fd68a"></i>O₁ 向右运动时的平衡位置</span>
-    <span><i style="background:#e8d44d"></i>O₂ 向左运动时的平衡位置</span>
+    <span><i style="background:#5fd68a"></i>O₁ 向右运动时（弹簧压缩侧）</span>
+    <span><i style="background:#e8d44d"></i>O₂ 向左运动时（伸长侧）</span>
     <span><i style="background:#ff6b6b"></i>摩擦</span>
   </div>
   <canvas id="cv1" width="760" height="300" style="margin-top:8px"></canvas>
@@ -153,7 +153,7 @@ function draw1(){
   // 左侧固定墙
   g1.fillStyle='#41566b'; g1.fillRect(sx(0)-6, Y0-46, 6, 92);
   // 两个平衡位置
-  [[-r,'#5fd68a','O₁'],[r,'#e8d44d','O₂']].forEach(([xx,col,lab])=>{
+  [[r,'#5fd68a','O₁'],[-r,'#e8d44d','O₂']].forEach(([xx,col,lab])=>{
     g1.setLineDash([6,5]); g1.strokeStyle=col; g1.lineWidth=2.2;
     g1.beginPath(); g1.moveTo(sx(xx),Y0-52); g1.lineTo(sx(xx),Y0+30); g1.stroke();
     g1.setLineDash([]);
@@ -204,7 +204,7 @@ function draw2(){
   const d = 2*r;
   const o1 = CX2 - d*SC2/2, o2 = CX2 + d*SC2/2;
   // 两颗钉
-  [[o1,'O₁','#5fd68a'],[o2,'O₂','#e8d44d']].forEach(([cx,col,lab])=>{
+  [[o1,'O₂','#e8d44d'],[o2,'O₁','#5fd68a']].forEach(([cx,col,lab])=>{
     g2.beginPath(); g2.arc(cx, CY2, 6, 0, 7); g2.fillStyle=col; g2.fill();
     g2.fillStyle=col; g2.font='bold 14px sans-serif'; g2.textAlign='center';
     g2.fillText(lab, cx, CY2+26);
@@ -279,13 +279,13 @@ function buildTable(){
   const ends=[A0];
   let guard=0;
   while(!stopped && guard++<200000){ step(0.001); }
-  for(const m of marks) if(m.tag==='端点') ends.push(m.x);
+  for(const m of marks) if(m.tag==='端点'||m.tag==='停') ends.push(m.x);
   Object.assign({},{});
   x=save.x; v=save.v; tt=save.tt; path=save.path; nHalf=save.nHalf;
   stopped=save.stopped; started=save.started; hist=save.hist; marks=save.marks;
 
   const d=2*r;
-  const rows = ends.slice(0, Math.min(ends.length,7)).map((e,i)=>{
+  const rows = ends.slice(0, Math.min(ends.length,8)).map((e,i)=>{
     const bal = (i%2===0) ? r : -r;           // 第 i 段围绕的平衡位置
     const amp = Math.abs(e - bal);
     return {i, e, amp};
@@ -293,7 +293,9 @@ function buildTable(){
   let html = '<table><tr><th>段</th><th>端点位置</th><th>围绕平衡位置</th><th>振幅</th></tr>';
   rows.forEach((row,i)=>{
     const bal = (i%2===0)? r : -r;
-    html += `<tr><td>${i===0?'起点 A':'第 '+i+' 段末'}</td><td>${row.e.toFixed(2)}A</td><td>${bal>0?'O₂ (+'+bal.toFixed(2)+')':'O₁ ('+bal.toFixed(2)+')'}</td><td class="k">${row.amp.toFixed(2)}</td></tr>`;
+    const name = bal>0 ? 'O₁ (+'+bal.toFixed(2)+')' : 'O₂ ('+bal.toFixed(2)+')';
+    const tag = (i===0) ? '起点 A' : ((i===ends.length-1) ? '<b>停止</b>' : '第 '+i+' 段末');
+    html += `<tr><td>${tag}</td><td>${row.e.toFixed(2)}A</td><td>${name}</td><td class="k">${row.amp.toFixed(2)}</td></tr>`;
   });
   html += '</table>';
   html += `<p>相邻两个端点之差恒为 <b class="k">2d = 4r = ${(4*r).toFixed(2)}A</b>，相邻振幅之差恒为 <b class="k">d = ${d.toFixed(2)}A</b>。</p>`;
