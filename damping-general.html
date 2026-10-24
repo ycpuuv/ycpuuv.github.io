@@ -116,6 +116,11 @@ const PI = Math.PI;
 
 function balDown(){ return (F - r)/K; }
 function balUp(){   return (F + r)/K; }
+function firstBal(){ return (F - K*C0 < 0) ? balUp() : balDown(); }
+function nTheo(){
+  const R1 = Math.abs(C0 - firstBal()), d = 2*r/K;
+  return Math.max(1, Math.ceil(R1/d - 1e-9));
+}
 
 function reset(){
   c = C0; v = 0; tt = 0; path = 0; nHalf = 0; stopped = false; started = false;
@@ -302,25 +307,35 @@ function draw3(){
 
 /* ============ 表格 ============ */
 function buildTable(){
-  const d=2*r, c1=balDown();
-  const rows = ends.slice(0,8);
+  const save={c,v,tt,path,nHalf,stopped,started,ends:ends.slice(),hist:hist.slice()};
+  reset(); let g=0; while(!stopped && g<300000){ step(0.0015); g++; }
+  const simEnds=ends.slice(), simStopped=stopped;
+  c=save.c; v=save.v; tt=save.tt; path=save.path; nHalf=save.nHalf;
+  stopped=save.stopped; started=save.started; ends=save.ends; hist=save.hist;
+
+  const d=2*r/K, c1=firstBal();
+  const rows = simEnds.slice(0,8);
+  ends = simEnds.slice();
   let h='<table><tr><th>位置</th><th>压缩量</th><th>围绕平衡</th><th>振幅</th></tr>';
   rows.forEach((cc,i)=>{
-    const bal = (i%2===0)? c1 : balUp();
+    const bal = (i%2===0)? firstBal() : ((firstBal()===balUp())? balDown() : balUp());
     const amp = Math.abs(cc - bal);
-    const tag = i===0 ? '起点 A' : (i===rows.length-1 && stopped ? '<b>停止</b>' : '第 '+i+' 段末');
+    const tag = i===0 ? '起点 A' : (i===rows.length-1 && simStopped ? '<b>停止</b>' : '第 '+i+' 段末');
     h += '<tr><td>'+tag+'</td><td>'+cc.toFixed(2)+'</td><td>'+bal.toFixed(2)+'</td><td class="k">'+amp.toFixed(2)+'</td></tr>';
   });
   h += '</table>';
-  const nTheo = Math.max(1, Math.ceil((C0-c1)/d));
-  h += '<p>相邻振幅之差 = <b class="k">d = '+d.toFixed(2)+'</b>；理论段数 n = (C₀−c₁)/d = '+
-       ((C0-c1).toFixed(2))+'/'+d.toFixed(2)+' = '+((C0-c1)/d).toFixed(2)+' → <b class="k">'+nTheo+' 段</b></p>';
+  const R1=Math.abs(C0-firstBal());
+  h += '<p>相邻振幅之差 = <b class="k">d = '+d.toFixed(2)+'</b>；理论段数 n = 首段振幅/d = '+
+       R1.toFixed(2)+'/'+d.toFixed(2)+' = '+(R1/d).toFixed(2)+' → <b class="k">'+nTheo()+' 段</b></p>';
   h += '<div class="sol">振幅是等差数列，公差恒为 d = 2f/k。这就是"一级一级掉"的来历。</div>';
   document.getElementById('tabBox').innerHTML=h;
+  const lo=Math.min(balDown(),balUp()), hi=Math.max(balDown(),balUp());
   document.getElementById('exampleBox').innerHTML =
-    '例：C₀ = 1.50，F = 1，f = 0.12 → 下平衡 c₁ = 0.88，d = 0.24<br>'+
-    'n = (1.50 − 0.88) ÷ 0.24 = 2.58 → 取 <b>3 段</b><br>'+
-    '振幅 0.62 → 0.38 → 0.14；停止位置落在 0.88 与 1.12 之间 ✓';
+    '例：C₀ = 1.50，F = 1，f = 0.12 → 两平衡位置 0.88 与 1.12，d = 0.24<br>'+
+    '首段振幅 = |1.50 − '+firstBal().toFixed(2)+'| = '+Math.abs(C0-firstBal()).toFixed(2)+
+    '；n = '+Math.abs(C0-firstBal()).toFixed(2)+'÷0.24 = '+(Math.abs(C0-firstBal())/0.24).toFixed(2)+
+    ' → 取 <b>'+nTheo()+' 段</b><br>'+
+    '停止位置落在 '+lo.toFixed(2)+' 与 '+hi.toFixed(2)+' 之间 ✓';
 }
 
 /* ============ 播放 ============ */
@@ -336,12 +351,11 @@ function loop(ts){
   if(playing) requestAnimationFrame(loop);
 }
 function readout(){
-  const c1=balDown(), d=2*r;
-  const nTheo=Math.max(1,Math.ceil((C0-c1)/d));
+  const n=nTheo();
   document.getElementById('rC').textContent=c.toFixed(2);
-  document.getElementById('rN').textContent=nTheo+' (理论)';
+  document.getElementById('rN').textContent=n+' (理论)';
   document.getElementById('rS').textContent=path.toFixed(2);
-  document.getElementById('rT').textContent=(nTheo*Math.PI).toFixed(2)+'·√(m/k)';
+  document.getElementById('rT').textContent=(n*Math.PI).toFixed(2)+'·√(m/k)';
 }
 document.getElementById('play').onclick=()=>{
   if(playing){ playing=false; last=0; document.getElementById('play').textContent='▶ 继续'; return; }
