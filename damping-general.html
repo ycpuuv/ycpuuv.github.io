@@ -167,45 +167,51 @@ function drawSpring1(u1){
   g1.beginPath(); g1.moveTo(p1.x,p1.y);
   for(let i=1;i<n;i++){ const s=(i%2?1:-1)*12; g1.lineTo(p1.x+dx*i+N.x*s, p1.y+dy*i+N.y*s); }
   g1.lineTo(p2.x,p2.y);
-  g1.strokeStyle='#8fd0ff'; g1.lineWidth=3.4; g1.lineJoin='round'; g1.stroke();
+  g1.strokeStyle='#8fd0ff'; g1.lineWidth=5; g1.lineJoin='round'; g1.stroke();
 }
 function draw1(){
   g1.clearRect(0,0,CW,CH); g1.fillStyle='#0e151d'; g1.fillRect(0,0,CW,CH);
   // 斜面
   const top=P(0.74,0);
   g1.beginPath(); g1.moveTo(BASE.x-14,BASE.y+12); g1.lineTo(top.x,top.y+12);
-  g1.strokeStyle='#41566b'; g1.lineWidth=5; g1.stroke();
+  g1.strokeStyle='#5a7290'; g1.lineWidth=9; g1.stroke();
   // 墙 / 挡板（垂直斜面）
-  const w1=P(0,-52), w2=P(0,34);
+  const w1=P(0,-64), w2=P(0,46);
   g1.beginPath(); g1.moveTo(w1.x,w1.y); g1.lineTo(w2.x,w2.y);
-  g1.strokeStyle='#9fb3c8'; g1.lineWidth=12; g1.stroke();
-  g1.fillStyle='#9fb3c8'; g1.font='bold 13px sans-serif'; g1.textAlign='right';
-  const wl=P(0.02,-64); g1.fillText('墙', wl.x-10, wl.y-4);
+  g1.strokeStyle='#cfe0ee'; g1.lineWidth=13; g1.stroke();
+  // 墙后阴影线
+  g1.strokeStyle='rgba(160,185,210,.35)'; g1.lineWidth=2;
+  for(let k=-56;k<=40;k+=13){
+    const q=P(0,k);
+    g1.beginPath(); g1.moveTo(q.x,q.y); g1.lineTo(q.x-16,q.y+11); g1.stroke();
+  }
+  g1.fillStyle='#cfe0ee'; g1.font='bold 17px sans-serif'; g1.textAlign='right';
+  const wl=P(0,-72); g1.fillText('墙', wl.x-6, wl.y-4);
   // 两个平衡位置（沿斜面，用压缩量换算成视觉位置）
   const toU = cc => Math.max(0.03, L - cc*0.30);   // 压缩量→物块沿斜面位置
   [[balDown(),'#5fd68a','下平衡'],[balUp(),'#e8d44d','上平衡']].forEach(([cc,col,lab])=>{
-    const u=toU(cc), a=P(u,-44), b=P(u,44);
+    const u=toU(cc), a=P(u,-62), b=P(u,62);
     g1.setLineDash([7,5]); g1.strokeStyle=col; g1.lineWidth=2.4;
     g1.beginPath(); g1.moveTo(a.x,a.y); g1.lineTo(b.x,b.y); g1.stroke();
     g1.setLineDash([]);
-    g1.fillStyle=col; g1.font='bold 13px sans-serif'; g1.textAlign='left';
-    g1.fillText(lab, b.x+7, b.y+5);
+    g1.fillStyle=col; g1.font='bold 16px sans-serif'; g1.textAlign='left';
+    g1.fillText(lab, b.x+8, b.y+6);
   });
   // 端点标记
   ends.forEach((cc,i)=>{
     if(i>7) return;
-    const u=toU(cc), p=P(u,-64);
-    g1.beginPath(); g1.arc(p.x,p.y,4,0,7); g1.fillStyle='rgba(255,255,255,.5)'; g1.fill();
-    g1.fillStyle='rgba(255,255,255,.65)'; g1.font='bold 12px sans-serif'; g1.textAlign='center';
-    g1.fillText(['A','B','C','D','E','F','G','H'][i]||'', p.x, p.y-8);
+    const u=toU(cc), p=P(u,-88);
+    g1.beginPath(); g1.arc(p.x,p.y,6,0,7); g1.fillStyle='rgba(255,255,255,.75)'; g1.fill();
+    g1.fillStyle='rgba(255,255,255,.9)'; g1.font='bold 16px sans-serif'; g1.textAlign='center';
+    g1.fillText(['A','B','C','D','E','F','G','H'][i]||'', p.x, p.y-11);
   });
   const uB=toU(c);
   drawSpring1(uB);
   // 物块
   const pb=P(uB,0);
   g1.save(); g1.translate(pb.x,pb.y); g1.rotate(ANG);
-  g1.fillStyle='#e8c26a'; g1.strokeStyle='#fff3c4'; g1.lineWidth=2.4;
-  g1.beginPath(); g1.roundRect(-26,-17,52,34,5); g1.fill(); g1.stroke();
+  g1.fillStyle='#e8c26a'; g1.strokeStyle='#fff3c4'; g1.lineWidth=3;
+  g1.beginPath(); g1.roundRect(-38,-25,76,50,7); g1.fill(); g1.stroke();
   g1.restore();
   // 速度箭头（沿斜面，向下为正）
   if(Math.abs(v)>0.03){
@@ -231,16 +237,14 @@ function draw1(){
              : (v>0 ? '↓ 向下运动，摩擦向上' : '↑ 向上运动，摩擦向下'));
   g1.fillStyle = stopped ? '#7fd0ff' : '#ffd166';
   g1.font='bold 17px sans-serif'; g1.textAlign='left';
-  g1.fillText(st, 20, 30);
+  g1.fillText(st, 22, 34);
   // 标注"只能压缩"
-  const nt=P(0.30,86);
-  g1.fillStyle='#6b7f95'; g1.font='bold 13px sans-serif'; g1.textAlign='left';
-  g1.fillText('弹簧只能压缩，左侧有墙', nt.x, nt.y);
+
 }
 
 /* ============ 画布2：两钉绕绳 ============ */
 const c2=document.getElementById('cv2'), g2=c2.getContext('2d');
-const W2=760,H2=400, CX2=380, CY2=205, SC2=150;
+const W2=760,H2=400, CX2=380, CY2=190, SC2=430;
 function draw2(){
   g2.clearRect(0,0,W2,H2); g2.fillStyle='#0e151d'; g2.fillRect(0,0,W2,H2);
   const d = 2*r*SC2/1;
