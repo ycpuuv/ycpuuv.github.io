@@ -154,11 +154,11 @@ function step(dt){
 /* ============ 画布1：斜面 + 弹簧 ============ */
 const c1=document.getElementById('cv1'), g1=c1.getContext('2d');
 const CW=760, CH=420;
-const BASE={x:90,y:390};                    // 挡板位置（斜面底端）
+const BASE={x:80,y:392};                    // 挡板位置（斜面底端）
 const ANG=-28*Math.PI/180;                  // 斜面向上方向
 const U={x:Math.cos(ANG), y:Math.sin(ANG)};
 const N={x:-U.y, y:U.x};
-const PPM=150, L=0.62;                      // 弹簧自由长度（视觉）
+const PPM=700, L=0.62;                      // 弹簧自由长度（视觉）
 function P(u,off){ return {x:BASE.x+U.x*u*PPM+N.x*(off||0), y:BASE.y+U.y*u*PPM+N.y*(off||0)}; }
 function drawSpring1(u1){
   const p1=P(0,0), p2=P(u1,0);
@@ -172,29 +172,29 @@ function drawSpring1(u1){
 function draw1(){
   g1.clearRect(0,0,CW,CH); g1.fillStyle='#0e151d'; g1.fillRect(0,0,CW,CH);
   // 斜面
-  const top=P(1.95,0);
+  const top=P(0.74,0);
   g1.beginPath(); g1.moveTo(BASE.x-14,BASE.y+12); g1.lineTo(top.x,top.y+12);
   g1.strokeStyle='#41566b'; g1.lineWidth=5; g1.stroke();
   // 墙 / 挡板（垂直斜面）
-  const w1=P(-0.09,-0.20), w2=P(-0.09,0.16);
+  const w1=P(0,-52), w2=P(0,34);
   g1.beginPath(); g1.moveTo(w1.x,w1.y); g1.lineTo(w2.x,w2.y);
   g1.strokeStyle='#9fb3c8'; g1.lineWidth=12; g1.stroke();
   g1.fillStyle='#9fb3c8'; g1.font='bold 13px sans-serif'; g1.textAlign='right';
-  const wl=P(-0.16,0.0); g1.fillText('墙', wl.x-6, wl.y+5);
+  const wl=P(0.02,-64); g1.fillText('墙', wl.x-10, wl.y-4);
   // 两个平衡位置（沿斜面，用压缩量换算成视觉位置）
-  const toU = cc => Math.max(0.02, L - cc*0.30);   // 压缩量→物块沿斜面位置
+  const toU = cc => Math.max(0.03, L - cc*0.30);   // 压缩量→物块沿斜面位置
   [[balDown(),'#5fd68a','下平衡'],[balUp(),'#e8d44d','上平衡']].forEach(([cc,col,lab])=>{
-    const u=toU(cc), a=P(u,-0.34), b=P(u,0.36);
+    const u=toU(cc), a=P(u,-44), b=P(u,44);
     g1.setLineDash([7,5]); g1.strokeStyle=col; g1.lineWidth=2.4;
     g1.beginPath(); g1.moveTo(a.x,a.y); g1.lineTo(b.x,b.y); g1.stroke();
     g1.setLineDash([]);
     g1.fillStyle=col; g1.font='bold 13px sans-serif'; g1.textAlign='left';
-    g1.fillText(lab, b.x+5, b.y+4);
+    g1.fillText(lab, b.x+7, b.y+5);
   });
   // 端点标记
   ends.forEach((cc,i)=>{
     if(i>7) return;
-    const u=toU(cc), p=P(u,-0.52);
+    const u=toU(cc), p=P(u,-64);
     g1.beginPath(); g1.arc(p.x,p.y,4,0,7); g1.fillStyle='rgba(255,255,255,.5)'; g1.fill();
     g1.fillStyle='rgba(255,255,255,.65)'; g1.font='bold 12px sans-serif'; g1.textAlign='center';
     g1.fillText(['A','B','C','D','E','F','G','H'][i]||'', p.x, p.y-8);
@@ -202,7 +202,7 @@ function draw1(){
   const uB=toU(c);
   drawSpring1(uB);
   // 物块
-  const pb=P(uB,-0.01);
+  const pb=P(uB,0);
   g1.save(); g1.translate(pb.x,pb.y); g1.rotate(ANG);
   g1.fillStyle='#e8c26a'; g1.strokeStyle='#fff3c4'; g1.lineWidth=2.4;
   g1.beginPath(); g1.roundRect(-26,-17,52,34,5); g1.fill(); g1.stroke();
@@ -210,7 +210,7 @@ function draw1(){
   // 速度箭头（沿斜面，向下为正）
   if(Math.abs(v)>0.03){
     const d=Math.max(-0.55,Math.min(0.55,v*0.22));
-    const a1=P(uB+0.22,-0.36), a2=P(uB+0.22+d,-0.36);
+    const a1=P(uB+0.05,-46), a2=P(uB+0.05+d,-46);
     g1.strokeStyle='#7fe0a0'; g1.lineWidth=4.5; g1.lineCap='round';
     g1.beginPath(); g1.moveTo(a1.x,a1.y); g1.lineTo(a2.x,a2.y); g1.stroke();
     g1.fillStyle='#7fe0a0'; g1.font='bold 14px sans-serif'; g1.textAlign='left';
@@ -219,7 +219,7 @@ function draw1(){
   // 摩擦箭头（沿斜面，反向于速度）
   if(Math.abs(v)>0.02 && r>0.01){
     const dir=-Math.sign(v);
-    const a1=P(uB-0.24,0.30), a2=P(uB-0.24+0.30*dir,0.30);
+    const a1=P(Math.max(0.05,uB-0.02),40), a2=P(Math.max(0.05,uB-0.02)+0.10*dir,40);
     g1.strokeStyle='#ff6b6b'; g1.lineWidth=5; g1.lineCap='round';
     g1.beginPath(); g1.moveTo(a1.x,a1.y); g1.lineTo(a2.x,a2.y); g1.stroke();
     g1.fillStyle='#ff8f8f'; g1.font='bold 14px sans-serif'; g1.textAlign='left';
@@ -233,9 +233,9 @@ function draw1(){
   g1.font='bold 17px sans-serif'; g1.textAlign='left';
   g1.fillText(st, 20, 30);
   // 标注"只能压缩"
-  const nt=P(1.45,0.75);
+  const nt=P(0.30,86);
   g1.fillStyle='#6b7f95'; g1.font='bold 13px sans-serif'; g1.textAlign='left';
-  g1.fillText('弹簧只能压缩，左侧有墙', nt.x-30, nt.y+58);
+  g1.fillText('弹簧只能压缩，左侧有墙', nt.x, nt.y);
 }
 
 /* ============ 画布2：两钉绕绳 ============ */
