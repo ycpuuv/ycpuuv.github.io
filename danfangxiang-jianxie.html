@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>单方向的简谐运动 · 干摩擦下的弹簧振子</title>
+<title>单方向的简谐运动 · 参数可调</title>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:#0b1118;color:#e8eef6;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:14px 12px 92px}
@@ -13,7 +13,7 @@ h1{font-size:19px;margin:0 0 5px;font-weight:800}
 .ttl{font-size:14px;color:#7fd0ff;font-weight:700;margin-bottom:8px}
 canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 .qtext{font-size:14.5px;line-height:1.95}
-.opt{font-size:14.5px;line-height:2.1;margin-top:6px}
+.opt{font-size:14.5px;line-height:2.05;margin-top:6px}
 .opt span{display:inline-block;width:26px;color:#7fd0ff;font-weight:700}
 .steps{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .steps button{flex:1 1 auto;min-width:52px;padding:8px 4px;font-size:13px;border-radius:8px;border:1px solid #2a3a4d;background:#172230;color:#8fa4ba;font-weight:700}
@@ -26,27 +26,36 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 #stepBox .w{color:#ff9b7b;font-weight:700}
 #stepBox .sol{background:#183226;border-left:3px solid #5fd68a;padding:8px 10px;border-radius:0 8px 8px 0;margin:8px 0;color:#c4f2d8}
 #stepBox .note{background:#1a2431;border-left:3px solid #ffd166;padding:8px 10px;border-radius:0 8px 8px 0;margin:8px 0;color:#ffd9a0;font-size:14px}
-.ctrl{display:flex;gap:8px;margin-top:10px}
-.ctrl button{flex:1;padding:11px;font-size:15px;font-weight:700;border-radius:10px;border:none;background:#1f6f9c;color:#fff}
+.ctrl{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ctrl button{flex:1 1 60px;padding:11px 6px;font-size:14px;font-weight:700;border-radius:10px;border:none;background:#1f6f9c;color:#fff}
 .ctrl button.ghost{background:#22303f;color:#9fb3c8}
+.ctrl button.sel{background:#2f89b8;color:#fff}
 .foot{position:fixed;left:0;right:0;bottom:0;background:#0b1118ee;border-top:1px solid #22303f;padding:10px 12px;display:flex;gap:8px}
 .foot button{flex:1;padding:12px;font-size:15px;font-weight:800;border-radius:10px;border:none}
 #prev{background:#22303f;color:#9fb3c8}
 #next{background:#1f6f9c;color:#fff}
 .tips{font-size:12px;color:#6b7f95;line-height:1.7;margin-top:8px}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:#8fa4ba;margin-top:8px}
-.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:4px}
+.slider{display:flex;align-items:center;gap:10px;margin:4px 0 8px}
+.slider label{font-size:13px;color:#9fb3c8;flex:0 0 auto}
+.slider input[type=range]{flex:1;accent-color:#2f89b8;height:28px}
+.slider b{font-size:17px;color:#ffd166;min-width:58px;text-align:right;font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;font-size:13px;margin-top:8px}
+.readout div{display:flex;justify-content:space-between;background:#172230;padding:7px 9px;border-radius:8px}
+.readout span{color:#8fa4ba}
+.readout b{font-variant-numeric:tabular-nums;color:#bfe9ff}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#8fa4ba;margin-top:8px}
+.legend i{display:inline-block;width:13px;height:3px;border-radius:2px;vertical-align:middle;margin-right:3px}
 </style>
 </head>
 <body>
 <h1>单方向的简谐运动</h1>
-<div class="sub">斜面弹簧振子 + 干摩擦：振幅为什么会"一级一级"掉下来，而不是平滑衰减。</div>
+<div class="sub">斜面弹簧振子遇到干摩擦。拖动滑块改摩擦，看振幅怎样一级一级掉下去。</div>
 
 <div class="card">
   <div class="ttl">题目</div>
   <div class="qtext">
-    如图所示，劲度系数为 <i>k</i> 的轻弹簧下端固定在倾角为 <i>θ</i> 的斜面底端的挡板上，弹簧处于自由伸长状态。质量为 <i>m</i> 的物块从弹簧顶端由静止释放。已知物块与斜面间的动摩擦因数 <i>μ</i> = ¼tan<i>θ</i>，重力加速度为 <i>g</i>。<br>
-    <b>则物块从释放到静止，克服摩擦力做的功为（　）</b>
+    劲度系数为 <i>k</i> 的轻弹簧下端固定在倾角 <i>θ</i> 的斜面底端挡板上，弹簧处于自由伸长状态。质量 <i>m</i> 的物块从弹簧顶端由静止释放。物块与斜面间动摩擦因数 <i>μ</i> = ¼tan<i>θ</i>。<br>
+    <b>物块从释放到静止，克服摩擦力做的功为（　）</b>
   </div>
   <div class="opt">
     <div><span>A</span>(<i>mg</i>sin<i>θ</i>)²/<i>k</i></div>
@@ -57,23 +66,39 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 </div>
 
 <div class="card">
-  <div class="ttl">运动过程</div>
-  <canvas id="cv1" width="760" height="470"></canvas>
+  <div class="ttl">参数：摩擦 / 重力沿斜面分量</div>
+  <div class="slider">
+    <label>r = f/F</label>
+    <input id="rg" type="range" min="0" max="0.9" step="0.01" value="0.25">
+    <b id="rgv">0.25</b>
+  </div>
+  <div class="tips">本题 <b>r = ¼</b>。r = 0 光滑；r 越大振幅掉得越快；<b>r ≥ 0.5 时第一个半周期就停</b>。改 r 后点「重来」。</div>
   <div class="legend">
     <span><i style="background:#5fd68a"></i>x₀ 无摩擦平衡位置</span>
-    <span><i style="background:#4fa3d1"></i>¾x₀ 向下段平衡位置</span>
-    <span><i style="background:#e8d44d"></i>1.25x₀ 向上段平衡位置</span>
+    <span><i style="background:#ffd166"></i>当前平衡位置（会跳）</span>
+    <span><i style="background:#ff6b6b"></i>摩擦力</span>
+    <span><i style="background:#7fe0a0"></i>速度</span>
   </div>
+  <canvas id="cv1" width="760" height="480" style="margin-top:8px"></canvas>
   <div class="ctrl">
     <button id="play">▶ 播放</button>
     <button id="reset" class="ghost">↺ 重来</button>
+    <button id="s025" class="ghost">0.25×</button>
+    <button id="s05" class="ghost">0.5×</button>
+    <button id="s1" class="ghost sel">1×</button>
+  </div>
+  <div class="readout">
+    <div><span>时间</span><b id="rT">0.00 s</b></div>
+    <div><span>半周期数</span><b id="rN">0</b></div>
+    <div><span>总路程</span><b id="rS">0.00 x₀</b></div>
+    <div><span>克服摩擦做功</span><b id="rW">0.000</b></div>
   </div>
 </div>
 
 <div class="card">
   <div class="ttl">压缩量 x 随时间变化</div>
   <canvas id="cv2" width="760" height="300"></canvas>
-  <div class="tips">注意峰值：1.5x₀ → 1.0x₀，一个台阶，然后停住。不是平滑曲线，是<b>折线</b>。</div>
+  <div class="tips">r = 0.25：峰值 1.50 → 1.00，一个台阶停住。拖到 0.10 会出现三个台阶。</div>
 </div>
 
 <div class="card">
@@ -83,7 +108,7 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 </div>
 
 <div class="card">
-  <div class="ttl">规律总结：这类题怎么一眼看穿</div>
+  <div class="ttl">规律总结</div>
   <div class="qtext" id="ruleBox"></div>
 </div>
 
@@ -93,260 +118,280 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 </div>
 
 <script>
-/* ============ 归一化：取 x₀ = mgsinθ/k = 1 ============ */
-const X0=1, F=1;              // F = mg sinθ（单位）
-const f=F/4;                  // 摩擦 = ¼F  ← 题眼
-const XDOWN=(F-f)/1;          // 向下段平衡位置 0.75
-const XUP=(F+f)/1;            // 向上段平衡位置 1.25
-const XBOT=1.5*X0;            // 最低点
-const XEND=1.0*X0;            // 末位置
-const W=1.0;                  // ω
-const TH=Math.PI/W;           // 半周期
+/* ============ 归一化：F = mgsinθ = 1，x₀ = F/k = 1，m = k = 1 ============ */
+const k = 1, m = 1, F = 1;
+let r = 0.25;
+let x = 0, v = 0, tt = 0, path = 0, halfN = 0, stopped = false, lastSign = 0;
+let hist = [];
+const TMAX = 40;
 
-function xt(t){
-  if(t<=TH){ const A=(XDOWN-0)*1; return XDOWN - A*Math.cos(W*t); }   // 0 → 1.5
-  const d=t-TH;
-  if(d<=TH){ const A=(XBOT-XUP); return XUP + A*Math.cos(W*d); }        // 1.5 → 1.0
-  return XEND;
+function reset(){
+  x = 0; v = 0; tt = 0; path = 0; halfN = 0; stopped = false; lastSign = 0;
+  hist = [{t:0, x:0}];
 }
-function vt(t){
-  if(t<=TH) return XDOWN*W*Math.sin(W*t);
-  const d=t-TH;
-  if(d<=TH) return -(XBOT-XUP)*W*Math.sin(W*d);
-  return 0;
-}
-function path(t){
-  // 累计路程
-  if(t<=TH) return xt(t);                       // 0 → 1.5
-  const d=t-TH;
-  if(d<=TH) return XBOT + (XBOT-xt(t));          // 1.5 + 回程
-  return 2.0;
-}
-const TEND=2*TH;
 
-/* ============ 画布1：斜面 + 弹簧 ============ */
+function step(dt){
+  if(stopped) return;
+  const f = r*F;
+  if(Math.abs(v) < 3e-4){
+    const drive = F - k*x;
+    if(Math.abs(drive) <= f){ stopped = true; v = 0; return; }
+    v = Math.sign(drive)*1e-3;      // 关键：给一个确定方向的小初速，否则会卡在零
+  }
+  const fr = (v > 0) ? -f : (v < 0 ? f : -Math.sign(F-k*x)*f);
+  const a = (F - k*x + fr)/m;
+  const vNew = v + a*dt;
+  if(v*vNew < 0){
+    const t0 = Math.abs(v)/Math.abs(a);
+    const dx0 = v*t0 + 0.5*a*t0*t0;
+    x += dx0; path += Math.abs(dx0); tt += t0; v = 0;
+    halfN++; lastSign = 0;
+    hist.push({t:tt, x:x});
+    return;
+  }
+  const dx = v*dt + 0.5*a*dt*dt;
+  x += dx; path += Math.abs(dx); v = vNew; tt += dt;
+  if(hist.length===0 || tt - hist[hist.length-1].t > 0.02) hist.push({t:tt, x:x});
+}
+
+/* ============ 画布1 ============ */
 const c1=document.getElementById('cv1'), g1=c1.getContext('2d');
-const CW=760, CH=470;
-const BASE={x:58,y:424};          // 斜面底端（挡板处）
-const ANG=-27*Math.PI/180;        // 斜面向上 27°
-const U={x:Math.cos(ANG), y:Math.sin(ANG)};   // 沿斜面向上
-const N={x:-U.y, y:U.x};                       // 法向
-const PPM=252;                    // 1 单位 x0 = 252 px
-const L0=0.62;                    // 弹簧自由长度（单位）
+const CW=760, CH=480;
+const BASE={x:56,y:432};
+const ANG=-30*Math.PI/180;
+const U={x:Math.cos(ANG), y:Math.sin(ANG)};
+const N={x:-U.y, y:U.x};
+const PPM=248, L0=0.60;
 function P(u,off){ return {x:BASE.x+U.x*u*PPM+N.x*(off||0), y:BASE.y+U.y*u*PPM+N.y*(off||0)}; }
-
-function drawSpring(u0,u1,wig){
-  const p1=P(u0,0), p2=P(u1,0);
-  const n=Math.max(6,Math.round((u1-u0)*PPM/14));
+function arrow(p1,p2,col,wid){
+  g1.strokeStyle=col; g1.lineWidth=wid; g1.lineCap='round';
+  g1.beginPath(); g1.moveTo(p1.x,p1.y); g1.lineTo(p2.x,p2.y); g1.stroke();
+  const a=Math.atan2(p2.y-p1.y,p2.x-p1.x), L=12;
+  g1.beginPath(); g1.moveTo(p2.x,p2.y);
+  g1.lineTo(p2.x-L*Math.cos(a-0.42),p2.y-L*Math.sin(a-0.42));
+  g1.lineTo(p2.x-L*Math.cos(a+0.42),p2.y-L*Math.sin(a+0.42));
+  g1.closePath(); g1.fillStyle=col; g1.fill();
+}
+function drawSpring(u1){
+  const p1=P(0,0), p2=P(u1,0);
+  const n=Math.max(8,Math.round(u1*PPM/13));
   const dx=(p2.x-p1.x)/n, dy=(p2.y-p1.y)/n;
   g1.beginPath(); g1.moveTo(p1.x,p1.y);
-  for(let i=1;i<n;i++){
-    const s=(i%2?1:-1)*wig;
-    g1.lineTo(p1.x+dx*i+N.x*s, p1.y+dy*i+N.y*s);
-  }
+  for(let i=1;i<n;i++){ const s=(i%2?1:-1)*13; g1.lineTo(p1.x+dx*i+N.x*s, p1.y+dy*i+N.y*s); }
   g1.lineTo(p2.x,p2.y);
-  g1.strokeStyle='#8fd0ff'; g1.lineWidth=3.2; g1.lineJoin='round'; g1.stroke();
+  g1.strokeStyle='#8fd0ff'; g1.lineWidth=3.4; g1.lineJoin='round'; g1.stroke();
 }
-function drawScene(t){
+function drawScene(){
   g1.clearRect(0,0,CW,CH); g1.fillStyle='#0e151d'; g1.fillRect(0,0,CW,CH);
-  // 斜面
-  const top=P(2.05,0);
-  g1.beginPath(); g1.moveTo(BASE.x-14,BASE.y+10); g1.lineTo(top.x,top.y+10);
+  const top=P(2.30,0);
+  g1.beginPath(); g1.moveTo(BASE.x-16,BASE.y+11); g1.lineTo(top.x,top.y+11);
   g1.strokeStyle='#41566b'; g1.lineWidth=5; g1.stroke();
-  // 挡板
-  g1.beginPath();
-  const b1=P(0,-0.16), b2=P(0,0.16);
-  g1.moveTo(b1.x,b1.y); g1.lineTo(b2.x,b2.y);
-  g1.strokeStyle='#9fb3c8'; g1.lineWidth=9; g1.stroke();
-  // 三条参考线（沿法向画出短刻度）
-  [[XDOWN,'#4fa3d1'],[XUP,'#e8d44d'],[X0,'#5fd68a']].forEach(([xx,col])=>{
-    const a=P(xx,-0.30), b=P(xx,0.34);
-    g1.setLineDash([7,5]); g1.strokeStyle=col; g1.lineWidth=2.2;
+  const b1=P(0,-0.15), b2=P(0,0.15);
+  g1.beginPath(); g1.moveTo(b1.x,b1.y); g1.lineTo(b2.x,b2.y);
+  g1.strokeStyle='#9fb3c8'; g1.lineWidth=10; g1.stroke();
+  // x₀ 与"当前平衡位置"
+  const xBal = (v < -1e-4) ? (F + r*F)/k : (F - r*F)/k;
+  [[1.0,'#5fd68a',2.2,'x₀'],[xBal,'#ffd166',3.2,'平衡位置 '+xBal.toFixed(2)+'x₀']].forEach(([xx,col,wid,lab])=>{
+    const a=P(xx,-0.36), b=P(xx,0.44);
+    g1.setLineDash([7,5]); g1.strokeStyle=col; g1.lineWidth=wid;
     g1.beginPath(); g1.moveTo(a.x,a.y); g1.lineTo(b.x,b.y); g1.stroke();
     g1.setLineDash([]);
-    g1.fillStyle=col; g1.font='bold 15px sans-serif'; g1.textAlign='left';
-    g1.fillText(xx.toFixed(2)+'x₀', b.x+6, b.y+5);
+    g1.fillStyle=col; g1.font='bold 14px sans-serif'; g1.textAlign='left';
+    g1.fillText(lab, b.x+5, b.y+5);
   });
-  // 弹簧：底端 0 → 物块位置
-  const x=xt(t);
-  const uBlock=Math.max(0.16, L0-x*0.30);     // 压缩后物块位置（视觉压缩比）
-  drawSpring(0,uBlock,13);
-  // 物块
-  const pb=P(uBlock,-0.06);
+  const uB=Math.max(0.14, L0-x*0.30);
+  drawSpring(uB);
+  const pb=P(uB,-0.02);
   g1.save(); g1.translate(pb.x,pb.y); g1.rotate(ANG);
-  g1.fillStyle='#e8c26a'; g1.strokeStyle='#fff3c4'; g1.lineWidth=2;
-  g1.beginPath(); g1.roundRect(-28,-17,56,34,5); g1.fill(); g1.stroke();
+  g1.fillStyle='#e8c26a'; g1.strokeStyle='#fff3c4'; g1.lineWidth=2.4;
+  g1.beginPath(); g1.roundRect(-30,-19,60,38,5); g1.fill(); g1.stroke();
   g1.restore();
-  // 长度标注
-  g1.fillStyle='#8fa4ba'; g1.font='bold 14px sans-serif'; g1.textAlign='left';
-  const lb=P(1.55,0.55); g1.fillText('θ', BASE.x+70, BASE.y-18);
-  // 状态文字
-  const st = t<=0.001 ? '释放瞬间　x = 0，v = 0'
-           : (t<TH ? '① 向下　摩擦向上　平衡位置 ¾x₀'
-                   : (t<TEND ? '② 向上　摩擦向下　平衡位置 1.25x₀'
-                             : '③ 停在 x₀：合力为零，不需要摩擦'));
-  g1.fillStyle = t<=0.001?'#8fa4ba':(t<TH?'#8fe0b0':(t<TEND?'#ffd166':'#7fd0ff'));
-  g1.font='bold 17px sans-serif'; g1.textAlign='left';
+  // 速度箭头
+  if(Math.abs(v)>0.05){
+    const d=Math.max(-0.5,Math.min(0.5,v*0.28));
+    const a1=P(uB,-0.36), a2=P(uB+d,-0.36);
+    arrow(a1,a2,'#7fe0a0',4.5);
+    g1.fillStyle='#7fe0a0'; g1.font='bold 15px sans-serif'; g1.textAlign='left';
+    g1.fillText('v '+Math.abs(v).toFixed(2), a2.x+7, a2.y+5);
+  }
+  // 摩擦箭头
+  if(Math.abs(v)>0.03 && r>0.015){
+    const dir=-Math.sign(v);
+    const a1=P(uB+0.18*dir,0.30), a2=P(uB+(0.18+0.25+r*0.8)*dir,0.30);
+    arrow(a1,a2,'#ff6b6b',5);
+    g1.fillStyle='#ff8f8f'; g1.font='bold 15px sans-serif'; g1.textAlign='left';
+    g1.fillText('f = '+r.toFixed(2)+'F', a2.x+7, a2.y+5);
+  }
+  const st = stopped ? '已静止：停在 x = '+x.toFixed(2)+'x₀'
+           : (Math.abs(v)<2e-3 ? '速度为零（到达端点）'
+             : (v>0 ? '↓ 向下运动　摩擦向上' : '↑ 向上运动　摩擦向下'));
+  g1.fillStyle = stopped ? '#7fd0ff' : '#ffd166';
+  g1.font='bold 18px sans-serif'; g1.textAlign='left';
   g1.fillText(st, 22, 34);
-  // 时间/路程
   g1.textAlign='right'; g1.fillStyle='#7f92a8'; g1.font='bold 15px sans-serif';
-  g1.fillText('t = '+t.toFixed(2)+'　路程 '+path(t).toFixed(2)+' x₀　克服摩擦做功 '+(f*path(t)).toFixed(3)+' F²/k', CW-20, 34);
+  g1.fillText('r = '+r.toFixed(2), CW-20, 34);
 }
 
 /* ============ 画布2：x–t ============ */
 const c2=document.getElementById('cv2'), g2=c2.getContext('2d');
-const W2=760,H2=300, PL=54,PR=24,PT=26,PB=42;
-const TW=TEND+0.5;
-function xpx(t){ return PL + t/TW*(W2-PL-PR); }
-function ypx(x){ const vmax=1.7; return PT + (vmax-x)/vmax*(H2-PT-PB); }
-function drawChart(tNow){
+const W2=760,H2=300, PL=52,PR=20,PT=26,PB=40;
+function ypx(xx){ return PT + (1.75-xx)/1.75*(H2-PT-PB); }
+function drawChart(){
   g2.clearRect(0,0,W2,H2); g2.fillStyle='#0e151d'; g2.fillRect(0,0,W2,H2);
-  // 三条水平参考线
-  [[XDOWN,'#4fa3d1'],[XUP,'#e8d44d'],[X0,'#5fd68a']].forEach(([xx,col])=>{
-    g2.setLineDash([6,5]); g2.strokeStyle=col; g2.lineWidth=1.8;
+  const tmax=Math.max(6, tt*1.06);
+  const XP=t=>PL+t/tmax*(W2-PL-PR);
+  [[(F-r*F)/k,'#4fa3d1'],[1.0,'#5fd68a'],[(F+r*F)/k,'#e8d44d']].forEach(([xx,col])=>{
+    g2.setLineDash([5,5]); g2.strokeStyle=col; g2.lineWidth=1.6;
     g2.beginPath(); g2.moveTo(PL,ypx(xx)); g2.lineTo(W2-PR,ypx(xx)); g2.stroke();
     g2.setLineDash([]);
-    g2.fillStyle=col; g2.font='bold 13px sans-serif'; g2.textAlign='right';
-    g2.fillText(xx.toFixed(2), PL-8, ypx(xx)+4);
+    g2.fillStyle=col; g2.font='bold 12px sans-serif'; g2.textAlign='right';
+    g2.fillText(xx.toFixed(2), PL-7, ypx(xx)+4);
   });
-  // 坐标轴
-  g2.strokeStyle='#2a3a4d'; g2.lineWidth=1.5;
+  g2.strokeStyle='#2a3a4d'; g2.lineWidth=1.4;
   g2.beginPath(); g2.moveTo(PL,PT-8); g2.lineTo(PL,H2-PB); g2.lineTo(W2-PR,H2-PB); g2.stroke();
-  g2.fillStyle='#7f92a8'; g2.font='bold 13px sans-serif'; g2.textAlign='left';
-  g2.fillText('x / x₀', 8, PT+4);
-  g2.textAlign='center'; g2.fillText('t', W2-PR-6, H2-PB+20);
-  // 曲线（已走过的部分实线，未来部分淡）
-  for(const [a,b,col,wid] of [[0,Math.min(tNow,TEND),'#5fd68a',3],[Math.min(tNow,TEND),TEND,'#26403a',2]]){
-    g2.beginPath();
-    let first=true;
-    for(let tt=a; tt<=b+1e-6; tt+=0.01){
-      const X=xpx(tt), Y=ypx(xt(Math.min(tt,TEND)));
-      if(first){ g2.moveTo(X,Y); first=false; } else g2.lineTo(X,Y);
-    }
-    g2.strokeStyle=col; g2.lineWidth=wid; g2.stroke();
+  g2.fillStyle='#7f92a8'; g2.font='bold 12px sans-serif'; g2.textAlign='left';
+  g2.fillText('x / x₀', 6, PT+3);
+  if(hist.length>1){
+    g2.beginPath(); g2.moveTo(XP(hist[0].t), ypx(hist[0].x));
+    for(const p of hist) g2.lineTo(XP(p.t), ypx(p.x));
+    g2.strokeStyle='#5fd68a'; g2.lineWidth=2.6; g2.stroke();
+    const lp=hist[hist.length-1];
+    g2.beginPath(); g2.arc(XP(lp.t),ypx(lp.x),5.5,0,7); g2.fillStyle='#ff5f5f'; g2.fill();
   }
-  // 当前点
-  const cx=xpx(Math.min(tNow,TEND)), cy=ypx(xt(Math.min(tNow,TEND)));
-  g2.beginPath(); g2.arc(cx,cy,6,0,7); g2.fillStyle='#ff5f5f'; g2.fill();
-  g2.strokeStyle='#ffb3b3'; g2.lineWidth=2; g2.stroke();
-  // 台阶标注
-  g2.setLineDash([4,4]); g2.strokeStyle='#5a6f85'; g2.lineWidth=1.5;
-  g2.beginPath(); g2.moveTo(xpx(TH),ypx(XBOT)); g2.lineTo(xpx(TH),H2-PB); g2.stroke();
-  g2.setLineDash([]);
-  g2.fillStyle='#5a6f85'; g2.font='bold 12px sans-serif'; g2.textAlign='center';
-  g2.fillText('半周期', xpx(TH), H2-PB+20);
-  g2.fillStyle='#8fa4ba'; g2.textAlign='left';
-  g2.fillText('峰值 1.50 → 1.00，掉了一整个台阶', PL+10, PT+16);
+  let peak=0; for(const p of hist) if(p.x>peak) peak=p.x;
+  g2.fillStyle='#8fa4ba'; g2.font='bold 13px sans-serif'; g2.textAlign='left';
+  g2.fillText('峰值 '+peak.toFixed(2)+'　末位置 '+x.toFixed(2)+'　半周期 '+halfN, PL+8, PT+14);
 }
 
 /* ============ 播放 ============ */
-let T=0, playing=false, last=0, SPEED=0.42;
-function frame(ts){
+let playing=false, last=0, SPEED=1;
+function loop(ts){
   if(!playing) return;
   if(!last) last=ts;
-  const dt=(ts-last)/1000; last=ts;
-  T+=dt*SPEED;
-  if(T>=TEND){ T=TEND; playing=false; document.getElementById('play').textContent='▶ 播放'; }
-  drawScene(T); drawChart(T);
-  if(playing) requestAnimationFrame(frame);
+  const dtReal=Math.min(0.05,(ts-last)/1000); last=ts;
+  let budget=dtReal*SPEED;
+  const h=0.0015;
+  while(budget>0 && !stopped && tt<TMAX){
+    const d=Math.min(h,budget); step(d); budget-=d;
+  }
+  if(stopped || tt>=TMAX){ playing=false; document.getElementById('play').textContent='▶ 播放'; }
+  drawScene(); drawChart(); readout();
+  if(playing) requestAnimationFrame(loop);
+}
+function readout(){
+  document.getElementById('rT').textContent=tt.toFixed(2)+' s';
+  document.getElementById('rN').textContent=halfN;
+  document.getElementById('rS').textContent=path.toFixed(2)+' x₀';
+  document.getElementById('rW').textContent=(r*path).toFixed(3);
 }
 document.getElementById('play').onclick=()=>{
   if(playing){ playing=false; last=0; document.getElementById('play').textContent='▶ 继续'; return; }
-  if(T>=TEND) T=0;
+  if(stopped||tt>=TMAX) reset();
   playing=true; last=0; document.getElementById('play').textContent='⏸ 暂停';
-  requestAnimationFrame(frame);
+  requestAnimationFrame(loop);
 };
-document.getElementById('reset').onclick=()=>{ T=0; playing=false; last=0; document.getElementById('play').textContent='▶ 播放'; drawScene(0); drawChart(0); };
+document.getElementById('reset').onclick=()=>{
+  reset(); playing=false; last=0;
+  document.getElementById('play').textContent='▶ 播放';
+  drawScene(); drawChart(); readout();
+};
+document.getElementById('rg').oninput=e=>{
+  r=parseFloat(e.target.value);
+  document.getElementById('rgv').textContent=r.toFixed(2);
+  reset(); playing=false; last=0;
+  document.getElementById('play').textContent='▶ 播放';
+  drawScene(); drawChart(); readout();
+};
+[['s025',0.25],['s05',0.5],['s1',1]].forEach(([id,sp])=>{
+  document.getElementById(id).onclick=()=>{
+    SPEED=sp;
+    ['s025','s05','s1'].forEach(i=>document.getElementById(i).className='ghost');
+    document.getElementById(id).className='ghost sel';
+  };
+});
 
 /* ============ 解析 ============ */
 const STEPS=[
- {k:'① 题眼', h:'把摩擦力和重力分量比一比',
-  body:`<p>摩擦：f = μmgcosθ = (¼tanθ)·mgcosθ</p>
-  <p>tanθ = sinθ/cosθ，代进去：<span class="k">f = ¼mg sinθ</span></p>
-  <p class="note">记 F = mg sinθ（重力沿斜面分量）。则 <b>f = F/4</b>。<br>这个比例是整道题的命门，后面所有位置都用它算。</p>`},
+ {k:'① 题眼', h:'把摩擦化成 F 的倍数',
+  body:`<p>f = μmgcosθ = (¼tanθ)·mgcosθ，而 tanθ = sinθ/cosθ，cosθ 一消：</p>
+  <p class="sol"><b>f = ¼mg sinθ = F/4</b>　（F 记作重力沿斜面分量）</p>
+  <p class="note">记 <b>r = f/F</b>，本题 r = ¼。整道题后面所有位置都用 r 表示。<br>把滑块拖到别的值，规律仍成立，只是台阶数变了。</p>`},
 
- {k:'② 振幅', h:'初速为零，振幅等于多少',
-  body:`<p>无摩擦时的平衡位置：F = kx₀ → <span class="k">x₀ = F/k = mg sinθ / k</span></p>
-  <p>物块从弹簧自由长度处（x = 0）静止释放，而平衡位置在 x₀，所以<b>振幅 A = x₀</b>。</p>
-  <p class="note">有摩擦以后，平衡位置<b>不再是 x₀</b>，而是随摩擦方向移动。<b>这是本题最容易错的地方。</b></p>`},
+ {k:'② 振幅', h:'初速为零，振幅就是 x₀',
+  body:`<p>无摩擦平衡位置：F = kx₀ → <b>x₀ = F/k</b></p>
+  <p>物块从 x = 0 静止释放，平衡位置在 x₀，所以<b>振幅 A = x₀</b>。</p>
+  <p class="note">有摩擦后平衡位置<b>不再是 x₀</b>：向下时在 (F−f)/k，向上时在 (F+f)/k。<br><b>看动画里那条黄线——每换一次方向，它就跳一次。</b></p>`},
 
- {k:'③ 向下', h:'下去的时候，平衡位置在哪儿',
-  body:`<p>物块向下运动，摩擦<b>向上</b>。沿斜面方向的合力：</p>
-  <p>F<sub>合</sub> = F − f − kx</p>
-  <p>令它为零：kx = F − f = ¾F → <span class="k">x₁ = ¾x₀</span></p>
-  <p>物块围绕 x₁ 振动，振幅 = x₁ − 0 = <b>¾x₀</b>。</p>
-  <p class="sol">最低点：x₁ + ¾x₀ = <b>1.5x₀</b>，在此速度降为零。</p>`},
+ {k:'③ 向下', h:'下去时平衡位置在 ¾x₀',
+  body:`<p>向下运动，摩擦向上。合力：F<sub>合</sub> = F − f − kx</p>
+  <p>令其为零：kx = F − f = ¾F → <b>x₁ = ¾x₀</b>（r = ¼ 时）</p>
+  <p>围绕 x₁ 振动，振幅 = ¾x₀。</p>
+  <p class="sol">最低点 x₁ + ¾x₀ = <b>1.5x₀</b>，速度降为零。</p>
+  <p class="note">r 调大，x₁ 更低、振幅更小；r ≥ 0.5 时振幅一次就归零。</p>`},
 
- {k:'④ 向上', h:'弹回来的时候，平衡位置又变了',
-  body:`<p>物块向上运动，摩擦<b>向下</b>。合力：</p>
-  <p>F<sub>合</sub> = F + f − kx</p>
-  <p>令它为零：kx = F + f = 1.25F → <span class="k">x₂ = 1.25x₀</span></p>
-  <p>从 x = 1.5x₀ 出发，振幅 = 1.5x₀ − 1.25x₀ = <b>¼x₀</b>。</p>
-  <p class="sol">回到 x₂ − ¼x₀ = <b>x₀</b> 时速度再次为零。</p>`},
+ {k:'④ 向上', h:'上来时平衡位置跳到 1.25x₀',
+  body:`<p>向上运动，摩擦向下。合力：F<sub>合</sub> = F + f − kx</p>
+  <p>令其为零：kx = F + f = 1.25F → <b>x₂ = 1.25x₀</b></p>
+  <p>从 1.5x₀ 出发，振幅 = ¼x₀。</p>
+  <p class="sol">回到 x₂ − ¼x₀ = <b>x₀</b> 时速度再次为零。</p>
+  <p class="note">两个平衡位置的间距恒为 <b>2f/k = 2r·x₀</b> —— 这就是每半周期振幅减少的量。</p>`},
 
- {k:'⑤ 停住', h:'为什么在 x₀ 停住了',
-  body:`<p>在 x = x₀ 处：重力的分量 F 与弹力 kx₀ = F <b>刚好平衡</b>，合力为零。</p>
-  <p>不需要摩擦也能停——这正是<b>无摩擦平衡位置</b>。</p>
-  <p class="note">更普遍的说法：当振幅小于 f/k 时，物块就停在平衡位置附近 ±f/k 的区间里，再也动不了。<br>本题振幅从 x₀ 掉到 0，正好落在平衡位置。</p>`},
+ {k:'⑤ 停住', h:'为什么停在这里',
+  body:`<p>在 x = x₀：重力分量 F 与弹力 kx₀ = F 恰好平衡，合力为零，<b>不需要摩擦也能停</b>——它就是无摩擦平衡位置。</p>
+  <p>普遍规律：振幅小于 f/k 时，物块停在平衡位置附近 ±f/k 区间里，再也动不了。</p>
+  <p class="note"><b>注意：停在 x₀ 是本题的巧合。</b><br>拖到 r = 0.10 再播：三个台阶，也停在 1.00x₀；<br>拖到 r = 0.30：只跳一步，停在 <b>1.20x₀</b>。<br><b>末位置由 r 决定，不能背结论。</b></p>`},
 
  {k:'⑥ 算功', h:'两条路，同一个答案',
-  body:`<p><b>能量法</b>（从 x=0 到 x=x₀）<br>
-  重力做功 F·x₀，弹性势能增加 ½kx₀²，其余被摩擦消耗：<br>
-  W<sub>f</sub> = F·x₀ − ½kx₀²</p>
-  <p>代入 x₀ = F/k：<br>
+  body:`<p><b>能量法</b>（x = 0 → x₀）：重力做功 F·x₀，弹性势能增加 ½kx₀²</p>
+  <p>W<sub>f</sub> = F·x₀ − ½kx₀²，代入 x₀ = F/k：<br>
   W<sub>f</sub> = F²/k − ½F²/k = <b>½F²/k</b></p>
   <p class="sol"><b>W<sub>f</sub> = (mg sinθ)²/(2k)　→　选 B</b></p>
-  <p><b>路程法验算</b>：总路程 = 1.5x₀（下）+ 0.5x₀（上）= 2x₀<br>
-  W<sub>f</sub> = f × 2x₀ = (F/4) × 2(F/k) = <b>½F²/k</b> ✓</p>
-  <p class="note">两条路必须相等。如果不相等，说明某个阶段的平衡位置找错了。</p>`}
+  <p><b>路程法</b>：总路程 = 1.5x₀ + 0.5x₀ = 2x₀<br>
+  W<sub>f</sub> = f × 2x₀ = (F/4)×2(F/k) = <b>½F²/k</b> ✓</p>
+  <p class="note">两条路必须相等。不相等，说明某个阶段的平衡位置算错了。</p>`}
 ];
 
-/* ============ 规律总结 ============ */
 document.getElementById('ruleBox').innerHTML=`
-<p><b>1. 平衡位置会"跳"，而且只跳两个位置</b><br>
-向下运动时在 (F−f)/k，向上运动时在 (F+f)/k。两者相距 <b>2f/k</b>。<br>
-<span class="k">每换一次方向，平衡位置就换一个。</span></p>
+<p><b>1. 平衡位置会跳，只跳两个</b><br>
+向下 (F−f)/k，向上 (F+f)/k，间距恒为 <b>2f/k</b>。<b>每换一次方向就跳一次。</b></p>
 
-<p><b>2. 振幅<b>线性</b>衰减，每半周期减少 2f/k</b><br>
-本题：x₀ → 再一个半周期就会掉到 x₀ − 2f/k = x₀/2 …<br>
-但它在 x₀ 就停了，因为振幅正好用完。</p>
+<p><b>2. 振幅线性衰减，每半周期减 2f/k</b><br>
+空气阻力是平滑的指数衰减，干摩擦是<b>固定台阶</b>。这是两者的分水岭。</p>
 
 <p><b>3. x–t 图是折线，不是光滑曲线</b><br>
-每个半周期换一个平衡位置，画出来是<b>一段段圆弧拼起来的台阶</b>。<br>
-这是干摩擦（恒定大小的摩擦）独有的特征——空气阻力造成的是平滑的指数衰减。</p>
+每段圆弧的中心（平衡位置）都不同，拼起来必然是台阶。</p>
 
 <p><b>4. 一定会停</b><br>
-无阻尼：永远振下去。<br>
-干摩擦：振幅每次减 2f/k，有限次后小于 f/k，停住。<br>
-<span class="k">题目说"从释放到静止"，就是让你用这个"必停"作为已知条件。</span></p>
+无阻尼永不停；干摩擦每次减 2f/k，有限次后小于 f/k，停住。</p>
 
-<p><b>5. 关于"单方向"这个叫法</b><br>
-本题弹簧只被压缩、不被拉伸，物块始终在弹簧一侧（x ≥ 0），所以振动只在平衡位置一侧展开，看上去是"单向"的。<br>
-<span class="w">但严格说，这类运动的学名是"干摩擦阻尼振动"或"有恒定摩擦力的简谐运动"。</span>"单方向"是本题初条件造成的现象，不是一类独立的运动。讲课时可以两个说法都给学生。</p>
+<p><b>5. 停止位置由 r 决定，不是固定值</b><br>
+· r = 0.10 → 多个台阶，停在 1.00x₀<br>
+· r = 0.25（本题）→ 一个台阶，停在 1.00x₀<br>
+· r = 0.30 → 一个台阶，停在 <b>1.20x₀</b><br>
+· r ≥ 0.50 → 第一个半周期就停<br>
+<b>别把"停在 x₀"当规律背。</b></p>
 
-<p><b>6. 解题三步</b><br>
-① 把 f 化成 F 的倍数（题眼）<br>
-② 每换一次方向，重算一次平衡位置和振幅<br>
-③ 用能量法或路程法算功，两者互验</p>
+<p><b>6. 关于"单方向"这个叫法</b><br>
+本题弹簧只压缩不拉伸，物块始终在 x ≥ 0 一侧，看起来单向。<br>
+<span class="w">严格说这类运动叫"干摩擦阻尼振动"或"有恒定摩擦力的简谐运动"。</span>"单方向"是初条件造成的现象，不是独立运动类型。两个说法都可以给学生，但要讲清哪个是本质。</p>
+
+<p><b>7. 解题三步</b><br>
+① 把 f 化成 F 的倍数 r　② 每换方向重算平衡位置和振幅　③ 能量法与路程法互验</p>
 `;
 
 /* ============ 交互 ============ */
 let cur=0;
 const box=document.getElementById('stepBox'), stepsEl=document.getElementById('steps');
 STEPS.forEach((st,i)=>{ const b=document.createElement('button'); b.textContent=st.k; b.onclick=()=>go(i); stepsEl.appendChild(b); });
-const marks=[0, TEND, TEND*0.45, TEND*0.92, TEND, TEND];
 function go(i){
   cur=Math.max(0,Math.min(STEPS.length-1,i));
   [...stepsEl.children].forEach((b,j)=>{ b.className=j===cur?'on':(j<cur?'done':''); });
   box.innerHTML='<h3>'+STEPS[cur].h+'</h3>'+STEPS[cur].body;
-  T=marks[cur]; playing=false; last=0;
-  document.getElementById('play').textContent='▶ 播放';
-  drawScene(T); drawChart(T);
 }
 document.getElementById('next').onclick=()=>go(cur+1);
 document.getElementById('prev').onclick=()=>go(cur-1);
 
-drawScene(0); drawChart(0); go(0);
+reset(); drawScene(); drawChart(); readout(); go(0);
 </script>
 </body>
 </html>
