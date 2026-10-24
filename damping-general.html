@@ -57,9 +57,9 @@ h4{font-size:15px;margin:14px 0 6px;color:#ffd166}
   <canvas id="cv1" width="760" height="300" style="margin-top:8px"></canvas>
   <div class="readout">
     <div><span>半周期数 n</span><b id="rN">0</b></div>
-    <div><span>剩余振幅</span><b id="rA">—</b></div>
+    <div><span>当前位置</span><b id="rA">—</b></div>
     <div><span>总路程</span><b id="rS">0</b></div>
-    <div><span>总时间</span><b id="rT">0</b></div>
+    <div><span>总时间（理论）</span><b id="rT">0</b></div>
   </div>
 </div>
 
@@ -314,12 +314,13 @@ function loop(ts){
   if(playing) requestAnimationFrame(loop);
 }
 function readout(){
-  document.getElementById('rN').textContent = nHalf;
-  const bal = ((-r + r)===0) ? ((nHalf%2===1)? r : -r) : 0;
-  const balUse = (nHalf%2===1)? -r : r;
-  document.getElementById('rA').textContent = Math.abs(x - balUse).toFixed(2)+'A';
+  const A1 = A0 - r;                       // 第一次的振幅
+  const d  = 2*r;                          // 振幅公差
+  const nTheo = Math.max(1, Math.ceil(A1/d));   // 理论半周期数
+  document.getElementById('rN').textContent = nTheo + ' (理论)';
+  document.getElementById('rA').textContent = (x>=0?'+':'') + x.toFixed(2) + 'A';
   document.getElementById('rS').textContent = path.toFixed(2)+'A';
-  document.getElementById('rT').textContent = tt.toFixed(2)+'·√(m/k)';
+  document.getElementById('rT').textContent = (nTheo*Math.PI).toFixed(2)+'·√(m/k)';
 }
 document.getElementById('play').onclick=()=>{
   if(playing){ playing=false; last=0; document.getElementById('play').textContent='▶ 继续'; return; }
