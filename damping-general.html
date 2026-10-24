@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>恒定摩擦力的阻尼振动 · 规律与两个平衡位置</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b1118;color:#e8eef6;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:14px 12px 30px}
+h1{font-size:19px;margin:0 0 5px;font-weight:800}
+.sub{font-size:13px;color:#7f92a8;margin-bottom:14px;line-height:1.65}
+.card{background:#131c26;border:1px solid #22303f;border-radius:12px;padding:12px;margin-bottom:12px}
+.ttl{font-size:14px;color:#7fd0ff;font-weight:700;margin-bottom:8px}
+canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
+.qtext{font-size:14.5px;line-height:1.95}
+.ctrl{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ctrl button{flex:1 1 64px;padding:11px 6px;font-size:14px;font-weight:700;border-radius:10px;border:none;background:#1f6f9c;color:#fff}
+.ctrl button.ghost{background:#22303f;color:#9fb3c8}
+.ctrl button.sel{background:#2f89b8;color:#fff}
+.tips{font-size:12px;color:#6b7f95;line-height:1.7;margin-top:8px}
+.slider{display:flex;align-items:center;gap:10px;margin:4px 0 8px}
+.slider label{font-size:13px;color:#9fb3c8;flex:0 0 auto}
+.slider input[type=range]{flex:1;accent-color:#2f89b8;height:28px}
+.slider b{font-size:17px;color:#ffd166;min-width:58px;text-align:right;font-variant-numeric:tabular-nums}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;font-size:13px;margin-top:8px}
+.readout div{display:flex;justify-content:space-between;background:#172230;padding:7px 9px;border-radius:8px}
+.readout span{color:#8fa4ba}
+.readout b{font-variant-numeric:tabular-nums;color:#bfe9ff}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:12px;color:#8fa4ba;margin-top:8px}
+.legend i{display:inline-block;width:13px;height:3px;border-radius:2px;vertical-align:middle;margin-right:3px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+th,td{border:1px solid #26374a;padding:6px 5px;text-align:center;font-variant-numeric:tabular-nums}
+th{background:#172230;color:#7fd0ff;font-weight:700}
+td.l{text-align:left;color:#9fb3c8}
+.k{color:#7fe0a0;font-weight:700}
+.w{color:#ff9b7b;font-weight:700}
+.sol{background:#183226;border-left:3px solid #5fd68a;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;color:#c4f2d8}
+.note{background:#1a2431;border-left:3px solid #ffd166;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;color:#ffd9a0;font-size:14px}
+h4{font-size:15px;margin:14px 0 6px;color:#ffd166}
+</style>
+</head>
+<body>
+<h1>恒定摩擦力的阻尼振动</h1>
+<div class="sub">两个平衡位置交替、振幅按等差数列递减、必定停下。三个结论，一个模型。</div>
+
+<div class="card">
+  <div class="ttl">一、模型：弹簧振子 + 大小不变的摩擦</div>
+  <div class="qtext">
+    水平面上，弹簧一端固定，另一端连一个振子。振子与地面间有摩擦，<b>滑动摩擦力大小恒为 f</b>（方向随运动反向）。<br>
+    把振子压缩到 A 点后由静止释放。
+  </div>
+  <div class="legend" style="margin-top:10px">
+    <span><i style="background:#5fd68a"></i>O₁ 向右运动时的平衡位置</span>
+    <span><i style="background:#e8d44d"></i>O₂ 向左运动时的平衡位置</span>
+    <span><i style="background:#ff6b6b"></i>摩擦</span>
+  </div>
+  <canvas id="cv1" width="760" height="300" style="margin-top:8px"></canvas>
+  <div class="readout">
+    <div><span>半周期数 n</span><b id="rN">0</b></div>
+    <div><span>剩余振幅</span><b id="rA">—</b></div>
+    <div><span>总路程</span><b id="rS">0</b></div>
+    <div><span>总时间</span><b id="rT">0</b></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ttl">二、等效模型：一根绳绕着两根钉</div>
+  <div class="tips" style="margin-top:0">两颗钉相距 d（= 两个平衡位置的间距），细绳系在钉上、另一端拴小球。小球交替以两颗钉为圆心做圆弧，<b>半径每次减 d</b>。</div>
+  <canvas id="cv2" width="760" height="420" style="margin-top:8px"></canvas>
+  <div class="ctrl">
+    <button id="play">▶ 播放</button>
+    <button id="reset" class="ghost">↺ 重来</button>
+  </div>
+  <div class="slider" style="margin-top:10px">
+    <label>摩擦比 r = f/(kA)</label>
+    <input id="rg" type="range" min="0.04" max="0.40" step="0.01" value="0.12">
+    <b id="rgv">0.12</b>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ttl">三、振幅按等差数列递减</div>
+  <div class="qtext" id="tabBox"></div>
+</div>
+
+<div class="card">
+  <div class="ttl">四、振动图像</div>
+  <canvas id="cv3" width="760" height="260"></canvas>
+  <div class="tips">台阶状折线。相邻两个峰值的差，恒等于 d。</div>
+</div>
+
+<div class="card">
+  <div class="ttl">五、三个必考结论</div>
+  <div class="qtext" id="ruleBox"></div>
+</div>
+
+<script>
+/* ============ 归一化：k=1, m=1, 初始压缩量 A=1 ============ */
+/* f = r（单位 kA），平衡位置 ±r，d = 2r */
+let r = 0.12;
+const K=1, M=1, A0=1;
+let x = A0, v = 0, tt = 0, path = 0, nHalf = 0, stopped = false, started = false;
+let hist = [], marks = [];
+const PI = Math.PI;
+
+function reset(){
+  x = A0; v = 0; tt = 0; path = 0; nHalf = 0; stopped = false; started = false;
+  hist = [{t:0, x:x}]; marks = [{x:A0, tag:'A'}];
+}
+function step(dt){
+  if(stopped) return;
+  const f = r;
+  if(Math.abs(v) < 3e-4){
+    const drive = -K*x;                 // 弹力（水平，无重力分量）
+    if(Math.abs(drive) <= f){ stopped = true; v = 0; nHalf++; marks.push({x:x, tag:'停'}); return; }
+    if(!started) started = true; else { nHalf++; marks.push({x:x, tag:'端点'}); }
+    v = Math.sign(drive)*1e-3;
+  }
+  const fr = (v > 0) ? -f : (v < 0 ? f : -Math.sign(-K*x)*f);
+  const a = (-K*x + fr)/M;
+  const vNew = v + a*dt;
+  if(v*vNew < 0){
+    const t0 = Math.abs(v)/Math.abs(a);
+    const dx0 = v*t0 + 0.5*a*t0*t0;
+    x += dx0; path += Math.abs(dx0); tt += t0; v = 0;
+    hist.push({t:tt, x:x});
+    return;
+  }
+  const dx = v*dt + 0.5*a*dt*dt;
+  x += dx; path += Math.abs(dx); v = vNew; tt += dt;
+  if(hist.length===0 || tt - hist[hist.length-1].t > 0.015) hist.push({t:tt, x:x});
+}
+
+/* ============ 画布1：水平弹簧 ============ */
+const c1=document.getElementById('cv1'), g1=c1.getContext('2d');
+const CW=760, CH=300, Y0=190, PPM=245;      // 1 单位 = 150 px
+const XO=430;                                // x=0 的屏幕位置
+const sx=v=>XO+v*PPM;
+function drawSpring1(){
+  const x0=sx(0), x1=sx(x);
+  g1.beginPath(); g1.moveTo(x0,Y0);
+  const n=26, dx=(x1-x0)/n;
+  for(let i=1;i<n;i++){ g1.lineTo(x0+dx*i, Y0 + (i%2?1:-1)*13); }
+  g1.lineTo(x1,Y0);
+  g1.strokeStyle='#8fd0ff'; g1.lineWidth=3.2; g1.stroke();
+}
+function draw1(){
+  g1.clearRect(0,0,CW,CH); g1.fillStyle='#0e151d'; g1.fillRect(0,0,CW,CH);
+  // 地面
+  g1.strokeStyle='#2c3e50'; g1.lineWidth=2;
+  g1.beginPath(); g1.moveTo(30,Y0+34); g1.lineTo(CW-30,Y0+34); g1.stroke();
+  for(let i=40;i<CW-30;i+=16){ g1.beginPath(); g1.moveTo(i,Y0+34); g1.lineTo(i-7,Y0+44); g1.stroke(); }
+  // 左侧固定墙
+  g1.fillStyle='#41566b'; g1.fillRect(sx(0)-6, Y0-46, 6, 92);
+  // 两个平衡位置
+  [[-r,'#5fd68a','O₁'],[r,'#e8d44d','O₂']].forEach(([xx,col,lab])=>{
+    g1.setLineDash([6,5]); g1.strokeStyle=col; g1.lineWidth=2.2;
+    g1.beginPath(); g1.moveTo(sx(xx),Y0-52); g1.lineTo(sx(xx),Y0+30); g1.stroke();
+    g1.setLineDash([]);
+    g1.fillStyle=col; g1.font='bold 15px sans-serif'; g1.textAlign='center';
+    g1.fillText(lab, sx(xx), Y0-60);
+  });
+  // d 标注
+  g1.strokeStyle='#8fa4ba'; g1.lineWidth=1.6;
+  const yd=Y0+24;
+  g1.beginPath(); g1.moveTo(sx(-r),yd); g1.lineTo(sx(r),yd); g1.stroke();
+  g1.fillStyle='#8fa4ba'; g1.font='bold 13px sans-serif'; g1.textAlign='center';
+  g1.fillText('d = '+ (2*r).toFixed(2), XO, yd+18);
+  // 端点标记
+  marks.forEach((m,i)=>{
+    g1.fillStyle='rgba(255,255,255,.55)'; g1.font='bold 12px sans-serif'; g1.textAlign='center';
+    g1.beginPath(); g1.arc(sx(m.x), Y0-34, 3, 0, 7); g1.fill();
+    g1.fillText(['A','B','C','D','E','F','G','H'][i]||'', sx(m.x), Y0-40);
+  });
+  drawSpring1();
+  // 振子
+  g1.fillStyle='#e8c26a'; g1.strokeStyle='#fff3c4'; g1.lineWidth=2.4;
+  g1.beginPath(); g1.roundRect(sx(x)-22, Y0-22, 44, 44, 5); g1.fill(); g1.stroke();
+  // 摩擦箭头
+  if(Math.abs(v)>0.03 && r>0.005){
+    const dir=-Math.sign(v), x1=sx(x), x2=sx(x)+dir*(26+r*90);
+    g1.strokeStyle='#ff6b6b'; g1.lineWidth=5; g1.lineCap='round';
+    g1.beginPath(); g1.moveTo(x1, Y0+26); g1.lineTo(x2, Y0+26); g1.stroke();
+    const a2=dir>0?0:Math.PI;
+    g1.beginPath(); g1.moveTo(x2,Y0+26);
+    g1.lineTo(x2-11*Math.cos(a2-0.42),Y0+26-11*Math.sin(a2-0.42));
+    g1.lineTo(x2-11*Math.cos(a2+0.42),Y0+26-11*Math.sin(a2+0.42));
+    g1.closePath(); g1.fillStyle='#ff6b6b'; g1.fill();
+  }
+  g1.fillStyle='#8fa4ba'; g1.font='bold 14px sans-serif'; g1.textAlign='left';
+  g1.fillText('x / A', 34, 30);
+}
+
+/* ============ 画布2：两根钉 + 绕绳 ============ */
+const c2=document.getElementById('cv2'), g2=c2.getContext('2d');
+const W2=760,H2=420, CX2=380, CY2=215;
+let SC2=1;
+function fitScale(){
+  // 让最大半径（A0 - r）装得下
+  SC2 = 165/(A0);
+}
+function draw2(){
+  g2.clearRect(0,0,W2,H2); g2.fillStyle='#0e151d'; g2.fillRect(0,0,W2,H2);
+  const d = 2*r;
+  const o1 = CX2 - d*SC2/2, o2 = CX2 + d*SC2/2;
+  // 两颗钉
+  [[o1,'O₁','#5fd68a'],[o2,'O₂','#e8d44d']].forEach(([cx,col,lab])=>{
+    g2.beginPath(); g2.arc(cx, CY2, 6, 0, 7); g2.fillStyle=col; g2.fill();
+    g2.fillStyle=col; g2.font='bold 14px sans-serif'; g2.textAlign='center';
+    g2.fillText(lab, cx, CY2+26);
+  });
+  // 已画过的圆弧（历史轨迹）
+  const R0 = A0 - r;                 // 第一个半圆的半径
+  let rad = R0, idx = 0;
+  const segs = [];
+  while(rad > 0.001 && idx < 40){
+    segs.push({c: (idx%2===0)?o1:o2, R: rad*SC2, dir: idx%2===0 ? 1 : -1});
+    rad -= 2*r; idx++;
+  }
+  // 画完整轨迹（暗） + 已走部分（亮）
+  const drawn = Math.min(segs.length, nHalf+1);
+  segs.forEach((s,i)=>{
+    const a0 = (i===0) ? Math.PI : ((i%2===1)?0:Math.PI);
+    g2.beginPath();
+    g2.arc(s.c, CY2, s.R, a0, a0 + s.dir*Math.PI, s.dir<0);
+    g2.strokeStyle = i < drawn ? 'rgba(143,208,255,.85)' : 'rgba(143,208,255,.16)';
+    g2.lineWidth = i < drawn ? 2.6 : 1.4;
+    g2.stroke();
+  });
+  // 当前半径的绳 + 球
+  const cur = segs[Math.min(drawn-1, segs.length-1)];
+  if(cur){
+    const prog = Math.min(1, (tt/(PI))/1);    // 每个半周期 π，ω=1
+    const frac = Math.min(1, (tt % PI)/PI);
+    const aStart = (Math.min(drawn-1,segs.length-1)===0) ? Math.PI : (((Math.min(drawn-1,segs.length-1))%2===1)?0:Math.PI);
+    const ang = aStart + cur.dir*PI*frac;
+    const bx = cur.c + cur.R*Math.cos(ang), by = CY2 + cur.R*Math.sin(ang);
+    g2.strokeStyle='#9fb3c8'; g2.lineWidth=2; g2.setLineDash([5,4]);
+    g2.beginPath(); g2.moveTo(cur.c, CY2); g2.lineTo(bx, by); g2.stroke();
+    g2.setLineDash([]);
+    g2.beginPath(); g2.arc(bx, by, 8, 0, 7); g2.fillStyle='#e8c26a'; g2.fill();
+    g2.strokeStyle='#fff3c4'; g2.lineWidth=2; g2.stroke();
+  }
+  g2.fillStyle='#7f92a8'; g2.font='bold 13px sans-serif'; g2.textAlign='left';
+  g2.fillText('绳长（振幅）每次减少 d = '+ (2*r).toFixed(2), 20, 26);
+  g2.textAlign='right';
+  g2.fillText('两钉间距 d', W2-20, 26);
+}
+
+/* ============ 画布3：x–t ============ */
+const c3=document.getElementById('cv3'), g3=c3.getContext('2d');
+const W3=760,H3=260, PL=52,PR=20,PT=24,PB=38;
+function ypx3(xx){ return PT + (1.15-xx)/2.30*(H3-PT-PB); }
+function draw3(){
+  g3.clearRect(0,0,W3,H3); g3.fillStyle='#0e151d'; g3.fillRect(0,0,W3,H3);
+  const tmax=Math.max(6, tt*1.06);
+  const XP=t=>PL+t/tmax*(W3-PL-PR);
+  [[-r,'#5fd68a'],[r,'#e8d44d']].forEach(([xx,col])=>{
+    g3.setLineDash([5,5]); g3.strokeStyle=col; g3.lineWidth=1.6;
+    g3.beginPath(); g3.moveTo(PL,ypx3(xx)); g3.lineTo(W3-PR,ypx3(xx)); g3.stroke();
+    g3.setLineDash([]);
+  });
+  g3.strokeStyle='#2a3a4d'; g3.lineWidth=1.4;
+  g3.beginPath(); g3.moveTo(PL,PT-6); g3.lineTo(PL,H3-PB); g3.lineTo(W3-PR,H3-PB); g3.stroke();
+  g3.fillStyle='#7f92a8'; g3.font='bold 12px sans-serif'; g3.textAlign='left';
+  g3.fillText('x', 8, PT+2);
+  if(hist.length>1){
+    g3.beginPath(); g3.moveTo(XP(hist[0].t), ypx3(hist[0].x));
+    for(const p of hist) g3.lineTo(XP(p.t), ypx3(p.x));
+    g3.strokeStyle='#5fd68a'; g3.lineWidth=2.4; g3.stroke();
+  }
+}
+
+/* ============ 表格：等差数列 ============ */
+function buildTable(){
+  // 计算各次端点位置（用模拟求，准确）
+  const save = {x,v,tt,path,nHalf,stopped,started,hist,marks};
+  x=A0; v=0; tt=0; path=0; nHalf=0; stopped=false; started=false;
+  const ends=[A0];
+  let guard=0;
+  while(!stopped && guard++<200000){ step(0.001); }
+  for(const m of marks) if(m.tag==='端点') ends.push(m.x);
+  Object.assign({},{});
+  x=save.x; v=save.v; tt=save.tt; path=save.path; nHalf=save.nHalf;
+  stopped=save.stopped; started=save.started; hist=save.hist; marks=save.marks;
+
+  const d=2*r;
+  const rows = ends.slice(0, Math.min(ends.length,7)).map((e,i)=>{
+    const bal = (i%2===0) ? r : -r;           // 第 i 段围绕的平衡位置
+    const amp = Math.abs(e - bal);
+    return {i, e, amp};
+  });
+  let html = '<table><tr><th>段</th><th>端点位置</th><th>围绕平衡位置</th><th>振幅</th></tr>';
+  rows.forEach((row,i)=>{
+    const bal = (i%2===0)? r : -r;
+    html += `<tr><td>${i===0?'起点 A':'第 '+i+' 段末'}</td><td>${row.e.toFixed(2)}A</td><td>${bal>0?'O₂ (+'+bal.toFixed(2)+')':'O₁ ('+bal.toFixed(2)+')'}</td><td class="k">${row.amp.toFixed(2)}</td></tr>`;
+  });
+  html += '</table>';
+  html += `<p>相邻两个端点之差恒为 <b class="k">2d = 4r = ${(4*r).toFixed(2)}A</b>，相邻振幅之差恒为 <b class="k">d = ${d.toFixed(2)}A</b>。</p>`;
+  html += `<div class="sol">振幅是<b>等差数列</b>，公差 = d = 2f/k。这就是"振幅一级一级掉"的原因。</div>`;
+  document.getElementById('tabBox').innerHTML = html;
+}
+
+/* ============ 播放 ============ */
+let playing=false, last=0, SPEED=0.55;
+function loop(ts){
+  if(!playing) return;
+  if(!last) last=ts;
+  const dtR=Math.min(0.05,(ts-last)/1000); last=ts;
+  let budget=dtR*SPEED;
+  while(budget>0 && !stopped && tt<60){ const d=Math.min(0.0015,budget); step(d); budget-=d; }
+  if(stopped||tt>=60){ playing=false; document.getElementById('play').textContent='▶ 播放'; }
+  draw1(); draw2(); draw3(); readout();
+  if(playing) requestAnimationFrame(loop);
+}
+function readout(){
+  document.getElementById('rN').textContent = nHalf;
+  const bal = ((-r + r)===0) ? ((nHalf%2===1)? r : -r) : 0;
+  const balUse = (nHalf%2===1)? -r : r;
+  document.getElementById('rA').textContent = Math.abs(x - balUse).toFixed(2)+'A';
+  document.getElementById('rS').textContent = path.toFixed(2)+'A';
+  document.getElementById('rT').textContent = tt.toFixed(2)+'·√(m/k)';
+}
+document.getElementById('play').onclick=()=>{
+  if(playing){ playing=false; last=0; document.getElementById('play').textContent='▶ 继续'; return; }
+  if(stopped||tt>0) { reset(); }
+  playing=true; last=0; document.getElementById('play').textContent='⏸ 暂停';
+  requestAnimationFrame(loop);
+};
+document.getElementById('reset').onclick=()=>{
+  reset(); playing=false; last=0;
+  document.getElementById('play').textContent='▶ 播放';
+  draw1(); draw2(); draw3(); readout(); buildTable();
+};
+document.getElementById('rg').oninput=e=>{
+  r=parseFloat(e.target.value);
+  document.getElementById('rgv').textContent=r.toFixed(2);
+  reset(); playing=false; last=0;
+  document.getElementById('play').textContent='▶ 播放';
+  fitScale(); draw1(); draw2(); draw3(); readout(); buildTable();
+};
+
+/* ============ 结论 ============ */
+document.getElementById('ruleBox').innerHTML=`
+<h4>1. 两个平衡位置，交替使用</h4>
+<p>向右运动时平衡在 <b>O₁</b>（弹簧压缩 f/k 处），向左运动时平衡在 <b>O₂</b>（弹簧伸长 f/k 处）。
+两点间距 <b>d = 2f/k</b>。</p>
+<div class="note">振子不是"围绕一个中心越摆越小"，而是<b>绕着两个中心轮流做半圆</b>。这是所有结论的源头。</div>
+
+<h4>2. 振幅是等差数列，公差 d = 2f/k</h4>
+<p>每次换向，振幅恰好减少一个 d。合力和弹力的最大值也用同样的公差 2f 递减。</p>
+<div class="sol">n 次后的总路程：S = A₁ + 2(A₁−d) + 2(A₁−2d) + … （等差求和）</div>
+
+<h4>3. 停止位置必在 O₁、O₂ 之间</h4>
+<p>在这两点之外，弹力的大小大于最大静摩擦力，振子不可能静止。<br>
+所以最终停下时，一定满足 <b class="k">|x| ≤ f/k</b>。</p>
+<div class="note">这条结论可以用来快速验证答案：算出停止位置后，看它是不是落在两个平衡位置之间。<b>不在这段区间里的答案，一定是错的。</b></div>
+
+<h4>4. 半周期数 n 怎么定</h4>
+<p>三个等价角度：<br>
+① 振幅序列 A₁ − (i−1)d &gt; 0 的最大 i<br>
+② 总路程 = 各段之和，与实际路程相等<br>
+③ 停止位置落在 O₁O₂ 之间</p>
+
+<h4>5. 总时间</h4>
+<p>每段都是半周期简谐运动，恢复系数始终是 k，所以<b>每段用时都是 π√(m/k)</b>，与振幅无关。</p>
+<div class="sol">t = n·π√(m/k)</div>
+<div class="note">这是本题最容易被忽略的一点：振幅在减小，但<b>周期不变</b>。这也正是"绳绕两钉"模型成立的前提——每个半圆的角速度相同。</div>
+`;
+
+/* 初始化 */
+reset(); fitScale(); draw1(); draw2(); draw3(); readout(); buildTable();
+</script>
+</body>
+</html>
