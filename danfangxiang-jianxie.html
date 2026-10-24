@@ -121,12 +121,12 @@ canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
 /* ============ 归一化：F = mgsinθ = 1，x₀ = F/k = 1，m = k = 1 ============ */
 const k = 1, m = 1, F = 1;
 let r = 0.25;
-let x = 0, v = 0, tt = 0, path = 0, halfN = 0, stopped = false, lastSign = 0;
+let x = 0, v = 0, tt = 0, path = 0, halfN = 0, stopped = false, started = false;
 let hist = [];
 const TMAX = 40;
 
 function reset(){
-  x = 0; v = 0; tt = 0; path = 0; halfN = 0; stopped = false; lastSign = 0;
+  x = 0; v = 0; tt = 0; path = 0; halfN = 0; stopped = false; started = false;
   hist = [{t:0, x:0}];
 }
 
@@ -136,7 +136,8 @@ function step(dt){
   if(Math.abs(v) < 3e-4){
     const drive = F - k*x;
     if(Math.abs(drive) <= f){ stopped = true; v = 0; return; }
-    v = Math.sign(drive)*1e-3;      // 关键：给一个确定方向的小初速，否则会卡在零
+    if(!started) started = true; else halfN++;   // 到达端点，方向要反了
+    v = Math.sign(drive)*1e-3;      // 给一个确定方向的小初速，否则会卡在零
   }
   const fr = (v > 0) ? -f : (v < 0 ? f : -Math.sign(F-k*x)*f);
   const a = (F - k*x + fr)/m;
@@ -145,7 +146,6 @@ function step(dt){
     const t0 = Math.abs(v)/Math.abs(a);
     const dx0 = v*t0 + 0.5*a*t0*t0;
     x += dx0; path += Math.abs(dx0); tt += t0; v = 0;
-    halfN++; lastSign = 0;
     hist.push({t:tt, x:x});
     return;
   }
