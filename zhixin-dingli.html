@@ -198,7 +198,7 @@ function step2b(dt){
   sA+=WA*RR*dt; sB+=WB*RR*dt;
   sC+=Math.abs((WA+WB)/2)*RR*dt;
   const sep=angDiff(thA,thB);
-  if(prevSep*sep<0){ const t=WA; WA=WB; WB=t; hits++; }
+  if(prevSep*sep<0){ const t=WA; WA=WB; WB=t; hits++; prevSep=angDiff(thA,thB); return; }
   prevSep=sep;
 }
 function draw2(){
@@ -246,6 +246,7 @@ function step3(dt){
     yB = yD-16; nH++;
   }
   if(yD>BOTY-24){ yD=BOTY-24; if(vD>0) vD=0; }
+  if(yB>BOTY-20){ reset3(); }
   t3+=dt;
   const cmy=(mB*yB+mD*yD)/MT2;
   trailB.push({x:XB-90,y:yB}); trailCm.push({x:XB+90,y:cmy});
