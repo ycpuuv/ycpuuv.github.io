@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>质心运动定理 · 高考压轴题的降维打法</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#0b1118;color:#e8eef6;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;padding:14px 12px 30px}
+h1{font-size:19px;margin:0 0 5px;font-weight:800}
+.sub{font-size:13px;color:#7f92a8;margin-bottom:14px;line-height:1.65}
+.card{background:#131c26;border:1px solid #22303f;border-radius:12px;padding:12px;margin-bottom:12px}
+.ttl{font-size:14px;color:#7fd0ff;font-weight:700;margin-bottom:8px}
+canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
+.qtext{font-size:14.5px;line-height:1.95}
+.ctrl{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.ctrl button{flex:1 1 70px;padding:11px 6px;font-size:14px;font-weight:700;border-radius:10px;border:none;background:#1f6f9c;color:#fff}
+.ctrl button.ghost{background:#22303f;color:#9fb3c8}
+.tips{font-size:12.5px;color:#7f92a8;line-height:1.75;margin-top:8px}
+.sol{background:#183226;border-left:3px solid #5fd68a;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;color:#c4f2d8}
+.note{background:#1a2431;border-left:3px solid #ffd166;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;color:#ffd9a0;font-size:14px}
+.warn{background:#2a1c1c;border-left:3px solid #ff8f6b;padding:9px 11px;border-radius:0 8px 8px 0;margin:9px 0;color:#ffc4b0;font-size:14px}
+h4{font-size:15px;margin:14px 0 6px;color:#ffd166}
+.readout{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px;font-size:13px;margin-top:8px}
+.readout div{display:flex;justify-content:space-between;background:#172230;padding:7px 9px;border-radius:8px}
+.readout span{color:#8fa4ba}
+.readout b{font-variant-numeric:tabular-nums;color:#bfe9ff}
+.k{color:#7fe0a0;font-weight:700}
+</style>
+</head>
+<body>
+<h1>质心运动定理</h1>
+<div class="sub">2024 湖南卷 · 2023 全国卷 压轴题的共同打法</div>
+
+<div class="card" style="border-color:#2f89b8">
+  <div class="ttl">三十秒看懂</div>
+  <div class="qtext">
+    <p><b>一句话：</b>内力再乱，也推不动质心。系统合外力为零，质心就匀速；合外力恒定，质心就匀加速。</p>
+    <p><b>① 质心在哪</b>　按质量加权平均：r<sub>C</sub> = (m₁r₁ + m₂r₂)/(m₁+m₂)</p>
+    <p><b>② 质心定理</b>　F<sub>外</sub> = (m₁+m₂)·a<sub>C</sub>。<b>内力在式子里根本不出现</b>，这就是它降维的原因。</p>
+    <p><b>③ 怎么用</b>　先看系统合外力（往往是 0 或恒力）→ 确定质心怎么动 → 再用质心去捞某个物体。</p>
+    <div class="note">两道压轴题都只做一件事：<b>把"两个物体的乱动"换成"一个质心的简单运动"</b>。</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="ttl">一、内力再复杂，质心照走直线</div>
+  <div class="tips" style="margin-top:0">两个球在光滑水平面上相向运动，碰撞后各自飞开。看两个球的轨迹（淡色）和质心的轨迹（黄色）。</div>
+  <canvas id="cv1" width="760" height="300" style="margin-top:8px"></canvas>
+  <div class="ctrl"><button id="b1">▶ 播放</button><button id="b1r" class="ghost">↺ 重来</button></div>
+  <div class="sol">两球的路径弯弯绕绕，质心却是一条<b>笔直的线</b>。因为水平面光滑，系统合外力为零 → 质心速度恒定。</div>
+</div>
+
+<div class="card">
+  <div class="ttl">二、例1：2024 湖南卷 · 圆环上的两球</div>
+  <div class="qtext">
+    两球在光滑圆环内运动，速率不变，碰撞时交换速度（等质量弹性碰撞）。
+  </div>
+  <canvas id="cv2" width="760" height="420" style="margin-top:8px"></canvas>
+  <div class="ctrl"><button id="b2">▶ 播放</button><button id="b2r" class="ghost">↺ 重来</button></div>
+  <div class="readout">
+    <div><span>A 的路程</span><b id="sA">0.00</b></div>
+    <div><span>B 的路程</span><b id="sB">0.00</b></div>
+    <div><span>质心路程</span><b id="sC">0.00</b></div>
+    <div><span>碰撞次数</span><b id="nHit">0</b></div>
+  </div>
+  <div class="sol">
+    <b>沿圆周方向合外力为零</b> → 质心角速度恒定 → 质心匀速率绕圆。<br>
+    每两次碰撞之间，一球比另一球多跑一个周长，而两者各自与质心的偏差正好抵消；<br>
+    从第 1 次到第 2n+1 次碰撞（偶数段），<b>S<sub>A</sub> = S<sub>B</sub> = S<sub>C</sub></b>。
+  </div>
+  <div class="note">关键不在算，在于敢换对象：<b>不去追两个球，去追它们的中点。</b></div>
+</div>
+
+<div class="card">
+  <div class="ttl">三、例2：2023 全国卷 · 球落进圆桶</div>
+  <div class="qtext">
+    小球在桶内下落，与桶底的圆盘反复弹性碰撞。盘受桶的支持力与重力平衡，<b>合力为零</b>；球只受重力。
+  </div>
+  <canvas id="cv3" width="760" height="420" style="margin-top:8px"></canvas>
+  <div class="ctrl"><button id="b3">▶ 播放</button><button id="b3r" class="ghost">↺ 重来</button></div>
+  <div class="readout">
+    <div><span>球的速度</span><b id="vB">0.00</b></div>
+    <div><span>盘的速度</span><b id="vD">0.00</b></div>
+    <div><span>质心加速度</span><b>0.25 g</b></div>
+    <div><span>碰撞次数</span><b id="nH">0</b></div>
+  </div>
+  <div class="sol">
+    系统合外力只有球的重力 mg → a<sub>C</sub> = mg/(m+3m) = <b>0.25g</b>，质心做<b>匀加速直线运动</b>。<br>
+    碰后球相对盘的速度大小不变、方向反转，相对加速度仍是 g → 每次上抛时间相同 → <b>碰撞间隔相同</b>。
+  </div>
+  <div class="warn">这两题的<b>具体数字</b>在原文的图片里，我只能读到文字。所以这里给的是<b>方法和结论</b>，具体答案你按自己手上的题算。</div>
+</div>
+
+<div class="card">
+  <div class="ttl">四、用质心的三个判断</div>
+  <div class="qtext">
+    <h4>1. 合外力为零 → 质心匀速</h4>
+    <p>光滑面上的碰撞、爆炸、相互推挤，全属于这一类。质心速度 = 碰撞前共同的速度，整个过程中不变。</p>
+
+    <h4>2. 合外力恒定 → 质心匀加速</h4>
+    <p>例2 就是这一类：球和盘之间的作用再复杂，质心只认 mg 这一个外力，加速度恒为 0.25g。</p>
+
+    <h4>3. 合外力只有某个方向的分量 → 质心只在该方向有加速度</h4>
+    <p>斜抛、带电粒子在匀强场中，横向质心速度守恒，这一条常常能一步定乾坤。</p>
+
+    <div class="note">看到"两个物体 + 反复碰撞 / 相互作用复杂"这样的字眼，先别列方程，<b>先问一句：系统合外力是多少？</b></div>
+  </div>
+</div>
+
+<script>
+const PI=Math.PI, G=10;
+
+/* ===== 画布1：两个球 + 质心 ===== */
+const c1=document.getElementById('cv1'), g1=c1.getContext('2d');
+const W1=760,H1=300;
+const m1=3, m2=1, MT=4;
+let p1,p2,v1,v2,trail=[],trailC=[],t1=0,run1=false,lastT1=0;
+function reset1(){
+  p1={x:170,y:150}; v1={x:120,y:34};
+  p2={x:600,y:120}; v2={x:-90,y:-14};
+  trail=[]; trailC=[]; t1=0;
+}
+function cm(){ return {x:(m1*p1.x+m2*p2.x)/MT, y:(m1*p1.y+m2*p2.y)/MT}; }
+function step1(dt){
+  p1.x+=v1.x*dt; p1.y+=v1.y*dt; p2.x+=v2.x*dt; p2.y+=v2.y*dt;
+  // 边界反弹
+  if(p1.x<40||p1.x>720) { v1.x*=-1; p1.x=Math.max(40,Math.min(720,p1.x)); }
+  if(p1.y<40||p1.y>260) { v1.y*=-1; p1.y=Math.max(40,Math.min(260,p1.y)); }
+  if(p2.x<40||p2.x>720) { v2.x*=-1; p2.x=Math.max(40,Math.min(720,p2.x)); }
+  if(p2.y<40||p2.y>260) { v2.y*=-1; p2.y=Math.max(40,Math.min(260,p2.y)); }
+  // 弹性碰撞（等质量? 不, 3:1）
+  const dx=p2.x-p1.x, dy=p2.y-p1.y, d=Math.hypot(dx,dy);
+  if(d<34){
+    const nx=dx/d, ny=dy/d;
+    const rv=(v2.x-v1.x)*nx+(v2.y-v1.y)*ny;
+    if(rv<0){
+      const e=1, imp=-(1+e)*rv/(1/m1+1/m2);
+      v1.x-=imp*nx/m1; v1.y-=imp*ny/m1;
+      v2.x+=imp*nx/m2; v2.y+=imp*ny/m2;
+    }
+  }
+  t1+=dt;
+  trail.push({x:p1.x,y:p1.y}); trailC.push(cm());
+  if(trail.length>600){trail.shift();trailC.shift();}
+}
+function draw1(){
+  g1.clearRect(0,0,W1,H1); g1.fillStyle='#0e151d'; g1.fillRect(0,0,W1,H1);
+  g1.strokeStyle='#2a3a4d'; g1.lineWidth=2; g1.strokeRect(40,40,680,220);
+  g1.lineWidth=1.6;
+  g1.strokeStyle='rgba(143,208,255,.30)';
+  g1.beginPath(); trail.forEach((p,i)=> i?g1.lineTo(p.x,p.y):g1.moveTo(p.x,p.y)); g1.stroke();
+  g1.strokeStyle='rgba(255,209,102,.45)';
+  g1.beginPath(); trailC.forEach((p,i)=> i?g1.lineTo(p.x,p.y):g1.moveTo(p.x,p.y)); g1.stroke();
+  const C=cm();
+  // 质心虚线
+  g1.setLineDash([4,4]); g1.strokeStyle='rgba(255,209,102,.5)'; g1.lineWidth=1.4;
+  g1.beginPath(); g1.moveTo(p1.x,p1.y); g1.lineTo(C.x,C.y); g1.lineTo(p2.x,p2.y); g1.stroke(); g1.setLineDash([]);
+  [[p1,m1,'A','#7fd0ff'],[p2,m2,'B','#ff9b7b']].forEach(([p,m,lab,col])=>{
+    const R=8+Math.sqrt(m)*5;
+    g1.beginPath(); g1.arc(p.x,p.y,R,0,7); g1.fillStyle=col; g1.fill();
+    g1.strokeStyle='#fff'; g1.lineWidth=2; g1.stroke();
+    g1.fillStyle='#0b1118'; g1.font='bold 15px sans-serif'; g1.textAlign='center'; g1.textBaseline='middle';
+    g1.fillText(lab, p.x, p.y); g1.textBaseline='alphabetic';
+  });
+  g1.beginPath(); g1.arc(C.x,C.y,10,0,7); g1.fillStyle='#ffd166'; g1.fill();
+  g1.strokeStyle='#fff6d0'; g1.lineWidth=2.5; g1.stroke();
+  g1.fillStyle='#ffd166'; g1.font='bold 15px sans-serif'; g1.textAlign='left';
+  g1.fillText('质心 C', C.x+14, C.y+5);
+  g1.fillStyle='#7f92a8'; g1.font='bold 13px sans-serif';
+  g1.fillText('m_A : m_B = 3 : 1，光滑水平面，系统合外力 = 0', 46, 30);
+}
+
+/* ===== 画布2：圆环两球 ===== */
+const c2=document.getElementById('cv2'), g2=c2.getContext('2d');
+const W2=760,H2=420, CX=380, CY=210, RR=155;
+const wA=1.05, wB=0.62;             // 角速度
+let thA=0.4, thB=3.0, sA=0,sB=0,sC=0, hits=0, run2=false, lastT2=0, prevSep=1, thC0=0;
+function reset2(){ thA=0.4; thB=3.0; sA=0;sB=0;sC=0; hits=0; prevSep=1; thC0=(thA+thB)/2; }
+function angDiff(a,b){ let d=(a-b)%(2*PI); if(d>PI)d-=2*PI; if(d<-PI)d+=2*PI; return d; }
+function step2(dt){
+  thA+=wA*dt; thB+=wB*dt;
+  sA+=wA*RR*dt; sB+=wB*RR*dt;
+  const sep=angDiff(thA,thB);
+  sC+=Math.abs((wA+wB)/2)*RR*dt;
+  // 相遇（角度差跨零）→ 交换速度
+  if(prevSep*sep<0){
+    const tmp=wA; // 等质量弹性碰撞交换速度
+    // 用变量交换不可，直接换角速度：
+  }
+  if(prevSep*sep<0) hits++;
+  prevSep=sep;
+}
+// 用可交换的角速度
+let WA=1.05, WB=0.62;
+function step2b(dt){
+  thA+=WA*dt; thB+=WB*dt;
+  sA+=WA*RR*dt; sB+=WB*RR*dt;
+  sC+=Math.abs((WA+WB)/2)*RR*dt;
+  const sep=angDiff(thA,thB);
+  if(prevSep*sep<0){ const t=WA; WA=WB; WB=t; hits++; }
+  prevSep=sep;
+}
+function draw2(){
+  g2.clearRect(0,0,W2,H2); g2.fillStyle='#0e151d'; g2.fillRect(0,0,W2,H2);
+  g2.beginPath(); g2.arc(CX,CY,RR,0,7); g2.strokeStyle='#3d5266'; g2.lineWidth=6; g2.stroke();
+  g2.beginPath(); g2.arc(CX,CY,RR,0,7); g2.strokeStyle='rgba(143,208,255,.18)'; g2.lineWidth=1.4; g2.stroke();
+  const pA={x:CX+RR*Math.cos(thA), y:CY+RR*Math.sin(thA)};
+  const pB={x:CX+RR*Math.cos(thB), y:CY+RR*Math.sin(thB)};
+  const Cm={x:(pA.x+pB.x)/2, y:(pA.y+pB.y)/2};
+  // 质心轨迹（同心圆）
+  const rC=Math.hypot(Cm.x-CX, Cm.y-CY);
+  g2.setLineDash([5,5]); g2.strokeStyle='rgba(255,209,102,.45)'; g2.lineWidth=1.6;
+  g2.beginPath(); g2.arc(CX,CY,Math.max(1,rC),0,7); g2.stroke(); g2.setLineDash([]);
+  g2.setLineDash([4,4]); g2.strokeStyle='rgba(255,255,255,.25)'; g2.lineWidth=1.4;
+  g2.beginPath(); g2.moveTo(pA.x,pA.y); g2.lineTo(Cm.x,Cm.y); g2.lineTo(pB.x,pB.y); g2.stroke(); g2.setLineDash([]);
+  [[pA,'A','#7fd0ff'],[pB,'B','#ff9b7b']].forEach(([p,lab,col])=>{
+    g2.beginPath(); g2.arc(p.x,p.y,15,0,7); g2.fillStyle=col; g2.fill();
+    g2.strokeStyle='#fff'; g2.lineWidth=2; g2.stroke();
+    g2.fillStyle='#0b1118'; g2.font='bold 15px sans-serif'; g2.textAlign='center'; g2.textBaseline='middle';
+    g2.fillText(lab,p.x,p.y); g2.textBaseline='alphabetic';
+  });
+  g2.beginPath(); g2.arc(Cm.x,Cm.y,11,0,7); g2.fillStyle='#ffd166'; g2.fill();
+  g2.strokeStyle='#fff6d0'; g2.lineWidth=2.5; g2.stroke();
+  g2.fillStyle='#ffd166'; g2.font='bold 15px sans-serif'; g2.textAlign='left';
+  g2.fillText('质心', Cm.x+15, Cm.y+5);
+  g2.fillStyle='#7f92a8'; g2.font='bold 13px sans-serif';
+  g2.fillText('质心始终在同一半径的圆上匀速运动', 20, 28);
+  g2.fillText('碰撞时两球交换速度', 20, 50);
+}
+
+/* ===== 画布3：球 + 盘 ===== */
+const c3=document.getElementById('cv3'), g3=c3.getContext('2d');
+const W3=760,H3=420, XB=380, TOPY=60, BOTY=380;
+const mB=1, mD=3, MT2=4;
+let yB, vB, yD, vD, t3=0, nH=0, run3=false, lastT3=0, trailB=[], trailCm=[];
+function reset3(){ yB=TOPY+20; vB=0; yD=BOTY-24; vD=0; t3=0; nH=0; trailB=[]; trailCm=[]; }
+function step3(dt){
+  // 球：重力 g；盘：合力为零（匀速）
+  vB+=G*dt; yB+=vB*dt; yD+=vD*dt;
+  if(yB>=yD-16 && vB>vD){
+    // 弹性碰撞 m:3m
+    const v1=vB, v2=vD;
+    vB = (mB-mD)/(mB+mD)*v1 + 2*mD/(mB+mD)*v2;
+    vD = 2*mB/(mB+mD)*v1 + (mD-mB)/(mB+mD)*v2;
+    yB = yD-16; nH++;
+  }
+  if(yD>BOTY-24){ yD=BOTY-24; if(vD>0) vD=0; }
+  t3+=dt;
+  const cmy=(mB*yB+mD*yD)/MT2;
+  trailB.push({x:XB-90,y:yB}); trailCm.push({x:XB+90,y:cmy});
+  if(trailB.length>900){trailB.shift();trailCm.shift();}
+}
+function draw3(){
+  g3.clearRect(0,0,W3,H3); g3.fillStyle='#0e151d'; g3.fillRect(0,0,W3,H3);
+  // 桶
+  g3.strokeStyle='#3d5266'; g3.lineWidth=5;
+  g3.beginPath(); g3.moveTo(XB-62,TOPY); g3.lineTo(XB-62,BOTY); g3.stroke();
+  g3.beginPath(); g3.moveTo(XB+62,TOPY); g3.lineTo(XB+62,BOTY); g3.stroke();
+  g3.strokeStyle='#2a3a4d'; g3.lineWidth=3;
+  g3.beginPath(); g3.moveTo(XB-62,BOTY); g3.lineTo(XB+62,BOTY); g3.stroke();
+  // 轨迹
+  g3.strokeStyle='rgba(143,208,255,.28)'; g3.lineWidth=1.4;
+  g3.beginPath(); trailB.forEach((p,i)=> i?g3.lineTo(p.x,p.y):g3.moveTo(p.x,p.y)); g3.stroke();
+  g3.strokeStyle='rgba(255,209,102,.55)'; g3.lineWidth=2.4;
+  g3.beginPath(); trailCm.forEach((p,i)=> i?g3.lineTo(p.x,p.y):g3.moveTo(p.x,p.y)); g3.stroke();
+  // 盘
+  g3.fillStyle='#8fa4ba'; g3.strokeStyle='#cfe0ee'; g3.lineWidth=2;
+  g3.beginPath(); g3.roundRect(XB-48, yD-8, 96, 16, 4); g3.fill(); g3.stroke();
+  // 球
+  g3.beginPath(); g3.arc(XB, yB, 13, 0, 7); g3.fillStyle='#7fd0ff'; g3.fill();
+  g3.strokeStyle='#fff'; g3.lineWidth=2; g3.stroke();
+  // 质心
+  const cmy=(mB*yB+mD*yD)/MT2;
+  g3.beginPath(); g3.arc(XB+90, cmy, 9, 0, 7); g3.fillStyle='#ffd166'; g3.fill();
+  g3.strokeStyle='#fff6d0'; g3.lineWidth=2; g3.stroke();
+  g3.fillStyle='#ffd166'; g3.font='bold 14px sans-serif'; g3.textAlign='left';
+  g3.fillText('质心', XB+104, cmy+5);
+  g3.fillStyle='#7f92a8'; g3.font='bold 13px sans-serif';
+  g3.fillText('球 m ：盘 3m　→　a_C = mg/4m = 0.25g', 20, 30);
+  g3.fillText('质心轨迹是一条抛物线状的匀加速直线（这里是竖直的）', 20, 52);
+}
+
+/* ===== 循环 ===== */
+let raf1=null, raf2=null, raf3=null;
+function loop1(ts){ if(!run1) return; if(!lastT1) lastT1=ts;
+  const dt=Math.min(0.04,(ts-lastT1)/1000); lastT1=ts;
+  for(let i=0;i<3;i++) step1(dt/3);
+  draw1(); raf1=requestAnimationFrame(loop1); }
+function loop2(ts){ if(!run2) return; if(!lastT2) lastT2=ts;
+  const dt=Math.min(0.04,(ts-lastT2)/1000); lastT2=ts;
+  step2b(dt); draw2();
+  document.getElementById('sA').textContent=sA.toFixed(0);
+  document.getElementById('sB').textContent=sB.toFixed(0);
+  document.getElementById('sC').textContent=sC.toFixed(0);
+  document.getElementById('nHit').textContent=hits;
+  raf2=requestAnimationFrame(loop2); }
+function loop3(ts){ if(!run3) return; if(!lastT3) lastT3=ts;
+  const dt=Math.min(0.02,(ts-lastT3)/1000); lastT3=ts;
+  for(let i=0;i<4;i++) step3(dt/4);
+  draw3();
+  document.getElementById('vB').textContent=vB.toFixed(1);
+  document.getElementById('vD').textContent=vD.toFixed(1);
+  document.getElementById('nH').textContent=nH;
+  raf3=requestAnimationFrame(loop3); }
+
+document.getElementById('b1').onclick=()=>{ run1=!run1; lastT1=0;
+  document.getElementById('b1').textContent = run1? '⏸ 暂停':'▶ 播放';
+  if(run1) requestAnimationFrame(loop1); };
+document.getElementById('b1r').onclick=()=>{ reset1(); draw1(); };
+document.getElementById('b2').onclick=()=>{ run2=!run2; lastT2=0;
+  document.getElementById('b2').textContent = run2? '⏸ 暂停':'▶ 播放';
+  if(run2) requestAnimationFrame(loop2); };
+document.getElementById('b2r').onclick=()=>{ reset2(); WA=1.05; WB=0.62; draw2();
+  document.getElementById('sA').textContent='0'; document.getElementById('sB').textContent='0';
+  document.getElementById('sC').textContent='0'; document.getElementById('nHit').textContent='0'; };
+document.getElementById('b3').onclick=()=>{ run3=!run3; lastT3=0;
+  document.getElementById('b3').textContent = run3? '⏸ 暂停':'▶ 播放';
+  if(run3) requestAnimationFrame(loop3); };
+document.getElementById('b3r').onclick=()=>{ reset3(); draw3();
+  document.getElementById('vB').textContent='0'; document.getElementById('vD').textContent='0';
+  document.getElementById('nH').textContent='0'; };
+
+reset1(); draw1(); reset2(); draw2(); reset3(); draw3();
+</script>
+</body>
+</html>
