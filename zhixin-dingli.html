@@ -11,7 +11,7 @@ h1{font-size:19px;margin:0 0 5px;font-weight:800}
 .sub{font-size:13px;color:#7f92a8;margin-bottom:14px;line-height:1.65}
 .card{background:#131c26;border:1px solid #22303f;border-radius:12px;padding:12px;margin-bottom:12px}
 .ttl{font-size:14px;color:#7fd0ff;font-weight:700;margin-bottom:8px}
-canvas{display:block;width:100%;border-radius:10px;background:#0e151d}
+canvas{display:block;width:100%;max-width:540px;margin:0 auto;border-radius:10px;background:#0e151d}
 .qtext{font-size:14.5px;line-height:1.95}
 .ctrl{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .ctrl button{flex:1 1 70px;padding:11px 6px;font-size:14px;font-weight:700;border-radius:10px;border:none;background:#1f6f9c;color:#fff}
@@ -54,7 +54,7 @@ h4{font-size:15px;margin:14px 0 6px;color:#ffd166}
 <div class="card">
   <div class="ttl">二、例1：2024 湖南卷 · 圆环上的两球</div>
   <div class="qtext">
-    两球在光滑圆环内运动，速率不变，碰撞时交换速度（等质量弹性碰撞）。
+    两球在光滑圆环内匀速运动，等质量弹性碰撞，视觉上等价于两球互相穿过。
   </div>
   <canvas id="cv2" width="760" height="420" style="margin-top:8px"></canvas>
   <div class="ctrl"><button id="b2">▶ 播放</button><button id="b2r" class="ghost">↺ 重来</button></div>
@@ -176,7 +176,7 @@ const c2=document.getElementById('cv2'), g2=c2.getContext('2d');
 const W2=760,H2=420, CX=380, CY=210, RR=155;
 const wA=1.05, wB=0.62;             // 角速度
 let thA=0.4, thB=3.0, sA=0,sB=0,sC=0, hits=0, run2=false, lastT2=0, prevSep=1, thC0=0;
-function reset2(){ thA=0.4; thB=3.0; sA=0;sB=0;sC=0; hits=0; prevSep=1; thC0=(thA+thB)/2; }
+function reset2(){ thA=0.4; thB=3.0; sA=0;sB=0;sC=0; hits=0; prevSep=1; flashT=0; thC0=(thA+thB)/2; }
 function angDiff(a,b){ let d=(a-b)%(2*PI); if(d>PI)d-=2*PI; if(d<-PI)d+=2*PI; return d; }
 function step2(dt){
   thA+=wA*dt; thB+=wB*dt;
@@ -192,14 +192,15 @@ function step2(dt){
   prevSep=sep;
 }
 // 用可交换的角速度
-let WA=1.05, WB=0.62;
+let WA=1.05, WB=0.62, flashT=0;
 function step2b(dt){
   thA+=WA*dt; thB+=WB*dt;
   sA+=WA*RR*dt; sB+=WB*RR*dt;
   sC+=Math.abs((WA+WB)/2)*RR*dt;
   const sep=angDiff(thA,thB);
-  if(prevSep*sep<0){ const t=WA; WA=WB; WB=t; hits++; prevSep=angDiff(thA,thB); return; }
+  if(prevSep*sep<0){ hits++; flashT=0.35; }
   prevSep=sep;
+  if(flashT>0) flashT-=dt;
 }
 function draw2(){
   g2.clearRect(0,0,W2,H2); g2.fillStyle='#0e151d'; g2.fillRect(0,0,W2,H2);
@@ -222,6 +223,10 @@ function draw2(){
   });
   g2.beginPath(); g2.arc(Cm.x,Cm.y,11,0,7); g2.fillStyle='#ffd166'; g2.fill();
   g2.strokeStyle='#fff6d0'; g2.lineWidth=2.5; g2.stroke();
+  if(flashT>0){
+    g2.beginPath(); g2.arc(Cm.x,Cm.y, 20+60*(0.35-flashT), 0, 7);
+    g2.strokeStyle='rgba(255,255,255,'+(flashT*2).toFixed(2)+')'; g2.lineWidth=3; g2.stroke();
+  }
   g2.fillStyle='#ffd166'; g2.font='bold 15px sans-serif'; g2.textAlign='left';
   g2.fillText('质心', Cm.x+15, Cm.y+5);
   g2.fillStyle='#7f92a8'; g2.font='bold 13px sans-serif';
@@ -234,7 +239,7 @@ const c3=document.getElementById('cv3'), g3=c3.getContext('2d');
 const W3=760,H3=420, XB=380, TOPY=60, BOTY=380;
 const mB=1, mD=3, MT2=4;
 let yB, vB, yD, vD, t3=0, nH=0, run3=false, lastT3=0, trailB=[], trailCm=[];
-function reset3(){ yB=TOPY+20; vB=0; yD=BOTY-24; vD=0; t3=0; nH=0; trailB=[]; trailCm=[]; }
+function reset3(){ yB=TOPY-10; vB=0; yD=TOPY+180; vD=12; t3=0; nH=0; trailB=[]; trailCm=[]; }
 function step3(dt){
   // 球：重力 g；盘：合力为零（匀速）
   vB+=G*dt; yB+=vB*dt; yD+=vD*dt;
@@ -245,8 +250,7 @@ function step3(dt){
     vD = 2*mB/(mB+mD)*v1 + (mD-mB)/(mB+mD)*v2;
     yB = yD-16; nH++;
   }
-  if(yD>BOTY-24){ yD=BOTY-24; if(vD>0) vD=0; }
-  if(yB>BOTY-20){ reset3(); }
+  if(yB>BOTY-30 || yD>BOTY-30){ reset3(); }
   t3+=dt;
   const cmy=(mB*yB+mD*yD)/MT2;
   trailB.push({x:XB-90,y:yB}); trailCm.push({x:XB+90,y:cmy});
