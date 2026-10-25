@@ -109,7 +109,7 @@ h4{font-size:15px;margin:14px 0 6px;color:#ffd166}
 </div>
 
 <script>
-const PI=Math.PI, G=10;
+const PI=Math.PI, G=800;
 
 /* ===== 画布1：两个球 + 质心 ===== */
 const c1=document.getElementById('cv1'), g1=c1.getContext('2d');
@@ -198,7 +198,7 @@ function step2b(dt){
   sA+=WA*RR*dt; sB+=WB*RR*dt;
   sC+=Math.abs((WA+WB)/2)*RR*dt;
   const sep=angDiff(thA,thB);
-  if(prevSep*sep<0){ hits++; flashT=0.35; }
+  if(prevSep*sep<0){ hits++; flashT=0.35; const t=sA; sA=sB; sB=t; }
   prevSep=sep;
   if(flashT>0) flashT-=dt;
 }
@@ -239,7 +239,7 @@ const c3=document.getElementById('cv3'), g3=c3.getContext('2d');
 const W3=760,H3=420, XB=380, TOPY=60, BOTY=380;
 const mB=1, mD=3, MT2=4;
 let yB, vB, yD, vD, t3=0, nH=0, run3=false, lastT3=0, trailB=[], trailCm=[];
-function reset3(){ yB=TOPY-10; vB=0; yD=TOPY+180; vD=12; t3=0; nH=0; trailB=[]; trailCm=[]; }
+function reset3(){ yB=TOPY-6; vB=0; yD=TOPY+190; vD=2; t3=0; nH=0; trailB=[]; trailCm=[]; }
 function step3(dt){
   // 球：重力 g；盘：合力为零（匀速）
   vB+=G*dt; yB+=vB*dt; yD+=vD*dt;
