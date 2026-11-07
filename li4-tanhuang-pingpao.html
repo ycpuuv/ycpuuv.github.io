@@ -48,6 +48,14 @@ input[type=range]{width:100%;margin:2px 0 6px;accent-color:var(--amber);height:2
     <button id="btnReset">↺ 重来</button>
     <button id="btnStep">单步</button>
   </div>
+  <div class="bar" style="align-items:center">
+    <span style="font-size:13px;color:#8b949e">播放速度</span>
+    <select id="speed" style="flex:1;padding:9px;border-radius:9px;background:#21262d;color:#e6edf3;border:1px solid #30363d;font-size:14px">
+      <option value="0.25">0.25×（很慢）</option>
+      <option value="0.5" selected>0.5×（上课推荐）</option>
+      <option value="1">1×（真实速度）</option>
+    </select>
+  </div>
 
   <div class="phase" id="phaseTxt">状态：弹簧被压缩 Δx，两物块静止，等待释放。</div>
 
@@ -257,7 +265,8 @@ function draw(){
   }
 }
 
-let last=0;
+let last=0, speed=0.5;
+document.getElementById('speed').addEventListener('change',e=>{speed=parseFloat(e.target.value);});
 function step(dt){
   if(phase===1){
     t+=dt;
@@ -290,7 +299,7 @@ function step(dt){
 function loop(ts){
   if(!playing) return;
   const dt=Math.min((ts-last)/1000,0.05); last=ts;
-  step(dt); draw(); liveUI();
+  step(dt*speed); draw(); liveUI();
   if(playing) requestAnimationFrame(loop);
 }
 
