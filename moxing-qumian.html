@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>滑块—曲(斜)面模型 · 交互仿真</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--txt:#e6edf3;--dim:#8b949e;
+--amber:#ffc857;--cyan:#4dd0e1;--green:#7ee787;--red:#ff7b72;--violet:#bc8cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 12px 40px}
+h1{font-size:20px;margin:4px 0 2px}
+h1 .tag{font-size:13px;color:var(--amber);font-weight:400;margin-left:8px}
+.sub{font-size:13px;color:var(--dim);margin-bottom:10px;line-height:1.5}
+.stage{background:#0a0e14;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.bar{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+button{flex:1;min-width:80px;padding:10px 8px;font-size:14px;border-radius:10px;border:1px solid var(--line);
+background:#21262d;color:var(--txt);font-family:inherit;cursor:pointer}
+button:active{transform:scale(.97)}
+button.play{background:#1f6feb;border-color:#1f6feb;color:#fff;font-weight:700}
+button.preset{min-width:0;flex:0 0 auto;padding:7px 12px;font-size:13px;background:#1a2430;border-color:#2f4a63;color:#9fd3ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card h3{font-size:14px;margin:0 0 8px;color:var(--cyan);font-weight:600}
+.row{display:flex;justify-content:space-between;font-size:13px;margin:6px 0;gap:10px}
+.row .k{color:var(--dim);flex:1}
+.row .v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;margin:2px 0 6px;accent-color:var(--amber);height:22px}
+select{width:100%;padding:8px;border-radius:8px;background:#21262d;color:var(--txt);border:1px solid var(--line);font-size:14px;font-family:inherit}
+.phase{font-size:13.5px;color:var(--amber);margin:8px 0;min-height:22px;line-height:1.5}
+.hint{font-size:12.5px;color:var(--dim);line-height:1.7;margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
+.hint b{color:var(--txt)}
+.ok{color:var(--green)} .bad{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>滑块—曲(斜)面模型<span class="tag">可动圆弧槽</span></h1>
+  <div class="sub">小球冲上放在光滑地面的圆弧槽：水平方向动量守恒，机械能守恒。共速那一刻，恰好是弹簧式的"完全非弹性"瞬间。</div>
+
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <div class="bar">
+    <button class="preset" data-p="ex4">例4 巴中三模</button>
+    <button class="preset" data-p="ex5">例5 滁州模拟</button>
+    <button class="preset" data-p="bs">变式 武汉月考</button>
+    <button class="preset" data-p="free">自由调参</button>
+  </div>
+  <div class="bar">
+    <button id="btnPlay" class="play">▶ 播放</button>
+    <button id="btnReset">↺ 重来</button>
+  </div>
+  <div class="phase" id="phaseTxt"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>参数</h3>
+      <div class="row"><span class="k">槽质量 M</span><span class="v" id="vM">—</span></div>
+      <input type="range" id="sM" min="0.5" max="6" step="0.1" value="4">
+      <div class="row"><span class="k">小球质量 m</span><span class="v" id="vm">—</span></div>
+      <input type="range" id="sm" min="0.2" max="4" step="0.1" value="2">
+      <div class="row"><span class="k">初速度 v₀</span><span class="v" id="vv">—</span></div>
+      <input type="range" id="sv" min="1" max="16" step="0.1" value="5">
+      <div class="row"><span class="k">圆弧半径 R</span><span class="v" id="vR">—</span></div>
+      <input type="range" id="sR" min="0.8" max="6" step="0.1" value="2">
+      <div class="row"><span class="k">播放速度</span><span class="v"></span></div>
+      <select id="speed">
+        <option value="0.25">0.25×（很慢）</option>
+        <option value="0.5" selected>0.5×（上课推荐）</option>
+        <option value="1">1×（真实速度）</option>
+        <option value="2">2×（快放）</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h3>实时数据</h3>
+      <div class="row"><span class="k">球速 v</span><span class="v" id="rv">—</span></div>
+      <div class="row"><span class="k">槽速 V</span><span class="v" id="rV">—</span></div>
+      <div class="row"><span class="k">上升高度 h</span><span class="v" id="rh">—</span></div>
+      <div class="row"><span class="k">相对速度 Rω</span><span class="v" id="rvr">—</span></div>
+      <div class="row"><span class="k">槽对球的支持力 N</span><span class="v" id="rN">—</span></div>
+      <div class="row"><span class="k">状态</span><span class="v" id="rjudge">—</span></div>
+    </div>
+
+    <div class="card">
+      <h3>这组参数的结论</h3>
+      <div class="row"><span class="k">共速速度 v共</span><span class="v" id="rvc">—</span></div>
+      <div class="row"><span class="k">若始终贴槽的最大高度</span><span class="v" id="rhmax">—</span></div>
+      <div class="row"><span class="k">能否到槽口 θ=90°</span><span class="v" id="rtop">—</span></div>
+      <div class="row"><span class="k">全程最小支持力 N<sub>min</sub></span><span class="v" id="rNmin">—</span></div>
+    </div>
+  </div>
+
+  <div class="hint">
+    <b>为什么水平动量守恒：</b>地面光滑，球和槽水平方向不受外力；竖直方向有重力和地面支持力，所以<b>只有水平分量守恒</b>——选项里"系统动量守恒"是错的，要说"水平方向"。<br>
+    <b>为什么用相对速度：</b>拆成"质心平动 + 相对转动"后，能量式变成 ½μ(Rω)² + mgh = ½μv₀²，其中 μ=mM/(m+M)。最高点就是 <b>Rω=0，也就是球和槽共速</b>——和弹簧压缩到最短是同一件事。<br>
+    <b>什么时候会提前脱离：</b>槽被球压着向右加速，当球需要的向心力不够时 N 会掉到 0。N = m(Rω² − A sinθ) + mg cosθ，A 是槽的加速度。
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const W=760, H=470, GY=390, RP=210;
+function fit(){const d=Math.min(window.devicePixelRatio||1,2);
+  cv.width=W*d;cv.height=H*d;cv.style.aspectRatio=W+'/'+H;ctx.setTransform(d,0,0,d,0,0);}
+fit();
+
+const P={M:4,m:2,v0:5,R:2,g:10};
+let SC=RP/P.R, Ox=70, Oy=GY-RP, Rr={};
+let th=0, t=0, playing=false, phase=0, dir=1, speed=0.5, Xg=0, fly=null, trail=[];
+
+/* ===== 物理核心 =====
+   记 β=m/(M+m)，G(θ)=1−βcos²θ
+   能量：½m(Rω)²G(θ) + mgR(1−cosθ) = ½m v0²·M/(M+m)
+   由此 (Rω)² = [C − 2gR(1−cosθ)] / G(θ)，C = M/(M+m)·v0²
+   槽速：V = v共 − β·(Rω)cosθ
+*/
+function beta(){ return P.m/(P.M+P.m); }
+function Cval(){ return P.M/(P.M+P.m)*P.v0*P.v0; }
+function Gfun(a){ return 1-beta()*Math.cos(a)*Math.cos(a); }
+function rw2(a){
+  const num=Cval()-2*P.g*P.R*(1-Math.cos(a));
+  return num<=0? 0 : num/Gfun(a);
+}
+function Rwdot(a,rw){
+  // Rω̇ = −[½ωG′ + g sinθ]/G
+  const g2=2*beta()*Math.sin(a)*Math.cos(a);
+  const w=rw/P.R;
+  return -(0.5*w*g2 + P.g*Math.sin(a))/Gfun(a);
+}
+function stateAt(a,wsign){
+  const rw=Math.sqrt(rw2(a))*wsign;
+  const V=P.m*P.v0/(P.m+P.M)-beta()*rw*Math.cos(a);
+  return {rw,V,vx:V+rw*Math.cos(a), vy:-rw*Math.sin(a)};
+}
+function Nof(a,rw){
+  const A=-(beta()*(P.R*Rwdot(a,rw)*Math.cos(a)-rw*rw*Math.sin(a)));
+  return P.m*(rw*rw/P.R-A*Math.sin(a))+P.m*P.g*Math.cos(a);
+}
+
+function calc(){
+  const g=P.g, m=P.m, M=P.M;
+  const vc=m*P.v0/(m+M);
+  const hmax=(0.5*m*P.v0*P.v0-0.5*(m+M)*vc*vc)/(m*g);
+  Rr={vc,hmax};
+  Rr.canTop = (Cval()-2*g*P.R) > -1e-9;
+  const end=Rr.canTop? Math.PI/2 : Math.acos(Math.max(-1,Math.min(1,1-(Cval())/(2*g*P.R))));
+  Rr.thEnd=end;
+  let nmin=1e9;
+  for(let i=0;i<=300;i++){
+    const a=end*i/300;
+    const rw=Math.sqrt(rw2(a));
+    const N=Nof(a,rw);
+    if(N<nmin) nmin=N;
+  }
+  Rr.nmin=nmin;
+}
+
+function reset(){
+  calc(); SC=RP/P.R; Oy=GY-RP; Ox=Math.max(66,(W-(RP+150))/2-46);
+  th=0;t=0;playing=false;phase=0;dir=1;Xg=0;fly=null;trail=[];
+  draw(); uiAll(); setPhase();
+  document.getElementById('btnPlay').textContent='▶ 播放';
+}
+
+function cx(){ return Ox+Xg; }
+function cy(){ return Oy; }
+function ballXY(){
+  if(fly) return {x:fly.x, y:fly.y};
+  return {x:cx()+(RP-9)*Math.sin(th), y:cy()+(RP-9)*Math.cos(th)};
+}
+function curState(){ return fly? {vx:fly.vx,vy:fly.vy,V:fly.V,rw:0} : stateAt(th,dir); }
+
+/* ===== 绘制 ===== */
+function arrow(x1,y1,x2,y2,c){
+  ctx.strokeStyle=c;ctx.fillStyle=c;ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath();ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-10*Math.cos(a-0.42),y2-10*Math.sin(a-0.42));
+  ctx.lineTo(x2-10*Math.cos(a+0.42),y2-10*Math.sin(a+0.42));
+  ctx.closePath();ctx.fill();
+}
+function drawGround(){
+  ctx.fillStyle='#101820'; ctx.fillRect(0,GY,W,H-GY);
+  ctx.strokeStyle='#3a4a5a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,GY); ctx.lineTo(W,GY); ctx.stroke();
+  ctx.strokeStyle='#1e2a35'; ctx.lineWidth=1.2;
+  for(let x=-20;x<W;x+=18){ctx.beginPath();ctx.moveTo(x,GY+2);ctx.lineTo(x+12,GY+14);ctx.stroke();}
+}
+function drawGroove(){
+  const x0=cx()-34, y0=cy()-40, x1=cx()+RP+64, y1=GY;
+  ctx.beginPath();
+  ctx.rect(x0,y0,x1-x0,y1-y0);
+  ctx.moveTo(cx()+RP, cy());
+  ctx.arc(cx(), cy(), RP, 0, Math.PI/2, false);
+  ctx.closePath();
+  ctx.fillStyle='#1d2b39'; ctx.fill('evenodd');
+  ctx.strokeStyle='#5b7d9e'; ctx.lineWidth=2.5; ctx.stroke();
+
+  ctx.beginPath(); ctx.arc(cx(), cy(), RP, 0, Math.PI/2, false);
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=4; ctx.stroke();
+
+  ctx.fillStyle='#8b949e'; ctx.beginPath(); ctx.arc(cx(),cy(),4,0,7); ctx.fill();
+  ctx.font='600 13px system-ui'; ctx.textAlign='left';
+  ctx.fillText('O', cx()+8, cy()+16);
+
+  const bp=ballXY();
+  ctx.setLineDash([4,5]); ctx.strokeStyle='rgba(139,148,158,.5)'; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(cx(),cy()); ctx.lineTo(bp.x,bp.y); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle='#7fb3d5'; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+  ctx.fillText('R = '+P.R.toFixed(1)+' m', cx()+RP*0.44+24, cy()+RP*0.44-4);
+
+  const st=curState();
+  if(Math.abs(st.V)>0.08){
+    const L=Math.min(80,Math.abs(st.V)*16)*(st.V>0?1:-1);
+    arrow(cx()-12, GY-10, cx()-12+L, GY-10, '#4dd0e1');
+    ctx.fillStyle='#4dd0e1'; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+    ctx.fillText('槽 V='+Math.abs(st.V).toFixed(2)+' m/s', cx()-12+L*0.5, GY-20);
+  }
+}
+function drawBall(){
+  const bp=ballXY();
+  if(trail.length>1){
+    ctx.setLineDash([3,6]); ctx.strokeStyle='rgba(255,200,87,.45)'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(trail[0].x,trail[0].y);
+    for(let i=1;i<trail.length;i++) ctx.lineTo(trail[i].x,trail[i].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.beginPath(); ctx.arc(bp.x,bp.y,9,0,7);
+  ctx.fillStyle='#ffc857'; ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.8; ctx.stroke();
+  const st=curState(), sp=Math.hypot(st.vx,st.vy);
+  if(sp>0.05){
+    const L=Math.min(90,sp*7);
+    arrow(bp.x,bp.y, bp.x+st.vx/sp*L, bp.y+st.vy/sp*L, '#7ee787');
+    ctx.fillStyle='#7ee787'; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+    ctx.fillText(sp.toFixed(2)+' m/s', bp.x+st.vx/sp*L*0.6, bp.y+st.vy/sp*L*0.6-13);
+  }
+}
+function drawBars(){
+  const E0=0.5*P.m*P.v0*P.v0;
+  const bp=ballXY();
+  const h=Math.max(0,(GY-bp.y)/SC)-0.09;
+  const st=curState();
+  const Eb=0.5*P.m*(st.vx*st.vx+st.vy*st.vy);
+  const Ec=0.5*P.M*st.V*st.V;
+  const Ep=P.m*P.g*Math.max(h,0);
+  const bx=W-232, by=24, bw=148, bh=10;
+  ctx.textAlign='left';
+  [['球动能',Eb,'#ffc857'],['槽动能',Ec,'#4dd0e1'],['重力势能',Ep,'#bc8cff']].forEach((it,i)=>{
+    const y=by+i*30;
+    ctx.fillStyle='#8b949e'; ctx.font='600 12px system-ui'; ctx.fillText(it[0],bx,y);
+    ctx.fillStyle='#1e2731'; ctx.fillRect(bx,y+4,bw,bh);
+    ctx.fillStyle=it[2]; ctx.fillRect(bx,y+4,Math.max(0,Math.min(bw,it[1]/E0*bw)),bh);
+    ctx.font='600 11px system-ui'; ctx.fillStyle=it[2];
+    ctx.fillText(it[1].toFixed(1)+' J', bx+bw+5, y+14);
+  });
+  ctx.fillStyle='#8b949e'; ctx.font='600 12px system-ui';
+  ctx.fillText('总机械能 '+E0.toFixed(1)+' J', bx, by+3*30+4);
+}
+function draw(){ ctx.clearRect(0,0,W,H); drawGround(); drawGroove(); drawBall(); drawBars(); }
+
+/* ===== 推进 ===== */
+function step(dt){
+  if(fly){
+    fly.x+=fly.vx*SC*dt; fly.y+=fly.vy*SC*dt; fly.vy+=P.g*dt;
+    Xg+=fly.V*SC*dt;
+    Rr.hPeak=Math.max(Rr.hPeak||0,(GY-fly.y)/SC-0.09);
+    trail.push({x:fly.x,y:fly.y}); if(trail.length>400)trail.shift();
+    if(fly.y>=GY-8){ fly.y=GY-8; playing=false; phase=5; setPhase();
+      document.getElementById('btnPlay').textContent='▶ 重放'; }
+    return;
+  }
+  const num=Cval()-2*P.g*P.R*(1-Math.cos(th));
+  if(num<=0 && dir>0) dir=-1;
+  const st=stateAt(th,dir);
+  th+= (st.rw/P.R)*dt;
+  if(dir>0 && th>=Math.PI/2){ th=Math.PI/2; go(); return; }
+  if(dir<0 && th<=0){ th=0; playing=false; phase=4; setPhase();
+    document.getElementById('btnPlay').textContent='▶ 重放'; return; }
+  const N=Nof(th,st.rw);
+  if(N<0){ go(); return; }
+  t+=dt;
+  Xg=(Rr.vc*t-beta()*P.R*Math.sin(th))*SC;
+  const bp=ballXY();
+  trail.push({x:bp.x,y:bp.y}); if(trail.length>400)trail.shift();
+}
+function go(){
+  const st=stateAt(th,dir), bp=ballXY();
+  fly={x:bp.x,y:bp.y,vx:st.vx,vy:st.vy,V:st.V};
+  phase=3; setPhase();
+}
+let last=0;
+function loop(ts){
+  if(!playing) return;
+  const raw=Math.min((ts-last)/1000,0.05); last=ts;
+  step(raw*speed); draw(); uiLive();
+  if(playing) requestAnimationFrame(loop);
+}
+
+/* ===== 文案 ===== */
+function setPhase(){
+  const m={0:'准备：小球以 v₀ 冲向静止的圆弧槽。地面光滑，槽立刻被顶向右。',
+    1:'上滑中：球压着槽向右加速，球越升越慢（相对速度 Rω 在减小）。',
+    2:'到达最高点：球与槽水平共速，Rω=0——和弹簧压到最短是同一件事。',
+    3:'离开槽面：此后球只受重力，槽保持匀速。',
+    4:'回到槽底：球从左侧离开槽，槽以 2mv₀/(M+m) 向右匀速前进。',
+    5:'落地。'};
+  document.getElementById('phaseTxt').textContent=m[phase]||'';
+}
+function uiAll(){
+  document.getElementById('vM').textContent=P.M.toFixed(1)+' kg';
+  document.getElementById('vm').textContent=P.m.toFixed(1)+' kg';
+  document.getElementById('vv').textContent=P.v0.toFixed(1)+' m/s';
+  document.getElementById('vR').textContent=P.R.toFixed(1)+' m';
+  document.getElementById('sM').value=P.M;
+  document.getElementById('sm').value=P.m;
+  document.getElementById('sv').value=P.v0;
+  document.getElementById('sR').value=P.R;
+  document.getElementById('rvc').textContent=Rr.vc.toFixed(2)+' m/s';
+  document.getElementById('rhmax').textContent=Rr.hmax.toFixed(2)+' m';
+  const top=document.getElementById('rtop');
+  if(Rr.nmin<-0.05){ top.textContent='会提前脱离槽面'; top.className='v bad'; }
+  else if(Rr.canTop){ top.textContent='能到槽口，不脱离'; top.className='v ok'; }
+  else { top.textContent='不到槽口，θ='+(Rr.thEnd*57.3).toFixed(0)+'° 折返'; top.className='v'; }
+  const nm=document.getElementById('rNmin');
+  nm.textContent=Rr.nmin.toFixed(1)+' N';
+  nm.className='v '+(Rr.nmin<0?'bad':'ok');
+  uiLive();
+}
+function uiLive(){
+  const st=curState(), bp=ballXY();
+  const h=Math.max(0,(GY-bp.y)/SC-0.09);
+  document.getElementById('rv').textContent=Math.hypot(st.vx,st.vy).toFixed(2)+' m/s';
+  document.getElementById('rV').textContent=st.V.toFixed(2)+' m/s';
+  document.getElementById('rh').textContent=h.toFixed(2)+' m';
+  document.getElementById('rvr').textContent=(fly?0:Math.abs(st.rw)).toFixed(2)+' m/s';
+  const N=fly?0:Nof(th,st.rw);
+  document.getElementById('rN').textContent=N.toFixed(1)+' N';
+  document.getElementById('rN').className='v '+(N<-0.01?'bad':'');
+  const j=document.getElementById('rjudge');
+  if(fly){ j.textContent='已离开槽面'; j.className='v'; }
+  else if(Math.abs(st.rw)<0.06){ j.textContent='共速（Rω≈0）'; j.className='v ok'; }
+  else { j.textContent='贴着槽面滑动'; j.className='v'; }
+}
+
+/* ===== 交互 ===== */
+[['sM','vM','M',v=>v.toFixed(1)+' kg'],['sm','vm','m',v=>v.toFixed(1)+' kg'],
+ ['sv','vv','v0',v=>v.toFixed(1)+' m/s'],['sR','vR','R',v=>v.toFixed(1)+' m']].forEach(([sid,vid,key,fmt])=>{
+  document.getElementById(sid).addEventListener('input',e=>{
+    P[key]=parseFloat(e.target.value);
+    document.getElementById(vid).textContent=fmt(P[key]);
+    reset();
+  });
+});
+document.getElementById('speed').addEventListener('change',e=>{ speed=parseFloat(e.target.value); });
+
+const PRESETS={
+  ex4:{M:4,m:2,v0:5,R:2},
+  ex5:{M:1,m:1,v0:2*Math.sqrt(10*1.5),R:1.5},
+  bs:{M:3,m:1,v0:12,R:4.6}
+};
+document.querySelectorAll('.preset').forEach(b=>{
+  b.onclick=()=>{
+    const k=b.dataset.p;
+    if(k!=='free'){ Object.assign(P,PRESETS[k]); P.v0=Math.round(P.v0*100)/100; }
+    reset();
+  };
+});
+document.getElementById('btnPlay').onclick=()=>{
+  if(phase===4||phase===5) reset();
+  if(phase===0){ phase=1; t=0; }
+  playing=!playing;
+  document.getElementById('btnPlay').textContent=playing?'❚❚ 暂停':'▶ 播放';
+  if(playing){ last=performance.now(); requestAnimationFrame(loop); }
+  setPhase();
+};
+document.getElementById('btnReset').onclick=()=>reset();
+window.addEventListener('resize',()=>{fit();draw();});
+reset();
+
+window.__seek=function(sec){
+  const n=Math.max(1,Math.round(sec*60));
+  for(let i=0;i<n;i++){ step(1/60*speed); if(phase>=4) break; }
+  draw(); uiLive(); setPhase();
+  const bp=ballXY();
+  document.title='DBG ph='+phase+' th='+(th*57.3).toFixed(1)+' h='+((GY-bp.y)/SC-0.09).toFixed(3)
+    +' Nmin='+Rr.nmin.toFixed(1)+' hmax='+Rr.hmax.toFixed(3)+' peak='+(Rr.hPeak||0).toFixed(3)+' rw='+(fly?0:curState().rw).toFixed(2);
+};
+(function(){
+  const h=location.hash;
+  const pm=h.match(/p=(\w+)/);
+  if(pm && PRESETS[pm[1]]){ Object.assign(P,PRESETS[pm[1]]); P.v0=Math.round(P.v0*100)/100; reset(); }
+  const tm=h.match(/t=([\d.]+)/);
+  if(tm){ const s0=parseFloat(tm[1]); setTimeout(()=>{ if(phase===0){phase=1;t=0;} window.__seek(s0); },80); }
+})();
+})();
+</script>
+</body>
+</html>
