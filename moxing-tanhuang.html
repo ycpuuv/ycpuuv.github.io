@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>滑块—弹簧模型 · 交互仿真</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--txt:#e6edf3;--dim:#8b949e;
+--amber:#ffc857;--cyan:#4dd0e1;--green:#7ee787;--red:#ff7b72;--violet:#bc8cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 12px 40px}
+h1{font-size:20px;margin:4px 0 2px}
+h1 .tag{font-size:13px;color:var(--amber);font-weight:400;margin-left:8px}
+.sub{font-size:13px;color:var(--dim);margin-bottom:10px;line-height:1.5}
+.stage{background:#0a0e14;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.bar{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+button{flex:1;min-width:80px;padding:10px 8px;font-size:14px;border-radius:10px;border:1px solid var(--line);
+background:#21262d;color:var(--txt);font-family:inherit;cursor:pointer}
+button:active{transform:scale(.97)}
+button.play{background:#1f6feb;border-color:#1f6feb;color:#fff;font-weight:700}
+button.preset{min-width:0;flex:0 0 auto;padding:7px 12px;font-size:13px;background:#1a2430;border-color:#2f4a63;color:#9fd3ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card h3{font-size:14px;margin:0 0 8px;color:var(--cyan);font-weight:600}
+.row{display:flex;justify-content:space-between;font-size:13px;margin:6px 0;gap:10px}
+.row .k{color:var(--dim);flex:1}
+.row .v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;margin:2px 0 6px;accent-color:var(--amber);height:22px}
+select{width:100%;padding:8px;border-radius:8px;background:#21262d;color:var(--txt);border:1px solid var(--line);font-size:14px;font-family:inherit}
+.phase{font-size:13.5px;color:var(--amber);margin:8px 0;min-height:22px;line-height:1.5}
+.hint{font-size:12.5px;color:var(--dim);line-height:1.7;margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
+.hint b{color:var(--txt)}
+.ok{color:var(--green)} .bad{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>滑块—弹簧模型<span class="tag">动量守恒 + 机械能守恒</span></h1>
+  <div class="sub">弹簧压缩到最短（或伸到最长）那一刻，两物块<b>速度相同</b>——这就是"完全非弹性"的位置；弹簧恢复原长时，相当于一次<b>弹性碰撞</b>。</div>
+
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <div class="bar">
+    <button class="preset" data-p="ex1">例1 A=2M,B=M</button>
+    <button class="preset" data-p="ex2">例2 等质量小车</button>
+    <button class="preset" data-p="ex3">例3 甲=2m,乙=m</button>
+    <button class="preset" data-p="free">自由调参</button>
+  </div>
+  <div class="bar">
+    <button id="btnPlay" class="play">▶ 播放</button>
+    <button id="btnReset">↺ 重来</button>
+  </div>
+  <div class="phase" id="phaseTxt"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>参数</h3>
+      <div class="row"><span class="k">左物块 m₁</span><span class="v" id="vm1">—</span></div>
+      <input type="range" id="sm1" min="0.5" max="6" step="0.1" value="2">
+      <div class="row"><span class="k">右物块 m₂</span><span class="v" id="vm2">—</span></div>
+      <input type="range" id="sm2" min="0.5" max="6" step="0.1" value="1">
+      <div class="row"><span class="k">初速度 v₀</span><span class="v" id="vv">—</span></div>
+      <input type="range" id="sv" min="0.5" max="8" step="0.1" value="5">
+      <div class="row"><span class="k">劲度系数 k</span><span class="v" id="vk">—</span></div>
+      <input type="range" id="sk" min="20" max="400" step="10" value="120">
+      <div class="row"><span class="k">左块与弹簧</span><span class="v"></span></div>
+      <select id="mode">
+        <option value="detach" selected>不拴接（碰后分离）</option>
+        <option value="attach">拴接（一直振动）</option>
+      </select>
+      <div class="row"><span class="k">播放速度</span><span class="v"></span></div>
+      <select id="speed">
+        <option value="0.25">0.25×（很慢）</option>
+        <option value="0.5" selected>0.5×（上课推荐）</option>
+        <option value="1">1×（真实速度）</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h3>实时数据</h3>
+      <div class="row"><span class="k">m₁ 的速度 v₁</span><span class="v" id="rv1">—</span></div>
+      <div class="row"><span class="k">m₂ 的速度 v₂</span><span class="v" id="rv2">—</span></div>
+      <div class="row"><span class="k">相对速度 |v₁−v₂|</span><span class="v" id="rvr">—</span></div>
+      <div class="row"><span class="k">弹簧形变量 x</span><span class="v" id="rx">—</span></div>
+      <div class="row"><span class="k">弹性势能 E<sub>p</sub></span><span class="v" id="rep">—</span></div>
+      <div class="row"><span class="k">状态</span><span class="v" id="rjudge">—</span></div>
+    </div>
+
+    <div class="card">
+      <h3>这组参数的结论</h3>
+      <div class="row"><span class="k">共速速度 v共</span><span class="v" id="rvc">—</span></div>
+      <div class="row"><span class="k">最大弹性势能</span><span class="v" id="repmax">—</span></div>
+      <div class="row"><span class="k">m₁ 受到的总冲量</span><span class="v" id="rimp">—</span></div>
+      <div class="row"><span class="k">恢复原长时的 v₁ / v₂</span><span class="v" id="rout">—</span></div>
+    </div>
+  </div>
+
+  <div class="hint">
+    <b>为什么共速时 Ep 最大：</b>两物块速度相同 → 相对速度为 0 → 形变量不再变化，弹簧卡在"最弯"的位置。这时系统动能最小、弹性势能最大。<br>
+    <b>为什么恢复原长像弹性碰撞：</b>此时 Ep=0，动能重新分配，公式和两球弹性碰撞完全一样：v₁=(m₁−m₂)v₀/(m₁+m₂)，v₂=2m₁v₀/(m₁+m₂)。<br>
+    <b>最容易错的一题：</b>弹簧对两物块做功的代数和不为零——弹力对 m₁ 做负功、对 m₂ 做正功，两者大小不等，差额就是 Ep。
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const W=760, H=470, FLOOR=350, L0=1.2;
+function fit(){const d=Math.min(window.devicePixelRatio||1,2);
+  cv.width=W*d;cv.height=H*d;cv.style.aspectRatio=W+'/'+H;ctx.setTransform(d,0,0,d,0,0);}
+fit();
+
+const P={m1:2,m2:1,v0:5,k:120,attach:false};
+let SC=260, XC=W/2;
+let s=0, sp=0, t=0, playing=false, phase=0, speed=0.5, V1=0, V2=0, done=false;
+let hist=[];              // v-t 曲线
+let Rr={};
+
+function mu(){ return P.m1*P.m2/(P.m1+P.m2); }
+function omega(){ return Math.sqrt(P.k/mu()); }
+function calc(){
+  const vc=P.m1*P.v0/(P.m1+P.m2);
+  Rr={vc, mu:mu(), w:omega(),
+      epmax:0.5*mu()*P.v0*P.v0,
+      imp:P.m1*P.v0-0, // |冲量| = m1v0 - m1v1(after) 见下
+      smax:P.v0/omega()};
+  const d=P.m1-P.m2, S=P.m1+P.m2;
+  Rr.v1e=d*P.v0/S; Rr.v2e=2*P.m1*P.v0/S;
+  Rr.imp=Math.abs(P.m1*(Rr.v1e-P.v0));
+  Rr.smax=P.v0/omega();
+  SC=Math.min(600,(W-190)/(L0+Math.max(Rr.smax,0.2)));
+}
+
+function reset(){
+  calc();
+  s=0; sp=-P.v0; t=0; playing=false; phase=0; done=false; hist=[];
+  V1=P.v0; V2=0;
+  draw(); ui(); setPhase();
+  document.getElementById('btnPlay').textContent='▶ 播放';
+}
+
+// 位置：质心固定在 XC
+function pos(){
+  const S=P.m1+P.m2;
+  const len=(L0+s);                       // 两物块间距(米)
+  const x1=XC-(P.m2/S)*len*SC;
+  const x2=XC+(P.m1/S)*len*SC;
+  return {x1,x2};
+}
+
+// ---------- 画 ----------
+function drawSpring(x1,x2,y){
+  const n=12, step=(x2-x1)/(n+1), amp=11;
+  ctx.strokeStyle='#9aa7b4'; ctx.lineWidth=2.6;
+  ctx.beginPath(); ctx.moveTo(x1,y);
+  for(let i=1;i<=n;i++) ctx.lineTo(x1+step*i, y+(i%2? -amp: amp));
+  ctx.lineTo(x2,y); ctx.stroke();
+}
+
+function block(x,y,w,h,label,color,v){
+  ctx.fillStyle=color; ctx.fillRect(x-w/2,y-h,w,h);
+  ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=1.6; ctx.strokeRect(x-w/2,y-h,w,h);
+  ctx.fillStyle='#0d1117'; ctx.font='700 14px system-ui'; ctx.textAlign='center';
+  ctx.fillText(label, x, y-h/2+5);
+  if(Math.abs(v)>0.05){
+    const L=Math.min(80,Math.abs(v)*16)*(v>0?1:-1);
+    const yy=y-h-16;
+    ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x,yy); ctx.lineTo(x+L,yy); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x+L,yy,4,0,7); ctx.fill();
+    ctx.font='600 13px system-ui';
+    ctx.fillText(v.toFixed(2), x+L*0.5, yy-10);
+  }
+}
+
+function drawChart(){
+  const cx0=48, cy0=152, cw=W-96, ch=104;
+  ctx.fillStyle='#0f151c'; ctx.fillRect(cx0,cy0-ch,cw,ch);
+  ctx.strokeStyle='#26313c'; ctx.lineWidth=1; ctx.strokeRect(cx0,cy0-ch,cw,ch);
+  ctx.fillStyle='#8b949e'; ctx.font='600 11px system-ui'; ctx.textAlign='left';
+  ctx.fillText('v–t 曲线（m₁=黄，m₂=青）', cx0+6, cy0-ch-6);
+  const vmax=Math.max(P.v0,0.1);
+  const y=v=>cy0-(v/vmax)*(ch-14)-7;
+  ctx.strokeStyle='#2a3642'; ctx.beginPath(); ctx.moveTo(cx0,y(0)); ctx.lineTo(cx0+cw,y(0)); ctx.stroke();
+  if(hist.length>1){
+    const tmax=Math.max(hist[hist.length-1].t,0.001);
+    const X=tt=>cx0+(tt/tmax)*cw;
+    [['v1','#ffc857'],['v2','#4dd0e1']].forEach(([k,c])=>{
+      ctx.strokeStyle=c; ctx.lineWidth=2.2; ctx.beginPath();
+      hist.forEach((h,i)=>{ const px=X(h.t), py=y(h[k]); i?ctx.lineTo(px,py):ctx.moveTo(px,py); });
+      ctx.stroke();
+    });
+    ctx.setLineDash([3,5]); ctx.strokeStyle='rgba(255,255,255,.35)';
+    ctx.beginPath(); ctx.moveTo(cx0,y(Rr.vc)); ctx.lineTo(cx0+cw,y(Rr.vc)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='rgba(255,255,255,.55)'; ctx.font='600 11px system-ui';
+    ctx.fillText('v共='+Rr.vc.toFixed(2), cx0+cw-64, y(Rr.vc)-4);
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#101820'; ctx.fillRect(0,FLOOR,W,150);
+  ctx.strokeStyle='#3a4a5a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,FLOOR); ctx.lineTo(W,FLOOR); ctx.stroke();
+  ctx.strokeStyle='#1e2a35'; ctx.lineWidth=1.2;
+  for(let x=-20;x<W;x+=18){ctx.beginPath();ctx.moveTo(x,FLOOR+2);ctx.lineTo(x+12,FLOOR+14);ctx.stroke();}
+
+  const {x1,x2}=pos();
+  const w1=26+P.m1*7, w2=26+P.m2*7;
+  drawSpring(x1+w1/2, x2-w2/2, FLOOR-26);
+  block(x1, FLOOR, w1, 44, '1', '#ffc857', V1);
+  block(x2, FLOOR, w2, 44, '2', '#4dd0e1', V2);
+
+  // 形变标注
+  ctx.fillStyle='#8b949e'; ctx.font='600 12px system-ui'; ctx.textAlign='center';
+  const tag = s<-0.002? '压缩 '+Math.abs(s).toFixed(2)+' m' : (s>0.002? '伸长 '+s.toFixed(2)+' m' : '原长');
+  ctx.fillText(tag, (x1+x2)/2, FLOOR+34);
+  // Ep 条
+  const Ep=0.5*P.k*s*s;
+  const bw=200, bx=(W-bw)/2, by=FLOOR+52;
+  ctx.fillStyle='#1e2731'; ctx.fillRect(bx,by,bw,10);
+  ctx.fillStyle='#bc8cff'; ctx.fillRect(bx,by,bw*Math.min(1,Ep/Math.max(Rr.epmax,1e-6)),10);
+  ctx.fillStyle='#bc8cff'; ctx.textAlign='left'; ctx.font='600 12px system-ui';
+  ctx.fillText('Ep '+Ep.toFixed(2)+' J', bx+bw+8, by+10);
+
+  drawChart();
+}
+
+// ---------- 物理 ----------
+function step(dt){
+  if(done) return;
+  t+=dt;
+  const w=omega(), S=P.m1+P.m2;
+  s  = -(P.v0/w)*Math.sin(w*t);     // 精确解：s''=-ω²s
+  sp = -P.v0*Math.cos(w*t);
+  const vrel=-sp;                    // v1 - v2
+  V1=Rr.vc+(P.m2/S)*vrel;
+  V2=Rr.vc-(P.m1/S)*vrel;
+
+  if(!P.attach && w*t>=Math.PI){     // 弹簧恢复原长 → 左块离开
+    done=true; s=0; V1=Rr.v1e; V2=Rr.v2e;
+    phase=2; playing=false;
+    setPhase(); document.getElementById('btnPlay').textContent='▶ 重放';
+    return;
+  }
+  if(hist.length===0 || t-hist[hist.length-1].t>0.008){
+    hist.push({t,v1:V1,v2:V2}); if(hist.length>1600) hist.shift();
+  }
+}
+
+let last=0;
+function loop(ts){
+  if(!playing) return;
+  const raw=Math.min((ts-last)/1000,0.04); last=ts;
+  step(raw*speed); draw(); live();
+  if(playing) requestAnimationFrame(loop);
+}
+
+// ---------- 文案 ----------
+function setPhase(){
+  const m={0:'准备：m₁ 以 v₀ 向右滑，即将接触 m₂ 的弹簧。弹簧原长，Ep=0。',
+    1:'相互作用中：弹簧先被压缩、再伸长，两物块速度相互"追赶"。',
+    2:'弹簧恢复原长：左块不再受弹力，两物块各自匀速离开——结果就是弹性碰撞公式。'};
+  document.getElementById('phaseTxt').textContent=m[phase]||'';
+}
+function ui(){
+  document.getElementById('vm1').textContent=P.m1.toFixed(1)+' kg';
+  document.getElementById('vm2').textContent=P.m2.toFixed(1)+' kg';
+  document.getElementById('vv').textContent=P.v0.toFixed(1)+' m/s';
+  document.getElementById('vk').textContent=P.k.toFixed(0)+' N/m';
+  document.getElementById('sm1').value=P.m1;
+  document.getElementById('sm2').value=P.m2;
+  document.getElementById('sv').value=P.v0;
+  document.getElementById('sk').value=P.k;
+  document.getElementById('mode').value=P.attach?'attach':'detach';
+  document.getElementById('rvc').textContent=Rr.vc.toFixed(2)+' m/s';
+  document.getElementById('repmax').textContent=Rr.epmax.toFixed(2)+' J';
+  document.getElementById('rimp').textContent=Rr.imp.toFixed(2)+' N·s';
+  document.getElementById('rout').textContent=Rr.v1e.toFixed(2)+' / '+Rr.v2e.toFixed(2)+' m/s';
+  live();
+}
+function live(){
+  const Ep=0.5*P.k*s*s;
+  document.getElementById('rv1').textContent=V1.toFixed(2)+' m/s';
+  document.getElementById('rv2').textContent=V2.toFixed(2)+' m/s';
+  document.getElementById('rvr').textContent=Math.abs(V1-V2).toFixed(2)+' m/s';
+  document.getElementById('rx').textContent=s.toFixed(3)+' m';
+  document.getElementById('rep').textContent=Ep.toFixed(2)+' J';
+  const j=document.getElementById('rjudge');
+  if(done){ j.textContent='已分离，各自匀速'; j.className='v'; }
+  else if(Math.abs(V1-V2)<0.05){ j.textContent='共速 → Ep 最大'; j.className='v ok'; }
+  else { j.textContent='弹簧形变中'; j.className='v'; }
+}
+
+// ---------- 交互 ----------
+[['sm1','vm1','m1',v=>v.toFixed(1)+' kg'],['sm2','vm2','m2',v=>v.toFixed(1)+' kg'],
+ ['sv','vv','v0',v=>v.toFixed(1)+' m/s'],['sk','vk','k',v=>v.toFixed(0)+' N/m']].forEach(([sid,vid,key,fmt])=>{
+  document.getElementById(sid).addEventListener('input',e=>{
+    P[key]=parseFloat(e.target.value);
+    document.getElementById(vid).textContent=fmt(P[key]);
+    reset();
+  });
+});
+document.getElementById('mode').addEventListener('change',e=>{P.attach=e.target.value==='attach';reset();});
+document.getElementById('speed').addEventListener('change',e=>{speed=parseFloat(e.target.value);});
+
+const PRESETS={
+  ex1:{m1:2,m2:1,v0:5,k:120,attach:false},
+  ex2:{m1:1,m2:1,v0:4,k:120,attach:false},
+  ex3:{m1:2,m2:1,v0:4,k:120,attach:true}
+};
+document.querySelectorAll('.preset').forEach(b=>{
+  b.onclick=()=>{ const k=b.dataset.p; if(k!=='free') Object.assign(P,PRESETS[k]); reset(); };
+});
+document.getElementById('btnPlay').onclick=()=>{
+  if(done||phase===2) reset();
+  if(phase===0){phase=1;t=0;}
+  playing=!playing;
+  document.getElementById('btnPlay').textContent=playing?'❚❚ 暂停':'▶ 播放';
+  if(playing){ last=performance.now(); requestAnimationFrame(loop); }
+  setPhase();
+};
+document.getElementById('btnReset').onclick=()=>reset();
+window.addEventListener('resize',()=>{fit();draw();});
+reset();
+
+window.__seek=(sec)=>{
+  const n=Math.max(1,Math.round(sec*60));
+  for(let i=0;i<n;i++){ step(1/60); if(done) break; }
+  draw(); live(); setPhase();
+  document.title='DBG t='+t.toFixed(2)+' s='+s.toFixed(3)+' v1='+V1.toFixed(2)+' v2='+V2.toFixed(2)
+    +' Ep='+(0.5*P.k*s*s).toFixed(2);
+};
+if(location.hash.indexOf('t=')>=0){ const s0=parseFloat(location.hash.split('t=')[1]);
+  setTimeout(()=>{ if(phase===0){phase=1;t=0;} window.__seek(s0); },80); }
+})();
+</script>
+</body>
+</html>
