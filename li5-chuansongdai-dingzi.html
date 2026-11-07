@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>例5 传送带·碰撞·绳过钉子</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --line:#30363d;
+  --txt:#e6edf3; --dim:#8b949e;
+  --amber:#ffc857; --cyan:#4dd0e1; --green:#7ee787; --red:#ff7b72; --violet:#bc8cff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 12px 40px}
+h1{font-size:20px;margin:4px 0 2px;letter-spacing:.5px}
+h1 .tag{font-size:13px;color:var(--amber);font-weight:400;margin-left:8px}
+.sub{font-size:13px;color:var(--dim);margin-bottom:10px}
+.stage{position:relative;background:#0a0e14;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.bar{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+button{flex:1;min-width:88px;padding:11px 8px;font-size:14px;border-radius:10px;border:1px solid var(--line);
+  background:#21262d;color:var(--txt);font-family:inherit;cursor:pointer}
+button:active{transform:scale(.97)}
+button.play{background:#1f6feb;border-color:#1f6feb;color:#fff;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:10px;margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card h3{font-size:14px;margin:0 0 8px;color:var(--cyan);font-weight:600}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin:6px 0}
+.row .k{color:var(--dim)}
+.row .v{font-variant-numeric:tabular-nums;font-weight:600}
+input[type=range]{width:100%;margin:2px 0 6px;accent-color:var(--amber);height:22px}
+.phase{font-size:13px;color:var(--amber);margin-top:8px;min-height:20px;line-height:1.5}
+.hint{font-size:12px;color:var(--dim);line-height:1.65;margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
+.hint b{color:var(--txt)}
+.ok{color:var(--green)} .bad{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>例5 · 传送带 → 碰撞 → 绕钉子圆周<span class="tag">2024 湖北卷</span></h1>
+  <div class="sub">物块放上传送带左端被带到右端，与悬线小球正碰；小球摆起后绳被钉子 P 挡住，改为绕 P 转动。</div>
+
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <div class="bar">
+    <button id="btnPlay" class="play">▶ 播放</button>
+    <button id="btnReset">↺ 重来</button>
+    <button id="btnStep">单步</button>
+  </div>
+
+  <div class="phase" id="phaseTxt">状态：物块静止在传送带左端，带面正以 v 向右运动。</div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>可调参数</h3>
+      <div class="row"><span class="k">传送带速度 v<sub>带</sub></span><span class="v" id="vvb">5.0 m/s</span></div>
+      <input type="range" id="svb" min="2" max="9" step="0.5" value="5">
+      <div class="row"><span class="k">两端距离 L</span><span class="v" id="vL">3.60 m</span></div>
+      <input type="range" id="sL" min="2" max="5" step="0.1" value="3.6">
+      <div class="row"><span class="k">物块质量 m</span><span class="v" id="vm">0.10 kg</span></div>
+      <input type="range" id="sm" min="0.05" max="0.30" step="0.01" value="0.10">
+      <div class="row"><span class="k">小球质量 M</span><span class="v" id="vM">0.20 kg</span></div>
+      <input type="range" id="sM" min="0.10" max="0.50" step="0.01" value="0.20">
+      <div class="row"><span class="k">动摩擦因数 μ</span><span class="v" id="vmu">0.50</span></div>
+      <input type="range" id="smu" min="0.2" max="0.9" step="0.05" value="0.5">
+      <div class="row"><span class="k">碰后物块速度 u（向左）</span><span class="v" id="vu">1.0 m/s</span></div>
+      <input type="range" id="su" min="0.5" max="3" step="0.1" value="1">
+      <div class="row"><span class="k">绳长 l</span><span class="v" id="vl">0.30 m</span></div>
+      <input type="range" id="sl" min="0.20" max="0.50" step="0.01" value="0.30">
+      <div class="row"><span class="k">钉子 P 到 O 的距离 d</span><span class="v" id="vd">0.200 m</span></div>
+      <input type="range" id="sd" min="0.05" max="0.29" step="0.005" value="0.2">
+    </div>
+
+    <div class="card">
+      <h3>实时结果</h3>
+      <div class="row"><span class="k">碰前物块速度</span><span class="v" id="rv1">—</span></div>
+      <div class="row"><span class="k">碰后小球速度 v′</span><span class="v" id="rv2">—</span></div>
+      <div class="row"><span class="k">碰撞损失动能 ΔE<sub>k</sub></span><span class="v" id="rdk">—</span></div>
+      <div class="row"><span class="k">绕 P 半径 r = l − d</span><span class="v" id="rr">—</span></div>
+      <div class="row"><span class="k">过最高点需 v′ ≥</span><span class="v" id="rvreq">—</span></div>
+      <div class="row"><span class="k">判定</span><span class="v" id="rok">—</span></div>
+    </div>
+  </div>
+
+  <div class="hint">
+    <b>三段的接缝在哪：</b>传送带上加速 → 与带同速后匀速；碰撞瞬间动量守恒（时间极短，摩擦冲量可忽略）；碰后小球只受重力和绳拉力，机械能守恒。<br>
+    <b>钉子改变的是什么：</b>只改变圆心和半径（O→P，l→l−d），<b>不改变速度</b>——绳碰到钉子的瞬间，速度方向沿切线，突然改变圆心不消耗能量。<br>
+    <b>为什么有最小 d：</b>d 越小，绕 P 的半径 r 越大，过顶需要的向心力越大，而升高越多、速度越小，两头夹出一个临界值。
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const W=980, H=560;
+function fit(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=W*dpr; cv.height=H*dpr; cv.style.aspectRatio=W+'/'+H;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+fit();
+
+const P={vb:5, L:3.6, m:0.10, M:0.20, mu:0.5, u:1.0, l:0.30, d:0.20, g:10};
+let R={};
+const PPM=200;
+const BELT_Y=400;
+const BELT_X0=70;
+let phase=0, t=0, playing=false, beltOff=0;
+let ball={th:0, phi:0, x:0, y:0, v:0};
+let blk={x:0, v:0};
+let flash=0, trail=[], ropeBent=false;
+
+function ox(){ return BELT_X0 + P.L*PPM; }
+function oy(){ return BELT_Y - P.l*PPM; }
+
+function compute(){
+  const g=P.g, mu=P.mu;
+  const a=mu*g;
+  const xAcc=P.vb*P.vb/(2*a);          // 加速到带速所需位移
+  const vHit = (xAcc < P.L) ? P.vb : Math.sqrt(2*a*P.L);
+  const tAcc = vHit/a;
+  const tUni = (xAcc < P.L) ? (P.L-xAcc)/P.vb : 0;
+  const v2 = P.m*(vHit + P.u)/P.M;      // 碰后小球速度（动量守恒）
+  const dK = 0.5*P.m*vHit*vHit - (0.5*P.m*P.u*P.u + 0.5*P.M*v2*v2);
+  const r = P.l - P.d;
+  // 过顶条件: v'² - 2g(l + r) ≥ g r  →  等价于 v'² ≥ g(2l + r)
+  const vNeed = Math.sqrt(g*(2*P.l + r));
+  const bSlack = v2*v2 - 2*g*(P.l + r);  // 到顶时 v²
+  const vH2 = v2*v2 - 2*g*P.l;
+  R={a,xAcc,vHit,tAcc,tUni,v2,dK,r,vNeed,bSlack,vH2,
+     okTop: bSlack >= g*r, reach: bSlack >= 0};
+}
+
+function reset(){
+  compute();
+  phase=0; t=0; playing=false; flash=0; trail=[]; ropeBent=false;
+  blk={x:START_X, v:0};
+  ball={th:0, phi:0, x:ox(), y:BELT_Y, v:0};
+  draw(); updateUI(); setPhase();
+  document.getElementById('btnPlay').textContent='▶ 播放';
+}
+
+// ---------- 绘制 ----------
+function arrow(x1,y1,x2,y2,color,w){
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=w||3;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-10*Math.cos(a-0.42), y2-10*Math.sin(a-0.42));
+  ctx.lineTo(x2-10*Math.cos(a+0.42), y2-10*Math.sin(a+0.42));
+  ctx.closePath(); ctx.fill();
+}
+
+function drawBelt(){
+  const x1=BELT_X0, x2=ox(), y=BELT_Y;
+  // 带体
+  ctx.fillStyle='#1b2530'; ctx.fillRect(x1,y,x2-x1,16);
+  ctx.strokeStyle='#465a6e'; ctx.lineWidth=2; ctx.strokeRect(x1,y,x2-x1,16);
+  // 滚轮
+  [x1,x2].forEach(cx=>{
+    ctx.beginPath(); ctx.arc(cx,y+8,11,0,7); ctx.fillStyle='#2b3a48'; ctx.fill();
+    ctx.strokeStyle='#5a7288'; ctx.lineWidth=2; ctx.stroke();
+  });
+  // 带面纹理（顺时针 → 上表面向右）
+  ctx.save(); ctx.beginPath(); ctx.rect(x1,y,x2-x1,16); ctx.clip();
+  ctx.strokeStyle='rgba(77,208,225,.45)'; ctx.lineWidth=2;
+  for(let x=x1-40; x<x2+40; x+=34){
+    const xx=x+((beltOff*44)%34);
+    ctx.beginPath(); ctx.moveTo(xx,y+2); ctx.lineTo(xx+12,y+14); ctx.stroke();
+  }
+  ctx.restore();
+  // 长度标注
+  ctx.strokeStyle='#33506b'; ctx.setLineDash([5,5]); ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(x1,y+30); ctx.lineTo(x2,y+30); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle='#7fb3d5'; ctx.font='600 14px system-ui'; ctx.textAlign='center';
+  ctx.fillText('L = '+P.L.toFixed(2)+' m', (x1+x2)/2, y+52);
+  // 带速箭头
+  arrow(x1+30,y-26,x1+30+P.vb*16,y-26,'#4dd0e1',2.5);
+  ctx.fillStyle='#4dd0e1'; ctx.font='600 13px system-ui'; ctx.textAlign='left';
+  ctx.fillText('v带 '+P.vb.toFixed(1)+' m/s', x1+34+P.vb*16, y-21);
+}
+
+function drawPendulum(){
+  const Ox=ox(), Oy=oy(), Bx=ox(), By=BELT_Y;
+  const Px=Ox+P.d*PPM, Py=Oy;
+  const r=R.r*PPM;
+  // 悬点
+  ctx.fillStyle='#8b949e';
+  ctx.fillRect(Ox-9,Oy-9,18,9);
+  // 钉子
+  ctx.beginPath(); ctx.arc(Px,Py,4.5,0,7); ctx.fillStyle='#ffc857'; ctx.fill();
+  ctx.fillStyle='#ffc857'; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+  ctx.fillText('P', Px, Py-12);
+  ctx.fillStyle='#8b949e'; ctx.fillText('O', Ox, Oy-14);
+  // 绳
+  ctx.strokeStyle='#c9d1d9'; ctx.lineWidth=2.2;
+  ctx.beginPath();
+  if(!ropeBent){ ctx.moveTo(Ox,Oy); ctx.lineTo(ball.x,ball.y); }
+  else { ctx.moveTo(Ox,Oy); ctx.lineTo(Px,Py); ctx.lineTo(ball.x,ball.y); }
+  ctx.stroke();
+  // 轨迹
+  if(trail.length>1){
+    ctx.setLineDash([3,6]); ctx.strokeStyle='rgba(188,140,255,.5)'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(trail[0].x,trail[0].y);
+    for(let i=1;i<trail.length;i++) ctx.lineTo(trail[i].x,trail[i].y);
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // 小球
+  ctx.beginPath(); ctx.arc(ball.x,ball.y,8,0,7);
+  ctx.fillStyle='#ff9ecb'; ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke();
+  // 速度
+  if(phase>=4 && phase<=5){
+    const sp=Math.hypot(ball.vx||0, ball.vy||0);
+    if(sp>0.05){
+      arrow(ball.x,ball.y,ball.x+(ball.vx/sp)*40,ball.y+(ball.vy/sp)*40,'#7ee787',2.6);
+    }
+  }
+}
+
+function drawBlock(){
+  const x=blk.x, y=BELT_Y;
+  ctx.fillStyle='#4dd0e1';
+  ctx.fillRect(x-9,y-18,18,18);
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.4; ctx.strokeRect(x-9,y-18,18,18);
+  ctx.fillStyle='#0d1117'; ctx.font='700 11px system-ui'; ctx.textAlign='center';
+  ctx.fillText('m', x, y-5);
+  if(Math.abs(blk.v)>0.05){
+    const dir=blk.v>0?1:-1;
+    arrow(x+dir*12,y-9,x+dir*(12+Math.min(Math.abs(blk.v),6)*9),y-9,'#ffc857',2.4);
+    ctx.fillStyle='#ffc857'; ctx.font='600 12px system-ui'; ctx.textAlign='center';
+    ctx.fillText(Math.abs(blk.v).toFixed(1)+' m/s', x+dir*52, y-16);
+  }
+}
+
+function drawInset(){
+  // 左上角：摆球全程放大
+  const bx0=22, by0=14, bw=560, bh=306;
+  ctx.fillStyle='rgba(10,14,20,.94)';
+  ctx.strokeStyle='#30363d'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.roundRect(bx0,by0,bw,bh,10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#8b949e'; ctx.font='600 12px system-ui'; ctx.textAlign='left';
+  ctx.fillText('摆球全程放大（O 为悬点，P 为钉子）', bx0+14, by0+21);
+
+  const ZP=520;                                  // 放大区每米像素
+  const Ox=ox(), Oy=oy(), Px=Ox+P.d*PPM, Py=Oy;
+  const sOx=bx0+bw*0.5, sOy=by0+118;
+  const mx=x=>sOx+(x-Ox)/PPM*ZP;
+  const my=y=>sOy+(y-Oy)/PPM*ZP;
+
+  // 两个参考圆
+  ctx.setLineDash([3,5]); ctx.lineWidth=1.2;
+  ctx.strokeStyle='rgba(77,208,225,.35)';
+  ctx.beginPath(); ctx.arc(sOx,sOy,P.l*ZP,0,7); ctx.stroke();
+  ctx.strokeStyle='rgba(255,200,87,.45)';
+  ctx.beginPath(); ctx.arc(mx(Px),my(Py),R.r*ZP,0,7); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // 悬点 O
+  ctx.fillStyle='#8b949e'; ctx.fillRect(sOx-13,sOy-8,26,8);
+  ctx.fillStyle='#8b949e'; ctx.font='600 13px system-ui'; ctx.textAlign='right';
+  ctx.fillText('O', sOx-18, sOy+2);
+
+  // 钉子 P
+  ctx.beginPath(); ctx.arc(mx(Px),my(Py),5,0,7); ctx.fillStyle='#ffc857'; ctx.fill();
+  ctx.fillStyle='#ffc857'; ctx.textAlign='left';
+  ctx.fillText('P', mx(Px)+9, my(Py)-8);
+
+  // 绳
+  ctx.strokeStyle='#c9d1d9'; ctx.lineWidth=2.4;
+  ctx.beginPath(); ctx.moveTo(sOx,sOy);
+  if(!ropeBent) ctx.lineTo(mx(ball.x),my(ball.y));
+  else { ctx.lineTo(mx(Px),my(Py)); ctx.lineTo(mx(ball.x),my(ball.y)); }
+  ctx.stroke();
+
+  // 轨迹
+  if(trail.length>1){
+    ctx.setLineDash([2,5]); ctx.strokeStyle='rgba(188,140,255,.45)'; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(mx(trail[0].x),my(trail[0].y));
+    for(let i=1;i<trail.length;i++) ctx.lineTo(mx(trail[i].x),my(trail[i].y));
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+
+  // 球
+  ctx.beginPath(); ctx.arc(mx(ball.x),my(ball.y),11,0,7);
+  ctx.fillStyle='#ff9ecb'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=1.8; ctx.stroke();
+
+  // 标注
+  ctx.fillStyle='#7fb3d5'; ctx.font='600 13px system-ui'; ctx.textAlign='left';
+  ctx.fillText('l = '+P.l.toFixed(2)+' m', bx0+18, by0+bh-44);
+  ctx.fillStyle='#ffc857';
+  ctx.fillText('d = '+P.d.toFixed(3)+' m     r = l − d = '+R.r.toFixed(3)+' m', bx0+18, by0+bh-20);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // 地面
+  ctx.fillStyle='#0a0e14'; ctx.fillRect(0,BELT_Y+16,W,H-BELT_Y-16);
+  ctx.strokeStyle='#26303a'; ctx.lineWidth=1.5;
+  ctx.beginPath(); ctx.moveTo(0,BELT_Y+90); ctx.lineTo(W,BELT_Y+90); ctx.stroke();
+
+  drawBelt();
+  drawBlock();
+  drawPendulum();
+  drawInset();
+
+  if(flash>0){
+    ctx.fillStyle='rgba(255,200,87,'+flash*0.35+')';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+// ---------- 播放 ----------
+let last=0;
+const START_X=BELT_X0+10;
+function travelPx(){ return Math.max(60, P.L*PPM-20); }
+
+function step(dt){
+  beltOff+=dt;
+
+  if(phase===1){                        // 加速
+    t+=dt;
+    const a=R.a, tt=Math.min(t,R.tAcc);
+    blk.v=Math.min(a*tt,R.vHit);
+    blk.x=START_X+(0.5*a*tt*tt/P.L)*travelPx();
+    if(t>=R.tAcc){
+      if(R.xAcc<P.L){ phase=2; t=0; }
+      else { blk.x=START_X+travelPx(); phase=3; t=0; }
+    }
+  } else if(phase===2){                 // 匀速
+    t+=dt;
+    blk.v=P.vb;
+    const s=R.xAcc+P.vb*t;
+    blk.x=START_X+Math.min(s/P.L,1)*travelPx();
+    if(s>=P.L){ blk.x=START_X+travelPx(); phase=3; t=0; }
+  } else if(phase===3){                 // 碰撞
+    t+=dt;
+    if(t>0.12){
+      flash=0.9; phase=4; t=0; blk.v=-P.u; ropeBent=false; trail=[];
+      ball.th=0; ball.v=R.v2;
+    }
+  } else if(phase===4){                 // 绕 O 摆到水平
+    t+=dt;
+    const g=P.g, Rl=P.l;
+    const vv=R.v2*R.v2-2*g*Rl*(1-Math.cos(ball.th));
+    ball.v = vv>0? Math.sqrt(vv) : 0;
+    ball.th += (ball.v/Rl)*dt;
+    if(ball.th>=Math.PI/2){ ball.th=Math.PI/2; phase=5; t=0; ropeBent=true; }
+    ball.x=ox()+Rl*PPM*Math.sin(ball.th);
+    ball.y=oy()+Rl*PPM*Math.cos(ball.th);
+    ball.vx=ball.v*Math.cos(ball.th); ball.vy=-ball.v*Math.sin(ball.th);
+    trail.push({x:ball.x,y:ball.y}); if(trail.length>260) trail.shift();
+  } else if(phase===5){                 // 绕 P 转到最高点
+    t+=dt;
+    const g=P.g, r=R.r;
+    const vv=R.vH2-2*g*r*Math.sin(ball.phi);
+    if(vv<=0){ phase=6; playing=false; setPhase();
+      document.getElementById('btnPlay').textContent='▶ 重放'; return; }
+    ball.v=Math.sqrt(vv);
+    ball.phi += (ball.v/r)*dt;
+    if(ball.phi>=Math.PI/2){ ball.phi=Math.PI/2; phase=6; playing=false;
+      document.getElementById('btnPlay').textContent='▶ 重放'; setPhase(); }
+    const Px=ox()+P.d*PPM, Py=oy();
+    ball.x=Px+r*PPM*Math.cos(ball.phi);
+    ball.y=Py-r*PPM*Math.sin(ball.phi);
+    ball.vx=-ball.v*Math.sin(ball.phi); ball.vy=-ball.v*Math.cos(ball.phi);
+    trail.push({x:ball.x,y:ball.y}); if(trail.length>400) trail.shift();
+  }
+
+  if(phase>=4){
+    const aF=P.mu*P.g;
+    if(blk.v<0) blk.v=Math.min(0, blk.v+aF*dt);
+    blk.x += blk.v*PPM*dt;
+    if(blk.x<START_X) blk.x=START_X;
+  }
+  if(flash>0) flash=Math.max(0,flash-dt*2.2);
+}
+
+function loop(ts){
+  if(!playing) return;
+  const dt=Math.min((ts-last)/1000,0.04); last=ts;
+  step(dt); draw();
+  if(playing) requestAnimationFrame(loop);
+}
+
+window.__seek=function(sec){
+  const n=Math.max(1,Math.round(sec*60));
+  for(let i=0;i<n;i++){ step(1/60); if(phase>=6) break; }
+  draw(); setPhase();
+  document.title='DBG phase='+phase+' th='+(ball.th*57.3).toFixed(1)+' phi='+(ball.phi*57.3).toFixed(1)+' bx='+ball.x.toFixed(0)+' by='+ball.y.toFixed(0)+' Ox='+ox().toFixed(0)+' Oy='+oy().toFixed(0)+' r='+R.r;
+};
+
+function setPhase(){
+  const el=document.getElementById('phaseTxt');
+  const txt=[
+    '状态：物块静止在左端，带面以 v='+P.vb.toFixed(1)+' m/s 向右运动，静摩擦带动物块加速。',
+    '状态：摩擦力向右，物块加速（a = μg = '+(P.mu*P.g).toFixed(1)+' m/s²），直到速度追上带速。',
+    '状态：已达到带速，摩擦力消失，物块随带匀速滑向 right 端。'.replace('right','右'),
+    '状态：碰撞瞬间 —— 极短，动量守恒，机械能有损失。',
+    '状态：小球绕 O 摆起，只有重力做功，机械能守恒，越摆越慢。',
+    '状态：绳碰到钉子 P —— 圆心改为 P，半径变为 r = l − d = '+R.r.toFixed(3)+' m，速度大小不变。',
+    '状态：小球到达 P 正上方。'
+  ];
+  el.textContent = txt[phase] || '';
+}
+
+function updateUI(){
+  compute();
+  document.getElementById('rv1').textContent=R.vHit.toFixed(2)+' m/s';
+  document.getElementById('rv2').textContent=R.v2.toFixed(2)+' m/s';
+  document.getElementById('rdk').textContent=R.dK.toFixed(3)+' J';
+  document.getElementById('rr').textContent=R.r.toFixed(3)+' m';
+  document.getElementById('rvreq').textContent=R.vNeed.toFixed(2)+' m/s';
+  const ok=document.getElementById('rok');
+  if(R.bSlack<0){ ok.textContent='到不了 P 正上方'; ok.className='v bad'; }
+  else if(R.okTop){ ok.textContent='可以通过'; ok.className='v ok'; }
+  else { ok.textContent='绳会松弛'; ok.className='v bad'; }
+}
+
+// ---------- 交互 ----------
+const map=[['svb','vvb','vb',v=>v.toFixed(1)+' m/s'],
+           ['sL','vL','L',v=>v.toFixed(2)+' m'],
+           ['sm','vm','m',v=>v.toFixed(2)+' kg'],
+           ['sM','vM','M',v=>v.toFixed(2)+' kg'],
+           ['smu','vmu','mu',v=>v.toFixed(2)],
+           ['su','vu','u',v=>v.toFixed(1)+' m/s'],
+           ['sl','vl','l',v=>v.toFixed(2)+' m'],
+           ['sd','vd','d',v=>v.toFixed(3)+' m']];
+map.forEach(([sid,vid,key,fmt])=>{
+  const s=document.getElementById(sid);
+  s.addEventListener('input',()=>{
+    P[key]=parseFloat(s.value);
+    document.getElementById(vid).textContent=fmt(P[key]);
+    reset();
+  });
+});
+
+document.getElementById('btnPlay').onclick=()=>{
+  if(phase===6){ reset(); }
+  if(phase===0){ phase=1; t=0; }
+  playing=!playing;
+  document.getElementById('btnPlay').textContent=playing?'❚❚ 暂停':'▶ 播放';
+  if(playing){ last=performance.now(); requestAnimationFrame(loop); }
+  setPhase();
+};
+document.getElementById('btnReset').onclick=()=>reset();
+document.getElementById('btnStep').onclick=()=>{
+  if(phase===0){ phase=1;t=0;setPhase();draw();return; }
+  if(phase===1){ phase=2;t=0;setPhase();draw();return; }
+  if(phase===2){ blk.x=ox()-14; phase=3;t=0;setPhase();draw();return; }
+  if(phase===3){ phase=4;t=0;ball.th=0;ball.v=R.v2;setPhase();draw();return; }
+  if(phase===4){ phase=5;t=0;ball.phi=0;ropeBent=true;setPhase();draw();return; }
+};
+
+window.addEventListener('resize',()=>{ fit(); draw(); });
+reset();
+// 测试用：地址带 #t=秒 跳到某一时刻；#auto 自动播放
+if(location.hash.indexOf('t=')>=0){
+  const s=parseFloat(location.hash.split('t=')[1]);
+  setTimeout(()=>{ if(phase===0){phase=1;t=0;} window.__seek(s); },80);
+} else if(location.hash.indexOf('auto')>=0){
+  setTimeout(()=>document.getElementById('btnPlay').click(),60);
+}
+})();
+</script>
+</body>
+</html>
