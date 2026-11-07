@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>例4 弹簧弹开·平抛·滑行</title>
+<style>
+:root{
+  --bg:#0d1117; --panel:#161b22; --line:#30363d;
+  --txt:#e6edf3; --dim:#8b949e;
+  --amber:#ffc857; --cyan:#4dd0e1; --green:#7ee787; --red:#ff7b72; --violet:#bc8cff;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif;}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 12px 40px}
+h1{font-size:20px;margin:4px 0 2px;letter-spacing:.5px}
+h1 .tag{font-size:13px;color:var(--amber);font-weight:400;margin-left:8px}
+.sub{font-size:13px;color:var(--dim);margin-bottom:10px;line-height:1.5}
+.stage{position:relative;background:#0a0e14;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.bar{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+button{flex:1;min-width:88px;padding:11px 8px;font-size:14px;border-radius:10px;border:1px solid var(--line);
+  background:#21262d;color:var(--txt);font-family:inherit;cursor:pointer}
+button:active{transform:scale(.97)}
+button.play{background:#1f6feb;border-color:#1f6feb;color:#fff;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin-top:6px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card h3{font-size:14px;margin:0 0 8px;color:var(--cyan);font-weight:600}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin:6px 0;gap:10px}
+.row .k{color:var(--dim);flex:1}
+.row .v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;margin:2px 0 6px;accent-color:var(--amber);height:22px}
+.phase{font-size:13px;color:var(--amber);margin-top:8px;min-height:20px;line-height:1.5}
+.hint{font-size:12.5px;color:var(--dim);line-height:1.7;margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
+.hint b{color:var(--txt)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>例4 · 弹簧弹开 → 平抛 → 滑行<span class="tag">2024 黑吉辽卷</span></h1>
+  <div class="sub">两物块夹一根不拴接的轻弹簧，由静止释放：A 恰在弹簧恢复原长时从桌面左端水平飞出，B 继续滑行后停下。</div>
+
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <div class="bar">
+    <button id="btnPlay" class="play">▶ 播放</button>
+    <button id="btnReset">↺ 重来</button>
+    <button id="btnStep">单步</button>
+  </div>
+
+  <div class="phase" id="phaseTxt">状态：弹簧被压缩 Δx，两物块静止，等待释放。</div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>可调参数</h3>
+      <div class="row"><span class="k">质量 m<sub>A</sub> = m<sub>B</sub></span><span class="v" id="vm">0.10 kg</span></div>
+      <input type="range" id="sm" min="0.05" max="0.30" step="0.01" value="0.10">
+      <div class="row"><span class="k">弹簧压缩量 Δx</span><span class="v" id="vdx">0.10 m</span></div>
+      <input type="range" id="sdx" min="0.04" max="0.20" step="0.01" value="0.10">
+      <div class="row"><span class="k">桌面高度 h</span><span class="v" id="vh">0.80 m</span></div>
+      <input type="range" id="sh" min="0.40" max="1.20" step="0.05" value="0.80">
+      <div class="row"><span class="k">A 的水平射程 x<sub>A</sub></span><span class="v" id="vxa">0.40 m</span></div>
+      <input type="range" id="sxa" min="0.20" max="0.80" step="0.02" value="0.40">
+      <div class="row"><span class="k">B 弹开后再滑行 x<sub>B</sub></span><span class="v" id="vxb">0.25 m</span></div>
+      <input type="range" id="sxb" min="0.10" max="0.60" step="0.01" value="0.25">
+    </div>
+
+    <div class="card">
+      <h3>实时结果</h3>
+      <div class="row"><span class="k">弹开时 A 的速度 v<sub>A</sub></span><span class="v" id="rva">—</span></div>
+      <div class="row"><span class="k">弹开时 B 的速度 v<sub>B</sub></span><span class="v" id="rvb">—</span></div>
+      <div class="row"><span class="k">动摩擦因数 μ</span><span class="v" id="rmu">—</span></div>
+      <div class="row"><span class="k">A 的平抛时间 t</span><span class="v" id="rt">—</span></div>
+      <div class="row"><span class="k">弹簧释放的弹性势能 ΔE<sub>p</sub></span><span class="v" id="rep">—</span></div>
+      <div class="row"><span class="k">A 落地时竖直速度</span><span class="v" id="rvy">—</span></div>
+    </div>
+  </div>
+
+  <div class="hint">
+    <b>看什么：</b>弹簧从压缩恢复原长的过程中，A、B <b>各走 Δx/2</b>，速度由 0 增到最大；之后 A 只受重力做平抛，B 只受摩擦力做匀减速。<br>
+    <b>为什么 v<sub>A</sub> = v<sub>B</sub>：</b>两物块质量相同、弹力等大反向、作用时间相同 → 动量等大反向 → 分离时速率相等。<br>
+    <b>能量去哪了：</b>ΔE<sub>p</sub> = ½m(v<sub>A</sub>²+v<sub>B</sub>²) + 弹开中两端克服摩擦（各 μmg·Δx/2）+ B 继续滑行克服摩擦（μmg·x<sub>B</sub>）。
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const W=690, H=700;
+function fit(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=W*dpr; cv.height=H*dpr; cv.style.aspectRatio=W+'/'+H;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+fit();
+
+const P={m:0.10, dx:0.10, h:0.8, xA:0.4, xB:0.25, g:10};
+let R={};
+
+let PPM=700;
+const GROUND_Y=610;
+let TABLE_TOP=50;
+let LEFT_EDGE=340;
+const SPRING_NAT=0.20;
+const BLK_W=22, BLK_H=18;
+let TABLE_W=300;
+
+let phase=0, t=0, playing=false;
+let A={x:0,y:0,vx:0,vy:0}, B={x:0,v:0};
+let trail=[];
+
+function compute(){
+  const g=P.g;
+  const tFall=Math.sqrt(2*P.h/g);
+  const vA=P.xA/tFall;
+  const vB=vA;
+  const mu=vB*vB/(2*g*P.xB);
+  const half=P.dx/2;
+  const Ep=0.5*P.m*vA*vA+0.5*P.m*vB*vB+mu*P.m*g*half*2+mu*P.m*g*P.xB;
+  R={tFall,vA,vB,mu,Ep,half};
+}
+
+function layout(){
+  PPM=Math.min(700,(GROUND_Y-70)/P.h,(W-170)/(P.xA+0.24+P.xB));
+  LEFT_EDGE=60+P.xA*PPM;
+  TABLE_W=(W-40)-LEFT_EDGE-46;
+  TABLE_TOP=GROUND_Y-P.h*PPM;
+}
+
+function reset(){
+  compute(); layout();
+  phase=0; t=0; playing=false; trail=[];
+  const gap0=(SPRING_NAT-P.dx)*PPM;
+  A.x=LEFT_EDGE+P.dx/2*PPM;          // 弹开后恰好到左边缘
+  A.y=TABLE_TOP;
+  B.x=A.x+gap0;
+  A.vx=0;A.vy=0;B.v=0;
+  draw(); updateUI(); setPhase();
+  document.getElementById('btnPlay').textContent='▶ 播放';
+}
+
+function clear(){ ctx.clearRect(0,0,W,H); }
+
+function drawGround(){
+  ctx.fillStyle='#101820'; ctx.fillRect(0,GROUND_Y,W,H-GROUND_Y);
+  ctx.strokeStyle='#3a4a5a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,GROUND_Y); ctx.lineTo(W,GROUND_Y); ctx.stroke();
+
+  ctx.fillStyle='#1c2733';
+  ctx.fillRect(LEFT_EDGE,TABLE_TOP,TABLE_W,14);
+  ctx.strokeStyle='#4a5b6b'; ctx.lineWidth=2;
+  ctx.strokeRect(LEFT_EDGE,TABLE_TOP,TABLE_W,14);
+
+  // 高度标注
+  const hx=LEFT_EDGE+TABLE_W+20;
+  ctx.setLineDash([5,6]); ctx.strokeStyle='#33506b'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(hx,TABLE_TOP); ctx.lineTo(hx,GROUND_Y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.save(); ctx.translate(hx+18,(TABLE_TOP+GROUND_Y)/2); ctx.rotate(-Math.PI/2);
+  ctx.fillStyle='#7fb3d5'; ctx.font='600 15px system-ui'; ctx.textAlign='center';
+  ctx.fillText('h = '+P.h.toFixed(2)+' m',0,0); ctx.restore();
+
+  // 左边缘
+  ctx.strokeStyle='#5a7085'; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(LEFT_EDGE,TABLE_TOP); ctx.lineTo(LEFT_EDGE,TABLE_TOP+14); ctx.stroke();
+}
+
+function drawSpring(x1,x2,yc){
+  if(x2-x1<4) return;
+  const n=8, step=(x2-x1)/(n+1);
+  ctx.strokeStyle='#9aa7b4'; ctx.lineWidth=2.4;
+  ctx.beginPath(); ctx.moveTo(x1,yc);
+  for(let i=1;i<=n;i++){
+    ctx.lineTo(x1+step*i, yc+(i%2?-7:7));
+  }
+  ctx.lineTo(x2,yc); ctx.stroke();
+}
+
+function arrow(x1,y1,x2,y2,color,w){
+  ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=w||3;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1);
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-11*Math.cos(a-0.42), y2-11*Math.sin(a-0.42));
+  ctx.lineTo(x2-11*Math.cos(a+0.42), y2-11*Math.sin(a+0.42));
+  ctx.closePath(); ctx.fill();
+}
+
+function drawBlock(x,y,label,color,vx,vy){
+  const yc=y-BLK_H/2;
+  ctx.fillStyle=color;
+  ctx.fillRect(x-BLK_W/2,y-BLK_H,BLK_W,BLK_H);
+  ctx.strokeStyle='rgba(255,255,255,.55)'; ctx.lineWidth=1.4;
+  ctx.strokeRect(x-BLK_W/2,y-BLK_H,BLK_W,BLK_H);
+  ctx.fillStyle='#0d1117'; ctx.font='700 12px system-ui'; ctx.textAlign='center';
+  ctx.fillText(label,x,y-4);
+  const sp=Math.hypot(vx||0,vy||0);
+  if(sp>0.03){
+    const sc=46;
+    const ox0=x, oy0=yc-BLK_H/2-10;
+    arrow(ox0,oy0, ox0+vx*sc, oy0+vy*sc, color);
+    ctx.fillStyle=color; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+    const lx=ox0+vx*sc*0.72 + (vy<0? -6: 6), ly=oy0+vy*sc*0.72 - 10;
+    ctx.fillText(sp.toFixed(2)+' m/s', lx, ly);
+  }
+}
+
+function drawTrail(){
+  if(trail.length<2) return;
+  ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(255,200,87,.6)'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(trail[0].x,trail[0].y);
+  for(let i=1;i<trail.length;i++) ctx.lineTo(trail[i].x,trail[i].y);
+  ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawPreview(){
+  // 预测轨迹（淡）
+  ctx.setLineDash([3,8]); ctx.strokeStyle='rgba(255,200,87,.30)'; ctx.lineWidth=1.6;
+  ctx.beginPath();
+  for(let i=0;i<=48;i++){
+    const tt=R.tFall*i/48;
+    const px=LEFT_EDGE-R.vA*PPM*tt, py=TABLE_TOP+0.5*P.g*PPM*tt*tt;
+    i?ctx.lineTo(px,py):ctx.moveTo(px,py);
+  }
+  ctx.stroke();
+  // B 的停止位置
+  const stopX = LEFT_EDGE + SPRING_NAT*PPM + P.xB*PPM;
+  ctx.setLineDash([2,6]); ctx.strokeStyle='rgba(188,140,255,.35)'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(stopX,TABLE_TOP-BLK_H-6); ctx.lineTo(stopX,TABLE_TOP+4); ctx.stroke();
+  ctx.setLineDash([]);
+}
+
+function draw(){
+  clear(); drawGround(); drawPreview(); drawTrail();
+  if(phase<2) drawSpring(A.x+BLK_W/2, B.x-BLK_W/2, TABLE_TOP-BLK_H/2);
+  drawBlock(A.x, A.y, 'A', '#4dd0e1', phase>=1?A.vx:0, phase>=2?A.vy:0);
+  drawBlock(B.x, TABLE_TOP, 'B', '#bc8cff', 0, 0);
+
+  // 射程标注
+  if(phase>=2){
+    const lx=LEFT_EDGE-P.xA*PPM;
+    ctx.strokeStyle='#ffc857'; ctx.lineWidth=1.6; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(LEFT_EDGE,GROUND_Y+18); ctx.lineTo(lx,GROUND_Y+18); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#ffc857'; ctx.font='600 14px system-ui'; ctx.textAlign='center';
+    ctx.fillText('x_A = '+P.xA.toFixed(2)+' m',(LEFT_EDGE+lx)/2, GROUND_Y+40);
+  }
+  // B 滑行标注
+  if(phase>=2){
+    const s0=LEFT_EDGE+SPRING_NAT*PPM, s1=s0+P.xB*PPM;
+    ctx.strokeStyle='rgba(188,140,255,.75)'; ctx.lineWidth=1.6; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(s0,TABLE_TOP-2); ctx.lineTo(s1,TABLE_TOP-2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#bc8cff'; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+    ctx.fillText('x_B = '+P.xB.toFixed(2)+' m', (s0+s1)/2, TABLE_TOP+32);
+  }
+}
+
+let last=0;
+function step(dt){
+  if(phase===1){
+    t+=dt;
+    const dur=0.45, p=Math.min(t/dur,1), e=1-Math.pow(1-p,3);
+    const gap0=(SPRING_NAT-P.dx)*PPM, gapN=SPRING_NAT*PPM;
+    A.x=(LEFT_EDGE+P.dx/2*PPM)-(P.dx/2*PPM)*e;
+    B.x=A.x+gap0+(gapN-gap0)*e;
+    A.vx=-R.vA*e; A.vy=0;
+    if(p>=1){ phase=2; t=0; A.y=TABLE_TOP; A.vy=0; trail=[]; }
+  } else if(phase===2){
+    t+=dt;
+    A.x=LEFT_EDGE-R.vA*PPM*t;
+    A.y=TABLE_TOP+0.5*P.g*PPM*t*t;
+    A.vy=P.g*t;
+    trail.push({x:A.x,y:A.y}); if(trail.length>500) trail.shift();
+
+    const aF=R.mu*P.g;
+    const tt=Math.min(t,R.vB/aF);
+    B.x=(LEFT_EDGE+SPRING_NAT*PPM+R.vB*PPM*tt-0.5*aF*PPM*tt*tt);
+    B.v=Math.max(0,R.vB-aF*tt);
+
+    if(t>=Math.max(R.tFall,R.vB/R.mu/P.g)+0.15){
+      phase=3; playing=false;
+      document.getElementById('btnPlay').textContent='▶ 重放';
+      setPhase();
+    }
+  }
+}
+
+function loop(ts){
+  if(!playing) return;
+  const dt=Math.min((ts-last)/1000,0.05); last=ts;
+  step(dt); draw(); liveUI();
+  if(playing) requestAnimationFrame(loop);
+}
+
+// 测试/调试：跳到第 sec 秒
+window.__seek=function(sec){
+  const n=Math.max(1,Math.round(sec*60));
+  for(let i=0;i<n;i++){ step(1/60); if(phase>=3) break; }
+  draw(); liveUI(); setPhase();
+};
+
+function setPhase(){
+  const el=document.getElementById('phaseTxt');
+  const map={
+    0:'状态：弹簧被压缩 Δx='+P.dx.toFixed(2)+' m，两物块静止，等待释放。',
+    1:'状态：弹簧恢复原长中 —— 弹力同时推 A、B，速度由 0 增大，两物块各走 Δx/2。',
+    2:'状态：弹簧已到原长 —— A 恰好离开桌面做平抛，B 在桌面匀减速滑行。',
+    3:'状态：A 已落地，B 已停止，整个过程结束。'
+  };
+  el.textContent=map[phase];
+}
+
+function updateUI(){
+  compute();
+  document.getElementById('rva').textContent=R.vA.toFixed(2)+' m/s';
+  document.getElementById('rvb').textContent=R.vB.toFixed(2)+' m/s';
+  document.getElementById('rmu').textContent=R.mu.toFixed(3);
+  document.getElementById('rt').textContent=R.tFall.toFixed(2)+' s';
+  document.getElementById('rep').textContent=R.Ep.toFixed(3)+' J';
+  document.getElementById('rvy').textContent=(P.g*R.tFall).toFixed(2)+' m/s';
+}
+function liveUI(){
+  document.getElementById('rvy').textContent=
+    (phase>=2? Math.min(P.g*t,P.g*R.tFall):0).toFixed(2)+' m/s';
+}
+
+const ids=[['sm','vm','m',v=>v.toFixed(2)+' kg'],
+           ['sdx','vdx','dx',v=>v.toFixed(2)+' m'],
+           ['sh','vh','h',v=>v.toFixed(2)+' m'],
+           ['sxa','vxa','xA',v=>v.toFixed(2)+' m'],
+           ['sxb','vxb','xB',v=>v.toFixed(2)+' m']];
+ids.forEach(([sid,vid,key,fmt])=>{
+  const s=document.getElementById(sid);
+  s.addEventListener('input',()=>{
+    P[key]=parseFloat(s.value);
+    document.getElementById(vid).textContent=fmt(P[key]);
+    reset();
+  });
+});
+
+document.getElementById('btnPlay').onclick=()=>{
+  if(phase===3) reset();
+  if(phase===0){ phase=1; t=0; }
+  playing=!playing;
+  document.getElementById('btnPlay').textContent=playing?'❚❚ 暂停':'▶ 播放';
+  if(playing){ last=performance.now(); requestAnimationFrame(loop); }
+  setPhase();
+};
+document.getElementById('btnReset').onclick=()=>reset();
+document.getElementById('btnStep').onclick=()=>{
+  if(phase===0){ phase=1;t=0;setPhase();draw();return; }
+  if(phase===1){ phase=2;t=0;A.y=TABLE_TOP;trail=[];setPhase();draw();return; }
+  if(phase===2){ phase=3;t=0;setPhase();draw();return; }
+};
+
+window.addEventListener('resize',()=>{ fit(); draw(); });
+reset();
+// 测试用：地址带 #auto 自动播放
+if(location.hash.indexOf('t=')>=0){ const s=parseFloat(location.hash.split('t=')[1]); setTimeout(()=>{ if(phase===0){phase=1;t=0;} window.__seek(s); },80); }
+else if(location.hash.indexOf('auto')>=0){ setTimeout(()=>document.getElementById('btnPlay').click(),60); }
+})();
+</script>
+</body>
+</html>
