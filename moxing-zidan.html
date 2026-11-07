@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>子弹打木块 · 交互仿真</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--txt:#e6edf3;--dim:#8b949e;
+--amber:#ffc857;--cyan:#4dd0e1;--green:#7ee787;--red:#ff7b72;--violet:#bc8cff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1000px;margin:0 auto;padding:14px 12px 40px}
+h1{font-size:20px;margin:4px 0 2px}
+h1 .tag{font-size:13px;color:var(--amber);font-weight:400;margin-left:8px}
+.sub{font-size:13px;color:var(--dim);margin-bottom:10px;line-height:1.5}
+.stage{background:#0a0e14;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+canvas{display:block;width:100%;height:auto;touch-action:none}
+.bar{display:flex;gap:8px;margin:10px 0;flex-wrap:wrap}
+button{flex:1;min-width:80px;padding:10px 8px;font-size:14px;border-radius:10px;border:1px solid var(--line);
+background:#21262d;color:var(--txt);font-family:inherit;cursor:pointer}
+button:active{transform:scale(.97)}
+button.play{background:#1f6feb;border-color:#1f6feb;color:#fff;font-weight:700}
+button.preset{min-width:0;flex:0 0 auto;padding:7px 12px;font-size:13px;background:#1a2430;border-color:#2f4a63;color:#9fd3ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.card h3{font-size:14px;margin:0 0 8px;color:var(--cyan);font-weight:600}
+.row{display:flex;justify-content:space-between;font-size:13px;margin:6px 0;gap:10px}
+.row .k{color:var(--dim);flex:1}
+.row .v{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+input[type=range]{width:100%;margin:2px 0 6px;accent-color:var(--amber);height:22px}
+select{width:100%;padding:8px;border-radius:8px;background:#21262d;color:var(--txt);border:1px solid var(--line);font-size:14px;font-family:inherit}
+.phase{font-size:13.5px;color:var(--amber);margin:8px 0;min-height:22px;line-height:1.5}
+.hint{font-size:12.5px;color:var(--dim);line-height:1.7;margin-top:14px;border-top:1px dashed var(--line);padding-top:10px}
+.hint b{color:var(--txt)}
+.ok{color:var(--green)} .bad{color:var(--red)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>子弹打木块模型<span class="tag">摩擦生热 Q = f·Δs<sub>相对</sub></span></h1>
+  <div class="sub">子弹射入放在光滑地面的木块。地面对木块没有摩擦，但子弹与木块之间有<b>恒定阻力 f</b>。木块位移 s，子弹进入深度 d——两者之差才是"生热"的那部分。</div>
+
+  <div class="stage"><canvas id="cv"></canvas></div>
+
+  <div class="bar">
+    <button class="preset" data-p="ex6">例6 子弹轻于木块</button>
+    <button class="preset" data-p="bs">变式 一般情形</button>
+    <button class="preset" data-p="thru">会穿出的情形</button>
+    <button class="preset" data-p="free">自由调参</button>
+  </div>
+  <div class="bar">
+    <button id="btnPlay" class="play">▶ 播放</button>
+    <button id="btnReset">↺ 重来</button>
+  </div>
+  <div class="phase" id="phaseTxt"></div>
+
+  <div class="grid">
+    <div class="card">
+      <h3>参数</h3>
+      <div class="row"><span class="k">子弹质量 m</span><span class="v" id="vm">—</span></div>
+      <input type="range" id="sm" min="0.01" max="0.5" step="0.01" value="0.1">
+      <div class="row"><span class="k">木块质量 M</span><span class="v" id="vM">—</span></div>
+      <input type="range" id="sM" min="0.5" max="6" step="0.1" value="1">
+      <div class="row"><span class="k">子弹初速度 v₀</span><span class="v" id="vv">—</span></div>
+      <input type="range" id="sv" min="20" max="400" step="10" value="100">
+      <div class="row"><span class="k">阻力 f</span><span class="v" id="vf">—</span></div>
+      <input type="range" id="sf" min="1000" max="100000" step="1000" value="20000">
+      <div class="row"><span class="k">木块长度 L</span><span class="v" id="vL">—</span></div>
+      <input type="range" id="sL" min="0.05" max="0.6" step="0.01" value="0.2">
+      <div class="row"><span class="k">播放速度</span><span class="v"></span></div>
+      <select id="speed">
+        <option value="0.001" selected>0.001×（真实子弹，约 2 秒看完）</option>
+        <option value="0.003">0.003×</option>
+        <option value="0.01">0.01×</option>
+        <option value="0.05">0.05×（快速预览）</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h3>实时数据</h3>
+      <div class="row"><span class="k">子弹速度 v</span><span class="v" id="rv">—</span></div>
+      <div class="row"><span class="k">木块速度 V</span><span class="v" id="rV">—</span></div>
+      <div class="row"><span class="k">进入深度 d</span><span class="v" id="rd">—</span></div>
+      <div class="row"><span class="k">木块位移 s</span><span class="v" id="rs">—</span></div>
+      <div class="row"><span class="k">相对位移 d−s</span><span class="v" id="rdr">—</span></div>
+      <div class="row"><span class="k">已生热 Q=f(d−s)</span><span class="v" id="rQ">—</span></div>
+    </div>
+
+    <div class="card">
+      <h3>这组参数的结论</h3>
+      <div class="row"><span class="k">能否穿出</span><span class="v" id="rout">—</span></div>
+      <div class="row"><span class="k">共速速度（未穿出时）</span><span class="v" id="rvc">—</span></div>
+      <div class="row"><span class="k">最大进入深度 d<sub>max</sub></span><span class="v" id="rdmax">—</span></div>
+      <div class="row"><span class="k">d<sub>max</sub> ÷ s<sub>max</sub></span><span class="v" id="rratio">—</span></div>
+      <div class="row"><span class="k">损失机械能</span><span class="v" id="rQmax">—</span></div>
+    </div>
+  </div>
+
+  <div class="hint">
+    <b>为什么 d 一定大于 s：</b>共速时对木块用动能定理 f·s=½MV²，对整个系统用能量守恒 f·d=½mv₀²−½(m+M)V²。两者相除得 <b>d/s=(m+M)/m &gt; 1</b>，与 v₀、f 都无关。<br>
+    <b>为什么 s 一定小于 L：</b>因为 d≤L（子弹没穿出去），而 s&lt;d，所以 s 必然小于木块长度。<br>
+    <b>生热只认相对位移：</b>Q=f·Δs<sub>相对</sub>，不是 f 乘木块位移，也不是 f 乘子弹位移——这是这道题最容易错的地方。
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const W=760, H=370, FLOOR=272;
+function fit(){const d=Math.min(window.devicePixelRatio||1,2);
+  cv.width=W*d;cv.height=H*d;cv.style.aspectRatio=W+'/'+H;ctx.setTransform(d,0,0,d,0,0);}
+fit();
+
+const P={m:0.3,M:1,v0:100,f:20000,L:0.10};
+let BLK=280;            // 木块像素长度
+let SC=BLK/P.L;         // 像素/米
+let X0=170;             // 木块初始左端
+let Rr={};
+
+function calc(){
+  const m=P.m,M=P.M,f=P.f,mu=m*M/(m+M);
+  const vc=m*P.v0/(m+M);
+  const dmax=0.5*mu*P.v0*P.v0/f;          // 共速前的相对位移
+  const thru=dmax>P.L;
+  Rr={mu,vc,dmax,thru,
+      vcTime:P.v0/(f*(1/m+1/M)),
+      Qmax:thru? f*P.L : 0.5*mu*P.v0*P.v0,
+      smax:0};
+  if(!thru){
+    Rr.smax=0.5*M*vc*vc/f;
+    Rr.ratio=dmax/Rr.smax;
+  } else {
+    const u2=P.v0*P.v0-2*f*P.L/mu;
+    const ue=Math.sqrt(Math.max(u2,0));
+    Rr.ue=ue;
+    Rr.vb=(m*P.v0+M*ue)/(m+M);
+    Rr.vB=(m*P.v0-m*ue)/(m+M);
+    Rr.tOut=(P.v0-ue)/(f/m+f/M);
+    Rr.smax=Rr.vB*Rr.vB/(2*(f/M));
+    Rr.ratio=null;
+  }
+  BLK=Math.min(300, Math.max(160, 260));
+  SC=BLK/P.L;
+  X0=150;
+}
+
+let t=0, playing=false, speed=0.001, phase=0, done=false;
+let vb=P.v0, vB=0, dRel=0, sBlock=0;
+
+function reset(){
+  calc();
+  t=0;playing=false;phase=0;done=false;vb=P.v0;vB=0;dRel=0;sBlock=0;
+  draw(); ui(); setPhase();
+  document.getElementById('btnPlay').textContent='▶ 播放';
+}
+
+function step(dt){
+  if(done) return;
+  const m=P.m,M=P.M,f=P.f;
+  if(!Rr.thru){
+    const tEnd=Rr.vcTime;
+    t=Math.min(t+dt,tEnd);
+    vb=P.v0-f/m*t;
+    vB=f/M*t;
+    dRel=P.v0*t-0.5*f*(1/m+1/M)*t*t;
+    sBlock+=vB*dt;
+    if(t>=tEnd-1e-9){ vb=Rr.vc; vB=Rr.vc; dRel=Rr.dmax; done=true; phase=2;
+      playing=false; setPhase(); document.getElementById('btnPlay').textContent='▶ 重放'; }
+  } else {
+    t=Math.min(t+dt,Rr.tOut);
+    if(t<Rr.tOut){
+      vb=P.v0-f/m*t; vB=f/M*t;
+      dRel=P.v0*t-0.5*f*(1/m+1/M)*t*t;
+      sBlock+=vB*dt;
+    } else {
+      vb=Rr.vb; vB=Rr.vB; dRel=P.L;
+      done=true; phase=3; playing=false; setPhase();
+      document.getElementById('btnPlay').textContent='▶ 重放';
+    }
+  }
+}
+
+let last=0;
+function loop(ts){
+  if(!playing) return;
+  const raw=Math.min((ts-last)/1000,0.05); last=ts;
+  step(raw*speed); draw(); live();
+  if(playing) requestAnimationFrame(loop);
+}
+
+// ---------- 画 ----------
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle='#101820'; ctx.fillRect(0,FLOOR,W,H-FLOOR);
+  ctx.strokeStyle='#3a4a5a'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,FLOOR); ctx.lineTo(W,FLOOR); ctx.stroke();
+  ctx.strokeStyle='#1e2a35'; ctx.lineWidth=1.2;
+  for(let x=-20;x<W;x+=18){ctx.beginPath();ctx.moveTo(x,FLOOR+2);ctx.lineTo(x+12,FLOOR+14);ctx.stroke();}
+
+  const s=sBlock;
+  const bx=X0+s*SC, by=FLOOR-84;
+  // 木块初始位置
+  ctx.setLineDash([4,6]); ctx.strokeStyle='rgba(139,148,158,.45)'; ctx.lineWidth=1.5;
+  ctx.strokeRect(X0,FLOOR-84,BLK,84); ctx.setLineDash([]);
+  // 木块
+  ctx.fillStyle='#2a3a4a'; ctx.fillRect(bx,by,BLK,84);
+  ctx.strokeStyle='#5b7d9e'; ctx.lineWidth=2.5; ctx.strokeRect(bx,by,BLK,84);
+  ctx.fillStyle='#8b949e'; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+  ctx.fillText('M = '+P.M.toFixed(1)+' kg，长 L = '+P.L.toFixed(2)+' m', bx+BLK/2, by+70);
+
+  // 子弹
+  const bulletX=bx+Math.min(dRel,P.L)*SC;
+  ctx.fillStyle='#ffc857';
+  ctx.beginPath(); ctx.ellipse(bulletX-10, by+40, 11, 6, 0, 0, 7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.2; ctx.stroke();
+
+  // 进入深度标注
+  if(dRel>0.001){
+    ctx.strokeStyle='#ffc857'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bx,by-12); ctx.lineTo(bx+Math.min(dRel,P.L)*SC,by-12); ctx.stroke();
+    ctx.fillStyle='#ffc857'; ctx.font='600 13px system-ui'; ctx.textAlign='center';
+    ctx.fillText('d = '+Math.min(dRel,P.L).toFixed(3)+' m', bx+Math.min(dRel,P.L)*SC/2, by-20);
+  }
+  // 木块位移标注
+  if(s>0.0005){
+    ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(X0,FLOOR-6); ctx.lineTo(X0+s*SC,FLOOR-6); ctx.stroke();
+    ctx.fillStyle='#4dd0e1'; ctx.font='600 13px system-ui';
+    ctx.fillText('s = '+s.toFixed(3)+' m', X0+s*SC/2, FLOOR+34);
+  }
+
+  // 速度箭头
+  const arr=(x,y,v,c)=>{
+    if(Math.abs(v)<2) return;
+    const L=Math.min(90,Math.abs(v)*0.18)*(v>0?1:-1);
+    ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+L,y); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x+L,y,4,0,7); ctx.fill();
+    ctx.font='600 12px system-ui'; ctx.textAlign='center';
+    ctx.fillText(Math.abs(v).toFixed(0), x+L*0.5, y-8);
+  };
+  arr(bulletX, by+40, vb, '#ffc857');
+  arr(bx+BLK/2, by-34, vB, '#4dd0e1');
+  ctx.fillStyle='#4dd0e1'; ctx.font='600 12px system-ui'; ctx.textAlign='left';
+  ctx.fillText('木块', bx+BLK+14, by+34);
+}
+
+function setPhase(){
+  const m={0:'准备：子弹以 v₀ 射向静止木块，木块放在光滑地面上。',
+    1:'射入中：子弹减速、木块加速，二者之间的阻力 f 是恒定的。',
+    2:'共速：子弹停在木块里，此后一起匀速——机械能损失最多。',
+    3:'穿出：子弹从右侧穿出，此后两者速度不再相等。'};
+  document.getElementById('phaseTxt').textContent=m[phase]||'';
+}
+function ui(){
+  document.getElementById('vm').textContent=P.m.toFixed(2)+' kg';
+  document.getElementById('vM').textContent=P.M.toFixed(1)+' kg';
+  document.getElementById('vv').textContent=P.v0.toFixed(0)+' m/s';
+  document.getElementById('vf').textContent=P.f.toFixed(0)+' N';
+  document.getElementById('vL').textContent=P.L.toFixed(2)+' m';
+  document.getElementById('sm').value=P.m;
+  document.getElementById('sM').value=P.M;
+  document.getElementById('sv').value=P.v0;
+  document.getElementById('sf').value=P.f;
+  document.getElementById('sL').value=P.L;
+  document.getElementById('rout').textContent=Rr.thru?'能穿出':'不能穿出（停在木块内）';
+  document.getElementById('rout').className='v '+(Rr.thru?'bad':'ok');
+  document.getElementById('rvc').textContent=Rr.vc.toFixed(1)+' m/s';
+  document.getElementById('rdmax').textContent=Rr.dmax.toFixed(3)+' m'+(Rr.thru?'（>L）':'');
+  document.getElementById('rratio').textContent=Rr.thru?'—（已穿出）':Rr.ratio.toFixed(2)+' = (m+M)/m';
+  document.getElementById('rQmax').textContent=Rr.Qmax.toFixed(1)+' J';
+  live();
+}
+function live(){
+  document.getElementById('rv').textContent=vb.toFixed(1)+' m/s';
+  document.getElementById('rV').textContent=vB.toFixed(1)+' m/s';
+  document.getElementById('rd').textContent=Math.min(dRel,P.L).toFixed(3)+' m';
+  document.getElementById('rs').textContent=sBlock.toFixed(3)+' m';
+  document.getElementById('rdr').textContent=Math.max(0,dRel-sBlock).toFixed(3)+' m';
+  document.getElementById('rQ').textContent=(P.f*Math.max(0,dRel-sBlock)).toFixed(1)+' J';
+}
+
+// ---------- 交互 ----------
+[['sm','vm','m',v=>v.toFixed(2)+' kg'],['sM','vM','M',v=>v.toFixed(1)+' kg'],
+ ['sv','vv','v0',v=>v.toFixed(0)+' m/s'],['sf','vf','f',v=>v.toFixed(0)+' N'],
+ ['sL','vL','L',v=>v.toFixed(2)+' m']].forEach(([sid,vid,key,fmt])=>{
+  document.getElementById(sid).addEventListener('input',e=>{
+    P[key]=parseFloat(e.target.value);
+    document.getElementById(vid).textContent=fmt(P[key]);
+    reset();
+  });
+});
+document.getElementById('speed').addEventListener('change',e=>{speed=parseFloat(e.target.value);});
+
+const PRESETS={
+  ex6:{m:0.1,M:2,v0:300,f:60000,L:0.15},
+  bs:{m:0.3,M:1,v0:100,f:20000,L:0.10},
+  thru:{m:0.1,M:1,v0:300,f:20000,L:0.08}
+};
+document.querySelectorAll('.preset').forEach(b=>{
+  b.onclick=()=>{const k=b.dataset.p; if(k!=='free') Object.assign(P,PRESETS[k]); reset();};
+});
+document.getElementById('btnPlay').onclick=()=>{
+  if(done) reset();
+  if(phase===0){phase=1;t=0;}
+  playing=!playing;
+  document.getElementById('btnPlay').textContent=playing?'❚❚ 暂停':'▶ 播放';
+  if(playing){last=performance.now(); requestAnimationFrame(loop);}
+  setPhase();
+};
+document.getElementById('btnReset').onclick=()=>reset();
+window.addEventListener('resize',()=>{fit();draw();});
+reset();
+
+window.__seek=(sec)=>{
+  const dt=Math.max(1e-7, sec/400);
+  for(let i=0;i<400;i++){ step(dt); if(done) break; }
+  draw(); live(); setPhase();
+  document.title='DBG t='+t.toFixed(4)+' vb='+vb.toFixed(1)+' vB='+vB.toFixed(1)
+    +' d='+dRel.toFixed(4)+' dmax='+Rr.dmax.toFixed(4)+' thru='+Rr.thru;
+};
+if(location.hash.indexOf('t=')>=0){ const s0=parseFloat(location.hash.split('t=')[1]);
+  setTimeout(()=>{ if(phase===0){phase=1;t=0;} window.__seek(s0); },80); }
+})();
+</script>
+</body>
+</html>
