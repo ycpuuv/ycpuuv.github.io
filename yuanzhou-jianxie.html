@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>圆周运动 → 简谐运动 · 投影法演示</title>
+<title>圆周运动 → 简谐运动 · 投影法（竖式）</title>
 <style>
 :root{--bg:#0b0f14;--panel:#141b23;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
 --amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
@@ -11,7 +11,7 @@
 html,body{margin:0;background:var(--bg);color:var(--txt);
 font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
 .wrap{max-width:1040px;margin:0 auto;padding:10px 10px 26px}
-h1{font-size:19px;margin:6px 0 2px;letter-spacing:.3px}
+h1{font-size:19px;margin:6px 0 2px}
 h1 em{font-style:normal;color:var(--amber)}
 .sub{font-size:12.5px;color:var(--dim);margin-bottom:8px;line-height:1.6}
 #cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
@@ -38,7 +38,7 @@ border-top:1px solid var(--line);padding-top:10px}
 <body>
 <div class="wrap">
   <h1>圆周运动的投影 = <em>简谐运动</em></h1>
-  <div class="sub">P 绕圆匀速转动，竖直方向的"影子" m′ 在竖直直径上来回跑。右边曲线的<b>高度</b>就是 m′ 的<b>高度</b>——三点永远在一条水平线上。</div>
+  <div class="sub">时间轴竖着往下走。m′ 在圆的水平直径上左右移动，<b>它正下方</b>就是曲线上的点——两者永远在同一条竖直线上，横向距离都是位移 x。</div>
   <canvas id="cv"></canvas>
 
   <div class="ctrl">
@@ -66,8 +66,8 @@ border-top:1px solid var(--line);padding-top:10px}
   </div>
 
   <div class="foot">
-    <b>一条水平线读三样东西：</b>P 的高度 = m′ 的高度 = 曲线当前点的高度，都是位移 x。<br>
-    <b>再加一条切线：</b>曲线在该点的斜率 = 绿色 vₓ 箭头（同绿同向），峰谷处斜率为零、加速度最大。<br>
+    <b>竖着看一条线：</b>m′ 在圆的直径上左右移动，它脚下的那条竖线一直跟到曲线的当前点——横坐标都是 x。<br>
+    <b>横着看三个箭头：</b>P 的速度、vₓ、曲线的切线斜率，指的是同一件事；到最大位移处三者一起归零。<br>
     <b>结论：</b>x = A sin(ωt+φ)，Fₓ = −mω²x，令 k = mω²，得 T = 2π√(m/k)。
   </div>
 </div>
@@ -93,18 +93,19 @@ border-top:1px solid var(--line);padding-top:10px}
 
   function resize(){
     const w=Math.min(cv.parentElement.clientWidth,1040);
-    const wide = w>=620;
-    const h=Math.round(w*(wide?0.50:0.72));
+    const wide=w>=680;
+    const h=Math.round(wide? Math.min(760, w*0.74) : w*1.55);
     const dpr=Math.min(window.devicePixelRatio||1,2);
     cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
     const PW=w, PH=h;
-    const cy=Math.round(PH*0.50);
-    const cx=Math.round(PW*(wide?0.215:0.25));
-    const SC=Math.min((PH*0.40)/1.8, (cx-30)/1.8);
-    const gx0=Math.round(Math.max(cx+1.8*SC+34, PW*(wide?0.44:0.47)));
-    const gx1=PW-22;
-    L={PW,PH,cx,cy,SC,gx0,gx1};
+    const cy=Math.round(wide? Math.min(PH*0.28,190) : Math.min(PH*0.30,180));
+    const cx=Math.round(PW*0.5);
+    const SC=Math.min((cy-26)/1.8, (PW/2-40)/1.8);
+    const gy0=Math.round(cy+1.8*SC+34);
+    const gy1=PH-58;
+    const PPY=Math.max(30, Math.min(52,(gy1-gy0)/4.3));
+    L={PW,PH,cx,cy,SC,gy0,gy1,PPY};
   }
   window.addEventListener('resize',resize);
 
@@ -126,115 +127,123 @@ border-top:1px solid var(--line);padding-top:10px}
 
   function draw(){
     if(!L) resize();
-    const {PW,PH,cx,cy,SC,gx0,gx1}=L;
+    const {PW,PH,cx,cy,SC,gy0,gy1,PPY}=L;
     const R=A*SC;
     const ang=d2r(PHI)+W*t;
     const curX=A*Math.sin(ang), curV=W*A*Math.cos(ang);
-    const px=cx+R*Math.cos(ang);
-    const py=cy-R*Math.sin(ang);
-    const my=cy-curX*SC;
-    const gy=my, gx=gx1;
+    // P：从圆顶点起顺时针
+    const px=cx+R*Math.sin(ang), py=cy-R*Math.cos(ang);
+    // m′：水平直径上，与 P 同一竖直位置
+    const mx=px, my=cy;
+    // 曲线当前点：最下方
+    const gy=gy1, gx=cx+curX*SC;
 
     ctx.clearRect(0,0,PW,PH);
 
-    ctx.strokeStyle='#141c25'; ctx.lineWidth=1;
-    for(let x=gx0;x<=gx1;x+=34){ctx.beginPath();ctx.moveTo(x,cy-R-26);ctx.lineTo(x,cy+R+26);ctx.stroke();}
-
+    // 竖向 ±A 参考线（与圆左右相切）
     ctx.strokeStyle='rgba(255,123,114,.45)'; ctx.lineWidth=1.6; ctx.setLineDash([7,6]);
-    ctx.beginPath(); ctx.moveTo(cx-16,cy-R); ctx.lineTo(gx1,cy-R); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cx-16,cy+R); ctx.lineTo(gx1,cy+R); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-R, cy-R-16); ctx.lineTo(cx-R, gy1); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx+R, cy-R-16); ctx.lineTo(cx+R, gy1); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle='#ff7b72'; ctx.font='bold 12px system-ui';
-    ctx.fillText('+A', cx-16, cy-R-7);
-    ctx.fillText('−A', cx-16, cy+R+16);
+    ctx.fillStyle='#ff7b72'; ctx.font='bold 12px system-ui'; ctx.textAlign='center';
+    ctx.fillText('−A', cx-R, cy-R-24); ctx.fillText('+A', cx+R, cy-R-24);
+    ctx.textAlign='left';
 
+    // 水平位移轴（过圆心）
     ctx.strokeStyle='#3a4756'; ctx.lineWidth=1.6;
-    ctx.beginPath(); ctx.moveTo(cx-16,cy); ctx.lineTo(gx1,cy); ctx.stroke();
-    ctx.strokeStyle='#2c3743'; ctx.setLineDash([3,4]);
-    ctx.beginPath(); ctx.moveTo(cx,cy+R+18); ctx.lineTo(cx,cy-R-18); ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(cx-R-26,cy); ctx.lineTo(cx+R+26,cy); ctx.stroke();
+    // 竖直时间轴
+    ctx.beginPath(); ctx.moveTo(cx,cy-R-30); ctx.lineTo(cx,gy1+16); ctx.stroke();
     ctx.fillStyle='#5d6b7a'; ctx.font='13px system-ui';
-    ctx.fillText('x', cx+8, cy-R-10);
-    ctx.fillText('O', cx-15, cy+16);
+    ctx.fillText('x', cx+R+12, cy-8);
+    ctx.fillText('t', cx+8, gy1+30);
+    ctx.fillText('O', cx-16, cy+18);
 
+    // 圆
     ctx.strokeStyle='#38465a'; ctx.lineWidth=2; ctx.setLineDash([7,5]);
     ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
 
-    const T_WIN=(gx1-gx0)/52;
+    // x-t 曲线：t 向下
+    const T_WIN=(gy1-gy0)/PPY;
     ctx.strokeStyle='#bc8cff'; ctx.lineWidth=2.6; ctx.lineJoin='round';
     ctx.beginPath();
     let st=false;
     for(let tau=t-T_WIN; tau<=t+1e-9; tau+=0.006){
-      const sx=gx0+(tau-(t-T_WIN))*52;
-      const sy=cy-xOf(tau)*SC;
+      const sy=gy0+(tau-(t-T_WIN))*PPY;
+      const sx=cx+xOf(tau)*SC;
       if(!st){ctx.moveTo(sx,sy);st=true;} else ctx.lineTo(sx,sy);
     }
     ctx.stroke();
 
+    // 切线：斜率（dx/dt）= vₓ，画在屏幕上是 dy/dx
     if(showTan){
-      const tl=32, k=-curV*SC/52;
-      const nx=tl/Math.hypot(1,k), ny=k*nx;
-      ctx.strokeStyle='rgba(126,231,135,.9)'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+      const tl=30, slope=-curV*SC/PPY;          // 屏幕坐标 y 向下
+      const ny=tl/Math.hypot(1,slope), nx=slope*ny;
+      ctx.strokeStyle='rgba(126,231,135,.95)'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
       ctx.beginPath(); ctx.moveTo(gx-nx,gy-ny); ctx.lineTo(gx+nx,gy+ny); ctx.stroke();
       ctx.setLineDash([]);
     }
 
-    ctx.save(); ctx.globalAlpha=.8; ctx.lineWidth=1.5;
-    ctx.setLineDash([6,5]); ctx.strokeStyle='#ffc857';
-    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(cx,my); ctx.stroke();
-    ctx.strokeStyle='#bc8cff';
-    ctx.beginPath(); ctx.moveTo(cx,my); ctx.lineTo(gx,gy); ctx.stroke();
+    // 竖直连线：m′ → 曲线当前点
+    ctx.save(); ctx.globalAlpha=.75; ctx.lineWidth=1.5; ctx.setLineDash([6,5]);
+    ctx.strokeStyle='#ffc857'; ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(mx,my); ctx.stroke();
+    ctx.strokeStyle='#bc8cff'; ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(gx,gy); ctx.stroke();
     ctx.restore(); ctx.setLineDash([]);
 
+    // 位移线段 O→m′
     ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=5; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx,my); ctx.stroke(); ctx.lineCap='butt';
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(mx,my); ctx.stroke(); ctx.lineCap='butt';
 
+    // 半径 + 角（从竖直向上方向顺时针）
     ctx.strokeStyle='#ffc857'; ctx.lineWidth=2;
     ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py); ctx.stroke();
     const ar=Math.min(R*0.34,30);
     ctx.strokeStyle='rgba(188,140,255,.9)'; ctx.lineWidth=1.6;
-    ctx.beginPath(); ctx.arc(cx,cy,ar,0,ang,false); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx,cy,ar,-Math.PI/2,-Math.PI/2+ang,false); ctx.stroke();
     ctx.fillStyle='#bc8cff'; ctx.font='bold 12px system-ui';
-    ctx.fillText('ωt+φ', cx+ar+6, cy-ar*0.55-6);
+    ctx.fillText('ωt+φ', cx-ar-46, cy-ar-10);
 
+    // 速度：顺时针切向 (cos, sin)
     const vlen=Math.min(W*A*24,84);
-    const vSX=-Math.sin(ang)*vlen, vSY=-Math.cos(ang)*vlen;
+    const vSX=Math.cos(ang)*vlen, vSY=Math.sin(ang)*vlen;
     arrow(px,py,px+vSX,py+vSY,'#7ee787',2.6);
-    const vxl=Math.max(-56,Math.min(56,curV*SC*0.34));
-    arrow(cx+30,my,cx+30,my-vxl,'#4b9e55',2.4);
+    const vxl=Math.max(-52,Math.min(52,curV*SC*0.34));
+    arrow(mx,my+16,mx+vxl,my+16,'#4b9e55',2.4);
     ctx.fillStyle='#7ee787'; ctx.font='bold 12px system-ui';
     ctx.fillText('v', px+vSX+7, py+vSY-4);
-    ctx.fillStyle='#4b9e55'; ctx.fillText('vₓ', cx+34, my-vxl-4);
+    ctx.fillStyle='#4b9e55'; ctx.fillText('vₓ', mx+vxl+(vxl>=0?4:-26), my+30);
 
+    // 向心力
     const flen=Math.min(W*W*A*13,70);
     let fdx=cx-px, fdy=cy-py; const nn=Math.hypot(fdx,fdy)||1; fdx/=nn; fdy/=nn;
     arrow(px,py,px+fdx*flen,py+fdy*flen,'#ff7b72',2.6);
-    const fxl=Math.max(-52,Math.min(52,W*W*curX*SC*0.030));
-    arrow(cx-32,my,cx-32,my-fxl,'#a8483f',2.2);
+    const fxl=Math.max(-48,Math.min(48,W*W*curX*SC*0.030));
+    arrow(mx,my-16,mx-fxl,my-16,'#a8483f',2.2);
     ctx.fillStyle='#ff7b72'; ctx.font='bold 12px system-ui';
-    ctx.fillText('Fₓ', cx-52, my-fxl-4);
+    ctx.fillText('Fₓ', mx-fxl+(fxl>=0?-24:4), my-24);
 
+    // 三点
     const dot=(x,y,r,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
       ctx.strokeStyle='#0b0f14';ctx.lineWidth=2.5;ctx.stroke();};
     dot(px,py,9,'#ffc857');
-    dot(cx,my,8,'#4dd0e1');
+    dot(mx,my,8,'#4dd0e1');
     dot(gx,gy,8,'#bc8cff');
     ctx.fillStyle='#ffc857'; ctx.font='bold 13px system-ui'; ctx.fillText('P',px+13,py-11);
-    ctx.fillStyle='#4dd0e1'; ctx.fillText("m′",cx-26,my+22);
+    ctx.fillStyle='#4dd0e1'; ctx.fillText("m′",mx-30,my-10);
+    ctx.fillStyle='#bc8cff'; ctx.font='bold 12px system-ui'; ctx.fillText('x-t',gx-14,gy-14);
 
+    // 时间刻度
     ctx.font='10.5px system-ui'; ctx.fillStyle='#556270';
     const s0=Math.ceil(t-T_WIN), s1=Math.floor(t);
     for(let s=s0;s<=s1;s++){
-      const sx=gx0+(s-(t-T_WIN))*52;
-      if(sx<gx0+.5||sx>gx1) continue;
+      const sy=gy0+(s-(t-T_WIN))*PPY;
+      if(sy<gy0-.5||sy>gy1) continue;
       const lab=Math.round(s-t);
       if(lab%2) continue;
       ctx.strokeStyle='#2a3541';
-      ctx.beginPath(); ctx.moveTo(sx,cy+4); ctx.lineTo(sx,cy-4); ctx.stroke();
-      ctx.fillText(lab===0?'现在':lab+'s', sx-11, cy+R+34);
+      ctx.beginPath(); ctx.moveTo(cx-4,sy); ctx.lineTo(cx+4,sy); ctx.stroke();
+      ctx.fillText(lab===0?'现在':lab+'s', cx+8, sy+4);
     }
-    ctx.fillStyle='#6b7a8a'; ctx.font='bold 12px system-ui';
-    ctx.fillText('x-t 图像', gx0+2, cy-R-14);
   }
 
   function ui(){
