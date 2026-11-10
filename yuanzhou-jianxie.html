@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>圆周运动 → 简谐运动 · 投影法演示</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1040px;margin:0 auto;padding:10px 10px 26px}
+h1{font-size:19px;margin:6px 0 2px;letter-spacing:.3px}
+h1 em{font-style:normal;color:var(--amber)}
+.sub{font-size:12.5px;color:var(--dim);margin-bottom:8px}
+#cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px 14px;margin-top:10px}
+.row{display:flex;align-items:center;gap:8px;font-size:13px}
+.row label{min-width:52px;color:var(--dim)}
+.row input[type=range]{flex:1;accent-color:var(--cyan);height:22px}
+.row b{color:var(--amber);min-width:52px;text-align:right;font-variant-numeric:tabular-nums;font-size:13.5px}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+button{font-size:13.5px;font-weight:600;padding:7px 13px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--txt);cursor:pointer}
+button:active{transform:scale(.97)}
+button.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+button.play{background:#12341f;border-color:#2ea043;color:#8ff0a4}
+.readout{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-top:10px}
+.kv{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim);margin-bottom:2px}
+.kv span{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.foot{margin-top:12px;font-size:12.5px;color:var(--dim);line-height:1.7;
+border-top:1px solid var(--line);padding-top:10px}
+.foot b{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>圆周运动的投影 = <em>简谐运动</em></h1>
+  <div class="sub">P 绕圆匀速转动，它的"影子" m′ 在直径上来回跑 —— 右边那条曲线，就是影子自己画出来的轨迹。</div>
+  <canvas id="cv"></canvas>
+
+  <div class="ctrl">
+    <div class="row"><label>振幅 A</label><input id="sA" type="range" min="0.4" max="1.8" step="0.05" value="1"><b id="vA">1.00 m</b></div>
+    <div class="row"><label>角速度 ω</label><input id="sW" type="range" min="0.4" max="3.2" step="0.1" value="1.2"><b id="vW">1.2</b></div>
+    <div class="row"><label>初相 φ</label><input id="sP" type="range" min="0" max="360" step="5" value="0"><b id="vP">0°</b></div>
+    <div class="row"><label>播放</label><input id="sS" type="range" min="0.15" max="1.5" step="0.05" value="0.5"><b id="vS">0.50×</b></div>
+  </div>
+
+  <div class="btns">
+    <button id="bp" class="play">⏸ 暂停</button>
+    <button id="br">↺ 从头</button>
+    <button data-f="0">φ=0° 平衡位</button>
+    <button data-f="90">φ=90° +最大</button>
+    <button data-f="180">φ=180° 平衡位</button>
+    <button data-f="270">φ=270° −最大</button>
+    <button id="bt">切线斜率</button>
+  </div>
+
+  <div class="readout">
+    <div class="kv"><i>位移 x</i><span id="rx" style="color:#4dd0e1">0.00 m</span></div>
+    <div class="kv"><i>速度 vₓ</i><span id="rv" style="color:#7ee787">0.00 m/s</span></div>
+    <div class="kv"><i>加速度 aₓ = −ω²x</i><span id="ra" style="color:#ff7b72">0.00 m/s²</span></div>
+    <div class="kv"><i>周期 T = 2π/ω</i><span id="rt" style="color:#ffc857">0.00 s</span></div>
+  </div>
+
+  <div class="foot">
+    <b>看三件事：</b>①三点始终等高——P 的高度 = 曲线当前点的高度；②曲线在峰和谷时 m′ 速度为零、加速度最大，过零点时正好相反；③绿色的切线斜率 = 绿色的 vₓ，一根箭头，两种看法。<br>
+    <b>结论：</b>x = A sin(ωt+φ)，Fₓ = −mω²x，令 k = mω²，就得到 T = 2π√(m/k)。
+  </div>
+</div>
+
+<script>
+(function(){
+  const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  const d2r=d=>d*Math.PI/180;
+  let A=1, W=1.2, PHI=0, SPD=0.5, t=0, playing=true, showTan=true, L=null;
+
+  const $=id=>document.getElementById(id);
+  const sA=$('sA'), sW=$('sW'), sP=$('sP'), sS=$('sS');
+  const vA=$('vA'), vW=$('vW'), vP=$('vP'), vS=$('vS'), bp=$('bp');
+  sA.oninput=e=>{A=+e.target.value; vA.textContent=A.toFixed(2)+' m';};
+  sW.oninput=e=>{W=+e.target.value; vW.textContent=W.toFixed(1);};
+  sP.oninput=e=>{PHI=+e.target.value; vP.textContent=PHI+'°';};
+  sS.oninput=e=>{SPD=+e.target.value; vS.textContent=SPD.toFixed(2)+'×';};
+  bp.onclick=()=>{playing=!playing; bp.textContent=playing?'⏸ 暂停':'▶ 播放';};
+  $('br').onclick=()=>{t=0;};
+  $('bt').onclick=e=>{showTan=!showTan; e.target.classList.toggle('on',showTan);};
+  document.querySelectorAll('[data-f]').forEach(b=>{
+    b.onclick=()=>{PHI=+b.dataset.f; sP.value=PHI; vP.textContent=PHI+'°';};
+  });
+  $('bt').classList.add('on');
+
+  function resize(){
+    const w=Math.min(cv.parentElement.clientWidth, 1040);
+    const portrait = w<720;
+    const h = Math.round(portrait ? w*1.30 : w*0.53);
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    const PW=w, PH=h;
+    if(portrait){
+      const cx=PW/2, cy=Math.min(PW*0.30,150)*0.98+40;
+      const Rmax=Math.min(PW*0.32,150);
+      const gy0=cy+Rmax+64, gy1=PH-64;
+      const zeroY=(gy0+gy1)/2;
+      const ampPx=Math.min((gy1-gy0)/2/1.18, Rmax);
+      L={portrait,PW,PH,cx,cy,Rmax,gy0,gy1,zeroY,ampPx,gx0:38,gx1:PW-20,gy:zeroY};
+      L.SC = ampPx/1.8;          // 每米像素（圆与图各自用）
+      L.SCcircle = Rmax/1.8;
+    }else{
+      const cx=Math.round(PW*0.215), cy=Math.round(PH*0.50);
+      const Rmax=Math.min(PH*0.34,cx-46);
+      const zeroY=cy;
+      const ampPx=Math.min(PH*0.31,190);
+      L={portrait:false,PW,PH,cx,cy,Rmax,zeroY,ampPx,gx0:Math.round(PW*0.45),gx1:PW-26};
+      L.SC = ampPx/1.8;
+      L.SCcircle = Math.min(Rmax/1.8, ampPx/1.8);
+    }
+  }
+  window.addEventListener('resize',resize);
+
+  const xOf = tt => A*Math.sin(W*tt+d2r(PHI));
+  const vOf = tt => W*A*Math.cos(W*tt+d2r(PHI));
+
+  function arrow(x1,y1,x2,y2,color,wid,head){
+    const dx=x2-x1, dy=y2-y1, len=Math.hypot(dx,dy);
+    if(len<2.5) return;
+    const a=Math.atan2(dy,dx), hs=head||9;
+    ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=wid;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-hs*Math.cos(a-0.4), y2-hs*Math.sin(a-0.4));
+    ctx.lineTo(x2-hs*Math.cos(a+0.4), y2-hs*Math.sin(a+0.4));
+    ctx.closePath(); ctx.fill();
+  }
+
+  function draw(){
+    if(!L) resize();
+    const {PW,PH,cx,cy,zeroY,ampPx,gx0,gx1,portrait}=L;
+    const axisY = portrait ? cy : zeroY;
+    const SC=L.SC*1.8/1.8, Rc=A*(portrait? L.SCcircle : Math.min(L.SCcircle, L.SC));
+    const ang=d2r(PHI)+W*t;
+    const px=cx+Rc*Math.sin(ang);
+    const py=cy-Rc*Math.cos(ang);
+    const curX=xOf(t), curV=vOf(t);
+    const gy=zeroY-curX*SC*1.8/1.8;
+    const gx=gx1;
+
+    ctx.clearRect(0,0,PW,PH);
+
+    // ---- 网格 ----
+    ctx.strokeStyle='#151d26'; ctx.lineWidth=1;
+    for(let x=gx0;x<=gx1;x+=32){ctx.beginPath();ctx.moveTo(x,zeroY-ampPx*1.18);ctx.lineTo(x,zeroY+ampPx*1.18);ctx.stroke();}
+
+    // ---- ±A 参考线 ----
+    const yA=A*SC;
+    ctx.strokeStyle='rgba(255,120,120,.34)'; ctx.lineWidth=1.6; ctx.setLineDash([7,6]);
+    ctx.beginPath(); ctx.moveTo(cx-Rc-24,zeroY-yA); ctx.lineTo(gx1,zeroY-yA); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx-Rc-24,zeroY+yA); ctx.lineTo(gx1,zeroY+yA); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#ff7b72'; ctx.font='bold 12px system-ui';
+    ctx.fillText('+A', cx-Rc-24, zeroY-yA-7);
+    ctx.fillText('−A', cx-Rc-24, zeroY+yA+16);
+
+    // ---- 坐标轴 ----
+    ctx.strokeStyle='#3a4756'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.moveTo(cx-Rc-24,zeroY); ctx.lineTo(gx1,zeroY); ctx.stroke();
+    ctx.strokeStyle='#2c3743'; ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(cx,cy+Rc+18); ctx.lineTo(cx,cy-Rc-18); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle='#5d6b7a'; ctx.font='13px system-ui';
+    ctx.fillText('x', cx-Rc-30, axisY-7);
+    ctx.fillText('y', cx+7, cy-Rc-22);
+
+    // ---- 圆 ----
+    ctx.strokeStyle='#38465a'; ctx.lineWidth=2; ctx.setLineDash([7,5]);
+    ctx.beginPath(); ctx.arc(cx,cy,Rc,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+
+    // ---- x-t 曲线 ----
+    const T_WIN=(gx1-gx0)/52;
+    ctx.strokeStyle='#bc8cff'; ctx.lineWidth=2.6; ctx.lineJoin='round';
+    ctx.beginPath();
+    let st=false;
+    for(let tau=t-T_WIN; tau<=t+1e-9; tau+=0.006){
+      const sx=gx0+(tau-(t-T_WIN))*52;
+      const sy=zeroY-xOf(tau)*SC;
+      if(!st){ctx.moveTo(sx,sy);st=true;} else ctx.lineTo(sx,sy);
+    }
+    ctx.stroke();
+
+    // ---- 切线（斜率 = vₓ）----
+    if(showTan){
+      const tl=34, k=-curV*SC/52;                 // 屏幕斜率
+      const nx=tl/Math.hypot(1,k), ny=k*nx;
+      ctx.strokeStyle='rgba(126,231,135,.85)'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+      ctx.beginPath(); ctx.moveTo(gx-nx, gy-ny); ctx.lineTo(gx+nx, gy+ny); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // ---- 连线 P → m′ → 曲线 ----
+    ctx.save(); ctx.globalAlpha=.75; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
+    ctx.strokeStyle='#ffc857';
+    ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,axisY); ctx.stroke();
+    ctx.strokeStyle='#bc8cff';
+    ctx.beginPath(); ctx.moveTo(px,axisY); ctx.lineTo(gx,gy); ctx.stroke();
+    ctx.restore(); ctx.setLineDash([]);
+
+    // ---- 位移线段 ----
+    ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx,axisY); ctx.lineTo(px,axisY); ctx.stroke(); ctx.lineCap='butt';
+
+    // ---- 半径 + 角 ----
+    ctx.strokeStyle='#ffc857'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(px,py); ctx.stroke();
+    const ar=Math.min(Rc*0.34,30);
+    ctx.strokeStyle='rgba(188,140,255,.9)'; ctx.lineWidth=1.6;
+    ctx.beginPath(); ctx.arc(cx,cy,ar,-Math.PI/2,-Math.PI/2+ang,false); ctx.stroke();
+    ctx.fillStyle='#bc8cff'; ctx.font='bold 12px system-ui';
+    ctx.fillText('ωt+φ', cx+ar*0.72, cy-ar-6);
+
+    // ---- 速度（顺时针切向）----
+    const vlen=Math.min(W*A*26, 92);
+    const vSX=Math.cos(ang)*vlen, vSY=Math.sin(ang)*vlen;
+    arrow(px,py,px+vSX,py+vSY,'#7ee787',2.6);
+    arrow(px,axisY+17,px+vSX,axisY+17,'#4b9e55',2);
+    ctx.fillStyle='#7ee787'; ctx.font='bold 12px system-ui';
+    ctx.fillText('v', px+vSX+7, py+vSY-4);
+
+    // ---- 向心力 ----
+    const flen=Math.min(W*W*A*13, 78);
+    let fdx=cx-px, fdy=cy-py; const nn=Math.hypot(fdx,fdy)||1; fdx/=nn; fdy/=nn;
+    arrow(px,py,px+fdx*flen,py+fdy*flen,'#ff7b72',2.6);
+    arrow(px,axisY-17,px+fdx*flen,axisY-17,'#a8483f',2);
+
+    // ---- 三点 ----
+    const dot=(x,y,r,c)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#0b0f14';ctx.lineWidth=2.5;ctx.stroke();};
+    dot(px,py,9,'#ffc857');
+    dot(px,axisY,8,'#4dd0e1');
+    dot(gx,gy,8,'#bc8cff');
+    ctx.fillStyle='#ffc857'; ctx.font='bold 13px system-ui'; ctx.fillText('P',px+13,py-11);
+    ctx.fillStyle='#4dd0e1'; ctx.fillText("m′",px-9,axisY+(curX>=0?26:-14));
+    ctx.fillStyle='#bc8cff'; ctx.font='bold 12px system-ui'; ctx.fillText('x-t',gx-34,gy-14);
+
+    // ---- 时间刻度 ----
+    ctx.font='10.5px system-ui'; ctx.fillStyle='#556270';
+    const s0=Math.ceil(t-T_WIN), s1=Math.floor(t);
+    for(let s=s0;s<=s1;s++){
+      const sx=gx0+(s-(t-T_WIN))*52;
+      if(sx<gx0+.5||sx>gx1) continue;
+      const lab=Math.round(s-t);
+      if(lab%2) continue;
+      ctx.strokeStyle='#2a3541';
+      ctx.beginPath(); ctx.moveTo(sx,zeroY+4); ctx.lineTo(sx,zeroY-4); ctx.stroke();
+      ctx.fillText(lab===0?'现在':lab+'s', sx-11, zeroY+yA+34);
+    }
+    // ---- 标题 ----
+    ctx.fillStyle='#6b7a8a'; ctx.font='bold 12px system-ui';
+    ctx.fillText('x-t 图像', gx0+2, zeroY-yA-14);
+  }
+
+  function ui(){
+    const cur=t;
+    $('rx').textContent=xOf(cur).toFixed(2)+' m';
+    $('rv').textContent=vOf(cur).toFixed(2)+' m/s';
+    $('ra').textContent=(-W*W*xOf(cur)).toFixed(2)+' m/s²';
+    $('rt').textContent=(2*Math.PI/W).toFixed(2)+' s';
+  }
+
+  let last=performance.now();
+  function loop(now){
+    const dt=Math.min((now-last)/1000,0.05); last=now;
+    if(playing) t+=dt*SPD;
+    draw(); ui();
+    requestAnimationFrame(loop);
+  }
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
