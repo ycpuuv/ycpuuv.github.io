@@ -127,7 +127,9 @@ border-top:1px solid var(--line);padding-top:10px}
 
   function draw(){
     if(!L) resize();
-    const {PW,PH,cx,cy,SC,gy0,gy1,PPY}=L;
+    const {PW,PH,cx,cy,SC,gy0,gy1}=L;
+    const span=gy1-gy0;
+    let PPY=L.PPY; if(t*PPY>span) PPY=span/Math.max(t,0.05);   // 越跑越压缩，但一个点也不丢
     const R=A*SC;
     const ang=d2r(PHI)+W*t;
     const curX=A*Math.sin(ang), curV=W*A*Math.cos(ang);
@@ -136,7 +138,7 @@ border-top:1px solid var(--line);padding-top:10px}
     // m′：水平直径上，与 P 同一竖直位置
     const mx=px, my=cy;
     // 曲线当前点：最下方
-    const gy=gy1, gx=cx+curX*SC;
+    const gy=Math.min(gy1, gy0+t*PPY), gx=cx+curX*SC;
 
     ctx.clearRect(0,0,PW,PH);
 
@@ -164,12 +166,11 @@ border-top:1px solid var(--line);padding-top:10px}
     ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
 
     // x-t 曲线：t 向下
-    const T_WIN=(gy1-gy0)/PPY;
     ctx.strokeStyle='#bc8cff'; ctx.lineWidth=2.6; ctx.lineJoin='round';
     ctx.beginPath();
     let st=false;
-    for(let tau=t-T_WIN; tau<=t+1e-9; tau+=0.006){
-      const sy=gy0+(tau-(t-T_WIN))*PPY;
+    for(let tau=0; tau<=t+1e-9; tau+=0.006){
+      const sy=gy0+tau*PPY;
       const sx=cx+xOf(tau)*SC;
       if(!st){ctx.moveTo(sx,sy);st=true;} else ctx.lineTo(sx,sy);
     }
@@ -177,8 +178,8 @@ border-top:1px solid var(--line);padding-top:10px}
 
     // 切线：斜率（dx/dt）= vₓ，画在屏幕上是 dy/dx
     if(showTan){
-      const tl=30, slope=-curV*SC/PPY;          // 屏幕坐标 y 向下
-      const ny=tl/Math.hypot(1,slope), nx=slope*ny;
+      const ux=curV*SC, uy=PPY, un=Math.hypot(ux,uy)||1, tl=26;
+      const nx=ux/un*tl, ny=uy/un*tl;
       ctx.strokeStyle='rgba(126,231,135,.95)'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
       ctx.beginPath(); ctx.moveTo(gx-nx,gy-ny); ctx.lineTo(gx+nx,gy+ny); ctx.stroke();
       ctx.setLineDash([]);
@@ -234,15 +235,14 @@ border-top:1px solid var(--line);padding-top:10px}
 
     // 时间刻度
     ctx.font='10.5px system-ui'; ctx.fillStyle='#556270';
-    const s0=Math.ceil(t-T_WIN), s1=Math.floor(t);
-    for(let s=s0;s<=s1;s++){
-      const sy=gy0+(s-(t-T_WIN))*PPY;
-      if(sy<gy0-.5||sy>gy1) continue;
-      const lab=Math.round(s-t);
-      if(lab%2) continue;
+    const s1=Math.floor(t);
+    for(let s=0;s<=s1;s++){
+      const sy=gy0+s*PPY;
+      if(sy>gy1) break;
+      if(s%2) continue;
       ctx.strokeStyle='#2a3541';
       ctx.beginPath(); ctx.moveTo(cx-4,sy); ctx.lineTo(cx+4,sy); ctx.stroke();
-      ctx.fillText(lab===0?'现在':lab+'s', cx+8, sy+4);
+      ctx.fillText(s+'s', cx+8, sy+4);
     }
   }
 
