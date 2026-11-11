@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>机械波 · 全套交互课件</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:10px 10px 30px}
+h1{font-size:19px;margin:6px 0 8px}
+h1 em{font-style:normal;color:var(--amber)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+.tabs button{font-size:13px;font-weight:600;padding:7px 12px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--dim);cursor:pointer}
+.tabs button.on{background:#0f2b33;border-color:var(--cyan);color:var(--cyan)}
+#cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
+.ctrl{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:7px 14px;margin-top:9px}
+.row{display:flex;align-items:center;gap:8px;font-size:13px}
+.row label{min-width:54px;color:var(--dim)}
+.row input[type=range]{flex:1;accent-color:var(--cyan);height:22px}
+.row b{color:var(--amber);min-width:58px;text-align:right;font-variant-numeric:tabular-nums;font-size:13.5px}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.btns button{font-size:13px;font-weight:600;padding:6px 12px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--txt);cursor:pointer}
+.btns button.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+.btns button.play{background:#12341f;border-color:#2ea043;color:#8ff0a4}
+.readout{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.kv{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 11px;flex:1;min-width:118px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim)}
+.kv span{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.note{margin-top:11px;font-size:13px;line-height:1.75;color:#cfd8e3;
+border-left:3px solid var(--amber);padding:8px 12px;background:#131a22;border-radius:0 8px 8px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>机械波 · <em>全套交互课件</em></h1>
+  <div class="tabs" id="tabs"></div>
+  <canvas id="cv"></canvas>
+
+  <div class="ctrl">
+    <div class="row"><label>频率 f</label><input id="sf" type="range" min="0.25" max="1.6" step="0.05" value="0.5"><b id="vf">0.50 Hz</b></div>
+    <div class="row"><label>波速 v</label><input id="sv" type="range" min="0.4" max="2.4" step="0.05" value="1.0"><b id="vv">1.00 m/s</b></div>
+    <div class="row"><label>振幅 A</label><input id="sa" type="range" min="0.4" max="1.4" step="0.05" value="1"><b id="va">1.00</b></div>
+    <div class="row" id="drow" style="display:none"><label>缝宽 d</label><input id="sd" type="range" min="0.05" max="1.6" step="0.05" value="0.9"><b id="vd">0.90 m</b></div>
+    <div class="row"><label>播放</label><input id="ss" type="range" min="0.15" max="1.4" step="0.05" value="0.45"><b id="vs">0.45×</b></div>
+  </div>
+
+  <div class="btns">
+    <button id="bp" class="play">⏸ 暂停</button>
+    <button id="br">↺ 从头</button>
+    <button id="bx" class="on">辅助线</button>
+  </div>
+
+  <div class="readout" id="ro"></div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const S={tab:0,t:0,play:true,spd:0.45,f:0.5,v:1.0,A:1,d:0.9,aux:true};
+const K=()=>2*Math.PI*S.f/S.v, W_=()=>2*Math.PI*S.f, LAM=()=>S.v/S.f;
+
+const TABS=[
+ {n:'① 波的形成', note:'波源先动，靠近的质点被带动，远处的还没动。<b>波传到哪里，哪里的质点才开始振动</b>；质点只在平衡位置附近上下动，<b>不随波迁移</b>。'},
+ {n:'② 横波与纵波', note:'<b>横波</b>质点振动方向 ⊥ 传播方向（绳、光）；<b>纵波</b>质点振动方向 ∥ 传播方向，形成<b>密部与疏部</b>（声波）。两者都满足 λ=v/f。'},
+ {n:'③ λ · v · T', note:'一个周期 T 内，波正好前进一个波长 λ，所以 <b>λ = vT = v/f</b>。<b>频率由波源决定，波速由介质决定</b>，波长跟着两者变。'},
+ {n:'④ 波形图与振动图',  note:'左图是<b>某一时刻</b>所有质点的位移（横轴是位置 x）；右图是<b>某一个质点</b>在各时刻的位移（横轴是时间 t）。同一个点，两张图必须对得上。'},
+ {n:'⑤ 叠加与驻波', note:'两列<b>相向</b>传播、频率相同的波叠加：同相时形成<b>驻波</b>（波节不动、波腹振幅 2A）；相位差不是 0 或 π 时，整体一边振一边移动。'},
+ {n:'⑥ 波的衍射', note:'缝宽 d 与波长 λ <b>差不多或更小</b>时，波明显绕到缝后各个方向；d ≫ λ 时几乎沿直线传播。<b>衍射是波特有的现象，不需要条件也能发生，只是明不明显的问题。</b>'}
+];
+
+/* ---------- 布局 ---------- */
+let W=0,H=0,L=null;
+function resize(){
+  const w=Math.min(cv.parentElement.clientWidth,1060);
+  const h=Math.round(Math.max(370,Math.min(560,w*0.40)));
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W=w; H=h;
+  L={x0:Math.round(w*0.08),x1:w-24,y1:Math.round(h*0.30),y2:Math.round(h*0.72)};
+}
+window.addEventListener('resize',()=>{resize();});
+
+/* ---------- 小工具 ---------- */
+function txt(s,x,y,c,size,bold){
+  ctx.fillStyle=c||'#cfd8e3';
+  ctx.font=(bold?'bold ':'')+(size||12.5)+'px system-ui,-apple-system,sans-serif';
+  ctx.fillText(s,x,y);
+}
+function arrow(x1,y1,x2,y2,c,w,head){
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy); if(len<2)return;
+  const a=Math.atan2(dy,dx),hs=head||8;
+  ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=w||2;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-hs*Math.cos(a-.4),y2-hs*Math.sin(a-.4));
+  ctx.lineTo(x2-hs*Math.cos(a+.4),y2-hs*Math.sin(a+.4));
+  ctx.closePath(); ctx.fill();
+}
+function dash(x1,y1,x2,y2,c,d){
+  ctx.save(); ctx.strokeStyle=c||'#2c3743'; ctx.lineWidth=1.3;
+  ctx.setLineDash(d||[4,5]); ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore();
+}
+
+/* ---------- 各模块 ---------- */
+const M={};
+
+// ① 波的形成
+M[0]=function(){
+  const {x0,x1,y1}=L, yc=y1, Lm=(x1-x0)/2.4;
+  const N=27, k=K(), w=W_();
+  txt('波源先振动，一个个把邻居带起来 —— 但每个质点自己并不往前跑',x0,40,'#7ee787',13.5,true);
+  dash(x0-8,yc,x1,yc,'#2c3743');
+  // 波前
+  const xf=Math.min(2.4, S.v*S.t);
+  // 连线
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=2.6; ctx.beginPath();
+  let started=false;
+  for(let i=0;i<N;i++){
+    const xx=2.4*i/(N-1), px=x0+xx*Lm;
+    const ph=k*xx-w*S.t;
+    const y=(xx<=xf)? yc-S.A*Math.sin(ph)*46 : yc;
+    if(xx<=xf){ started?ctx.lineTo(px,y):ctx.moveTo(px,y); started=true; }
+  }
+  if(started) ctx.stroke();
+  // 点
+  for(let i=0;i<N;i++){
+    const xx=2.4*i/(N-1), px=x0+xx*Lm;
+    const on=xx<=xf;
+    const y=on? yc-S.A*Math.sin(k*xx-w*S.t)*46 : yc;
+    ctx.fillStyle=on?'#ffd97a':'#46525f';
+    ctx.beginPath(); ctx.arc(px,y,on?3.2:2.6,0,7); ctx.fill();
+  }
+  // 波前标注
+  if(xf<2.4){
+    const px=x0+xf*Lm;
+    ctx.strokeStyle='#ff7b72'; ctx.lineWidth=2; ctx.setLineDash([5,4]);
+    ctx.beginPath(); ctx.moveTo(px,yc-70); ctx.lineTo(px,yc+55); ctx.stroke(); ctx.setLineDash([]);
+    txt('波前',px+5,yc-76,'#ff7b72',12.5,true);
+  }
+  // 波源
+  const px0=x0;
+  ctx.fillStyle='#ff7b72'; ctx.beginPath(); ctx.arc(px0,yc-S.A*Math.sin(-w*S.t)*46,5.5,0,7); ctx.fill();
+  txt('波源',px0-16,yc+66,'#ff7b72',12,true);
+  arrow(x1-140,yc-88,x1-60,yc-88,'#ffc857',2.4,9);
+  txt('传播方向',x1-142,yc-96,'#ffc857',12);
+  return ['波前位置',(xf).toFixed(2)+' m'];
+};
+
+// ② 横波 / 纵波
+M[1]=function(){
+  const {x0,x1,y1,y2}=L, Lm=(x1-x0)/2.4, k=K(), w=W_();
+  txt('横波 · 质点上下振动',x0,y1-62,'#4dd0e1',13,true);
+  dash(x0-8,y1,x1,y1);
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=3; ctx.beginPath();
+  for(let px=x0;px<=x1;px+=2){
+    const xx=(px-x0)/Lm, y=y1-Math.sin(k*xx-w*S.t)*S.A*44;
+    px===x0?ctx.moveTo(px,y):ctx.lineTo(px,y);
+  }
+  ctx.stroke();
+  for(let xx=0;xx<=2.4;xx+=0.2){
+    const px=x0+xx*Lm; if(px>x1)break;
+    ctx.fillStyle='#9fe8ff';
+    ctx.beginPath(); ctx.arc(px,y1-Math.sin(k*xx-w*S.t)*S.A*44,2.5,0,7); ctx.fill();
+  }
+  // 纵波
+  txt('纵波 · 质点左右振动 → 密部 / 疏部',x0,y2-58,'#ffc857',13,true);
+  const N=70, uPix=S.A*54, dots=[];
+  for(let i=0;i<N;i++){
+    const xx=2.4*i/(N-1), u=S.A*Math.sin(k*xx-w*S.t);
+    dots.push({xx,px:x0+xx*Lm+u*uPix});
+  }
+  for(let i=0;i<dots.length-1;i++){
+    const gap=dots[i+1].px-dots[i].px;
+    const a=Math.max(0,Math.min(1,(14-gap)/7))*0.5;
+    ctx.fillStyle='rgba(255,200,87,'+a.toFixed(3)+')';
+    ctx.fillRect(dots[i].px,y2-16,Math.max(1,gap),32);
+  }
+  ctx.fillStyle='#ffd97a';
+  for(const q of dots){ if(q.px<x0-8||q.px>x1+8)continue;
+    ctx.beginPath(); ctx.arc(q.px,y2,2.8,0,7); ctx.fill(); }
+  // 标记点
+  const xx=1.0, px=x0+xx*Lm;
+  const yA=y1-Math.sin(k*xx-w*S.t)*S.A*44;
+  ctx.fillStyle='#ff7b72'; ctx.beginPath(); ctx.arc(px,yA,5.5,0,7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.8; ctx.stroke();
+  arrow(px,yA,px,yA-Math.cos(k*xx-w*S.t)*30,'#ff7b72',2.4);
+  const uB=S.A*Math.sin(k*xx-w*S.t), pxB=x0+xx*Lm+uB*uPix;
+  ctx.fillStyle='#ff7b72'; ctx.beginPath(); ctx.arc(pxB,y2,5.5,0,7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.stroke();
+  arrow(pxB,y2,pxB+Math.cos(k*xx-w*S.t)*30,y2,'#ff7b72',2.4);
+  txt('同一时刻，同一个 x',x0,y2+52,'#8b98a6',12);
+  return ['波长 λ',LAM().toFixed(2)+' m','周期 T',(1/S.f).toFixed(2)+' s'];
+};
+
+// ③ λ v T
+M[2]=function(){
+  const {x0,x1,y1}=L, Lm=(x1-x0)/2.4, k=K(), w=W_(), yc=y1;
+  txt('红色：此刻的波　　灰色：再过一个周期 T 后的波（正好挪了一个 λ）',x0,38,'#cfd8e3',12.8);
+  dash(x0-8,yc,x1,yc);
+  // 灰：t+T
+  ctx.strokeStyle='#3a4653'; ctx.lineWidth=2.4; ctx.beginPath();
+  for(let px=x0;px<=x1;px+=2){
+    const xx=(px-x0)/Lm;
+    const y=yc-Math.sin(k*xx-w*(S.t+1/S.f))*S.A*46;
+    px===x0?ctx.moveTo(px,y):ctx.lineTo(px,y);
+  }
+  ctx.stroke();
+  // 红：t
+  ctx.strokeStyle='#ff7b72'; ctx.lineWidth=3; ctx.beginPath();
+  for(let px=x0;px<=x1;px+=2){
+    const xx=(px-x0)/Lm;
+    const y=yc-Math.sin(k*xx-w*S.t)*S.A*46;
+    px===x0?ctx.moveTo(px,y):ctx.lineTo(px,y);
+  }
+  ctx.stroke();
+  // 波长标注
+  const lam=LAM(), lamPx=lam*Lm;
+  if(lamPx<=(x1-x0)){
+    const yA=yc+66;
+    ctx.strokeStyle='#bc8cff'; ctx.lineWidth=1.8;
+    ctx.beginPath(); ctx.moveTo(x0+10,yA); ctx.lineTo(x0+10+lamPx,yA); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0+10,yA-6); ctx.lineTo(x0+10,yA+6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x0+10+lamPx,yA-6); ctx.lineTo(x0+10+lamPx,yA+6); ctx.stroke();
+    txt('λ = '+lam.toFixed(2)+' m',x0+10+lamPx/2-34,yA-9,'#bc8cff',12.5,true);
+    // 一个 T 内前进了多少个 λ 的箭头
+    arrow(x0+10,yA-34,x0+10+lamPx,yA-34,'#7ee787',2,9);
+    txt('一个周期 T 内前进 λ',x0+10+lamPx/2-58,yA-42,'#7ee787',12);
+  }else{
+    txt('λ 超出画面，减小 v 或增大 f',x0+10,yc+70,'#ff9b93',12.5,true);
+  }
+  return ['λ = vT', 'v·T = '+lam.toFixed(2)+' m','T',(1/S.f).toFixed(2)+' s'];
+};
+
+// ④ 波形图 vs 振动图
+M[3]=function(){
+  const k=K(), w=W_();
+  const yc=Math.round(H*0.50), amp=Math.round(H*0.17);
+  const lx=Math.round(W*0.06), lw=Math.round(W*0.40);
+  const rx=Math.round(W*0.55), rw=Math.round(W*0.40);
+  txt('波形图 y–x：此刻所有质点的位移',lx,yc-amp-16,'#4dd0e1',12.8,true);
+  dash(lx,yc,lx+lw,yc);
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=2.6; ctx.beginPath();
+  for(let i=0;i<=lw;i+=2){
+    const xx=2.4*i/lw, y=yc-Math.sin(k*xx-w*S.t)*amp;
+    i===0?ctx.moveTo(lx+i,y):ctx.lineTo(lx+i,y);
+  }
+  ctx.stroke();
+  arrow(lx,yc+amp+30,lx+lw,yc+amp+30,'#8b98a6',1.6,8);
+  txt('位置 x →',lx+lw-56,yc+amp+24,'#8b98a6',11.5);
+
+  txt('振动图 y–t：x = 1.0 m 处质点的历史',rx,yc-amp-16,'#ffc857',12.8,true);
+  const Tspan=6/S.f, tNow=S.t;
+  let ta=0,tb=Tspan; if(tNow>Tspan){ta=tNow-Tspan;tb=tNow;}
+  const X=t=>rx+rw*(t-ta)/(tb-ta);
+  dash(rx,yc,rx+rw,yc);
+  ctx.strokeStyle='#ffc857'; ctx.lineWidth=2.6; ctx.beginPath();
+  const NN=Math.max(2,Math.round(320*(tNow-ta)/(tb-ta)));
+  for(let n=0;n<=NN;n++){
+    const tt=ta+(tNow-ta)*n/NN, y=yc-Math.sin(k*1.0-w*tt)*amp;
+    n===0?ctx.moveTo(X(tt),y):ctx.lineTo(X(tt),y);
+  }
+  ctx.stroke();
+  arrow(rx,yc+amp+30,rx+rw,yc+amp+30,'#8b98a6',1.6,8);
+  txt('时间 t →',rx+rw-62,yc+amp+24,'#8b98a6',11.5);
+
+  const yv=yc-Math.sin(k*1.0-w*S.t)*amp;
+  const px1=lx+lw*(1.0/2.4);
+  ctx.fillStyle='#ff7b72'; ctx.beginPath(); ctx.arc(px1,yv,5,0,7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.stroke();
+  dash(px1,yv,px1,yc+amp+18,'#ff7b72');
+  txt('x = 1.0 m',px1-24,yc+amp+15,'#ff7b72',11.5);
+  const px2=X(tNow);
+  ctx.fillStyle='#ff7b72'; ctx.beginPath(); ctx.arc(px2,yv,5,0,7); ctx.fill(); ctx.strokeStyle='#fff'; ctx.stroke();
+  txt('此刻',px2-38,yv-10,'#ff7b72',11.5);
+
+  txt('同一个质点：两张图的纵坐标都是位移 y，只是横轴不同',lx,yc+amp+62,'#8b98a6',12.5);
+  return ['两图同一质点','x = 1.00 m','纵轴都是','位移 y'];
+};
+
+// ⑤ 驻波
+M[4]=function(){
+  const {x0,x1,y1}=L, Lm=(x1-x0)/2.4, k=K(), w=W_(), yc=y1;
+  const nWave=Math.max(1,Math.round((x1-x0)/ (LAM()*Lm) ));
+  txt('两列相向传播的波叠加',x0,32,'#7ee787',13,true);
+  dash(x0-8,yc,x1,yc);
+  // 波腹点（振幅 2A 处）
+  ctx.fillStyle='#bc8cff';
+  for(let n=0;;n++){
+    const xx=(Math.PI/2+n*Math.PI)/k; if(xx>2.4)break;
+    const px=x0+xx*Lm;
+    for(const s of [1,-1]){
+      ctx.beginPath(); ctx.arc(px,yc-s*S.A*92,3.4,0,7); ctx.fill();
+    }
+  }
+  // 合成波
+  ctx.strokeStyle='#ffc857'; ctx.lineWidth=3; ctx.beginPath();
+  for(let px=x0;px<=x1;px+=2){
+    const xx=(px-x0)/Lm;
+    const y=yc-(Math.sin(k*xx-w*S.t)+Math.sin(k*xx+w*S.t))*S.A*46;
+    px===x0?ctx.moveTo(px,y):ctx.lineTo(px,y);
+  }
+  ctx.stroke();
+  // 节点
+  let cn=0;
+  for(let n=0;;n++){
+    const xx=n*Math.PI/k; if(xx>2.4)break;
+    const px=x0+xx*Lm;
+    ctx.fillStyle='#8b98a6'; ctx.beginPath(); ctx.arc(px,yc,3.4,0,7); ctx.fill();
+    if(cn<4) txt('节点',px-12,yc+30,'#8b98a6',11.5);
+    cn++;
+  }
+  txt('灰点是波节（始终不动），紫点是波腹（振幅为 2A，最大）',x0,yc+150,'#cfd8e3',12.8);
+  txt('相邻两个波节相距 λ/2 = '+(LAM()/2).toFixed(2)+' m',x0,yc+176,'#bc8cff',12.8,true);
+  return ['λ/2',(LAM()/2).toFixed(2)+' m','波腹振幅','2A = '+(2*S.A).toFixed(2)];
+};
+
+// ⑥ 衍射
+M[5]=function(){
+  const yc=Math.round(H*0.52), xb=Math.round(W*0.30);
+  const lam=LAM(), lamPx=Math.min(120,lam*(W*0.34)/2.4);
+  const dPx=Math.max(6,Math.min(H*0.62,S.d*(W*0.34)/2.4));
+  txt('平面波 → 缝（宽 '+S.d.toFixed(2)+' m，λ = '+lam.toFixed(2)+' m）',20,28,'#7ee787',13,true);
+  // 障碍板
+  ctx.fillStyle='#253040';
+  ctx.fillRect(xb-6, yc-dPx/2-H*0.55, 12, H*0.55);
+  ctx.fillRect(xb-6, yc+dPx/2, 12, H*0.55);
+  ctx.fillStyle='#46525f'; txt('缝',xb-9,yc+dPx/2+18,'#8b98a6',12);
+  // 入射平面波（左侧竖线）
+  const ph=(S.t*S.f)%1;
+  for(let i=0;i<8;i++){
+    const x=xb-14-((i+ph)*lamPx*0.75);
+    if(x<0)continue;
+    ctx.strokeStyle='rgba(77,208,225,'+(0.45-i*0.05).toFixed(3)+')';
+    ctx.lineWidth=2.2;
+    ctx.beginPath(); ctx.moveTo(x,14); ctx.lineTo(x,H-46); ctx.stroke();
+  }
+  // 缝内次级子波
+  const M_=7;
+  for(let j=0;j<M_;j++){
+    const sy=yc-dPx/2+dPx*j/(M_-1);
+    for(let kk=0;kk<4;kk++){
+      const r=((S.t*S.v*90)%(lamPx*1.6))+kk*lamPx*1.6;
+      if(r<1)continue;
+      ctx.strokeStyle='rgba(255,200,87,'+(0.40-kk*0.08).toFixed(3)+')';
+      ctx.lineWidth=1.7;
+      ctx.beginPath(); ctx.arc(xb,sy,r,-Math.PI/2.0,Math.PI/2.0); ctx.stroke();
+    }
+  }
+  const rel=S.d/lam;
+  const judge= rel>2 ? 'd ≫ λ：几乎沿直线，衍射不明显' : (rel<0.6?'d < λ：波向各方向散开，衍射非常明显':'d ≈ λ：明显绕射');
+  txt(judge,20,H-22,'#ffc857',13,true);
+  return ['d / λ',rel.toFixed(2),'判断',rel>2?'不明显':(rel<0.6?'很明显':'明显')];
+};
+
+/* ---------- 交互 ---------- */
+const tabsEl=$('tabs');
+TABS.forEach((T,i)=>{
+  const b=document.createElement('button');
+  b.textContent=T.n; b.onclick=()=>setTab(i);
+  tabsEl.appendChild(b);
+});
+function setTab(i){
+  S.tab=i; S.t=0;
+  [...tabsEl.children].forEach((b,j)=>b.classList.toggle('on',j===i));
+  $('drow').style.display = (i===5)?'flex':'none';
+  $('note').innerHTML=TABS[i].note;
+}
+function ui(){
+  const out=(M[S.tab]||function(){return[];})()||[];
+  let h='';
+  const extra=[['λ = v/f',LAM().toFixed(2)+' m'],['T = 1/f',(1/S.f).toFixed(2)+' s']];
+  const all=out.concat(extra);
+  for(let i=0;i<all.length;i+=2){
+    h+='<div class="kv"><i>'+all[i]+'</i><span>'+(all[i+1]||'')+'</span></div>';
+  }
+  $('ro').innerHTML=h;
+}
+
+$('sf').oninput=e=>{S.f=+e.target.value; $('vf').textContent=S.f.toFixed(2)+' Hz';};
+$('sv').oninput=e=>{S.v=+e.target.value; $('vv').textContent=S.v.toFixed(2)+' m/s';};
+$('sa').oninput=e=>{S.A=+e.target.value; $('va').textContent=S.A.toFixed(2);};
+$('sd').oninput=e=>{S.d=+e.target.value; $('vd').textContent=S.d.toFixed(2)+' m';};
+$('ss').oninput=e=>{S.spd=+e.target.value; $('vs').textContent=S.spd.toFixed(2)+'×';};
+$('bp').onclick=()=>{S.play=!S.play; $('bp').textContent=S.play?'⏸ 暂停':'▶ 播放';};
+$('br').onclick=()=>{S.t=0;};
+$('bx').onclick=e=>{S.aux=!S.aux; e.target.classList.toggle('on',S.aux);};
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(S.play) S.t+=dt*S.spd;
+  ctx.clearRect(0,0,W,H);
+  try{ (M[S.tab]||M[0])(); }catch(e){ txt('渲染出错：'+e.message,20,60,'#ff7b72',13,true); }
+  ui();
+  requestAnimationFrame(loop);
+}
+resize(); setTab(Math.min(5,Math.max(0,parseInt(location.hash.slice(1))||0))); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
