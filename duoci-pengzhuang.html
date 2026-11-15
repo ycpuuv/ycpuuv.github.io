@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>多次碰撞 · 质心法与 v-t 图像法</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:10px 10px 26px}
+h1{font-size:18.5px;margin:6px 0 4px}
+h1 em{font-style:normal;color:var(--amber)}
+.sub{font-size:12.5px;color:var(--dim);margin-bottom:9px;line-height:1.6}
+#cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+button{font-size:13px;font-weight:600;padding:7px 13px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--txt);cursor:pointer}
+button.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+button.play{background:#12341f;border-color:#2ea043;color:#8ff0a4}
+.readout{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.kv{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 11px;flex:1;min-width:110px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim)}
+.kv span{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.note{margin-top:11px;font-size:13px;line-height:1.8;color:#cfd8e3;
+border-left:3px solid var(--amber);padding:9px 13px;background:#131a22;border-radius:0 8px 8px 0}
+.note b{color:var(--amber)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>多次碰撞：<em>盯住质心</em>，别逐段算</h1>
+  <div class="sub">2026 河南卷 15 题 · 球壳内小球竖直上抛　｜　M = 壳，m = 3M 球，D = 0.25 m，天花板到地面 6.25 m</div>
+  <canvas id="cv"></canvas>
+
+  <div class="btns">
+    <button id="bp" class="play">⏸ 暂停</button>
+    <button id="br">↺ 从头</button>
+    <button data-s="0.15">0.15×</button>
+    <button data-s="0.3" class="on">0.3×</button>
+    <button data-s="0.6">0.6×</button>
+    <button data-s="1">1×</button>
+    <button id="bt" class="on">质心轨迹</button>
+  </div>
+
+  <div class="readout">
+    <div class="kv"><i>时间 t</i><span id="rt" style="color:#4dd0e1">0.00 s</span></div>
+    <div class="kv"><i>碰撞次数</i><span id="rn" style="color:#ffc857">0</span></div>
+    <div class="kv"><i>球壳速度</i><span id="r1" style="color:#4dd0e1">+1.00</span></div>
+    <div class="kv"><i>小球速度</i><span id="r2" style="color:#ffd97a">−1.00</span></div>
+    <div class="kv"><i>质心速度</i><span id="rc" style="color:#ff7b72">−0.50</span></div>
+  </div>
+
+  <div class="note">
+    <b>为什么质心好用：</b>碰撞是内力，改变不了质心的运动。合外力只有 (M+m)g，所以<b>质心始终以 g 匀加速下落</b>，v-t 图上是一条<b>直线</b>；而壳和球的速度在这条直线上下<b>阶梯跳变</b>。<br>
+    <b>为什么是 0.1 s 一次：</b>弹性碰撞只让相对速度反向、大小不变，相对速率恒为 2 m/s；球要在壳内走完 0.2 m，所以每次间隔恒等于 0.1 s。
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const g=10, M=1, m=3, D=0.25, off=0.1, TOP=0, BOT=6.25;
+let W=0,H=0,S=null, t=0, playing=true, spd=0.3, showC=true;
+let last=performance.now();
+
+/* ---------- 解析求解：碰撞严格发生在 0.1s 整数倍 ---------- */
+const EV=[];          // 每次碰撞后的状态
+const SNAP=[];        // 各时刻的位置快照（含起点）
+(function solve(){
+  let y1=0.125, v1=1, y2=0.225, v2=-1, tt=0;
+  SNAP.push({t:0,y1,v1,y2,v2});
+  for(let k=1;k<=11;k++){
+    const dt=0.1;
+    const before1=v1+g*dt, before2=v2+g*dt;
+    const Y1=y1+v1*dt+0.5*g*dt*dt, Y2=y2+v2*dt+0.5*g*dt*dt;
+    // 一维弹性碰撞
+    const nv1=((M-m)*before1+2*m*before2)/(M+m);
+    const nv2=((m-M)*before2+2*M*before1)/(M+m);
+    tt+=dt;
+    EV.push({t:tt,before1,before2,after1:nv1,after2:nv2,kind:(k%2? '壳顶':'壳底')});
+    SNAP.push({t:tt,y1:Y1,v1:nv1,y2:Y2,v2:nv2});
+    y1=Y1; v1=nv1; y2=Y2; v2=nv2;
+  }
+  // 落地
+  const s=SNAP[SNAP.length-1];
+  let yf=s.y1, vf=s.v1, tf=s.t, h=0;
+  while(yf+RAD(0)<BOT && h<4000){ yf+=vf*1e-4+0.5*g*1e-8; vf+=g*1e-4; tf+=1e-4; h++; }
+  SNAP.push({t:tf,y1:BOT-0.125,v1:vf,y2:y2At(tf),v2:v2At(tf)});
+  window.TFLOOR=tf;
+})();
+function RAD(){return 0.125}
+// 辅助：落地时刻各物体位置（沿最后一段抛物线外推）
+function y2At(tt){
+  const s=SNAP[SNAP.length-2];
+  const tau=tt-s.t;
+  return s.y2+s.v2*tau+0.5*g*tau*tau;
+}
+function v2At(tt){
+  const s=SNAP[SNAP.length-2];
+  return s.v2+g*(tt-s.t);
+}
+const TFLOOR=window.TFLOOR||1.14;
+
+function stateAt(t){
+  if(t<=0) return {y1:0.125,v1:1,y2:0.225,v2:-1,n:0};
+  if(t>=TFLOOR) return {y1:BOT-0.125,v1:SNAP[SNAP.length-1].v1,y2:y2At(TFLOOR),v2:v2At(TFLOOR),n:EV.length};
+  let i=0;
+  for(let k=0;k<SNAP.length;k++){ if(SNAP[k].t<=t) i=k; else break; }
+  const s=SNAP[i], tau=t-s.t;
+  return {y1:s.y1+s.v1*tau+0.5*g*tau*tau,
+          v1:s.v1+g*tau,
+          y2:s.y2+s.v2*tau+0.5*g*tau*tau,
+          v2:s.v2+g*tau,
+          n:i};
+}
+
+function resize(){
+  const w=Math.min(cv.parentElement.clientWidth,1060);
+  const h=Math.round(Math.max(420,Math.min(560,w*0.48)));
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W=w; H=h;
+  S={top:46, bot:h-34, sc:(h-34-46)/6.25,
+     cx:Math.round(w*0.20),
+     gx:Math.round(w*0.40), gy0:70, gy1:h-30,
+     gw:w-Math.round(w*0.40)-26};
+}
+window.addEventListener('resize',resize);
+
+function txt(s,x,y,c,size,bold){
+  ctx.fillStyle=c||'#cfd8e3';
+  ctx.font=(bold?'bold ':'')+(size||12)+'px system-ui,-apple-system,sans-serif';
+  ctx.fillText(s,x,y);
+}
+function arrow(x1,y1,x2,y2,c,w,hs){
+  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy); if(L<2)return;
+  const a=Math.atan2(dy,dx),h=hs||8;
+  ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=w||2;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-h*Math.cos(a-.4),y2-h*Math.sin(a-.4));
+  ctx.lineTo(x2-h*Math.cos(a+.4),y2-h*Math.sin(a+.4));
+  ctx.closePath(); ctx.fill();
+}
+
+function draw(){
+  if(!S) resize();
+  const st=stateAt(t);
+  ctx.clearRect(0,0,W,H);
+
+  /* ===== 左：竖直截面 ===== */
+  const {top,bot,sc,cx}=S;
+  const PX=y=>top+y*sc;
+  // 天花板 / 地面
+  ctx.fillStyle='#253040'; ctx.fillRect(cx-70,top-14,140,14);
+  ctx.fillStyle='#253040'; ctx.fillRect(cx-80,bot,160,12);
+  txt('天花板',cx+80,top-2,'#8b98a6',11.5);
+  txt('地面',cx+80,bot+5,'#8b98a6',11.5);
+  // 竖直标尺
+  ctx.strokeStyle='#1d2733'; ctx.lineWidth=1;
+  for(let y=0;y<=6;y++){ ctx.beginPath(); ctx.moveTo(cx-66,PX(y)); ctx.lineTo(cx+66,PX(y)); ctx.stroke(); }
+
+  const shellY=PX(st.y1), ballY=PX(st.y2);
+  const RS=17, RB=8.5;   // 尺寸放大，便于观看
+  // 质心轨迹
+  if(showC){
+    ctx.strokeStyle='rgba(255,123,114,.35)'; ctx.lineWidth=2; ctx.setLineDash([4,5]);
+    ctx.beginPath();
+    for(let tt=0;tt<=Math.min(t,TFLOOR);tt+=TFLOOR/160){
+      const q=stateAt(tt), yc=(q.y1+3*q.y2)/4;
+      const px=cx+52, py=PX(yc);
+      tt===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+  }
+  // 球壳（圆环）
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=3.2;
+  ctx.beginPath(); ctx.arc(cx,shellY,RS,0,7); ctx.stroke();
+  ctx.strokeStyle='rgba(77,208,225,.25)'; ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(cx-RS,shellY); ctx.lineTo(cx+RS,shellY); ctx.stroke();
+  // 小球
+  ctx.fillStyle='#ffd97a';
+  ctx.beginPath(); ctx.arc(cx,ballY,RB,0,7); ctx.fill();
+  // 质心
+  const yc=(st.y1+3*st.y2)/4;
+  ctx.fillStyle='#ff7b72';
+  ctx.beginPath(); ctx.arc(cx+52,PX(yc),5.5,0,7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.stroke();
+  txt('质心',cx+62,PX(yc)+4,'#ff7b72',11.5,true);
+  // 碰撞闪光
+  for(const e of EV){
+    if(Math.abs(t-e.t)<0.006){
+      ctx.strokeStyle='rgba(255,200,87,.9)'; ctx.lineWidth=2.4;
+      ctx.beginPath(); ctx.arc(cx,shellY,RS+12,0,7); ctx.stroke();
+    }
+  }
+  txt('球壳、小球已放大，位移按真实比例',cx-150,bot+22,'#5c6a78',10.5);
+
+  /* ===== 右：v-t 图 ===== */
+  const {gx,gy0,gy1,gw}=S;
+  const TMAX=TFLOOR*1.06, VMAX=12, VMIN=-4;
+  const PX2=tt=>gx+gw*tt/TMAX;
+  const PY2=v=>gy1-(gy1-gy0)*(v-VMIN)/(VMAX-VMIN);
+  // 坐标
+  ctx.strokeStyle='#26303b'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(gx,PY2(0)); ctx.lineTo(gx+gw,PY2(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx,gy0); ctx.lineTo(gx,gy1); ctx.stroke();
+  txt('v / (m·s⁻¹)',gx-6,gy0-14,'#8b98a6',11.5);
+  txt('t / s',gx+gw-20,PY2(0)+16,'#8b98a6',11.5);
+  for(let v=0;v<=10;v+=2) txt(v,gx-18,PY2(v)+4,'#5c6a78',10.5);
+  for(let s=0;s<=TMAX;s+=0.2) txt(s.toFixed(1),PX2(s)-6,PY2(0)+16,'#5c6a78',10);
+
+  // 曲线：分两段（碰撞前 / 碰撞后），避免跳变被连成斜线
+  function seg(key,color){
+    ctx.strokeStyle=color; ctx.lineWidth=2.6; ctx.beginPath();
+    let started=false, prevKey=null;
+    const dt=TFLOOR/900;
+    for(let tt=0;tt<=Math.min(t,TFLOOR);tt+=dt){
+      const q=stateAt(tt);
+      let v=key==='v1'?q.v1:q.v2;
+      const X=PX2(tt), Y=PY2(v);
+      // 判断是否刚发生跳变
+      let jumped=false;
+      for(const e of EV) if(Math.abs(tt-e.t)<dt*1.01) jumped=true;
+      if(!started||jumped){ ctx.moveTo(X,Y); started=true; }
+      else ctx.lineTo(X,Y);
+    }
+    ctx.stroke();
+  }
+  seg('v1','#4dd0e1');
+  seg('v2','#ffd97a');
+  // 质心速度：直线
+  const vc0=-0.5;
+  ctx.strokeStyle='#ff7b72'; ctx.lineWidth=2.2; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(PX2(0),PY2(vc0)); ctx.lineTo(PX2(Math.min(t,TFLOOR)),PY2(vc0+g*Math.min(t,TFLOOR)));
+  ctx.stroke(); ctx.setLineDash([]);
+  // 当前点
+  const cur=stateAt(t);
+  if(t>0.002 && t<TFLOOR){
+    [[cur.v1,'#4dd0e1'],[cur.v2,'#ffd97a']].forEach(([v,c])=>{
+      ctx.fillStyle=c; ctx.beginPath(); ctx.arc(PX2(t),PY2(v),4,0,7); ctx.fill();
+    });
+    ctx.fillStyle='#ff7b72';
+    ctx.beginPath(); ctx.arc(PX2(t),PY2(vc0+g*t),4,0,7); ctx.fill();
+  }
+  // 图例
+  txt('● 球壳 v₁',gx+6,gy0+2,'#4dd0e1',12,true);
+  txt('● 小球 v₂',gx+86,gy0+2,'#ffd97a',12,true);
+  txt('┄ 质心 v_c',gx+166,gy0+2,'#ff7b72',12,true);
+
+  // 读书
+  $('rt').textContent=t.toFixed(2)+' s';
+  $('rn').textContent=cur.n;
+  $('r1').textContent=(cur.v1>=0?'+':'−')+Math.abs(cur.v1).toFixed(2);
+  $('r2').textContent=(cur.v2>=0?'+':'−')+Math.abs(cur.v2).toFixed(2);
+  const vc=(cur.v1+3*cur.v2)/4;
+  $('rc').textContent=(vc>=0?'+':'−')+Math.abs(vc).toFixed(2);
+}
+
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(playing){ t+=dt*spd; if(t>TFLOOR+0.6){ t=TFLOOR+0.6; playing=false; $('bp').textContent='▶ 播放'; } }
+  draw();
+  requestAnimationFrame(loop);
+}
+$('bp').onclick=()=>{playing=!playing; $('bp').textContent=playing?'⏸ 暂停':'▶ 播放';};
+$('br').onclick=()=>{t=0; playing=true; $('bp').textContent='⏸ 暂停';};
+document.querySelectorAll('[data-s]').forEach(b=>{
+  b.onclick=()=>{spd=+b.dataset.s; document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b));};
+});
+$('bt').onclick=e=>{showC=!showC; e.target.classList.toggle('on',showC);};
+resize();
+const _h=parseFloat((location.hash||'').slice(1));
+if(!isNaN(_h)){ t=Math.min(_h,TFLOOR+0.6); playing=false; $('bp').textContent='▶ 播放'; }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
