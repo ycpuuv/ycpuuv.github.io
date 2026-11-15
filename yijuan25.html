@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>2023 全国乙卷 25 题 · 圆盘与小球（质心法 + v-t 图）</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:10px 10px 30px}
+h1{font-size:18.5px;margin:6px 0 4px}
+h1 em{font-style:normal;color:var(--amber)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.card h2{font-size:14.5px;margin:0 0 8px;color:var(--amber)}
+.card p{margin:6px 0;font-size:13.5px;line-height:1.85;color:#dbe4ee}
+.f{display:inline-block;font-family:"Times New Roman",Georgia,serif;font-style:italic;
+font-size:15px;color:#fff;padding:0 3px}
+.fn{font-style:normal}
+.hl{color:var(--cyan);font-weight:700}
+.hl2{color:var(--amber);font-weight:700}
+#cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+button{font-size:13px;font-weight:600;padding:7px 13px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--txt);cursor:pointer}
+button.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+button.play{background:#12341f;border-color:#2ea043;color:#8ff0a4}
+.readout{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.kv{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 11px;flex:1;min-width:104px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim)}
+.kv span{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+ol{padding-left:20px;margin:6px 0}
+ol li{font-size:13.5px;line-height:1.9;color:#dbe4ee;margin-bottom:4px}
+.ans{color:var(--green);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>2023 全国乙卷 25 题：<em>圆盘与小球</em>，碰几次？</h1>
+
+  <div class="card">
+    <h2>一、原题</h2>
+    <p>竖直固定的长直圆管内有一圆盘，<b>圆盘质量 M = 3m</b>（m 为小球质量），圆盘与管壁间的滑动摩擦力大小恒等于 <span class="f">Mg</span>。圆盘上方有一质量为 <span class="f">m</span> 的小球，从距圆盘 <span class="f">l</span> 处由静止释放。小球与圆盘发生<b>弹性碰撞</b>，碰撞时间极短。第一次碰撞的位置距圆管下端口 <span class="f">19l</span>。重力加速度为 <span class="f">g</span>。求：</p>
+    <ol>
+      <li>第一次碰撞后瞬间小球和圆盘的速度大小；</li>
+      <li>第一次碰撞到第二次碰撞之间，小球与圆盘间的最远距离；</li>
+      <li>圆盘在管内运动过程中，小球与圆盘碰撞的次数。</li>
+    </ol>
+    <p style="color:#8b98a6;font-size:12px">（题干按原题条件复述，便于对照；图见下方动画）</p>
+  </div>
+
+  <canvas id="cv"></canvas>
+  <div class="btns">
+    <button id="bp" class="play">⏸ 暂停</button>
+    <button id="br">↺ 从头</button>
+    <button data-s="0.15">0.15×</button>
+    <button data-s="0.35" class="on">0.35×</button>
+    <button data-s="0.7">0.7×</button>
+    <button data-s="1">1×</button>
+  </div>
+  <div class="readout">
+    <div class="kv"><i>t（以第一次碰为 0）</i><span id="rt" style="color:#4dd0e1">—</span></div>
+    <div class="kv"><i>碰撞次数</i><span id="rn" style="color:#ffc857">0</span></div>
+    <div class="kv"><i>圆盘速度</i><span id="r1" style="color:#4dd0e1">0</span></div>
+    <div class="kv"><i>小球速度</i><span id="r2" style="color:#ffd97a">0</span></div>
+    <div class="kv"><i>质心速度</i><span id="rc" style="color:#ff7b72">0</span></div>
+  </div>
+
+  <div class="card">
+    <h2>二、常规解法的困境</h2>
+    <p>第(1)(2)问是常规题：小球下落 <span class="f">l</span> 后速度 <span class="f">v₀ = √(2gl)</span>。等质量相碰才会交换速度，而这里 <span class="f">M = 3m</span>，代入弹性碰撞公式得</p>
+    <p style="text-align:center"><span class="f">v₁′ = −v₀/2</span>（向上），<span class="f">v₂′ = v₀/2</span>（向下）</p>
+    <p>之后共速时相距最远，最远距离 <span class="f">v₀²/(2g) = l</span>。</p>
+    <p><b>真正的困难在第(3)问：</b>圆盘每碰一次速度就增加 <span class="f">v₀/2</span>，而且逐段匀速。按常规思路，必须“碰一次、算一次、再加一次”，十几次下来极易出错。<b>而次数本身就藏在“总位移不能超过 19l”这个条件里。</b></p>
+  </div>
+
+  <div class="card">
+    <h2>三、质心法：三步</h2>
+    <p><b>第一步：质心做什么运动？</b></p>
+    <p>圆盘受摩擦力 <span class="f">Mg</span> 向上，自身重力 <span class="f">Mg</span> 向下，两者抵消；小球只受重力。系统合外力</p>
+    <p style="text-align:center"><span class="f">F = (M+m)g − Mg = mg</span>，所以 <span class="f">a_c = mg/(M+m) = g/4</span></p>
+    <p><b class="hl">整段过程里，质心始终以 g/4 匀加速下落</b>——不管两者各自的速度怎么跳变。第一次碰前小球速度 <span class="f">v₀</span>、圆盘静止，故质心初速度 <span class="f">v_c0 = mv₀/(M+m) = v₀/4</span>。</p>
+
+    <p><b>第二步：碰撞发生在什么时刻？</b></p>
+    <p>取第一次碰撞点为原点、向下为正。碰后小球做匀加速（a = g），圆盘匀速。设经过 <span class="f">t</span> 再次相遇：</p>
+    <p style="text-align:center"><span class="f">x球 = −(v₀/2)t + ½gt²</span>，<span class="f">x盘 = (v₀/2)t</span></p>
+    <p>令两者相等，得 <span class="f">½gt² = v₀t</span>，即 <b class="hl2">t = 2v₀/g</b>。</p>
+    <p>而且弹性碰撞只让相对速度反向、大小不变（相对加速度恒为 g），<b>所以每次碰撞间隔都等于 2v₀/g</b>。碰撞时刻构成等差数列 <span class="f">tₙ = 2(n−1)v₀/g</span>。</p>
+
+    <p><b>第三步：碰几次？</b></p>
+    <p>碰撞瞬间球与盘在同一位置，<b>质心也必在该位置</b>。于是只要算质心的位移：</p>
+    <p style="text-align:center"><span class="f">x_c = (v₀/4)t + ½·(g/4)·t²</span></p>
+    <p>把 <span class="f">tₙ = 2(n−1)v₀/g</span> 代入，并用 <span class="f">v₀² = 2gl</span> 化简得</p>
+    <p style="text-align:center"><b class="hl2" style="font-size:17px">xₙ = l·n(n−1)</b></p>
+    <p>这个结果<b>只跟 n 有关</b>，与中间任何一次的速度无关。</p>
+    <p>管口在 <span class="f">19l</span> 处，要求 <span class="f">xₙ &lt; 19l</span>：</p>
+    <p style="text-align:center"><span class="f">n = 4 → x₄ = 12l ✓</span>　　<span class="f">n = 5 → x₅ = 20l &gt; 19l ✗</span></p>
+    <p><b class="ans">所以一共碰撞 4 次；第 4 次碰点距下端口 19l − 12l = 7l。</b></p>
+    <p style="color:#8b98a6;font-size:12.5px">对比一下：常规解法要算 4 次速度、4 段位移再累加；质心法只写了一个二次式、比了一个数。</p>
+  </div>
+
+  <div class="card">
+    <h2>四、v-t 图怎么看</h2>
+    <p>· <b>圆盘</b>合力为零，做匀速运动 → 图上是<b>水平台阶</b>，每碰一次抬升 <span class="f">v₀/2</span></p>
+    <p>· <b>小球</b>只受重力 → 图上是<b>一族平行斜线</b>，斜率都是 g</p>
+    <p>· 碰撞就是斜线与台阶之间的<b>竖直跳变</b>，跳变前后两线间距都是 <span class="f">v₀</span></p>
+    <p>· <b>质心</b>是一条<b>笔直的斜线</b>，斜率 g/4，穿过整个图形</p>
+    <p>· <b>两线相交即共速</b>，此时相距最远；三角形的面积就是最远距离</p>
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const g=10, l=1, v0=Math.sqrt(2*g*l), M=3, m=1;
+const T0=-v0/g;                 // 小球释放时刻
+const tc=n=>2*(n-1)*v0/g;       // 第 n 次碰撞时刻（n=1,2,3,4）
+const TEND=tc(4)+0.55;          // 第4次碰后继续一小段
+let W=0,H=0,S=null,t=T0,playing=true,spd=0.35;
+let last=performance.now();
+
+// 解析采样：第 n 次碰撞后，盘速 = n·v0/2，球速 = (n−2)·v0/2，位置 x_n = l·n(n−1)
+function posAt(tt){
+  let n=0;
+  for(let k=1;k<=4;k++) if(tt>=tc(k)) n=k;
+  if(n===0){
+    const tau=tt-T0;
+    return {t:tt, k:0, yb:-l+0.5*g*tau*tau, yd:0, vb:g*tau, vd:0};
+  }
+  const xn=l*n*(n-1), tau=tt-tc(n);
+  const vb0=(n-2)*v0/2, vd0=n*v0/2;
+  return {t:tt, k:n,
+    yb:xn+vb0*tau+0.5*g*tau*tau, yd:xn+vd0*tau,
+    vb:vb0+g*tau, vd:vd0};
+}
+function samp(tt){ return posAt(Math.max(T0,Math.min(TEND,tt))); }
+
+function resize(){
+  const w=Math.min(cv.parentElement.clientWidth,1060);
+  const h=Math.round(Math.max(430,Math.min(580,w*0.50)));
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W=w;H=h;
+  S={top:26,bot:h-18, cx:Math.round(w*0.17),
+     gx:Math.round(w*0.38), gy0:64, gy1:h-42, gw:w-Math.round(w*0.38)-24,
+     yTop:-1.6, yBot:19.4};
+}
+window.addEventListener('resize',resize);
+
+function txt(s,x,y,c,size,bold){
+  ctx.fillStyle=c||'#cfd8e3';
+  ctx.font=(bold?'bold ':'')+(size||12)+'px system-ui,-apple-system,sans-serif';
+  ctx.fillText(s,x,y);
+}
+function draw(){
+  if(!S) resize();
+  const {top,bot,cx,gx,gy0,gy1,gw,yTop,yBot}=S;
+  const SC=(bot-top)/(yBot-yTop);
+  const PY=y=>top+(y-yTop)*SC;
+  ctx.clearRect(0,0,W,H);
+  const q=samp(t);
+
+  /* ===== 圆管 ===== */
+  const TW=34;
+  ctx.strokeStyle='#3a4756'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(cx-TW,PY(-l-0.8)); ctx.lineTo(cx-TW,PY(19)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+TW,PY(-l-0.8)); ctx.lineTo(cx+TW,PY(19)); ctx.stroke();
+  // 管底封口
+  ctx.strokeStyle='#5c6a78'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(cx-TW,PY(19)); ctx.lineTo(cx+TW,PY(19)); ctx.stroke();
+  txt('管口 19l',cx+TW+8,PY(19)+4,'#8b98a6',11.5);
+  // 刻度
+  ctx.strokeStyle='#1d2733'; ctx.lineWidth=1;
+  for(let k=0;k<=19;k+=1){
+    const y=PY(k);
+    ctx.beginPath(); ctx.moveTo(cx-TW-10,y); ctx.lineTo(cx-TW,y); ctx.stroke();
+  }
+  for(let k=0;k<=19;k+=4) txt(k+'l',cx-TW-34,PY(k)+4,'#46525f',10.5);
+
+  // 圆盘
+  const diskY=PY(q.yd);
+  ctx.fillStyle='#4dd0e1';
+  ctx.beginPath(); ctx.ellipse(cx,diskY,TW-4,6,0,0,7); ctx.fill();
+  // 小球
+  const ballY=PY(q.yb);
+  ctx.fillStyle='#ffd97a';
+  ctx.beginPath(); ctx.arc(cx,ballY,7.5,0,7); ctx.fill();
+
+  // 碰撞标记
+  for(let n=1;n<=4;n++){
+    const y=PY(l*n*(n-1));
+    ctx.fillStyle='rgba(255,200,87,.85)';
+    ctx.beginPath(); ctx.arc(cx,y,3,0,7); ctx.fill();
+    if(n<=4) txt(n+'次 '+ (l*n*(n-1))+'l',cx+TW+8,y+4,'#8a7a4a',10.5);
+  }
+  txt('M = 3m',cx-TW-52,PY(-l-0.9),'#4dd0e1',11.5,true);
+  txt('m',cx+TW+6,PY(-l-1.35),'#ffd97a',11.5,true);
+
+  /* ===== v-t 图 ===== */
+  const TMIN=T0, TMAX=TEND;
+  const PX=tt=>gx+gw*(tt-TMIN)/(TMAX-TMIN);
+  const VMAX=Math.max(9,v0*2.2), VMIN=-v0*1.6;
+  const PV=v=>gy1-(gy1-gy0)*(v-VMIN)/(VMAX-VMIN);
+  ctx.strokeStyle='#26303b'; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(gx,PV(0)); ctx.lineTo(gx+gw,PV(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx,gy0); ctx.lineTo(gx,gy1); ctx.stroke();
+  txt('v',gx-12,gy0-6,'#8b98a6',12);
+  txt('t',gx+gw-8,PV(0)+16,'#8b98a6',12);
+  for(let s=0;s<=Math.floor(TMAX);s++) txt(s+'s',PX(s)-6,PV(0)+16,'#5c6a78',10.5);
+  for(let n=1;n<=4;n++){
+    const X=PX(tc(n));
+    ctx.strokeStyle='rgba(255,200,87,.18)'; ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(X,gy0); ctx.lineTo(X,gy1); ctx.stroke(); ctx.setLineDash([]);
+  }
+  // 曲线
+  const N=420;
+  for(const key of ['vd','vb']){
+    ctx.strokeStyle=key==='vd'?'#4dd0e1':'#ffd97a';
+    ctx.lineWidth=2.5; ctx.beginPath();
+    let prev=null;
+    for(let i=0;i<=N;i++){
+      const tt=TMIN+(Math.min(t,TMAX)-TMIN)*i/N;
+      if(tt<t-TMAX) {}
+      const s=samp(tt);
+      const X=PX(tt),Y=PV(s[key]);
+      if(prev!==null && Math.abs(s[key]-prev)>v0*0.6){ ctx.moveTo(X,Y); }
+      else if(i===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
+      prev=s[key];
+    }
+    ctx.stroke();
+  }
+  // 质心线
+  const vc0=m*v0/(M+m), ac=g*m/(M+m);
+  ctx.strokeStyle='#ff7b72'; ctx.lineWidth=2.2; ctx.setLineDash([6,4]);
+  ctx.beginPath(); ctx.moveTo(PX(TMIN),PV(0)); ctx.lineTo(PX(Math.min(t,TMAX)),PV(ac*(Math.min(t,TMAX)-TMIN)));
+  ctx.stroke(); ctx.setLineDash([]);
+  txt('● 圆盘',gx+8,gy0+2,'#4dd0e1',11.5,true);
+  txt('● 小球',gx+72,gy0+2,'#ffd97a',11.5,true);
+  txt('┄ 质心',gx+136,gy0+2,'#ff7b72',11.5,true);
+
+  // 读数
+  $('rt').textContent=t.toFixed(2)+' s';
+  $('rn').textContent=q.k;
+  $('r1').textContent=q.vd.toFixed(2);
+  $('r2').textContent=(q.vb>=0?'+':'−')+Math.abs(q.vb).toFixed(2);
+  $('rc').textContent=(M*q.vd+m*q.vb)/(M+m)>0?'+':'−';
+  $('rc').textContent=(function(){const v=(M*q.vd+m*q.vb)/(M+m);return (v>=0?'+':'−')+Math.abs(v).toFixed(2);})();
+}
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(playing){ t+=dt*spd; if(t>TEND){ t=TEND; playing=false; $('bp').textContent='▶ 播放'; } }
+  draw();
+  requestAnimationFrame(loop);
+}
+$('bp').onclick=()=>{playing=!playing; $('bp').textContent=playing?'⏸ 暂停':'▶ 播放';};
+$('br').onclick=()=>{t=T0; playing=true; $('bp').textContent='⏸ 暂停';};
+document.querySelectorAll('[data-s]').forEach(b=>{
+  b.onclick=()=>{spd=+b.dataset.s; document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b));};
+});
+resize();
+const _h=parseFloat((location.hash||'').slice(1));
+if(!isNaN(_h)){ t=_h; playing=false; $('bp').textContent='▶ 播放'; }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
