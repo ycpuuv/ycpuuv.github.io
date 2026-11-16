@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>金属管与小球 · 换参考系变匀速</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:10px 10px 30px}
+h1{font-size:18.5px;margin:6px 0 4px}
+h1 em{font-style:normal;color:var(--amber)}
+.sub{font-size:12.5px;color:var(--dim);margin-bottom:9px;line-height:1.6}
+#cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+button{font-size:13px;font-weight:600;padding:7px 13px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--txt);cursor:pointer}
+button.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+button.play{background:#12341f;border-color:#2ea043;color:#8ff0a4}
+.readout{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.kv{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 11px;flex:1;min-width:104px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim)}
+.kv span{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.note{margin-top:11px;font-size:13px;line-height:1.8;color:#cfd8e3;
+border-left:3px solid var(--amber);padding:9px 13px;background:#131a22;border-radius:0 8px 8px 0}
+.note b{color:var(--amber)}
+.verdict{font-size:15px;font-weight:700;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>金属管与小球的相遇：<em>换个参考系，二次式变一次式</em></h1>
+  <div class="sub">L = 0.4 m　h = 1.2 m　g = 10 m/s²　管从地面以 v₀ 竖直上抛，小球同时自由下落（第 9 题）</div>
+  <canvas id="cv"></canvas>
+
+  <div class="btns">
+    <button id="bp" class="play">⏸ 暂停</button>
+    <button id="br">↺ 从头</button>
+    <button data-v="2.4">v₀=2.4</button>
+    <button data-v="2.8">v₀=2.8</button>
+    <button data-v="3.2" class="on">v₀=3.2</button>
+    <button data-v="3.6">v₀=3.6</button>
+  </div>
+  <div class="btns">
+    <button data-s="0.08">0.08× 极慢</button>
+    <button data-s="0.15" class="on">0.15× 慢</button>
+    <button data-s="0.3">0.3×</button>
+    <button data-s="0.6">0.6×</button>
+  </div>
+
+  <div class="readout">
+    <div class="kv"><i>时间 t</i><span id="rt" style="color:#4dd0e1">0.00 s</span></div>
+    <div class="kv"><i>球相对管的位移</i><span id="rr" style="color:#bc8cff">0.00 m</span></div>
+    <div class="kv"><i>管的状态</i><span id="rs" style="color:#ffc857">上升</span></div>
+    <div class="kv"><i>穿过时刻</i><span id="rp" style="color:#7ee787">0.50 s</span></div>
+  </div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const g=10, L=0.4, h=1.2;
+let W=0,H=0,S=null,v0=3.2,t=0,playing=true,spd=0.15;
+let last=performance.now();
+
+const T_UP  =()=>v0/g;          // 管到最高点
+const T_LAND=()=>2*v0/g;        // 管落地
+const T_PASS=()=>(h+L)/v0;      // 完全穿过（相对位移 h+L）
+
+function resize(){
+  const w=Math.min(cv.parentElement.clientWidth,1060);
+  const hh=Math.round(Math.max(400,Math.min(560,w*0.50)));
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=w*dpr; cv.height=hh*dpr; cv.style.height=hh+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W=w;H=hh;
+  S={top:26,bot:hh-20, cx:Math.round(w*0.20),
+     gx:Math.round(w*0.42), gy0:56, gy1:hh-56, gw:w-Math.round(w*0.42)-26,
+     YBOT:-0.2, YTOP:2.0};
+}
+window.addEventListener('resize',resize);
+
+function txt(s,x,y,c,size,bold){
+  ctx.fillStyle=c||'#cfd8e3';
+  ctx.font=(bold?'bold ':'')+(size||12)+'px system-ui,-apple-system,sans-serif';
+  ctx.fillText(s,x,y);
+}
+
+function draw(){
+  if(!S) resize();
+  const {top,bot,cx,gx,gy0,gy1,gw,YBOT,YTOP}=S;
+  const SC=(bot-top)/(YTOP-YBOT);
+  const PY=y=>bot-(y-YBOT)*SC;
+  ctx.clearRect(0,0,W,H);
+
+  const tt=Math.min(t,T_LAND());
+  const yTop = L + v0*tt - 0.5*g*tt*tt;     // 管顶
+  const yBot = yTop - L;                    // 管底
+  const yBall= L + h - 0.5*g*tt*tt;         // 球
+
+  /* ===== 左：竖直场景 ===== */
+  // 地面
+  ctx.fillStyle='#253040'; ctx.fillRect(cx-90,PY(0),180,10);
+  ctx.fillStyle='#1a232e'; ctx.fillRect(0,PY(0)+10,Math.round(W*0.30),(bot-PY(0))+10);
+  txt('地面',cx-118,PY(0)+8,'#8b98a6',11.5);
+  // 管
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(cx-20,PY(yTop)); ctx.lineTo(cx-20,PY(yBot)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx+20,PY(yTop)); ctx.lineTo(cx+20,PY(yBot)); ctx.stroke();
+  txt('管 L=0.4',cx+26,PY((yTop+yBot)/2)+4,'#4dd0e1',11.5,true);
+  // 球
+  ctx.fillStyle='#ffd97a';
+  ctx.beginPath(); ctx.arc(cx,PY(yBall),7,0,7); ctx.fill();
+  txt('球',cx+14,PY(yBall)-13,'#ffd97a',11.5,true);
+  // 初始位置虚线
+  ctx.strokeStyle='#2c3743'; ctx.setLineDash([4,4]); ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(cx-70,PY(L+h)); ctx.lineTo(cx+70,PY(L+h)); ctx.stroke();
+  ctx.setLineDash([]);
+  txt('初始：球在管口上方 h=1.2',cx-70,PY(L+h)-6,'#5c6a78',10.5);
+  // 上升/下降状态色带
+  const rising = tt < T_UP();
+  ctx.fillStyle=rising?'rgba(77,208,225,.10)':'rgba(255,200,87,.12)';
+  ctx.fillRect(cx-66,top+6,132,16);
+  txt(rising?'管 · 上升阶段':'管 · 下降阶段',cx-58,top+18,rising?'#4dd0e1':'#ffc857',11.5,true);
+
+  /* ===== 右：相对位移—时间 ===== */
+  const TMAX=Math.max(T_LAND()*1.06, T_PASS()*1.1);
+  const PX=tt2=>gx+gw*tt2/TMAX;
+  const RR=r=>gy1-(gy1-gy0)*r/(h+L+0.25);
+  ctx.strokeStyle='#26303b'; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(gx,gy1); ctx.lineTo(gx+gw,gy1); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx,gy0); ctx.lineTo(gx,gy1); ctx.stroke();
+  txt('相对位移 (h+L)',gx-4,gy0-10,'#8b98a6',11.5);
+  txt('t',gx+gw-4,gy1+16,'#8b98a6',11.5);
+  // 两条水平线
+  ctx.strokeStyle='#5c6a78'; ctx.setLineDash([5,4]); ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(gx,RR(h)); ctx.lineTo(gx+gw,RR(h)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx,RR(h+L)); ctx.lineTo(gx+gw,RR(h+L)); ctx.stroke();
+  ctx.setLineDash([]);
+  txt('h（刚进管口）',gx+6,RR(h)-6,'#8b98a6',10.5);
+  txt('h+L（完全穿出）',gx+6,RR(h+L)-6,'#8b98a6',10.5);
+  // 匀速直线
+  ctx.strokeStyle='#bc8cff'; ctx.lineWidth=2.8;
+  ctx.beginPath(); ctx.moveTo(PX(0),RR(0)); ctx.lineTo(PX(tt),RR(v0*tt)); ctx.stroke();
+  // 交点
+  const tp=T_PASS();
+  if(tp<=TMAX){
+    ctx.fillStyle='#ff7b72';
+    ctx.beginPath(); ctx.arc(PX(tp),RR(h+L),5.5,0,7); ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.stroke();
+    ctx.strokeStyle='rgba(255,123,114,.5)'; ctx.setLineDash([3,4]);
+    ctx.beginPath(); ctx.moveTo(PX(tp),RR(h+L)); ctx.lineTo(PX(tp),gy1); ctx.stroke();
+    ctx.setLineDash([]);
+    txt('穿过 t='+tp.toFixed(2)+'s',PX(tp)-30,gy1-8,'#ff7b72',11,true);
+  }
+  // 管最高点 / 落地竖线
+  [[T_UP(),'最高点','#4dd0e1'],[T_LAND(),'落地','#ffc857']].forEach(([x,lb,c])=>{
+    if(x>TMAX) return;
+    ctx.strokeStyle=c+'66'; ctx.setLineDash([2,4]); ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(PX(x),gy0); ctx.lineTo(PX(x),gy1); ctx.stroke();
+    ctx.setLineDash([]);
+    txt(lb,PX(x)-14,gy0+10,c,10.5);
+  });
+
+  // 读数
+  $('rt').textContent=tt.toFixed(2)+' s';
+  $('rr').textContent=(v0*tt).toFixed(2)+' m';
+  $('rs').textContent= tt<T_UP()?'上升':(tt<T_LAND()?'下降':'已落地');
+  $('rp').textContent=tp.toFixed(2)+' s';
+}
+
+function verdict(){
+  const tp=T_PASS(), tu=T_UP(), tl=T_LAND();
+  let s='';
+  if(tp<tu) s='<b>球在管上升阶段穿过</b>——不合题意。';
+  else if(tp<tl) s='<b class="hl">球在管下降阶段穿过 ✓</b>　'+v0+' m/s 满足条件。';
+  else s='<b>球还没穿出，管已经落地</b>——不合题意（此时球相对管只走了 '+(v0*tl).toFixed(2)+' m，不足 '+(h+L)+' m）。';
+  $('note').innerHTML=
+    '<b>为什么换参考系就对了：</b>管和球都只受重力，<b>加速度都是 g</b>，所以相对加速度为零——'+
+    '在管看来，小球以 v₀ 做<b>匀速直线运动</b>，相对位移 = v₀t。<br>'+
+    '<b>穿过条件：</b>相对位移从 0 走到 h+L，用时 t = (h+L)/v₀ = '+((h+L)/v0).toFixed(3)+' s。<br>'+
+    '<b>“在下降阶段穿过”⇒</b> v₀/g &lt; t &lt; 2v₀/g，代入即 '+s+
+    '<br><b>结论：2√2 ≈ 2.83 m/s &lt; v₀ &lt; 4 m/s　→ 选 C、D</b>';
+}
+
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(playing){ t+=dt*spd; if(t>T_LAND()+0.15){ t=T_LAND()+0.15; playing=false; $('bp').textContent='▶ 播放'; } }
+  draw();
+  requestAnimationFrame(loop);
+}
+$('bp').onclick=()=>{playing=!playing; $('bp').textContent=playing?'⏸ 暂停':'▶ 播放';};
+$('br').onclick=()=>{t=0;playing=true;$('bp').textContent='⏸ 暂停';};
+document.querySelectorAll('[data-v]').forEach(b=>{
+  b.onclick=()=>{v0=+b.dataset.v; t=0; playing=true; $('bp').textContent='⏸ 暂停';
+    document.querySelectorAll('[data-v]').forEach(x=>x.classList.toggle('on',x===b)); verdict();};
+});
+document.querySelectorAll('[data-s]').forEach(b=>{
+  b.onclick=()=>{spd=+b.dataset.s; document.querySelectorAll('[data-s]').forEach(y=>y.classList.toggle('on',y===b));};
+});
+resize(); verdict(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
