@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>变加速与相遇：a-x 图像法 & 相对运动</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1060px;margin:0 auto;padding:10px 10px 30px}
+h1{font-size:18.5px;margin:6px 0 4px}
+h1 em{font-style:normal;color:var(--amber)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:10px 0}
+.card h2{font-size:14.5px;margin:0 0 8px;color:var(--amber)}
+.card p{margin:6px 0;font-size:13.5px;line-height:1.85;color:#dbe4ee}
+.f{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-size:15px;color:#fff;padding:0 2px}
+.hl{color:var(--cyan);font-weight:700}
+.hl2{color:var(--amber);font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:720px){.grid2{grid-template-columns:1fr}}
+.tagn{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:6px;background:#1d2836;color:#8fb6c9;margin-right:6px}
+#cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+button{font-size:13px;font-weight:600;padding:7px 13px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--txt);cursor:pointer}
+button.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+button.play{background:#12341f;border-color:#2ea043;color:#8ff0a4}
+.readout{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.kv{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:7px 11px;flex:1;min-width:100px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim)}
+.kv span{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+ol{padding-left:20px;margin:6px 0}
+ol li{font-size:13.5px;line-height:1.9;color:#dbe4ee;margin-bottom:5px}
+.ans{color:var(--green);font-weight:700}
+.eq{text-align:center;margin:8px 0;font-size:15px;color:#fff;font-family:"Times New Roman",Georgia,serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>变加速与相遇：<em>一张 a-x 图</em> 和 <em>一个参考系</em></h1>
+
+  <div class="card">
+    <h2>一、先把方法归类</h2>
+    <div class="grid2">
+      <div class="card" style="margin:0">
+        <p><span class="tagn">A 型</span><b class="hl">单体 · 变加速 → a-x 图像面积法</b></p>
+        <p><b>识别信号：</b>只有一个物体，加速度<b>随位移变化</b>（题目直接给 <span class="f">a = −ks + g</span>），却要问速度。</p>
+        <p><b>核心工具：</b><span class="f">∫a dx = (v² − v₀²)/2</span></p>
+        <p><b>三步：</b>① 画出 a-x 图 ② 标关键点（起点、终点、过零点）③ 算面积代回去</p>
+        <p style="color:#8b98a6;font-size:12.5px">例：本题第 (3) 问</p>
+      </div>
+      <div class="card" style="margin:0">
+        <p><span class="tagn">B 型</span><b class="hl2">两体 · 同一直线 → 相对运动</b></p>
+        <p><b>识别信号：</b>两个物体各自运动（一个上抛、一个自由落体），问“何时/何处穿过”。</p>
+        <p><b>核心工具：</b>以其中一个为参考系，<span class="f">a相对 = a₁ − a₂</span>，<span class="f">v相对 = v₁ − v₂</span></p>
+        <p><b>三步：</b>① 选参考系（选加速度简单的那个）② 写相对运动 ③ 相遇 ⇔ 相对位移 = 初始间距</p>
+        <p style="color:#8b98a6;font-size:12.5px">例：第 9 题（金属管与小球）</p>
+      </div>
+    </div>
+    <p style="margin-top:10px"><b>为什么能归成一类：</b>两型都建立在同一条式子上——<span class="f">v² − v₀² = 2ax</span>。匀变速时它就是 2ax；加速度变时，它变成 <span class="f">2∫a dx</span>；换参考系时，等式照样成立（因为相对运动也是匀变速）。<b class="hl2">一条式子，三种用法。</b></p>
+  </div>
+
+  <div class="card">
+    <h2>二、A 型：第 15 题第 (3) 问，一步步来</h2>
+    <p><b>已知：</b>入水后 <span class="f">a = −ks + g</span>（s 为入水距离），且 <span class="f">kl = 4g</span>。</p>
+    <p><b>① 把 a 写成位移的函数。</b>入水前 a = g；入水后令 <span class="f">s = x − H</span>，得</p>
+    <p class="eq">a = g − k(x − H)</p>
+    <p><b>② 找两个端点。</b>刚入水 <span class="f">x = H</span>：a = g；完全入水 <span class="f">x = H + l</span>：a = g − kl = g − 4g = <b class="hl">−3g</b>。</p>
+    <p><b>③ 找过零点。</b>令 a = 0：<span class="f">k(x−H) = g</span>，即 <span class="f">x − H = g/k = l/4</span>，所以过零点在 <b class="hl2">x = H + l/4</b>。</p>
+    <p><b>④ 算面积。</b>a-x 图下方面积（上正下负）：</p>
+    <p class="eq">S = ½·(l/4)·g + ½·(3l/4)·(−3g) = lg/8 − 9lg/8 = <b style="color:#ff7b72">−lg</b></p>
+    <p><b>⑤ 代回公式。</b><span class="f">(v₂² − v₁²)/2 = S = −gl</span>，而 <span class="f">v₁² = 2gH</span>：</p>
+    <p class="eq"><b class="ans">v₂ = √(2g(H − l))</b></p>
+    <p style="color:#8b98a6;font-size:12.5px">注意：整个入水段速度先增后减——过零点之前 a 仍向上（减速尚未开始），过零点之后才真正减速。面积算出负值，说明这一段“净减速”。</p>
+  </div>
+
+  <canvas id="cv"></canvas>
+  <div class="btns">
+    <button id="bp" class="play">⏸ 暂停</button>
+    <button id="br">↺ 从头</button>
+    <button data-s="0.15">0.15×</button>
+    <button data-s="0.3" class="on">0.3×</button>
+    <button data-s="0.6">0.6×</button>
+    <button data-s="1">1×</button>
+  </div>
+  <div class="readout">
+    <div class="kv"><i>位移 x</i><span id="rx" style="color:#4dd0e1">0.0 m</span></div>
+    <div class="kv"><i>加速度 a</i><span id="ra" style="color:#ffc857">+10.0</span></div>
+    <div class="kv"><i>累计面积 S</i><span id="rs" style="color:#bc8cff">0.0</span></div>
+    <div class="kv"><i>速度 v = √(2S)</i><span id="rv" style="color:#7ee787">0.00</span></div>
+  </div>
+
+  <div class="card">
+    <h2>三、B 型：第 9 题，换个参考系就变简单</h2>
+    <p><b>原题：</b>长 <span class="f">L = 0.4 m</span> 的金属管以 <span class="f">v₀</span> 竖直上抛；管口正上方 <span class="f">h = 1.2 m</span> 处小球同时自由下落。若小球在<b>管下降阶段</b>穿过管，求 <span class="f">v₀</span> 的范围。</p>
+    <p><b>常规做法：</b>分别写管和球的位移方程，令两者相差 L，还要判断“在下降阶段”——两个二次式加不等式，容易乱。</p>
+    <p><b>换参考系做法（推荐）：</b>以管为参考系。管和球的加速度都是 <span class="f">g</span>，所以<b>相对加速度为零</b>，小球相对管做<b>匀速运动</b>，速度大小恰好是 <span class="f">v₀</span>（方向向下）。</p>
+    <p class="eq">穿过所需时间 <span class="f">t = (h + L)/v₀ = 1.6/v₀</span></p>
+    <p><b>“在下降阶段穿过” ⇔ </b>穿过时刻晚于管到达最高点、早于管落地：</p>
+    <p class="eq"><span class="f">v₀/g &lt; t &lt; 2v₀/g</span></p>
+    <p>代入 <span class="f">t = 1.6/v₀</span>：左边给出 <span class="f">v₀² &lt; 1.6g = 16</span>，右边给出 <span class="f">v₀² &gt; 0.8g = 8</span>。</p>
+    <p class="eq"><b class="ans">2√2 m/s &lt; v₀ &lt; 4 m/s　→　选 C、D</b></p>
+    <p style="color:#8b98a6;font-size:12.5px">两个边界值各对应一个“临界时刻”：v₀=4 时恰好管到最高点穿过；v₀=2√2 时恰好管落地穿过。</p>
+  </div>
+
+  <div class="card">
+    <h2>四、给学生的辨识口诀</h2>
+    <p><b>“看加速度跟谁变”：</b>跟<b>位移</b>变 → 画 a-x 图算面积；跟<b>时间</b>变 → 画 v-t 图算面积。</p>
+    <p><b>“两个物体别分家”：</b>只要两者加速度相同（都只受重力），合起来看就是一个匀速问题——<b>换参考系，二次式变一次式</b>。</p>
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const g=10, H=10, L=2;            // 平台高、人体长
+const k=4*g/L;                    // kl=4g
+const XMAX=H+L, AMAX=g, AMIN=-3*g;
+let W=0,Hh=0,S=null,x=0,v=0,t=0,playing=true,spd=0.3;
+let last=performance.now();
+
+function acc(xx){ return xx<=H ? g : g-k*(xx-H); }
+function area(xx){                // ∫0^xx a dx
+  if(xx<=0) return 0;
+  if(xx<=H) return g*xx;
+  const s=xx-H;
+  return g*H + (g*s - 0.5*k*s*s);
+}
+
+function resize(){
+  const w=Math.min(cv.parentElement.clientWidth,1060);
+  const h=Math.round(Math.max(400,Math.min(540,w*0.47)));
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W=w; Hh=h;
+  S={top:24,bot:h-18, cx:Math.round(w*0.17),
+     gx:Math.round(w*0.40), gy0:54, gy1:h-46, gw:w-Math.round(w*0.40)-26};
+}
+window.addEventListener('resize',resize);
+
+function txt(s,x,y,c,size,bold){
+  ctx.fillStyle=c||'#cfd8e3';
+  ctx.font=(bold?'bold ':'')+(size||12)+'px system-ui,-apple-system,sans-serif';
+  ctx.fillText(s,x,y);
+}
+
+function draw(){
+  if(!S) resize();
+  const {top,bot,cx,gx,gy0,gy1,gw}=S;
+  // 左侧：世界坐标 0..14 m
+  const YTOP=-1, YBOT=14;
+  const SC=(bot-top)/(YBOT-YTOP);
+  const PY=y=>top+(y-YTOP)*SC;
+  ctx.clearRect(0,0,W,Hh);
+
+  // 水面（x=H）
+  ctx.strokeStyle='#2b6f86'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(cx-80,PY(H)); ctx.lineTo(cx+80,PY(H)); ctx.stroke();
+  ctx.fillStyle='rgba(43,111,134,.16)';
+  ctx.fillRect(cx-80,PY(H),160,PY(YBOT)-PY(H));
+  txt('水面',cx+84,PY(H)+4,'#5fa8c4',11.5);
+  // 平台
+  ctx.fillStyle='#253040'; ctx.fillRect(cx-64,PY(0)-8,128,8);
+  txt('平台 AB',cx-64,PY(0)-14,'#8b98a6',11.5);
+  // 圆环（x=h）
+  const yRing=PY(6);
+  ctx.strokeStyle='#bc8cff'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(cx-30,yRing); ctx.lineTo(cx-8,yRing);
+  ctx.moveTo(cx+8,yRing); ctx.lineTo(cx+30,yRing); ctx.stroke();
+  txt('圆环 h',cx+34,yRing+4,'#bc8cff',11.5);
+
+  // 运动员：从 x 到 x+L，重心 x+L/2
+  const y1=PY(x), y2=PY(Math.min(x+L,XMAX+2));
+  ctx.strokeStyle='#ffd97a'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(cx,y1); ctx.lineTo(cx,y2); ctx.stroke();
+  ctx.lineCap='butt';
+  ctx.fillStyle='#ff7b72';
+  ctx.beginPath(); ctx.arc(cx,PY(x+L/2),5,0,7); ctx.fill();
+  txt('重心',cx-46,PY(x+L/2)+4,'#ff7b72',11);
+  // 手指标记
+  ctx.fillStyle='#4dd0e1'; ctx.beginPath(); ctx.arc(cx,y1,4,0,7); ctx.fill();
+
+  // 速度箭头
+  if(v>0.5){
+    const ay=PY(Math.min(x,L>-1?x:0));
+    ctx.strokeStyle='#7ee787'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(cx+44,ay); ctx.lineTo(cx+44,ay+Math.min(46,v*3)); ctx.stroke();
+    txt('v',cx+50,ay+Math.min(46,v*3)+4,'#7ee787',11.5,true);
+  }
+
+  /* ===== 右侧 a-x 图 ===== */
+  const PX=xx=>gx+gw*xx/XMAX;
+  const PA=aa=>gy1-(gy1-gy0)*(aa-AMIN)/(AMAX-AMIN);
+  ctx.strokeStyle='#26303b'; ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(gx,PA(0)); ctx.lineTo(gx+gw,PA(0)); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx,gy0); ctx.lineTo(gx,gy1); ctx.stroke();
+  txt('a',gx-14,gy0-4,'#8b98a6',12);
+  txt('x',gx+gw+2,PA(0)+4,'#8b98a6',12);
+  // 刻度
+  txt('0',gx-8,PA(0)+16,'#5c6a78',10.5);
+  txt('H',PX(H),PA(0)+16,'#5c6a78',10.5);
+  txt('H+l',PX(H+L)-22,PA(0)+16,'#5c6a78',10.5);
+  txt('g',gx-16,PA(g)+4,'#5c6a78',10.5);
+  txt('−3g',gx-24,PA(-3*g)+4,'#5c6a78',10.5);
+
+  // 面积填充（当前 x 之前）
+  ctx.fillStyle='rgba(188,140,255,.28)';
+  ctx.beginPath();
+  ctx.moveTo(PX(0),PA(0));
+  const N=140, xEnd=Math.min(x,XMAX);
+  for(let i=0;i<=N;i++){
+    const xx=xEnd*i/N;
+    ctx.lineTo(PX(xx),PA(acc(xx)));
+  }
+  ctx.lineTo(PX(xEnd),PA(0));
+  ctx.closePath(); ctx.fill();
+
+  // 曲线
+  ctx.strokeStyle='#ffc857'; ctx.lineWidth=2.8; ctx.beginPath();
+  for(let i=0;i<=160;i++){
+    const xx=XMAX*i/160, yy=PA(acc(xx));
+    i===0?ctx.moveTo(PX(xx),yy):ctx.lineTo(PX(xx),yy);
+  }
+  ctx.stroke();
+  // 过零点
+  const xz=H+L/4;
+  ctx.strokeStyle='rgba(126,231,135,.7)'; ctx.setLineDash([4,4]); ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(PX(xz),PA(0)); ctx.lineTo(PX(xz),PA(acc(xz))); ctx.stroke();
+  ctx.setLineDash([]);
+  txt('过零 H+l/4',PX(xz)-30,PA(0)-40,'#7ee787',10.5,true);
+
+  // 当前点
+  const curX=Math.min(x,XMAX);
+  ctx.fillStyle='#ff7b72';
+  ctx.beginPath(); ctx.arc(PX(curX),PA(acc(curX)),5.5,0,7); ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=1.6; ctx.stroke();
+
+  // 读数
+  $('rx').textContent=curX.toFixed(1)+' m';
+  $('ra').textContent=(acc(curX)>=0?'+':'')+acc(curX).toFixed(1);
+  const Ssum=area(curX);
+  $('rs').textContent=Ssum.toFixed(1)+' m²/s²';
+  $('rv').textContent=Math.sqrt(Math.max(0,2*Ssum)).toFixed(2);
+}
+
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(playing){
+    const step=dt*spd;
+    const vNow=Math.sqrt(Math.max(0,2*area(x)));
+    x+=vNow*step;
+    if(x>XMAX+1.2){ x=XMAX+1.2; playing=false; $('bp').textContent='▶ 播放'; }
+    v=vNow;
+  }
+  draw();
+  requestAnimationFrame(loop);
+}
+$('bp').onclick=()=>{playing=!playing; $('bp').textContent=playing?'⏸ 暂停':'▶ 播放';};
+$('br').onclick=()=>{x=0;v=0;playing=true;$('bp').textContent='⏸ 暂停';};
+document.querySelectorAll('[data-s]').forEach(b=>{
+  b.onclick=()=>{spd=+b.dataset.s; document.querySelectorAll('[data-s]').forEach(y=>y.classList.toggle('on',y===b));};
+});
+resize();
+const _h=parseFloat((location.hash||'').slice(1));
+if(!isNaN(_h)){ x=Math.min(_h,XMAX+1.2); playing=false; $('bp').textContent='▶ 播放'; }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
