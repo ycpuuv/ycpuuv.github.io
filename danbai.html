@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>用单摆测量重力加速度 · 课件</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--panel2:#101720;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72;--blue:#79b8ff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:12px 12px 60px}
+header{position:sticky;top:0;z-index:20;background:rgba(11,15,20,.94);backdrop-filter:blur(6px);
+border-bottom:1px solid var(--line);padding:8px 0 7px;margin-bottom:10px}
+h1{font-size:19px;margin:0 0 7px;line-height:1.35}
+h1 em{font-style:normal;color:var(--amber)}
+.nav{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.nav button{white-space:nowrap;font-size:12.5px;font-weight:600;padding:5px 11px;border:1px solid var(--line);
+border-radius:8px;background:var(--panel);color:var(--dim);cursor:pointer}
+.nav button.on{background:#152232;border-color:var(--cyan);color:var(--cyan)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:14px 16px;margin:12px 0;scroll-margin-top:78px}
+h2{font-size:15.5px;margin:0 0 10px;color:var(--amber);display:flex;align-items:center;gap:8px}
+h2 .num{display:inline-flex;width:23px;height:23px;border-radius:7px;background:#2a2110;color:var(--amber);
+align-items:center;justify-content:center;font-size:13px;flex:0 0 auto}
+h3{font-size:14px;margin:14px 0 6px;color:var(--cyan)}
+p{margin:7px 0;font-size:13.5px;line-height:1.9;color:#dbe4ee}
+ul,ol{padding-left:21px;margin:6px 0}
+li{font-size:13.5px;line-height:1.9;color:#dbe4ee;margin-bottom:5px}
+.f{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-size:15.5px;color:#fff;padding:0 2px}
+.fn{font-style:normal;font-family:inherit}
+.key{color:var(--amber);font-weight:700}
+.cy{color:var(--cyan);font-weight:700}
+.gr{color:var(--green);font-weight:700}
+.rd{color:var(--red);font-weight:700}
+.box{background:var(--panel2);border-left:3px solid var(--cyan);border-radius:0 9px 9px 0;padding:9px 13px;margin:10px 0}
+.box.warn{border-left-color:var(--amber)}
+.box.bad{border-left-color:var(--red)}
+.box.good{border-left-color:var(--green)}
+.box p{margin:4px 0}
+.eq{text-align:center;font-size:16px;color:#fff;font-family:"Times New Roman",Georgia,serif;margin:10px 0;line-height:1.7}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:780px){.two{grid-template-columns:1fr}}
+canvas{width:100%;display:block;border-radius:11px;background:#0f151d;border:1px solid var(--line)}
+.ctrls{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px;align-items:center}
+.ctrls label{font-size:12.5px;color:var(--dim)}
+.ctrls input[type=range]{width:118px;accent-color:#4dd0e1}
+button.b{font-size:12.5px;font-weight:600;padding:6px 11px;border:1px solid var(--line);
+border-radius:8px;background:var(--panel);color:var(--txt);cursor:pointer}
+button.b.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+.kvs{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.kv{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 11px;flex:1;min-width:106px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim)}
+.kv span{font-size:15.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.trans{margin-top:12px;font-size:12.5px;color:#6f7d8c;border-top:1px dashed var(--line);padding-top:8px}
+.trans b{color:var(--dim)}
+details{margin:8px 0;background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:9px 13px}
+summary{font-size:13.5px;font-weight:600;color:var(--cyan);cursor:pointer}
+details p{font-size:13px}
+.tag{display:inline-block;font-size:11.5px;padding:1px 7px;border-radius:6px;background:#1d2836;color:#8fb6c9;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>用单摆测量重力加速度 · <em>误差分析的三个角度</em></h1>
+  <div class="nav" id="nav">
+    <button data-go="s1" class="on">① 原理</button>
+    <button data-go="s2">② 装置与操作</button>
+    <button data-go="s3">③ 两种数据处理</button>
+    <button data-go="s4">④ 误差：三个角度</button>
+    <button data-go="s5">⑤ T²–L 诊断器</button>
+    <button data-go="s6">⑥ 判断口诀</button>
+    <button data-go="s7">⑦ 随堂练</button>
+  </div>
+</header>
+
+<!-- ============ 1 原理 ============ -->
+<section id="s1">
+  <h2><span class="num">1</span>原理：为什么不量加速度，能量长度和时间？</h2>
+  <p>单摆在摆角很小时做简谐运动，周期只跟摆长和重力加速度有关：</p>
+  <div class="eq"><span class="f">T = 2π√(L/g)</span>　⟺　<span class="f">g = 4π²L/T²</span></div>
+  <p><b>这个方法妙在哪：</b>它把"测一个加速度"换成了"量一段长度 + 计一段时间"。长度用米尺，时间用秒表——<b>都是初中就会量的量</b>。</p>
+  <p><b>代价是什么：</b><span class="f">T</span> 平方在分母上，<b>时间的误差被放大两倍</b>。这条会贯穿后面整个误差分析。</p>
+
+  <div class="two">
+    <div>
+      <canvas id="pend"></canvas>
+      <div class="ctrls">
+        <label>摆长 L</label><input type="range" id="rL" min="0.5" max="1.5" step="0.01" value="1.00">
+        <span id="vL" class="cy" style="font-size:12.5px;min-width:52px">1.00 m</span>
+      </div>
+      <div class="ctrls" style="margin-top:2px">
+        <label>摆角 θ₀</label><input type="range" id="rA" min="1" max="20" step="0.5" value="4">
+        <span id="vA" class="cy" style="font-size:12.5px;min-width:52px">4.0°</span>
+      </div>
+    </div>
+    <div>
+      <p><b>拖动摆角，看周期怎么变：</b></p>
+      <p>· <b>θ₀ ≤ 5°</b>：橙色实测周期与白色理论值几乎重合</p>
+      <p>· <b>θ₀ = 20°</b>：实测周期明显变大，<b>算出的 g 就偏小</b></p>
+      <p style="color:#8b98a6;font-size:12.5px">大摆角下的修正式：<span class="f">T ≈ T₀(1 + θ₀²/16)</span>，θ₀ 用弧度。</p>
+      <div class="kvs" style="flex-direction:column">
+        <div class="kv"><i>理论 T₀ = 2π√(L/g)</i><span id="pT0">2.006 s</span></div>
+        <div class="kv"><i>实测 T（含大摆角修正）</i><span id="pT" style="color:#ffc857">2.006 s</span></div>
+        <div class="kv"><i>由此算出的 g</i><span id="pg" style="color:#7ee787">9.80</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="box"><p><b>这就是第一处误差来源</b>：摆角过大 → T 偏大 → g 偏小。<span class="cy">θ₀=5° 时修正量只有 0.05%，可以不管；20° 时到了 0.8%。</span></p></div>
+  <div class="trans"><b>过渡：</b>知道公式只是开始，真正决定精度的，是接下来这几个动作。</div>
+</section>
+
+<!-- ============ 2 装置与操作 ============ -->
+<section id="s2">
+  <h2><span class="num">2</span>装置与操作：四个动作决定生死</h2>
+
+  <h3>① 摆长的起点在哪？</h3>
+  <p>摆长 <span class="f">L</span> 是<b>悬点到球心</b>的距离，不是悬点到球顶：</p>
+  <div class="eq"><span class="f">L = l + d/2</span>　（<span class="f">l</span> 为线长，<span class="f">d</span> 用游标卡尺量球直径）</div>
+  <p><b>为什么必须用卡尺量球？</b>米尺量到 mm 已经够了，但如果<b>漏掉半径</b>，<span class="f">d/2 ≈ 10 mm</span>，相对误差 1%——比米尺的读数误差大五倍。</p>
+
+  <h3>② 悬点必须夹紧</h3>
+  <p>用<b>铁夹夹住摆线</b>，不能只是绕过铁杆。悬点松动会让摆长<b>越摆越长</b>，而且每次测的还不一样。</p>
+
+  <h3>③ 为什么在最低点开始计时？</h3>
+  <p>这是全课最容易被问"为什么"的一句话，答案要算给他看：</p>
+  <div class="box">
+    <p>人眼判断位置有 <span class="f">δx ≈ 1 mm</span> 的误差。对应的时间误差</p>
+    <p class="eq" style="margin:6px 0"><span class="f">δt ≈ δx / v</span></p>
+    <p>最低点 <span class="f">v</span> 最大（<span class="f">v = √(2gL(1−cosθ₀))</span>），<b>分母最大，时间误差最小</b>；最高点 <span class="f">v = 0</span>，判断最不灵敏，误差最大。</p>
+    <p><b class="key">结论：计时起点选在最低点，不是习惯，是让 δt 最小。</b></p>
+  </div>
+
+  <h3>④ 为什么测 30～50 次全振动？</h3>
+  <p>人的反应时间约 <span class="f">Δt ≈ 0.2 s</span>，这是<b>常数</b>，不随测量次数变化。但相对误差：</p>
+  <div class="eq"><span class="f">Δt / t</span>　（<span class="f">t = nT</span>）</div>
+  <p>测 1 次：<span class="rd">0.2/2 = 10%</span>；测 30 次：<span class="gr">0.2/60 ≈ 0.33%</span>。<b>次数越多，相对误差越小</b>——因为误差的"分子"不变，分母变大了。</p>
+  <p class="fn" style="color:#8b98a6;font-size:12.5px">注意：数的是<b>全振动</b>次数。摆球从最低点出发、经过一个来回回到最低点且运动方向相同，才算 1 次。</p>
+
+  <div class="trans"><b>过渡：</b>数据测出来以后，怎么变成 g？有两条路，而两条路的抗误差能力完全不同。</div>
+</section>
+
+<!-- ============ 3 两种数据处理 ============ -->
+<section id="s3">
+  <h2><span class="num">3</span>两种数据处理：公式法与图像法</h2>
+
+  <h3>方法一：公式法（逐点代入）</h3>
+  <p>每一组数据代一次 <span class="f">g = 4π²L/T²</span>，再取平均。</p>
+  <p><b>优点：</b>快、直接。<b>缺点：</b><span class="rd">把每一点的误差原封不动搬进结果</span>——如果摆长少算了半径，每一组都少算，平均以后照样少算。</p>
+
+  <h3>方法二：图像法（作 T²–L 图）</h3>
+  <p>把 <span class="f">T = 2π√(L/g)</span> 两边平方：</p>
+  <div class="eq"><span class="f">T² = (4π²/g)·L</span></div>
+  <p>这是<b>过原点的直线</b>，斜率</p>
+  <div class="eq"><span class="f">k = 4π²/g</span>　⟹　<span class="f">g = 4π²/k</span></div>
+  <p><b>图像法的两个好处：</b></p>
+  <ul>
+    <li><b>多点拟合，误差互相抵消一部分</b>——单点的偶然误差被平均掉了</li>
+    <li><b class="key">斜率只跟 g 有关，跟直线在哪无关</b>——这就是它能"免疫"截距型误差的原因（下一节重点）</li>
+  </ul>
+  <div class="box warn"><p><b>易错提醒：</b>横轴是 <span class="f">L</span>（摆长），不是线长 <span class="f">l</span>；纵轴是 <span class="f">T²</span>，不是 <span class="f">T</span>。<b>纵轴用 T 画出来的是曲线，没法求斜率。</b></p></div>
+
+  <div class="trans"><b>过渡：</b>下面进入本节课最难、也最容易被讲乱的部分——误差到底怎么分析。</div>
+</section>
+
+<!-- ============ 4 误差分析 ============ -->
+<section id="s4">
+  <h2><span class="num">4</span>误差分析：三个角度，层层深入</h2>
+
+  <h3>角度一：从表达式看——谁被放大？</h3>
+  <p>对 <span class="f">g = 4π²L/T²</span> 两边取对数再微分（相对误差传递）：</p>
+  <div class="eq"><span class="f">Δg/g = ΔL/L + 2·ΔT/T</span></div>
+  <p><b class="key">时间项前面有个"2"。</b>这就是整节课最重要的一句话：<b>同样的相对误差，放在时间上，破坏力是长度的两倍。</b></p>
+  <p>代进实际数据算一遍（<span class="f">L≈1 m，T≈2 s</span>）：</p>
+  <ul>
+    <li>米尺读数 + 球心定位：<span class="f">ΔL ≈ 2 mm</span> → <span class="f">ΔL/L ≈ 0.2%</span></li>
+    <li>测 30 次全振动，反应 0.2 s：<span class="f">Δt/t = 0.2/60 ≈ 0.33%</span> → <span class="f">2ΔT/T ≈ 0.67%</span></li>
+    <li>合计 <span class="f">Δg/g ≈ 0.9%</span>，即 <span class="f">g ≈ 9.8 ± 0.09</span></li>
+  </ul>
+  <div class="box"><p><b>量级结论：计时误差是第一位的，占三分之二以上。</b>所以"多测几十次全振动"不是形式主义，它直接把 0.67% 这一项压下去。</p></div>
+
+  <h3>角度二：从图像看——按"数学性质"分两类</h3>
+  <p>这是本节课的核心。所有误差进到 <span class="f">T²–L</span> 图上，只有两种命运：</p>
+
+  <div class="box good">
+    <p><b class="gr">Ⅰ. 平移型（只改截距，不改斜率）</b></p>
+    <p>典型：<b>漏加球半径</b>、<b>多加半径</b>、悬点没夹紧导致 L 整体偏大或偏小。</p>
+    <p>图像上是<b>整条直线平行移动</b>，斜率不变 ⟹ <b class="gr">算出的 g 不变</b>。</p>
+    <p style="color:#8b98a6;font-size:12.5px">原因：这类误差是"<span class="f">L</span> 上多加了一个常数"，而斜率只看 <span class="f">T²</span> 随 <span class="f">L</span> 变化的<b>快慢</b>，不看在哪儿起步。</p>
+  </div>
+
+  <div class="box bad" style="margin-top:10px">
+    <p><b class="rd">Ⅱ. 转动型（改斜率）</b></p>
+    <p>典型：<b>振动次数数错</b>、<b>摆角过大</b>、<b>秒表系统性偏快或偏慢</b>、摆长按比例测错。</p>
+    <p>图像上是<b>整条直线绕某点转动</b>，斜率改变 ⟹ <b class="rd">算出的 g 一定错</b>，图像法也救不了。</p>
+    <p style="color:#8b98a6;font-size:12.5px">原因：这类误差是"<span class="f">T</span> 乘了一个系数"，而 <span class="f">T</span> 在公式里是平方、在图上就是纵坐标，<b>整体缩放必然改斜率</b>。</p>
+  </div>
+
+  <p style="margin-top:12px"><b>一句话记住：</b></p>
+  <div class="eq" style="font-size:17px"><span class="key">加在 L 上的误差 → 只挪位置；乘在 T 上的误差 → 改了斜率。</span></div>
+  <p>而 <span class="f">g</span> 只由斜率决定，所以<b class="gr">图像法能自动消除前者，消除不了后者</b>。</p>
+
+  <h3>角度三：从来源看——对照表在心里过一遍</h3>
+  <ul>
+    <li><b>漏加球半径</b>（L 偏小）→ 平移型 → <span class="gr">g 不变</span>（但用公式法会偏小）</li>
+    <li><b>把直径当半径加</b>（L 偏大 2 倍半径）→ 平移型 → <span class="gr">g 不变</span></li>
+    <li><b>悬点松动、摆线变长</b>→ 数据点散乱、不共线 → <span class="rd">随机误差</span>，g 可能偏大也可能偏小</li>
+    <li><b>少数一次全振动</b>（30 记成 29）→ T 偏大 → 斜率偏大 → <span class="rd">g 偏小</span></li>
+    <li><b>摆角 20°</b>→ T 偏大 → <span class="rd">g 偏小</span>（约 0.8%）</li>
+    <li><b>摆球不在同一竖直平面（圆锥摆）</b>→ 实际是圆锥摆，T 偏小 → <span class="rd">g 偏大</span></li>
+    <li><b>空气阻力</b>→ 阻尼使 T 略增 → g 略偏小，<b>量级 10⁻⁴，可忽略</b></li>
+    <li><b>摆球质量、摆线质量</b>→ 只要球远重于线，<b>无影响</b>（周期与质量无关）</li>
+  </ul>
+
+  <div class="trans"><b>过渡：</b>下面把这个"平移 / 转动"的判断，做成可以直接拖的图。</div>
+</section>
+
+<!-- ============ 5 诊断器 ============ -->
+<section id="s5">
+  <h2><span class="num">5</span>T²–L 诊断器：拖动情形，看直线怎么动</h2>
+  <p style="font-size:13px;color:#8b98a6">横轴为作图的横坐标取值，纵轴为实测 <span class="f">T²</span>。真实 <span class="f">g = 9.80</span>，球半径 <span class="f">r = 10 mm</span>，共 7 组数据。</p>
+  <canvas id="tl"></canvas>
+  <div class="ctrls">
+    <button class="b on" data-c="0">规范作图</button>
+    <button class="b" data-c="1">漏加半径</button>
+    <button class="b" data-c="2">多加半径</button>
+    <button class="b" data-c="3">少数一次</button>
+    <button class="b" data-c="4">摆角 20°</button>
+  </div>
+  <div class="kvs">
+    <div class="kv"><i>斜率 k</i><span id="tk" style="color:#4dd0e1">—</span></div>
+    <div class="kv"><i>纵截距 b</i><span id="tb" style="color:#bc8cff">—</span></div>
+    <div class="kv"><i>图像法 g = 4π²/k</i><span id="tg" style="color:#7ee787">—</span></div>
+    <div class="kv"><i>公式法 g（取 L≈1 m 那点）</i><span id="tgf" style="color:#ffc857">—</span></div>
+  </div>
+  <div class="box" id="tnote"><p>—</p></div>
+  <div class="trans"><b>过渡：</b>把这套判断压成三句话，考场上直接用。</div>
+</section>
+
+<!-- ============ 6 口诀 ============ -->
+<section id="s6">
+  <h2><span class="num">6</span>判断口诀：三句话解决所有误差题</h2>
+  <div class="box good"><p><b>第一句｜看它加在哪：</b>加在 <span class="f">L</span> 上 → 平移，g 不变；乘在 <span class="f">T</span> 上 → 转动，g 必错。</p></div>
+  <div class="box good"><p><b>第二句｜看它变大变小：</b>T 偏大 → g 偏小；T 偏小 → g 偏大。（因为 <span class="f">T²</span> 在分母）</p></div>
+  <div class="box good"><p><b>第三句｜看它能否自愈：</b>图像法只免疫"平移型"，其他一律免不了。<b>别指望画个图就万事大吉。</b></p></div>
+
+  <h3>三个常见的"想当然"</h3>
+  <ul>
+    <li><b>❌ "测的次数越多越准"</b>——次数多只压住计时误差；如果数错了（30 记 29），测 300 次也只是把 7% 的错放大得更整齐。<b>先是数对，再是多测。</b></li>
+    <li><b>❌ "摆球重一点更准"</b>——周期与质量无关。重球只是让空气阻力相对更小，<b>量级 10⁻⁴，可以不管</b>。</li>
+    <li><b>❌ "图像不过原点就一定错了"</b>——<b class="key">过不过原点不影响 g，斜率才影响 g</b>。漏加半径的图不过原点，但 g 是对的。</li>
+  </ul>
+
+  <div class="trans"><b>过渡：</b>下面三道题，正好检验这三句话。</div>
+</section>
+
+<!-- ============ 7 练习 ============ -->
+<section id="s7">
+  <h2><span class="num">7</span>随堂练：三道题检验口诀</h2>
+
+  <details>
+    <summary>1. 某同学测摆长时只量了悬点到球顶的距离，用 T²–L 图求 g。结果如何？</summary>
+    <p>L 少算了一个半径 r，属于<b>平移型</b>。直线整体左移（纵截距 +4π²r/g），<b>斜率不变</b>，所以 <b class="gr">g 的测量值不变</b>。</p>
+    <p>但若他用公式法逐点代入 <span class="f">g = 4π²l/T²</span>，则每组都偏小，<b class="rd">g 偏小约 1%</b>。<b>这是图像法优于公式法最典型的例子。</b></p>
+  </details>
+
+  <details>
+    <summary>2. 摆球在水平面内做圆周运动（圆锥摆），测得的 g 偏大还是偏小？</summary>
+    <p>圆锥摆的实际周期 <span class="f">T = 2π√(Lcosα/g)</span>，比单摆<b>小</b>。</p>
+    <p>由 <span class="f">g = 4π²L/T²</span>，T 偏小 → <b class="rd">g 偏大</b>。属于乘在 T 上的误差，<b>图像法也救不了</b>。</p>
+  </details>
+
+  <details>
+    <summary>3. 秒表走得偏快（实际 60 s 显示 61 s），g 偏大还是偏小？</summary>
+    <p>显示时间偏大 → <span class="f">T = t/n</span> 偏大 → 由 <span class="f">g = 4π²L/T²</span>，<b class="rd">g 偏小</b>。</p>
+    <p>这是乘性误差，<b>画图也会得到同样偏小的 g</b>——因为它是斜率整体缩放。</p>
+  </details>
+
+  <details>
+    <summary>4. 开放题：要进一步提高精度，先改哪一处？</summary>
+    <p><b>先改计时。</b>因为 <span class="f">Δg/g = ΔL/L + 2ΔT/T</span>，时间项系数是 2，实测占比也最大（约 0.67% vs 0.2%）。</p>
+    <p>具体做法：测 50 次全振动；用光电门代替人工秒表（可把 0.2 s 降到 0.001 s 量级）；<b>摆长尽量长</b>（T 大，同样的 Δt 相对误差更小）。</p>
+  </details>
+
+  <div class="box" style="margin-top:12px">
+    <p><b>本课小结：</b>一个公式 <span class="f">g = 4π²L/T²</span>；一条直线 <span class="f">T² = (4π²/g)L</span>；两个性质——<b class="key">斜率定 g，截距不定 g</b>；一个放大倍数——<b class="key">时间误差 ×2</b>。</p>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+/* ================= 单摆动画 ================= */
+const cv=document.getElementById('pend'), ctx=cv.getContext('2d');
+const g0=9.8;
+let L=1.0, A=4, W=0,H=0,phi=0,last=performance.now();
+function rsP(){
+  const w=cv.parentElement.clientWidth;
+  const h=Math.round(Math.max(300,Math.min(390,w*0.86)));
+  const d=Math.min(window.devicePixelRatio||1,2);
+  cv.width=w*d; cv.height=h*d; cv.style.height=h+'px';
+  ctx.setTransform(d,0,0,d,0,0);
+  W=w;H=h;
+}
+function Tof(angDeg){
+  const th=angDeg*Math.PI/180;
+  return 2*Math.PI*Math.sqrt(L/g0)*(1+th*th/16);
+}
+function drawP(){
+  ctx.clearRect(0,0,W,H);
+  const px=W/2, py=34;
+  // 支架
+  ctx.strokeStyle='#3a4756'; ctx.lineWidth=5;
+  ctx.beginPath(); ctx.moveTo(px-58,py); ctx.lineTo(px+58,py); ctx.stroke();
+  ctx.fillStyle='#2a3542';
+  ctx.fillRect(px-58,py-7,116,7);
+  // 竖直参考
+  ctx.strokeStyle='#1e2833'; ctx.setLineDash([3,5]); ctx.lineWidth=1.2;
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(px,py+ (H-py-40)); ctx.stroke();
+  ctx.setLineDash([]);
+  // 摆长像素：让 L=1.5 也能放下
+  const scale=(H-py-52)/1.6;
+  const len=L*scale;
+  const th=A*Math.PI/180*Math.cos(phi);
+  const bx=px+len*Math.sin(th), by=py+len*Math.cos(th);
+  // 摆线
+  ctx.strokeStyle='#8b98a6'; ctx.lineWidth=1.6;
+  ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(bx,by); ctx.stroke();
+  // 球
+  const rg=Math.max(9,10*scale/96);
+  const grd=ctx.createRadialGradient(bx-rg*0.35,by-rg*0.35,1,bx,by,rg);
+  grd.addColorStop(0,'#ffe9a8'); grd.addColorStop(1,'#c9962c');
+  ctx.fillStyle=grd;
+  ctx.beginPath(); ctx.arc(bx,by,rg,0,7); ctx.fill();
+  // 角标
+  ctx.strokeStyle='#4dd0e1'; ctx.lineWidth=1.6;
+  const ar=Math.min(46,len*0.45);
+  ctx.beginPath(); ctx.arc(px,py,ar,Math.PI/2-th,Math.PI/2,th<0); ctx.stroke();
+  ctx.fillStyle='#4dd0e1'; ctx.font='bold 12.5px system-ui';
+  ctx.fillText('θ₀='+A.toFixed(1)+'°',px+6,py+ar+16);
+  // 最低点
+  ctx.fillStyle='#5c6a78'; ctx.font='11.5px system-ui';
+  ctx.fillText('最低点（计时起点）',px+16,py+len+32);
+  ctx.fillStyle='#7ee787';
+  ctx.beginPath(); ctx.arc(px,py+len,3.2,0,7); ctx.fill();
+}
+function loopP(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  const T=Tof(A);
+  phi+=2*Math.PI*dt/(T*2.2);           // 放慢 2.2 倍
+  drawP(); requestAnimationFrame(loopP);
+}
+document.getElementById('rL').oninput=e=>{
+  L=+e.target.value; document.getElementById('vL').textContent=L.toFixed(2)+' m'; updateP();
+};
+document.getElementById('rA').oninput=e=>{
+  A=+e.target.value; document.getElementById('vA').textContent=A.toFixed(1)+'°'; updateP();
+};
+function updateP(){
+  const T0=2*Math.PI*Math.sqrt(L/g0), T=Tof(A);
+  document.getElementById('pT0').textContent=T0.toFixed(3)+' s';
+  document.getElementById('pT').textContent=T.toFixed(3)+' s';
+  const gg=4*Math.PI*Math.PI*L/(T*T);
+  const el=document.getElementById('pg');
+  el.textContent=gg.toFixed(2);
+  el.style.color = Math.abs(gg-g0)<0.005 ? '#7ee787' : '#ff7b72';
+}
+updateP();
+
+/* ================= T²–L 诊断器 ================= */
+const cv2=document.getElementById('tl'), ct2=cv2.getContext('2d');
+const G=9.8, R=0.010, K0=4*Math.PI*Math.PI/G;
+let mode=0, BW=0,BH=0;
+function rs2(){
+  const w=cv2.parentElement.clientWidth;
+  const h=Math.round(Math.max(330,Math.min(430,w*0.50)));
+  const d=Math.min(window.devicePixelRatio||1,2);
+  cv2.width=w*d; cv2.height=h*d; cv2.style.height=h+'px';
+  ct2.setTransform(d,0,0,d,0,0);
+  BW=w;BH=h;
+}
+// 七组数据：线长 l 从 0.40 到 1.00
+const LS=[0.40,0.50,0.60,0.70,0.80,0.90,1.00];
+function dataSet(m){
+  // 返回 {x,y} 数组 + 说明
+  const pts=LS.map(l=>{
+    const Ttrue2=K0*(l+R);          // 真实 T²
+    if(m===0) return {x:l+R, y:Ttrue2};
+    if(m===1) return {x:l,   y:Ttrue2};               // 漏半径：横轴只用线长
+    if(m===2) return {x:l+2*R, y:Ttrue2};             // 把直径当半径加
+    if(m===3){const f=30/29; return {x:l+R, y:Ttrue2*f*f};}  // 少数一次
+    if(m===4){const th=20*Math.PI/180, f=1+th*th/16; return {x:l+R, y:Ttrue2*f*f};}
+  });
+  return pts;
+}
+function fit(pts){
+  const n=pts.length;
+  let sx=0,sy=0,sxx=0,sxy=0;
+  for(const p of pts){sx+=p.x;sy+=p.y;sxx+=p.x*p.x;sxy+=p.x*p.y;}
+  const k=(n*sxy-sx*sy)/(n*sxx-sx*sx);
+  const b=(sy-k*sx)/n;
+  return {k,b};
+}
+function draw2(){
+  rs2done();
+}
+let inited2=false;
+function rs2done(){
+  if(!BW) rs2();
+}
+function paint2(){
+  const pts=dataSet(mode);
+  const {k,b}=fit(pts);
+  const gg=4*Math.PI*Math.PI/k;
+  // 公式法：取 l 最接近 1.00 那一点，学生用 x 当 L 代入
+  const p1=pts[pts.length-1];
+  const gf=4*Math.PI*Math.PI*p1.x/p1.y;
+
+  ct2.clearRect(0,0,BW,BH);
+  const ml=52,mr=20,mt=22,mb=40;
+  const X0=ml, X1=BW-mr, Y0=BH-mb, Y1=mt;
+  const XMAX=1.30, YMAX=4.6;
+  const PX=v=>X0+(X1-X0)*v/XMAX;
+  const PY=v=>Y0-(Y0-Y1)*v/YMAX;
+  // 网格
+  ct2.strokeStyle='#1b2531'; ct2.lineWidth=1;
+  for(let v=0.2;v<=1.2;v+=0.2){
+    ct2.beginPath(); ct2.moveTo(PX(v),Y0); ct2.lineTo(PX(v),Y1); ct2.stroke();
+    ct2.fillStyle='#54606d'; ct2.font='10.5px system-ui';
+    ct2.fillText(v.toFixed(1),PX(v)-9,Y0+14);
+  }
+  for(let v=1;v<=4;v+=1){
+    ct2.beginPath(); ct2.moveTo(X0,PY(v)); ct2.lineTo(X1,PY(v)); ct2.stroke();
+    ct2.fillStyle='#54606d'; ct2.fillText(v.toFixed(0),X0-14,PY(v)+4);
+  }
+  // 轴
+  ct2.strokeStyle='#39424e'; ct2.lineWidth=1.6;
+  ct2.beginPath(); ct2.moveTo(X0,Y0); ct2.lineTo(X1,Y0); ct2.stroke();
+  ct2.beginPath(); ct2.moveTo(X0,Y0); ct2.lineTo(X0,Y1); ct2.stroke();
+  ct2.fillStyle='#8b98a6'; ct2.font='12px system-ui';
+  ct2.fillText('L / m',X1-34,Y0+22);
+  ct2.fillText('T² / s²',X0-44,Y1+2);
+  // 拟合直线
+  ct2.strokeStyle='#4dd0e1'; ct2.lineWidth=2.4;
+  ct2.beginPath(); ct2.moveTo(PX(0),PY(b)); ct2.lineTo(PX(XMAX),PY(k*XMAX+b)); ct2.stroke();
+  // 点
+  for(const p of pts){
+    ct2.fillStyle='#ffc857';
+    ct2.beginPath(); ct2.arc(PX(p.x),PY(p.y),4.6,0,7); ct2.fill();
+    ct2.strokeStyle='#0f151d'; ct2.lineWidth=1.2; ct2.stroke();
+  }
+  // 截距标注
+  if(Math.abs(b)>0.002){
+    ct2.strokeStyle='#bc8cff'; ct2.setLineDash([4,4]); ct2.lineWidth=1.4;
+    ct2.beginPath(); ct2.moveTo(PX(0),PY(b)); ct2.lineTo(PX(0.16),PY(b)); ct2.stroke();
+    ct2.setLineDash([]);
+    ct2.fillStyle='#bc8cff'; ct2.font='bold 11px system-ui';
+    ct2.fillText('b='+b.toFixed(3),PX(0)+4,PY(b)-6);
+  }
+  // 理想线参照
+  ct2.strokeStyle='rgba(139,152,166,.45)'; ct2.setLineDash([5,5]); ct2.lineWidth=1.4;
+  ct2.beginPath(); ct2.moveTo(PX(0),PY(0)); ct2.lineTo(PX(XMAX),PY(K0*XMAX)); ct2.stroke();
+  ct2.setLineDash([]);
+  ct2.fillStyle='#6f7d8c'; ct2.font='10.5px system-ui';
+  ct2.fillText('灰虚线＝理想直线',X1-124,Y1+12);
+
+  document.getElementById('tk').textContent=k.toFixed(3);
+  document.getElementById('tb').textContent=(Math.abs(b)<0.0005?'0.000':(b>0?'+':'')+b.toFixed(3));
+  const eg=document.getElementById('tg');
+  eg.textContent=gg.toFixed(2);
+  eg.style.color=Math.abs(gg-G)<0.01?'#7ee787':'#ff7b72';
+  const ef=document.getElementById('tgf');
+  ef.textContent=gf.toFixed(2);
+  ef.style.color=Math.abs(gf-G)<0.01?'#7ee787':'#ff7b72';
+
+  const f1=(30/29), f2=1+Math.pow(20*Math.PI/180,2)/16;
+  const gL=G, gLf=(4*Math.PI*Math.PI*1.00)/(K0*(1.00+R));
+  const gPf=(4*Math.PI*Math.PI*(1.00+2*R))/(K0*(1.00+R));
+  const notes=[
+    `<p><b>规范作图：</b>直线过原点，斜率 k=4π²/g=${K0.toFixed(3)}，两种方法都得到 ${G.toFixed(2)}。<b>这是基准。</b></p>`,
+    `<p><b>漏加半径（平移型）：</b>横轴只用了线长 l，直线<b>整体上移</b>，纵截距 b≈+${(K0*R).toFixed(3)}，但<b class="gr">斜率一点没变</b>（仍是 ${k.toFixed(3)}）。</p><p>结果：图像法 g=${gg.toFixed(2)} <b class="gr">正确</b>；公式法 g=${gf.toFixed(2)} <b class="rd">偏小约 1%</b>。<b>这就是图像法的价值。</b></p>`,
+    `<p><b>多加半径（平移型）：</b>把直径当成了半径，横轴整体偏大，直线<b>整体下移</b>，纵截距 b≈${b.toFixed(3)}（负），<b class="gr">斜率仍不变</b>。</p><p>结果：图像法 g=${gg.toFixed(2)} <b class="gr">正确</b>；公式法 g=${gf.toFixed(2)} <b class="rd">偏大约 1%</b>。<b>镜像情形，结论相反但道理相同。</b></p>`,
+    `<p><b>少数一次（转动型）：</b>30 次记成 29 次，T 变成原来的 ${f1.toFixed(3)} 倍，<b>T² 全部放大 ${((f1*f1-1)*100).toFixed(1)}%</b>，直线<b>绕原点转动、变陡</b>：斜率 ${k.toFixed(3)}。</p><p>结果：图像法 g=${gg.toFixed(2)} <b class="rd">偏小 ${((1-gg/G)*100).toFixed(1)}%</b>；公式法同样偏小。<b>图像法救不了乘性误差。</b></p>`,
+    `<p><b>摆角 20°（转动型）：</b>T 放大 1+θ²/16≈${((f2-1)*100).toFixed(2)}%，T² 放大 ${((f2*f2-1)*100).toFixed(2)}%，斜率 ${k.toFixed(3)}。</p><p>结果：图像法 g=${gg.toFixed(2)}，<b class="rd">偏小 ${((1-gg/G)*100).toFixed(1)}%</b>。幅度不大，但方向和"平移型"完全不同——<b>它是斜率问题，不是截距问题</b>。</p>`
+  ];
+  document.getElementById('tnote').innerHTML=notes[mode];
+}
+document.querySelectorAll('[data-c]').forEach(b=>{
+  b.onclick=()=>{
+    mode=+b.dataset.c;
+    document.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',x===b));
+    paint2();
+  };
+});
+window.addEventListener('resize',()=>{rsP();rs2();paint2();});
+
+/* 导航 */
+document.getElementById('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-go]'); if(!b) return;
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('on',x===b));
+  const el=document.getElementById(b.dataset.go);
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+/* 启动 */
+const mh=/#m(\d)/.exec(location.hash||'');
+if(mh){ mode=+mh[1]; document.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',+x.dataset.c===mode)); }
+rsP(); rs2(); paint2(); requestAnimationFrame(loopP);
+})();
+</script>
+</body>
+</html>
