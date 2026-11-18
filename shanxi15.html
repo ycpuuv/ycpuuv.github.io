@@ -57,21 +57,26 @@ th{background:#18212b;color:var(--dim);font-weight:600}
     </ol>
   </div>
 
-  <canvas id="cv"></canvas>
-  <div class="btns">
-    <button id="bp" class="play">⏸ 暂停</button>
-    <button id="br">↺ 从头</button>
-    <button data-s="0.25">0.25×</button>
-    <button data-s="0.5" class="on">0.5×</button>
-    <button data-s="1">1×</button>
+  <div class="card" style="background:#f7f5ef;border-color:#d8d2c4">
+    <h2 style="color:#8a6d1f">原题配图</h2>
+    <img src="media/shanxi15-fig.png" alt="2025 陕晋青宁 15 题原图"
+         style="width:100%;max-width:920px;display:block;margin:8px auto;background:#fff;border-radius:8px;padding:16px 18px">
+    <p style="color:#6b6257;font-size:12.5px;text-align:center;margin-top:2px">
+      虚线为两粒子连线｜A 以 v₀ 向右追静止的 B，初始相距 l₀｜P 是 B 与 A 共速时的位置
+    </p>
   </div>
-  <div class="kvs">
-    <div class="kv"><i>阶段</i><span id="kSt" style="color:#ffc857">① 无外力</span></div>
-    <div class="kv"><i>总动量 p</i><span id="kP" style="color:#4dd0e1">1.00</span></div>
-    <div class="kv"><i>动能 Eₖ</i><span id="kK" style="color:#7ee787">0.500</span></div>
-    <div class="kv"><i>电势能 Eₚ</i><span id="kE" style="color:#bc8cff">0.133</span></div>
-    <div class="kv"><i>外力做功 W_F</i><span id="kW" style="color:#ff7b72">0</span></div>
-    <div class="kv"><i>间距 r/l₀</i><span id="kR" style="color:#e8eef5">1.000</span></div>
+
+  <div class="card">
+    <h2>三阶段账本（看这张表就够）</h2>
+    <table>
+      <tr><th>时刻</th><th>总动量 p</th><th>动能 Eₖ</th><th>电势能 Eₚ</th><th>F 做功</th><th>间距 r/l₀</th></tr>
+      <tr><td>初始</td><td>1.00</td><td>0.500</td><td>0.133</td><td>0</td><td>1.000</td></tr>
+      <tr><td>① 共速（B 到 P）</td><td><b class="cy">1.00</b>　守恒</td><td>0.100</td><td>0.533</td><td>0</td><td>0.250</td></tr>
+      <tr><td>② B 到 v₀（A 停在 P）</td><td><b class="rd">4.00</b>　变了</td><td>2.000</td><td>0.133</td><td>1.50</td><td>1.000</td></tr>
+    </table>
+    <p><b>账本闭合：</b>Eₖ+Eₚ 从 0.633 涨到 2.133，差值 <b class="key">1.50 正好等于 F 做的功</b>。</p>
+    <p><b>电势能首末都是 0.133</b>——走一圈回到原点，所以第（3）问可以<b class="key">直接把势能消掉</b>，只算外力做功和动能变化。</p>
+    <p style="color:#8b98a6;font-size:12.5px">数值以 m v₀² 为单位，长度以 l₀ 为单位。</p>
   </div>
 
   <div class="card">
@@ -133,172 +138,5 @@ th{background:#18212b;color:var(--dim);font-weight:600}
   </div>
 </div>
 
-<script>
-(function(){
-const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-const $=id=>document.getElementById(id);
-const W0=1.0, L0=1.0;              // 归一化单位：m=1, v0=1, l0=1, 时间单位 l0/v0
-const C=2/15;                       // Ep0 (r=l0 时)
-const F=1.5;                        // 3mv0^2/(2l0)
-const Fc=r=>C/(r*r);
-let W=0,H=0,S=null,t=0,playing=true,spd=0.5;
-let last=performance.now();
-
-/* ---------- 阶段①：真实动力学积分（已验证 r→l0/4） ---------- */
-const P1=[];
-(function(){
-  let xA=0,vA=W0,xB=L0,vB=0,tt=0,dt=2e-5,i=0;
-  P1.push({t:0,xA,xB,vA,vB});
-  while(vA>vB && tt<5){
-    const r=xB-xA;
-    vA+=(-Fc(r))*dt; xA+=vA*dt;
-    vB+=(Fc(r)/4)*dt; xB+=vB*dt;
-    tt+=dt;
-    if(++i%40===0) P1.push({t:tt,xA,xB,vA,vB});
-  }
-  P1.push({t:tt,xA,xB,vA,vB});
-})();
-const T1=P1[P1.length-1].t, XA1=P1[P1.length-1].xA, XB1=P1[P1.length-1].xB;
-const T2=2.0;                        // 2l0/v0
-const GAP0=XB1-XA1;                  // 应 ≈ 0.25
-const TOT=T1+T2;
-
-function state(tt){
-  if(tt<=T1){
-    // 查表插值
-    let lo=0,hi=P1.length-1;
-    while(hi-lo>1){const mid=(lo+hi)>>1; if(P1[mid].t<=tt) lo=mid; else hi=mid;}
-    const a=P1[lo],b=P1[hi],u=(tt-a.t)/((b.t-a.t)||1);
-    return {xA:a.xA+(b.xA-a.xA)*u, xB:a.xB+(b.xB-a.xB)*u,
-            vA:a.vA+(b.vA-a.vA)*u, vB:a.vB+(b.vB-a.vB)*u, ph:1};
-  }
-  const u=Math.min(1,(tt-T1)/T2);
-  // 阶段②：按题设末态构造（A: 0.2→0 走 |RT|；B: 0.2→1 走 l0）
-  const GAP=XB1-XA1;                 // 共速时间距 = l0/4
-  const p=1.6, q=1.667;
-  const xA=XA1+GAP*(1-Math.pow(1-u,p));   // A 走完 GAP，正好停在 P
-  const vA=0.2*Math.pow(1-u,0.6);
-  const xB=XB1+L0*Math.pow(u,q);
-  const vB=0.2+0.8*Math.pow(u,q);
-  return {xA,xB,vA,vB,ph:2};
-}
-
-function resize(){
-  const w=Math.min(cv.parentElement.clientWidth,1080);
-  const h=Math.round(Math.max(330,Math.min(420,w*0.40)));
-  const dpr=Math.min(window.devicePixelRatio||1,2);
-  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  W=w;H=h;
-  S={x0:-0.15,x1:2.45,y:Math.round(h*0.46)};
-}
-window.addEventListener('resize',resize);
-
-function txt(s,x,y,c,size,bold){
-  ctx.fillStyle=c||'#cfd8e3';
-  ctx.font=(bold?'bold ':'')+(size||12)+'px system-ui,-apple-system,sans-serif';
-  ctx.fillText(s,x,y);
-}
-
-function draw(){
-  if(!S) resize();
-  const {x0,x1,y}=S;
-  const PX=x=>60+(W-100)*(x-x0)/(x1-x0);
-  ctx.clearRect(0,0,W,H);
-  const q=state(t);
-
-  // 坐标轴
-  ctx.strokeStyle='#1e2833'; ctx.lineWidth=1;
-  for(let x=0;x<=2.05;x+=0.25){
-    ctx.beginPath(); ctx.moveTo(PX(x),y-90); ctx.lineTo(PX(x),y+90); ctx.stroke();
-  }
-  // P 点
-  ctx.strokeStyle='#ffc857'; ctx.lineWidth=2; ctx.setLineDash([5,5]);
-  ctx.beginPath(); ctx.moveTo(PX(XB1),y-100); ctx.lineTo(PX(XB1),y+100); ctx.stroke();
-  ctx.setLineDash([]);
-  txt('P',PX(XB1)-4,y-106,'#ffc857',13,true);
-
-  // 间距标尺
-  const gx1=PX(q.xA), gx2=PX(q.xB);
-  ctx.strokeStyle='#3a4756'; ctx.lineWidth=1.4;
-  ctx.beginPath(); ctx.moveTo(gx1,y+52); ctx.lineTo(gx2,y+52); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(gx1,y+46); ctx.lineTo(gx1,y+58); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(gx2,y+46); ctx.lineTo(gx2,y+58); ctx.stroke();
-  const r=q.xB-q.xA;
-  txt('r = '+(r/L0).toFixed(3)+' l₀',(gx1+gx2)/2-28,y+72,'#8b98a6',12.5);
-
-  // A（小）
-  ctx.fillStyle='#4dd0e1';
-  ctx.beginPath(); ctx.arc(gx1,y,13,0,7); ctx.fill();
-  txt('A',gx1-5,y+5,'#06202a',13,true);
-  txt('m',gx1-6,y-22,'#4dd0e1',12,true);
-  // B（大）
-  ctx.fillStyle='#ffd97a';
-  ctx.beginPath(); ctx.arc(gx2,y,21,0,7); ctx.fill();
-  txt('B',gx2-6,y+5,'#3a2a00',14,true);
-  txt('4m',gx2-10,y-32,'#ffd97a',12,true);
-
-  // 速度箭头
-  const arrow=(x,yy,v,c)=>{
-    if(Math.abs(v)<0.02) return;
-    const len=18+Math.abs(v)*34;
-    ctx.strokeStyle=c; ctx.lineWidth=2.6;
-    ctx.beginPath(); ctx.moveTo(x,yy); ctx.lineTo(x+len,yy); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(x+len,yy); ctx.lineTo(x+len-7,yy-5);
-    ctx.lineTo(x+len-7,yy+5); ctx.closePath(); ctx.fillStyle=c; ctx.fill();
-    txt(v.toFixed(2)+'v₀',x+len+6,yy+4,c,11.5,true);
-  };
-  arrow(gx1,y-40,q.vA,'#4dd0e1');
-  arrow(gx2,y-48,q.vB,'#ffd97a');
-
-  // 力箭头（阶段②）
-  if(q.ph===2){
-    const fr=Math.min(1,(t-T1)/0.25);
-    // 库仑斥力：A 向左，B 向右
-    const fc=Fc(r);
-    const scl=Math.min(52,10+fc*14);
-    const fArrow=(x,yy,dir,len,c,lab)=>{
-      ctx.strokeStyle=c; ctx.lineWidth=2.2; ctx.setLineDash([4,3]);
-      ctx.beginPath(); ctx.moveTo(x,yy); ctx.lineTo(x+dir*len,yy); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.beginPath(); ctx.moveTo(x+dir*len,yy); ctx.lineTo(x+dir*len-dir*7,yy-4);
-      ctx.lineTo(x+dir*len-dir*7,yy+4); ctx.closePath(); ctx.fillStyle=c; ctx.fill();
-      txt(lab,x+dir*len+(dir>0?6:-34),yy+4,c,10.5);
-    };
-    fArrow(gx1,y+18,-1,26*fr,'#bc8cff','库仑');
-    fArrow(gx2,y+30,1,26*fr,'#bc8cff','库仑');
-    fArrow(gx2,y-4,1,46*fr,'#ff7b72','F');
-  }
-
-  // 读数
-  const pTot=q.vA+4*q.vB;
-  const Ek=0.5*q.vA*q.vA+0.5*4*q.vB*q.vB;
-  const Ep=C/r;
-  const WF=F*Math.max(0,(q.xB-XB1));
-  $('kSt').textContent=q.ph===1?'① 无外力':'② 施加 F';
-  $('kP').textContent=Math.min(pTot,4.0).toFixed(2);
-  $('kK').textContent=Ek.toFixed(3);
-  $('kE').textContent=Ep.toFixed(3);
-  $('kW').textContent=WF.toFixed(2);
-  $('kR').textContent=(r/L0).toFixed(3);
-}
-
-function loop(now){
-  const dt=Math.min((now-last)/1000,0.05); last=now;
-  if(playing){ t+=dt*spd; if(t>TOT){ t=TOT; playing=false; $('bp').textContent='▶ 播放'; } }
-  draw();
-  requestAnimationFrame(loop);
-}
-$('bp').onclick=()=>{playing=!playing; $('bp').textContent=playing?'⏸ 暂停':'▶ 播放';};
-$('br').onclick=()=>{t=0;playing=true;$('bp').textContent='⏸ 暂停';};
-document.querySelectorAll('[data-s]').forEach(b=>{
-  b.onclick=()=>{spd=+b.dataset.s; document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b));};
-});
-resize();
-const _h=parseFloat((location.hash||'').slice(1));
-if(!isNaN(_h)){ t=Math.min(_h,TOT); playing=false; $('bp').textContent='▶ 播放'; }
-requestAnimationFrame(loop);
-})();
-</script>
 </body>
 </html>
