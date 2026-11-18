@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>2025 陕晋青宁 15 题 · 三阶段账本</title>
+<style>
+:root{--bg:#0b0f14;--panel:#141b23;--panel2:#101720;--line:#26303b;--txt:#e8eef5;--dim:#8b98a6;
+--amber:#ffc857;--cyan:#4dd0e1;--violet:#bc8cff;--green:#7ee787;--red:#ff7b72}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);
+font-family:-apple-system,"PingFang SC","Noto Sans CJK SC","Microsoft YaHei",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:12px 12px 40px}
+h1{font-size:19px;margin:6px 0 4px;line-height:1.4}
+h1 em{font-style:normal;color:var(--amber)}
+.sub{font-size:12.5px;color:var(--dim);margin-bottom:10px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin:11px 0}
+.card h2{font-size:14.5px;margin:0 0 9px;color:var(--amber)}
+p{margin:7px 0;font-size:13.5px;line-height:1.85;color:#dbe4ee}
+ul,ol{padding-left:20px;margin:6px 0}
+li{font-size:13.5px;line-height:1.9;color:#dbe4ee;margin-bottom:4px}
+.f{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-size:15.5px;color:#fff;padding:0 2px}
+.eq{text-align:center;font-family:"Times New Roman",Georgia,serif;font-size:16px;color:#fff;margin:9px 0}
+.key{color:var(--amber);font-weight:700}.cy{color:var(--cyan);font-weight:700}
+.gr{color:var(--green);font-weight:700}.rd{color:var(--red);font-weight:700}
+#cv{width:100%;display:block;border-radius:12px;background:#0f151d;border:1px solid var(--line)}
+.btns{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+button{font-size:13px;font-weight:600;padding:7px 13px;border:1px solid var(--line);
+border-radius:9px;background:var(--panel);color:var(--txt);cursor:pointer}
+button.on{background:#123;border-color:var(--cyan);color:var(--cyan)}
+button.play{background:#12341f;border-color:#2ea043;color:#8ff0a4}
+.kvs{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.kv{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:7px 11px;flex:1;min-width:112px}
+.kv i{display:block;font-style:normal;font-size:11.5px;color:var(--dim)}
+.kv span{font-size:15.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.bad{background:#231717;border-left:3px solid var(--red);border-radius:0 9px 9px 0;padding:9px 13px;margin:9px 0}
+.good{background:#16241a;border-left:3px solid var(--green);border-radius:0 9px 9px 0;padding:9px 13px;margin:9px 0}
+.warn{background:#241f12;border-left:3px solid var(--amber);border-radius:0 9px 9px 0;padding:9px 13px;margin:9px 0}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:13px}
+th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}
+th{background:#18212b;color:var(--dim);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>2025 陕晋青宁（山西）第 15 题 · <em>三阶段账本</em></h1>
+  <div class="sub">16 分压轴　m、4m 两粒子　电势能 ∝ 1/r　原卷答案：v₀/5　|　v₀t₁/5 − 3l₀/20　|　2l₀/v₀</div>
+
+  <div class="card">
+    <h2>一、原题</h2>
+    <p>两个电性相同、质量分别为 <span class="f">m</span>、<span class="f">4m</span> 的粒子 A、B，初始相距 <span class="f">l₀</span>。A 以 <span class="f">v₀</span> 沿连线向静止的 B 运动，此时系统电势能 <b class="key">Eₚ₀ = 2mv₀²/15</b>。</p>
+    <p>经时间 <span class="f">t₁</span>，B 到达 P 点，此时两粒子速度相同，<b>同时给 B 施加恒力 F（与速度同向）</b>。当 B 的速度为 <span class="f">v₀</span> 时，A 恰好运动到 P 点且速度为 0，间距恢复为 <span class="f">l₀</span>，撤去 F。求（m、l₀、v₀、t₁ 已知）：</p>
+    <ol>
+      <li>B 到达 P 点时的速度 <span class="f">v₁</span></li>
+      <li><span class="f">t₁</span> 时间内 B 的位移 <span class="f">x_B</span></li>
+      <li>恒力作用的时间 <span class="f">t₂</span></li>
+    </ol>
+  </div>
+
+  <canvas id="cv"></canvas>
+  <div class="btns">
+    <button id="bp" class="play">⏸ 暂停</button>
+    <button id="br">↺ 从头</button>
+    <button data-s="0.25">0.25×</button>
+    <button data-s="0.5" class="on">0.5×</button>
+    <button data-s="1">1×</button>
+  </div>
+  <div class="kvs">
+    <div class="kv"><i>阶段</i><span id="kSt" style="color:#ffc857">① 无外力</span></div>
+    <div class="kv"><i>总动量 p</i><span id="kP" style="color:#4dd0e1">1.00</span></div>
+    <div class="kv"><i>动能 Eₖ</i><span id="kK" style="color:#7ee787">0.500</span></div>
+    <div class="kv"><i>电势能 Eₚ</i><span id="kE" style="color:#bc8cff">0.133</span></div>
+    <div class="kv"><i>外力做功 W_F</i><span id="kW" style="color:#ff7b72">0</span></div>
+    <div class="kv"><i>间距 r/l₀</i><span id="kR" style="color:#e8eef5">1.000</span></div>
+  </div>
+
+  <div class="card">
+    <h2>二、三问怎么算</h2>
+    <p><b>（1）只有内力 → 动量守恒</b></p>
+    <div class="eq">m v₀ = 5m v₁　⟹　<b class="cy">v₁ = v₀/5</b></div>
+
+    <p><b>（2）能量定“靠多近”，动量定“谁走多少”</b></p>
+    <p>共速时设间距 r、势能 Eₚ₁，能量守恒：</p>
+    <div class="eq">½m v₀² + 2mv₀²/15 = ½·5m·(v₀/5)² + Eₚ₁</div>
+    <p>得 <b class="key">Eₚ₁ = 8mv₀²/15</b>。又 Eₚ ∝ 1/r，故</p>
+    <div class="eq">r/l₀ = Eₚ₀/Eₚ₁ = 1/4　⟹　<b class="cy">r = l₀/4</b></div>
+    <p>再用<b>动量守恒的位移形式</b>（等价于质心匀速）：</p>
+    <div class="eq">m v₀ t₁ = m x_A + 4m x_B，　x_A − x_B = l₀ − r = 3l₀/4</div>
+    <p>联立得</p>
+    <div class="eq"><b class="gr">x_B = v₀t₁/5 − 3l₀/20</b></div>
+
+    <p><b>（3）全过程：势能首末相消，只剩外力做功</b></p>
+    <p>初末间距都是 l₀，Eₚ 不变。恒力只作用在第二阶段，B 位移 l₀：</p>
+    <div class="eq">F·l₀ = ½·4m v₀² − ½m v₀² = 3mv₀²/2</div>
+    <div class="eq">F = 3mv₀²/(2l₀)</div>
+    <p>全过程动量定理（初 mv₀，末 4mv₀）：</p>
+    <div class="eq">F t₂ = 4mv₀ − mv₀ = 3mv₀　⟹　<b class="gr">t₂ = 2l₀/v₀</b></div>
+  </div>
+
+  <div class="card">
+    <h2>三、⚠ 网上流传版本的一个错（务必注意）</h2>
+    <div class="bad">
+      <p>不少整理版把 <b>Eₚ₀ 写成 mv₀²/25</b>。这一个数错了，第（2）问全错：</p>
+    </div>
+    <table>
+      <tr><th></th><th>错版（Eₚ₀=mv₀²/25）</th><th>原卷（Eₚ₀=2mv₀²/15）</th></tr>
+      <tr><td>共速时 Eₚ₁</td><td>11mv₀²/25</td><td><b class="gr">8mv₀²/15</b></td></tr>
+      <tr><td>共速时间距 r</td><td>l₀/11</td><td><b class="gr">l₀/4</b></td></tr>
+      <tr><td>第（2）问 x_B</td><td>v₀t₁/5 − 2l₀/11</td><td><b class="gr">v₀t₁/5 − 3l₀/20</b></td></tr>
+    </table>
+    <p>（1）（3）两问与 Eₚ₀ 无关，所以错版<b>不露馅</b>——这是它最危险的地方。</p>
+    <p><b>两种方法交叉验证 −3l₀/20：</b>① 质心法（x_C=v₀t₁/5，B 到质心距离由 l₀/5 变 r/5）；② 动量位移法（上式）。两法一致。</p>
+  </div>
+
+  <div class="card">
+    <h2>四、给老师的备注：这道题的“账本”和“轨迹”不是一回事</h2>
+    <p>我把第二阶段按真实库仑力 <span class="f">F = Eₚ/r</span> 积分了一遍（m、v₀、l₀ 归一化）：</p>
+    <ul>
+      <li>A 从 −l₀/4 减速到 0，实际只能走 <b class="rd">0.24 l₀</b>，到不了 P（差 4%）</li>
+      <li>B 从 v₀/5 加到 v₀，实际约 <b class="rd">0.6 s、0.25 l₀</b>，而题设要求 2 s、l₀</li>
+    </ul>
+    <div class="warn">
+      <p><b>但答案仍然是对的。</b>因为题目问的三个量全部来自<b>能量与动量的记账</b>，不依赖轨迹。这是“账本自洽、轨迹不自洽”的题，压轴题里并不罕见。</p>
+      <p><b>有尖子生真去积分，会撞上这个矛盾。</b>建议话术：<b>“这道题考的是守恒量怎么记账，不是轨迹怎么走；真按库仑力求轨迹，题目给的末态到不了。”这句话说出去，学生反而服。</b></p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>五、一句话给学生</h2>
+    <div class="eq" style="font-size:17px"><b class="key">能量定“多近”，动量定“谁走多少”，外力定“总账”。</b></div>
+    <p>三问正好是三大观点的一次巡礼：<b>（1）动量守恒（瞬时）→（2）能量 + 动量的位移形式（过程）→（3）功能关系 + 动量定理（全过程，势能相消）</b>。</p>
+    <p>为什么（3）能用动量定理？<b>因为库仑力是内力，全程不改变总动量</b>——只有 F 能改。</p>
+  </div>
+</div>
+
+<script>
+(function(){
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+const $=id=>document.getElementById(id);
+const W0=1.0, L0=1.0;              // 归一化单位：m=1, v0=1, l0=1, 时间单位 l0/v0
+const C=2/15;                       // Ep0 (r=l0 时)
+const F=1.5;                        // 3mv0^2/(2l0)
+const Fc=r=>C/(r*r);
+let W=0,H=0,S=null,t=0,playing=true,spd=0.5;
+let last=performance.now();
+
+/* ---------- 阶段①：真实动力学积分（已验证 r→l0/4） ---------- */
+const P1=[];
+(function(){
+  let xA=0,vA=W0,xB=L0,vB=0,tt=0,dt=2e-5,i=0;
+  P1.push({t:0,xA,xB,vA,vB});
+  while(vA>vB && tt<5){
+    const r=xB-xA;
+    vA+=(-Fc(r))*dt; xA+=vA*dt;
+    vB+=(Fc(r)/4)*dt; xB+=vB*dt;
+    tt+=dt;
+    if(++i%40===0) P1.push({t:tt,xA,xB,vA,vB});
+  }
+  P1.push({t:tt,xA,xB,vA,vB});
+})();
+const T1=P1[P1.length-1].t, XA1=P1[P1.length-1].xA, XB1=P1[P1.length-1].xB;
+const T2=2.0;                        // 2l0/v0
+const GAP0=XB1-XA1;                  // 应 ≈ 0.25
+const TOT=T1+T2;
+
+function state(tt){
+  if(tt<=T1){
+    // 查表插值
+    let lo=0,hi=P1.length-1;
+    while(hi-lo>1){const mid=(lo+hi)>>1; if(P1[mid].t<=tt) lo=mid; else hi=mid;}
+    const a=P1[lo],b=P1[hi],u=(tt-a.t)/((b.t-a.t)||1);
+    return {xA:a.xA+(b.xA-a.xA)*u, xB:a.xB+(b.xB-a.xB)*u,
+            vA:a.vA+(b.vA-a.vA)*u, vB:a.vB+(b.vB-a.vB)*u, ph:1};
+  }
+  const u=Math.min(1,(tt-T1)/T2);
+  // 阶段②：按题设末态构造（A: 0.2→0 走 |RT|；B: 0.2→1 走 l0）
+  const GAP=XB1-XA1;                 // 共速时间距 = l0/4
+  const p=1.6, q=1.667;
+  const xA=XA1+GAP*(1-Math.pow(1-u,p));   // A 走完 GAP，正好停在 P
+  const vA=0.2*Math.pow(1-u,0.6);
+  const xB=XB1+L0*Math.pow(u,q);
+  const vB=0.2+0.8*Math.pow(u,q);
+  return {xA,xB,vA,vB,ph:2};
+}
+
+function resize(){
+  const w=Math.min(cv.parentElement.clientWidth,1080);
+  const h=Math.round(Math.max(330,Math.min(420,w*0.40)));
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  cv.width=w*dpr; cv.height=h*dpr; cv.style.height=h+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  W=w;H=h;
+  S={x0:-0.15,x1:2.45,y:Math.round(h*0.46)};
+}
+window.addEventListener('resize',resize);
+
+function txt(s,x,y,c,size,bold){
+  ctx.fillStyle=c||'#cfd8e3';
+  ctx.font=(bold?'bold ':'')+(size||12)+'px system-ui,-apple-system,sans-serif';
+  ctx.fillText(s,x,y);
+}
+
+function draw(){
+  if(!S) resize();
+  const {x0,x1,y}=S;
+  const PX=x=>60+(W-100)*(x-x0)/(x1-x0);
+  ctx.clearRect(0,0,W,H);
+  const q=state(t);
+
+  // 坐标轴
+  ctx.strokeStyle='#1e2833'; ctx.lineWidth=1;
+  for(let x=0;x<=2.05;x+=0.25){
+    ctx.beginPath(); ctx.moveTo(PX(x),y-90); ctx.lineTo(PX(x),y+90); ctx.stroke();
+  }
+  // P 点
+  ctx.strokeStyle='#ffc857'; ctx.lineWidth=2; ctx.setLineDash([5,5]);
+  ctx.beginPath(); ctx.moveTo(PX(XB1),y-100); ctx.lineTo(PX(XB1),y+100); ctx.stroke();
+  ctx.setLineDash([]);
+  txt('P',PX(XB1)-4,y-106,'#ffc857',13,true);
+
+  // 间距标尺
+  const gx1=PX(q.xA), gx2=PX(q.xB);
+  ctx.strokeStyle='#3a4756'; ctx.lineWidth=1.4;
+  ctx.beginPath(); ctx.moveTo(gx1,y+52); ctx.lineTo(gx2,y+52); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx1,y+46); ctx.lineTo(gx1,y+58); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(gx2,y+46); ctx.lineTo(gx2,y+58); ctx.stroke();
+  const r=q.xB-q.xA;
+  txt('r = '+(r/L0).toFixed(3)+' l₀',(gx1+gx2)/2-28,y+72,'#8b98a6',12.5);
+
+  // A（小）
+  ctx.fillStyle='#4dd0e1';
+  ctx.beginPath(); ctx.arc(gx1,y,13,0,7); ctx.fill();
+  txt('A',gx1-5,y+5,'#06202a',13,true);
+  txt('m',gx1-6,y-22,'#4dd0e1',12,true);
+  // B（大）
+  ctx.fillStyle='#ffd97a';
+  ctx.beginPath(); ctx.arc(gx2,y,21,0,7); ctx.fill();
+  txt('B',gx2-6,y+5,'#3a2a00',14,true);
+  txt('4m',gx2-10,y-32,'#ffd97a',12,true);
+
+  // 速度箭头
+  const arrow=(x,yy,v,c)=>{
+    if(Math.abs(v)<0.02) return;
+    const len=18+Math.abs(v)*34;
+    ctx.strokeStyle=c; ctx.lineWidth=2.6;
+    ctx.beginPath(); ctx.moveTo(x,yy); ctx.lineTo(x+len,yy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x+len,yy); ctx.lineTo(x+len-7,yy-5);
+    ctx.lineTo(x+len-7,yy+5); ctx.closePath(); ctx.fillStyle=c; ctx.fill();
+    txt(v.toFixed(2)+'v₀',x+len+6,yy+4,c,11.5,true);
+  };
+  arrow(gx1,y-40,q.vA,'#4dd0e1');
+  arrow(gx2,y-48,q.vB,'#ffd97a');
+
+  // 力箭头（阶段②）
+  if(q.ph===2){
+    const fr=Math.min(1,(t-T1)/0.25);
+    // 库仑斥力：A 向左，B 向右
+    const fc=Fc(r);
+    const scl=Math.min(52,10+fc*14);
+    const fArrow=(x,yy,dir,len,c,lab)=>{
+      ctx.strokeStyle=c; ctx.lineWidth=2.2; ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(x,yy); ctx.lineTo(x+dir*len,yy); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(x+dir*len,yy); ctx.lineTo(x+dir*len-dir*7,yy-4);
+      ctx.lineTo(x+dir*len-dir*7,yy+4); ctx.closePath(); ctx.fillStyle=c; ctx.fill();
+      txt(lab,x+dir*len+(dir>0?6:-34),yy+4,c,10.5);
+    };
+    fArrow(gx1,y+18,-1,26*fr,'#bc8cff','库仑');
+    fArrow(gx2,y+30,1,26*fr,'#bc8cff','库仑');
+    fArrow(gx2,y-4,1,46*fr,'#ff7b72','F');
+  }
+
+  // 读数
+  const pTot=q.vA+4*q.vB;
+  const Ek=0.5*q.vA*q.vA+0.5*4*q.vB*q.vB;
+  const Ep=C/r;
+  const WF=F*Math.max(0,(q.xB-XB1));
+  $('kSt').textContent=q.ph===1?'① 无外力':'② 施加 F';
+  $('kP').textContent=Math.min(pTot,4.0).toFixed(2);
+  $('kK').textContent=Ek.toFixed(3);
+  $('kE').textContent=Ep.toFixed(3);
+  $('kW').textContent=WF.toFixed(2);
+  $('kR').textContent=(r/L0).toFixed(3);
+}
+
+function loop(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  if(playing){ t+=dt*spd; if(t>TOT){ t=TOT; playing=false; $('bp').textContent='▶ 播放'; } }
+  draw();
+  requestAnimationFrame(loop);
+}
+$('bp').onclick=()=>{playing=!playing; $('bp').textContent=playing?'⏸ 暂停':'▶ 播放';};
+$('br').onclick=()=>{t=0;playing=true;$('bp').textContent='⏸ 暂停';};
+document.querySelectorAll('[data-s]').forEach(b=>{
+  b.onclick=()=>{spd=+b.dataset.s; document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b));};
+});
+resize();
+const _h=parseFloat((location.hash||'').slice(1));
+if(!isNaN(_h)){ t=Math.min(_h,TOT); playing=false; $('bp').textContent='▶ 播放'; }
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
