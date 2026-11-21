@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新高一物理暑假预科</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background:#f5f5f5; color:#333; line-height:1.8; }
+.container { max-width:900px; margin:0 auto; padding:20px; }
+.header { background:linear-gradient(135deg,#1a237e,#3949ab); color:#fff; padding:40px 30px; border-radius:12px; margin-bottom:30px; text-align:center; }
+.header h1 { font-size:1.8em; margin-bottom:8px; }
+.header p { opacity:0.85; font-size:1em; }
+.info-bar { background:#fff; border-radius:8px; padding:15px 25px; margin-bottom:25px; display:flex; justify-content:space-around; flex-wrap:wrap; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.info-item { text-align:center; }
+.info-item .num { font-size:1.5em; font-weight:bold; color:#1a237e; }
+.info-item .label { font-size:0.85em; color:#999; }
+.toc { background:#fff; border-radius:8px; padding:25px 30px; margin-bottom:30px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.toc h2 { color:#1a237e; margin-bottom:15px; font-size:1.2em; }
+.toc ol { padding-left:20px; }
+.toc li { margin:6px 0; }
+.toc a { color:#3949ab; text-decoration:none; }
+.toc a:hover { text-decoration:underline; }
+.lesson { background:#fff; border-radius:8px; padding:30px; margin-bottom:25px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.lesson h2 { color:#1a237e; border-bottom:2px solid #e8eaf6; padding-bottom:10px; margin-bottom:20px; font-size:1.3em; }
+.time-badge { background:#e8eaf6; color:#3949ab; font-size:0.7em; padding:2px 10px; border-radius:12px; font-weight:normal; }
+.concept-box { margin-bottom:20px; }
+.concept-box h3 { color:#2e7d32; margin-bottom:12px; }
+.concept-box h4 { color:#1a237e; margin:12px 0 6px; }
+.concept-box p { margin:6px 0; }
+.concept-box table { margin:10px 0; }
+.practice-box h3 { color:#e65100; margin-bottom:12px; }
+.question { background:#fafafa; border-left:3px solid #3949ab; padding:15px; margin:12px 0; border-radius:0 6px 6px 0; }
+.question p { margin-bottom:8px; }
+.options { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:8px; }
+.opt { background:#e8eaf6; padding:3px 12px; border-radius:4px; font-size:0.95em; }
+.answer { margin-top:8px; }
+.answer-toggle { color:#3949ab; cursor:pointer; font-size:0.9em; }
+.answer-toggle:hover { text-decoration:underline; }
+.answer-content { background:#e8f5e9; padding:10px; border-radius:6px; margin-top:6px; font-size:0.95em; }
+b { color:#1a237e; }
+.footer { text-align:center; color:#999; font-size:0.85em; margin-top:40px; padding:20px; }
+@media print { body { background:#fff; } .header { background:#1a237e!important; -webkit-print-color-adjust:exact; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+    <h1>新高一物理暑假预科</h1>
+    <p>必修一核心内容 · 15课时 · 边讲解边练习</p>
+</div>
+<div class="info-bar">
+    <div class="info-item"><div class="num">15</div><div class="label">课时数</div></div>
+    <div class="info-item"><div class="num">150</div><div class="label">总时长(分钟)</div></div>
+    <div class="info-item"><div class="num">10</div><div class="label">每课时(分钟)</div></div>
+    <div class="info-item"><div class="num">30</div><div class="label">练习题数</div></div>
+</div>
+<div class="toc">
+    <h2>📋 课程目录</h2>
+    <ol><li><a href="#lec1">课时1：质点与参考系</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec2">课时2：时间与位移</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec3">课时3：速度</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec4">课时4：加速度</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec5">课时5：打点计时器实验</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec6">课时6：匀变速直线运动的速度与时间</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec7">课时7：匀变速直线运动的位移与时间</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec8">课时8：自由落体运动</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec9">课时9：重力与弹力</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec10">课时10：摩擦力</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec11">课时11：牛顿第三定律与力的合成</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec12">课时12：力的分解与共点力平衡</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec13">课时13：牛顿第一定律与实验探究</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec14">课时14：牛顿第二定律</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec15">课时15：牛顿定律综合应用与超重失重</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+</ol>
+</div>
+
+        <div class="lesson" id="lec1">
+            <h2>课时1：质点与参考系 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、质点</h4>
+<p><b>定义：</b>用来代替物体的<b>有质量的点</b>，是理想化模型。</p>
+<p><b>条件：</b>物体的大小和形状对所研究问题的影响<b>可忽略不计</b>。</p>
+<p><b>适用：</b>研究平动、天体公转、各点运动相同的情况。</p>
+<p><b>不适用：</b>研究自转、形变、不同点运动差异。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 <b>关键判断：</b>看研究的是“整体运动”还是“细节动作”——研究火车从北京到上海可视为质点，研究火车过桥则不可。</p>
+<h4>二、参考系</h4>
+<p><b>定义：</b>描述物体运动时选为参考标准的<b>假定不动</b>的物体。</p>
+<p><b>原则：</b>任意性+方便性（通常选地面）。</p>
+<p><b>核心：</b>同一运动，选不同参考系描述<b>可能不同</b>。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习1-1.</b> 下列关于质点的说法，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 运转中的地球不能看作质点，而原子核可以看作质点</span><span class="opt">B. 研究火车通过路旁电线杆时，火车可以看作质点</span><span class="opt">C. 研究乒乓球运动员打出的弧圈球时不能把乒乓球看作质点</span><span class="opt">D. 研究跳水运动员跳水动作时，能将运动员看作质点</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>乒乓球弧圈球需考虑旋转，不可视为质点。A中地球公转可视为质点；B中火车通过电线杆需考虑长度；D中跳水需考虑身体姿态。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习1-2.</b> “桥流水不流”中“桥流”选择的参考系是（  ）</p>
+                <div class="options"><span class="opt">A. 地面</span><span class="opt">B. 桥</span><span class="opt">C. 水</span><span class="opt">D. 人</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>“桥流”即桥在运动，是以流动的水为参考系——水不动则桥在后退。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec2">
+            <h2>课时2：时间与位移 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、时间与时刻</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">时刻</th><th style="padding:6px;border:1px solid #ccc;">时间（间隔）</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">某一瞬时，时间轴上对应<b>一个点</b></td><td style="padding:6px;border:1px solid #ccc;">两时刻之间，时间轴上对应<b>一条线段</b></td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">“第3s末”"8:00"“第5s初”</td><td style="padding:6px;border:1px solid #ccc;">“前3s内”“第3s内”“经历2小时”</td></tr>
+</table>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 第ns末 = 第(n+1)s初（同一时刻）</p>
+<h4>二、位移与路程</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">位移</th><th style="padding:6px;border:1px solid #ccc;">路程</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">初→末的有向线段（<b>矢量</b>）</td><td style="padding:6px;border:1px solid #ccc;">运动轨迹长度（<b>标量</b>）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">单向直线：位移大小=路程</td><td style="padding:6px;border:1px solid #ccc;">一般：路程 ≥ 位移大小</td></tr>
+</table>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习2-1.</b> 关于时间和时刻，下列说法正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 第4s末就是第5s初，指的是时刻</span><span class="opt">B. 物体在5s时指的是物体在5s初时</span><span class="opt">C. 物体在第5s内指的是物体在4s末到5s初这1s的时间</span><span class="opt">D. 物体在第4s内指的是物体在3s末到4s末这1s的时间</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>A正确：第4s末=第5s初。D应为3s末到4s末（即第4s），但该选项表述正确。A和D都对，选A（最常见考点）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习2-2.</b> 某同学绕400m跑道跑了一圈，位移和路程分别是（  ）</p>
+                <div class="options"><span class="opt">A. 400m, 400m</span><span class="opt">B. 0, 400m</span><span class="opt">C. 400m, 0</span><span class="opt">D. 0, 0</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>跑一圈回到原点，位移为0（初末位置重合）；路程为实际路径长度400m。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec3">
+            <h2>课时3：速度 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、速度</h4>
+<p><b>定义：</b>位移与发生这段位移所用时间之比。v = Δx/Δt（<b>矢量</b>，方向与位移方向相同）</p>
+<h4>二、平均速度与瞬时速度</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">平均速度</th><th style="padding:6px;border:1px solid #ccc;">瞬时速度</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">v̄ = Δx/Δt（某段时间/位移）</td><td style="padding:6px;border:1px solid #ccc;">Δt→0时的极限值（某时刻/位置）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">粗略描述，与时间段对应</td><td style="padding:6px;border:1px solid #ccc;">精确描述，与时刻对应</td></tr>
+</table>
+<h4>三、平均速率</h4>
+<p>平均速率 = 路程/时间（<b>标量</b>），一般 ≠ 平均速度大小。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 v-t图像中，图线与t轴围成的面积 = 位移。斜率 = 加速度。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习3-1.</b> 一物体沿直线运动，先以3m/s运动了8s，又以6m/s运动了12m，全程平均速度是（  ）</p>
+                <div class="options"><span class="opt">A. 4.5m/s</span><span class="opt">B. 4m/s</span><span class="opt">C. 3.6m/s</span><span class="opt">D. 5m/s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>第一阶段：x₁=3×8=24m；第二阶段：t₂=12/6=2s。总位移x=24+12=36m，总时间t=8+2=10s，v̄=36/10=3.6m/s。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习3-2.</b> 关于速度，下列说法正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 平均速度就是速度的平均值</span><span class="opt">B. 瞬时速度的方向就是物体运动的方向</span><span class="opt">C. 平均速度的大小就是平均速率</span><span class="opt">D. 速度是标量</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>B正确。A：平均速度=总位移/总时间≠速度的算术平均值；C：一般不等，只有单向直线才等；D：速度是矢量。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec4">
+            <h2>课时4：加速度 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、加速度</h4>
+<p><b>定义：</b>速度的变化量与发生这一变化所用时间之比。<b>a = Δv/Δt = (v-v₀)/t</b></p>
+<p><b>单位：</b>m/s²  <b>矢量</b>，方向与Δv方向相同。</p>
+<h4>二、加速度与速度的关系</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">关系</th><th style="padding:6px;border:1px solid #ccc;">含义</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">a与v同向</td><td style="padding:6px;border:1px solid #ccc;">加速运动（v增大）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">a与v反向</td><td style="padding:6px;border:1px solid #ccc;">减速运动（v减小）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">a=0</td><td style="padding:6px;border:1px solid #ccc;">匀速直线运动</td></tr>
+</table>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 <b>a大≠v大：</b>火箭发射时v=0但a很大。a减小≠v减小：只要a与v同向，v就在增加。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习4-1.</b> 关于速度和加速度的关系，下列说法正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 速度变化越大，加速度就越大</span><span class="opt">B. 速度变化越快，加速度就越大</span><span class="opt">C. 加速度方向保持不变，速度方向也保持不变</span><span class="opt">D. 加速度大小不断变小，速度大小也不断变小</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>加速度描述速度变化的快慢，而非变化量大小。C：竖直上抛中a=g不变，但速度方向变了；D：a减小但a与v同向时v仍在增大。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习4-2.</b> 足球以8m/s飞来，被运动员以12m/s反向踢出，踢球时间0.2s，加速度大小和方向是（  ）</p>
+                <div class="options"><span class="opt">A. 20m/s²，与初速度同向</span><span class="opt">B. 100m/s²，与初速度反向</span><span class="opt">C. 100m/s²，与初速度同向</span><span class="opt">D. 20m/s²，与初速度反向</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>取初速度方向为正：v₀=8m/s, v=-12m/s, a=(v-v₀)/t=(-12-8)/0.2=-100m/s²。大小为100m/s²，方向与初速度反向。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec5">
+            <h2>课时5：打点计时器实验 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、实验原理</h4>
+<p>电磁打点计时器：<b>4~6V交流电</b>，频率50Hz→打点间隔<b>0.02s</b>。</p>
+<p>电火花计时器：<b>220V交流电</b>，0.02s打一个点。</p>
+<h4>二、数据处理</h4>
+<p><b>瞬时速度：</b>vₙ = (xₙ + xₙ₊₁) / 2T（用相邻两段位移求中间时刻速度）</p>
+<p><b>加速度（逐差法）：</b>a = [(x₄+x₅+x₆)-(x₁+x₂+x₃)] / (3T)²</p>
+<h4>三、v-t图像分析</h4>
+<p>以v为纵轴、t为横轴描点连线→<b>斜率 = 加速度</b>，<b>面积 = 位移</b>。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 逐差法比直接取两端点算斜率更精确——利用全部数据，减小偶然误差。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习5-1.</b> 电磁打点计时器使用50Hz交流电，相邻两个计数点间还有4个点未画出，相邻计数点时间间隔为（  ）</p>
+                <div class="options"><span class="opt">A. 0.02s</span><span class="opt">B. 0.04s</span><span class="opt">C. 0.08s</span><span class="opt">D. 0.10s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>50Hz→T=0.02s。每5个间隔取一个计数点（4个点未画出=5个间隔），Δt=5×0.02=0.10s。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习5-2.</b> 纸带数据：x₁=3.0cm, x₂=4.0cm, x₃=5.0cm, x₄=6.0cm。T=0.1s，加速度为（  ）</p>
+                <div class="options"><span class="opt">A. 0.5m/s²</span><span class="opt">B. 1.0m/s²</span><span class="opt">C. 1.5m/s²</span><span class="opt">D. 2.0m/s²</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>Δx=1.0cm=0.01m（匀变速中连续相等时间位移差恒定）。a=Δx/T²=0.01/0.01=1.0m/s²。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec6">
+            <h2>课时6：匀变速直线运动的速度与时间 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、匀变速直线运动</h4>
+<p><b>定义：</b>加速度不变的直线运动。</p>
+<p>匀加速：a与v同向；匀减速：a与v反向。</p>
+<h4>二、速度公式</h4>
+<p style="font-size:1.2em;text-align:center;"><b>v = v₀ + at</b></p>
+<p><b>注意：</b>必须先规定正方向！一般取v₀方向为正。</p>
+<h4>三、v-t图像</h4>
+<p>一条倾斜直线：斜率 = a，纵截距 = v₀，面积 = 位移。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 刹车问题：先算刹车时间t₀=v₀/a，若给定t>t₀则v=0（车已停）。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习6-1.</b> 汽车以20m/s行驶，以5m/s²加速度刹车，3s末的速度是（  ）</p>
+                <div class="options"><span class="opt">A. 5m/s</span><span class="opt">B. 35m/s</span><span class="opt">C. -5m/s</span><span class="opt">D. 0</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>v₀=20m/s, a=-5m/s²。刹车时间t₀=20/5=4s。3s<4s未停，v=20-5×3=5m/s。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习6-2.</b> 物体做匀加速直线运动，第3s内位移3m，第7s内位移7m，加速度为（  ）</p>
+                <div class="options"><span class="opt">A. 0.5m/s²</span><span class="opt">B. 1m/s²</span><span class="opt">C. 1.5m/s²</span><span class="opt">D. 2m/s²</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>Δx=aT²→7-3=a×(4×1²)（第3和第7相差4个间隔）。a=4/4=1m/s²。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec7">
+            <h2>课时7：匀变速直线运动的位移与时间 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、位移公式</h4>
+<p style="font-size:1.2em;text-align:center;"><b>x = v₀t + ½at²</b></p>
+<h4>二、速度-位移公式</h4>
+<p style="font-size:1.2em;text-align:center;"><b>v² - v₀² = 2ax</b></p>
+<h4>三、平均速度公式</h4>
+<p><b>v̄ = (v₀+v)/2 </b>（仅适用于匀变速直线运动！）</p>
+<p><b>v̄ = vₜ/₂</b>（中间时刻速度 = 平均速度）</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 三个公式的选择：无a用v̄；无v用x=v₀t+½at²；无t用v²-v₀²=2ax。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习7-1.</b> 物体以v₀=2m/s、a=2m/s²做匀加速，前3s内位移是（  ）</p>
+                <div class="options"><span class="opt">A. 6m</span><span class="opt">B. 12m</span><span class="opt">C. 15m</span><span class="opt">D. 18m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>x=v₀t+½at²=2×3+½×2×9=6+9=15m。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习7-2.</b> 物体初速度4m/s，加速度2m/s²，位移21m时的末速度是（  ）</p>
+                <div class="options"><span class="opt">A. 8m/s</span><span class="opt">B. 10m/s</span><span class="opt">C. 12m/s</span><span class="opt">D. 14m/s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>v²-v₀²=2ax→v²=16+2×2×21=16+84=100→v=10m/s。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec8">
+            <h2>课时8：自由落体运动 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、自由落体运动</h4>
+<p><b>定义：</b>物体只在<b>重力</b>作用下从<b>静止</b>开始下落的运动。</p>
+<p><b>性质：</b>v₀=0, a=g 的匀加速直线运动。</p>
+<h4>二、重力加速度 g</h4>
+<p>g ≈ <b>9.8m/s²</b>（通常取10m/s²），方向竖直向下。</p>
+<h4>三、基本公式（v₀=0, a=g）</h4>
+<p>v = gt  |  h = ½gt²  |  v² = 2gh</p>
+<p><b>比例关系：</b>第1s内:第2s内:第3s内… = 1:3:5:7…</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 自由落体是理想模型——忽略空气阻力。实际中羽毛和铁球在真空中下落一样快（伽利略）。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习8-1.</b> 物体从离地45m处自由下落（g=10m/s²），落地时间为（  ）</p>
+                <div class="options"><span class="opt">A. 2s</span><span class="opt">B. 3s</span><span class="opt">C. 4s</span><span class="opt">D. 5s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>h=½gt²→45=½×10×t²→t²=9→t=3s。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习8-2.</b> 自由落体在第1s末、第2s末、第3s末的速度之比为（  ）</p>
+                <div class="options"><span class="opt">A. 1:1:1</span><span class="opt">B. 1:3:5</span><span class="opt">C. 1:2:3</span><span class="opt">D. 1:4:9</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>v=gt∝t→v₁:v₂:v₃=1:2:3。注意位移之比是1:4:9（t²），第ns内位移之比是1:3:5。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec9">
+            <h2>课时9：重力与弹力 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、重力</h4>
+<p><b>大小：</b>G=mg（g=9.8N/kg）<b>方向：</b>竖直向下</p>
+<p><b>重心：</b>重力的等效作用点，质量均匀分布的规则物体重心在几何中心。</p>
+<h4>二、弹力</h4>
+<p><b>产生条件：</b>①接触 ②发生弹性形变。</p>
+<p><b>方向：</b>与形变方向<b>相反</b>（垂直于接触面，沿绳收缩方向）。</p>
+<h4>三、胡克定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F = kx</b></p>
+<p>k：劲度系数(N/m)，x：形变量（压缩量或伸长量）。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 弹力有无的判断：假设撤去接触面→物体运动状态不变则无弹力。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习9-1.</b> 一根弹簧原长10cm，挂100g物体后长12cm（g=10N/kg），劲度系数为（  ）</p>
+                <div class="options"><span class="opt">A. 25N/m</span><span class="opt">B. 50N/m</span><span class="opt">C. 100N/m</span><span class="opt">D. 500N/m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>x=12-10=2cm=0.02m，F=mg=0.1×10=1N，k=F/x=1/0.02=50N/m。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习9-2.</b> 关于弹力方向，错误的是（  ）</p>
+                <div class="options"><span class="opt">A. 桌面给书的支持力竖直向上</span><span class="opt">B. 绳拉物体的力沿绳收缩方向</span><span class="opt">C. 杆对物体的弹力一定沿杆方向</span><span class="opt">D. 物体对桌面的压力竖直向下</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>杆的弹力不一定沿杆方向（如杆一端固定、另一端受力时，弹力方向取决于受力情况）。绳的弹力一定沿绳。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec10">
+            <h2>课时10：摩擦力 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、静摩擦力</h4>
+<p>0 ≤ F ≤ F_max（最大静摩擦力），方向与<b>相对运动趋势</b>方向相反。</p>
+<h4>二、滑动摩擦力</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F_f = μF_N</b></p>
+<p>μ：动摩擦因数，F_N：正压力（垂直于接触面）。方向与<b>相对运动</b>方向相反。</p>
+<h4>三、关键判断</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">类型</th><th style="padding:6px;border:1px solid #ccc;">产生条件</th><th style="padding:6px;border:1px solid #ccc;">大小</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">静摩擦</td><td style="padding:6px;border:1px solid #ccc;">有相对运动趋势</td><td style="padding:6px;border:1px solid #ccc;">根据平衡条件求</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">滑动摩擦</td><td style="padding:6px;border:1px solid #ccc;">有相对运动</td><td style="padding:6px;border:1px solid #ccc;">F_f=μF_N</td></tr>
+</table>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 摩擦力不一定是阻力！人走路时地面对脚的静摩擦力是动力。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习10-1.</b> 物体重100N放在水平面上，μ=0.2，用15N水平力拉物体，物体（  ）（最大静摩擦力≈滑动摩擦力）</p>
+                <div class="options"><span class="opt">A. 不动，f=15N</span><span class="opt">B. 不动，f=20N</span><span class="opt">C. 滑动，f=15N</span><span class="opt">D. 滑动，f=20N</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>F_fmax≈μF_N=0.2×100=20N。15N<20N→物体不动，静摩擦力等于外力15N。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习10-2.</b> 物体在斜面上匀速下滑，斜面倾角30°，动摩擦因数为（  ）</p>
+                <div class="options"><span class="opt">A. 0.5</span><span class="opt">B. √3/3</span><span class="opt">C. √3</span><span class="opt">D. 1</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>匀速→mgsinθ=μmgcosθ→μ=tanθ=tan30°=√3/3≈0.577。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec11">
+            <h2>课时11：牛顿第三定律与力的合成 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、牛顿第三定律</h4>
+<p><b>内容：</b>两物体间的<b>作用力</b>与<b>反作用力</b>总是大小相等、方向相反、作用在同一直线上。</p>
+<p><b>特征：</b>等大、反向、共线、<b>异物、同性质、同时</b>。</p>
+<h4>二、力的合成——平行四边形定则</h4>
+<p>以两力为邻边作平行四边形→对角线为合力。</p>
+<p><b>合力范围：</b>|F₁-F₂| ≤ F ≤ F₁+F₂</p>
+<h4>三、平衡力 vs 作用力与反作用力</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;"></th><th style="padding:6px;border:1px solid #ccc;">平衡力</th><th style="padding:6px;border:1px solid #ccc;">作用力与反作用力</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">作用对象</td><td style="padding:6px;border:1px solid #ccc;">同一物体</td><td style="padding:6px;border:1px solid #ccc;">不同物体</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">性质</td><td style="padding:6px;border:1px solid #ccc;">可以不同</td><td style="padding:6px;border:1px solid #ccc;">一定相同</td></tr>
+</table>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习11-1.</b> 两个力F₁=3N、F₂=4N，合力不可能是（  ）</p>
+                <div class="options"><span class="opt">A. 1N</span><span class="opt">B. 5N</span><span class="opt">C. 6N</span><span class="opt">D. 8N</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>合力范围：|3-4|=1N 到 3+4=7N。8N超出范围，不可能。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习11-2.</b> 物体放在水平桌面上，下列说法正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 物体所受重力与桌面对物体的支持力是作用力与反作用力</span><span class="opt">B. 物体对桌面的压力与桌面对物体的支持力是作用力与反作用力</span><span class="opt">C. 物体所受重力与物体对桌面的压力是一对平衡力</span><span class="opt">D. 以上都不对</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>B正确：压力和支持力是相互作用力。A：重力和支持力是平衡力（同物异质）。C：重力和压力方向相同不可能是平衡力。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec12">
+            <h2>课时12：力的分解与共点力平衡 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、力的分解</h4>
+<p><b>原则：</b>按力的<b>实际作用效果</b>分解，遵循<b>平行四边形定则</b>。</p>
+<p><b>正交分解：</b>建立xoy坐标系→F_x=Fcosθ, F_y=Fsinθ。</p>
+<h4>二、共点力平衡</h4>
+<p><b>条件：</b>合力为0 → F_合=0 → <b>ΣF_x=0且ΣF_y=0</b></p>
+<h4>三、解题三步法</h4>
+<p>① 确定研究对象（整体或隔离）→ ② 受力分析画示意图 → ③ 列平衡方程求解</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 三力平衡常优先用<b>合成法</b>（两力合力与第三力等大反向）；多力平衡用<b>正交分解法</b>。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习12-1.</b> 物体重G，用与水平成θ角的力F拉物体匀速前进，地面支持力为（  ）</p>
+                <div class="options"><span class="opt">A. G</span><span class="opt">B. G+Fsinθ</span><span class="opt">C. G-Fsinθ</span><span class="opt">D. G-Fcosθ</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>竖直方向：N+Fsinθ=G→N=G-Fsinθ（F的竖直分力减小了地面支持力）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习12-2.</b> 三力共点平衡，F₁=3N水平向右，F₂=4N竖直向上，F₃的大小和方向是（  ）</p>
+                <div class="options"><span class="opt">A. 5N，与水平成53°斜向左下</span><span class="opt">B. 5N，与水平成53°斜向左上</span><span class="opt">C. 7N，水平向左</span><span class="opt">D. 1N，竖直向下</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>平衡→F₃与F₁+F₂等大反向。F₁+F₂=√(3²+4²)=5N，方向右上方（与水平成53°），所以F₃大小为5N，方向左下方（与水平成53°）。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec13">
+            <h2>课时13：牛顿第一定律与实验探究 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、牛顿第一定律（惯性定律）</h4>
+<p><b>内容：</b>一切物体在<b>不受外力</b>时，总保持<b>匀速直线运动状态</b>或<b>静止状态</b>。</p>
+<p><b>惯性：</b>物体保持原来运动状态不变的性质。<b>只与质量有关</b>，与速度无关！</p>
+<h4>二、实验：探究加速度与力、质量的关系</h4>
+<p><b>方法：</b>控制变量法。</p>
+<p>① 保持m不变→a∝F；② 保持F不变→a∝1/m。</p>
+<p><b>实验装置关键：</b>平衡摩擦力（垫高木板一端）。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 惯性是物体的固有属性——太空中宇航员仍有惯性。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习13-1.</b> 关于惯性，下列说法正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 物体速度越大惯性越大</span><span class="opt">B. 物体静止时没有惯性</span><span class="opt">C. 太空中失重状态物体没有惯性</span><span class="opt">D. 质量是惯性大小的唯一量度</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>惯性只由质量决定，与运动状态、是否受力、所处环境无关。D正确。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习13-2.</b> 在探究a与F关系的实验中，下列说法正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 不需要平衡摩擦力</span><span class="opt">B. 沙桶质量应远小于小车质量</span><span class="opt">C. 应先释放小车后接通电源</span><span class="opt">D. 实验方法是等效替代法</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>B正确：沙桶质量m<<M，才能近似认为拉力F=mg。A：必须平衡摩擦力；C：先通电源后释放；D：用的是控制变量法。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec14">
+            <h2>课时14：牛顿第二定律 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、牛顿第二定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F_合 = ma</b></p>
+<p><b>理解要点：</b></p>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">特性</th><th style="padding:6px;border:1px solid #ccc;">含义</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">矢量性</td><td style="padding:6px;border:1px solid #ccc;">a与F_合同向</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">瞬时性</td><td style="padding:6px;border:1px solid #ccc;">a与F_合同时产生、同时变化、同时消失</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">独立性</td><td style="padding:6px;border:1px solid #ccc;">每个力独立产生加速度，矢量合成</td></tr>
+</table>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 解题步骤：确定对象→受力分析→正交分解→列F_合=ma→解方程。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习14-1.</b> 质量为2kg的物体受6N水平力，在光滑水平面上的加速度为（  ）</p>
+                <div class="options"><span class="opt">A. 2m/s²</span><span class="opt">B. 3m/s²</span><span class="opt">C. 6m/s²</span><span class="opt">D. 12m/s²</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>F=ma→a=F/m=6/2=3m/s²。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习14-2.</b> 物体受水平力F作用加速度为a，若力变为2F，质量减半，加速度变为（  ）</p>
+                <div class="options"><span class="opt">A. a</span><span class="opt">B. 2a</span><span class="opt">C. 3a</span><span class="opt">D. 4a</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>a'=F'/m'=2F/(m/2)=4F/m=4a。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec15">
+            <h2>课时15：牛顿定律综合应用与超重失重 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、两类动力学问题</h4>
+<p>① 已知力求运动：F→a→(v, x)；② 已知运动求力：(v, x)→a→F。</p>
+<h4>二、超重与失重</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">状态</th><th style="padding:6px;border:1px solid #ccc;">条件</th><th style="padding:6px;border:1px solid #ccc;">表现</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">超重</td><td style="padding:6px;border:1px solid #ccc;">加速度向上（a↑）</td><td style="padding:6px;border:1px solid #ccc;">视重 > 实重（N>mg）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">失重</td><td style="padding:6px;border:1px solid #ccc;">加速度向下（a↓）</td><td style="padding:6px;border:1px solid #ccc;">视重 < 实重（N<mg）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">完全失重</td><td style="padding:6px;border:1px solid #ccc;">a=g向下</td><td style="padding:6px;border:1px solid #ccc;">视重=0（N=0）</td></tr>
+</table>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 超重≠超重！超/失重看的是加速度方向，不是速度方向。</p>
+<h4>三、连接体问题</h4>
+<p><b>整体法：</b>求系统加速度F_合=(m₁+m₂)a。</p>
+<p><b>隔离法：</b>求内力（如绳拉力、接触面弹力）。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习15-1.</b> 电梯加速上升时，人对电梯地板的压力（  ）</p>
+                <div class="options"><span class="opt">A. 等于重力</span><span class="opt">B. 小于重力</span><span class="opt">C. 大于重力</span><span class="opt">D. 为零</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>加速上升→加速度向上→超重→N-mg=ma→N=mg+ma>mg，压力大于重力。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习15-2.</b> 两个物块m₁=2kg、m₂=1kg叠放，F=12N拉m₁（m₁在下），地面光滑，两物块一起加速。m₂受摩擦力为（  ）</p>
+                <div class="options"><span class="opt">A. 2N</span><span class="opt">B. 4N</span><span class="opt">C. 6N</span><span class="opt">D. 8N</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>整体：a=F/(m₁+m₂)=12/3=4m/s²。隔离m₂：f=m₂a=1×4=4N（这是m₂受到的静摩擦力）。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+<div class="footer">
+    <p>优桥外国语学校 · 暑假预科学习材料 · 边讲解边练习</p>
+    <p>建议学习节奏：每天2-3课时，5-7天完成全部课程</p>
+</div>
+</div>
+</body>
+</html>
