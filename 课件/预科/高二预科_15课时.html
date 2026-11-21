@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新高二物理暑假预科</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background:#f5f5f5; color:#333; line-height:1.8; }
+.container { max-width:900px; margin:0 auto; padding:20px; }
+.header { background:linear-gradient(135deg,#1a237e,#3949ab); color:#fff; padding:40px 30px; border-radius:12px; margin-bottom:30px; text-align:center; }
+.header h1 { font-size:1.8em; margin-bottom:8px; }
+.header p { opacity:0.85; font-size:1em; }
+.info-bar { background:#fff; border-radius:8px; padding:15px 25px; margin-bottom:25px; display:flex; justify-content:space-around; flex-wrap:wrap; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.info-item { text-align:center; }
+.info-item .num { font-size:1.5em; font-weight:bold; color:#1a237e; }
+.info-item .label { font-size:0.85em; color:#999; }
+.toc { background:#fff; border-radius:8px; padding:25px 30px; margin-bottom:30px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.toc h2 { color:#1a237e; margin-bottom:15px; font-size:1.2em; }
+.toc ol { padding-left:20px; }
+.toc li { margin:6px 0; }
+.toc a { color:#3949ab; text-decoration:none; }
+.toc a:hover { text-decoration:underline; }
+.lesson { background:#fff; border-radius:8px; padding:30px; margin-bottom:25px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.lesson h2 { color:#1a237e; border-bottom:2px solid #e8eaf6; padding-bottom:10px; margin-bottom:20px; font-size:1.3em; }
+.time-badge { background:#e8eaf6; color:#3949ab; font-size:0.7em; padding:2px 10px; border-radius:12px; font-weight:normal; }
+.concept-box { margin-bottom:20px; }
+.concept-box h3 { color:#2e7d32; margin-bottom:12px; }
+.concept-box h4 { color:#1a237e; margin:12px 0 6px; }
+.concept-box p { margin:6px 0; }
+.concept-box table { margin:10px 0; }
+.practice-box h3 { color:#e65100; margin-bottom:12px; }
+.question { background:#fafafa; border-left:3px solid #3949ab; padding:15px; margin:12px 0; border-radius:0 6px 6px 0; }
+.question p { margin-bottom:8px; }
+.options { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:8px; }
+.opt { background:#e8eaf6; padding:3px 12px; border-radius:4px; font-size:0.95em; }
+.answer { margin-top:8px; }
+.answer-toggle { color:#3949ab; cursor:pointer; font-size:0.9em; }
+.answer-toggle:hover { text-decoration:underline; }
+.answer-content { background:#e8f5e9; padding:10px; border-radius:6px; margin-top:6px; font-size:0.95em; }
+b { color:#1a237e; }
+.footer { text-align:center; color:#999; font-size:0.85em; margin-top:40px; padding:20px; }
+@media print { body { background:#fff; } .header { background:#1a237e!important; -webkit-print-color-adjust:exact; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+    <h1>新高二物理暑假预科</h1>
+    <p>复习+预习 · 15课时 · 边讲解边练习</p>
+</div>
+<div class="info-bar">
+    <div class="info-item"><div class="num">15</div><div class="label">课时数</div></div>
+    <div class="info-item"><div class="num">150</div><div class="label">总时长(分钟)</div></div>
+    <div class="info-item"><div class="num">10</div><div class="label">每课时(分钟)</div></div>
+    <div class="info-item"><div class="num">30</div><div class="label">练习题数</div></div>
+</div>
+<div class="toc">
+    <h2>📋 课程目录</h2>
+    <ol><li><a href="#lec1">课时1：抛体运动</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec2">课时2：圆周运动</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec3">课时3：万有引力与宇宙航行</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec4">课时4：机械能守恒定律</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec5">课时5：静电场基础</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec6">课时6：带电粒子在电场中的运动</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec7">课时7：恒定电流与闭合电路欧姆定律</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec8">课时8：电学实验</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec9">课时9：磁场与磁感线</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec10">课时10：磁感应强度与磁通量</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec11">课时11：电磁感应现象及应用</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec12">课时12：电磁波</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec13">课时13：动量与动量定理</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec14">课时14：动量守恒定律与碰撞</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec15">课时15：磁场对电流和电荷的作用</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+</ol>
+</div>
+
+        <div class="lesson" id="lec1">
+            <h2>课时1：抛体运动 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、运动的合成与分解</h4>
+<p><b>合运动：</b>物体实际发生的运动。<b>分运动：</b>参与的几个独立运动。</p>
+<p><b>等时性：</b>各分运动与合运动<b>时间相同</b>。<b>独立性：</b>各分运动互不影响。</p>
+<h4>二、平抛运动</h4>
+<p><b>条件：</b>v₀水平，仅受重力。<b>性质：</b>匀变速曲线运动（a=g恒定）。</p>
+<p><b>水平：</b>x=v₀t（匀速）<b>竖直：</b>y=½gt²（自由落体）</p>
+<p><b>合速度：</b>v=√(v₀²+(gt)²)，tanθ=gt/v₀</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 平抛运动时间只由竖直高度决定：t=√(2h/g)，与水平初速度无关。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习1-1.</b> 平抛物体，初速度10m/s，从高20m处抛出（g=10m/s²），水平射程为（  ）</p>
+                <div class="options"><span class="opt">A. 10m</span><span class="opt">B. 20m</span><span class="opt">C. 30m</span><span class="opt">D. 40m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>t=√(2h/g)=√(40/10)=2s。x=v₀t=10×2=20m。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习1-2.</b> 关于平抛运动，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 是匀速运动</span><span class="opt">B. 加速度不断变化</span><span class="opt">C. 是匀变速曲线运动</span><span class="opt">D. 水平方向做加速运动</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>平抛运动中加速度恒为g，是匀变速运动；轨迹为曲线，所以是匀变速曲线运动。C正确。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec2">
+            <h2>课时2：圆周运动 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、描述圆周运动的物理量</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">物理量</th><th style="padding:6px;border:1px solid #ccc;">公式</th><th style="padding:6px;border:1px solid #ccc;">关系</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">线速度v</td><td style="padding:6px;border:1px solid #ccc;">v=Δs/Δt=2πr/T</td><td style="padding:6px;border:1px solid #ccc;">v=ωr</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">角速度ω</td><td style="padding:6px;border:1px solid #ccc;">ω=Δθ/Δt=2π/T</td><td style="padding:6px;border:1px solid #ccc;"></td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">周期T</td><td style="padding:6px;border:1px solid #ccc;">T=1/n=2πr/v=2π/ω</td><td style="padding:6px;border:1px solid #ccc;"></td></tr>
+</table>
+<h4>二、向心加速度</h4>
+<p style="font-size:1.2em;text-align:center;"><b>aₙ = v²/r = ω²r</b></p>
+<h4>三、向心力</h4>
+<p style="font-size:1.2em;text-align:center;"><b>Fₙ = mv²/r = mω²r</b></p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 向心力是<b>效果力</b>（由其他力提供），不是性质力。分析受力时写"由…提供向心力"。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习2-1.</b> 质点做匀速圆周运动，不变的物理量是（  ）</p>
+                <div class="options"><span class="opt">A. 线速度</span><span class="opt">B. 角速度</span><span class="opt">C. 向心加速度</span><span class="opt">D. 向心力</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>匀速圆周运动中角速度ω大小不变。线速度、向心加速度、向心力大小不变但方向时刻变化。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习2-2.</b> 汽车以10m/s通过半径50m的拱桥顶部（g=10m/s²），对桥压力为（  ）（车重mg）</p>
+                <div class="options"><span class="opt">A. mg</span><span class="opt">B. 0.8mg</span><span class="opt">C. 1.2mg</span><span class="opt">D. 0.5mg</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>在桥顶：mg-N=mv²/r→N=mg-mv²/r=mg-m×100/50=mg-2m。设m=1000kg则G=10000N，N=10000-2000=8000N=0.8mg。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec3">
+            <h2>课时3：万有引力与宇宙航行 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、开普勒三定律</h4>
+<p>① 轨道定律（椭圆轨道）；② 面积定律；③ <b>周期定律：a³/T²=k</b>（k仅与中心天体有关）</p>
+<h4>二、万有引力定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F = Gm₁m₂/r²</b></p>
+<p>G=6.67×10⁻¹¹ N·m²/kg²（卡文迪许扭秤实验测定）。</p>
+<h4>三、天体运动——"万有引力=向心力"</h4>
+<p><b>GMm/r² = mv²/r = mω²r = m(2π/T)²r</b></p>
+<p><b>黄金代换：</b>GM = gR²（R为星球半径，g为表面重力加速度）</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 高轨低速长周期：轨道越高→v越小、ω越小、T越长。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习3-1.</b> 两颗卫星绕地球做匀速圆周运动，轨道半径之比r₁:r₂=1:4，周期之比T₁:T₂为（  ）</p>
+                <div class="options"><span class="opt">A. 1:4</span><span class="opt">B. 1:8</span><span class="opt">C. 1:2</span><span class="opt">D. 1:√2</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>开普勒第三定律：r³/T²=k→T∝r^(3/2)。T₁:T₂=(1)^(3/2):(4)^(3/2)=1:8。选B。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习3-2.</b> 已知地球半径R，表面重力加速度g，第一宇宙速度为（  ）</p>
+                <div class="options"><span class="opt">A. √(gR)</span><span class="opt">B. √(2gR)</span><span class="opt">C. √(gR/2)</span><span class="opt">D. gR</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>第一宇宙速度：mg=mv²/R→v=√(gR)≈7.9km/s。第一宇宙速度=最小发射速度=最大环绕速度。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec4">
+            <h2>课时4：机械能守恒定律 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、功和功率</h4>
+<p><b>功：</b>W=Flcosα（α为力与位移夹角）。<b>功率：</b>P=W/t=Fvcosα。</p>
+<h4>二、动能和动能定理</h4>
+<p><b>动能：</b>E_k=½mv²  <b>定理：</b><span style="font-size:1.1em;">W_合 = E_k₂ - E_k₁</span></p>
+<h4>三、势能</h4>
+<p><b>重力势能：</b>E_p=mgh（h为相对参考平面的高度）</p>
+<p><b>弹性势能：</b>E_p=½kx²</p>
+<h4>四、机械能守恒定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>E_k₁+E_p₁ = E_k₂+E_p₂</b></p>
+<p><b>条件：</b>只有重力（或弹力）做功。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 优先使用守恒定律比用牛顿定律+运动学公式更简洁！</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习4-1.</b> 物体从高h处自由下落，落地时动能为（  ）</p>
+                <div class="options"><span class="opt">A. mgh/2</span><span class="opt">B. mgh</span><span class="opt">C. 2mgh</span><span class="opt">D. 无法确定</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>机械能守恒：E_k=mgh（重力势能全部转化为动能）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习4-2.</b> 物体在粗糙斜面下滑，机械能（  ）</p>
+                <div class="options"><span class="opt">A. 守恒</span><span class="opt">B. 增加</span><span class="opt">C. 减少</span><span class="opt">D. 无法确定</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>有摩擦力做功→机械能不守恒→内能增加→机械能减少。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec5">
+            <h2>课时5：静电场基础 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、电荷与库仑定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F = kq₁q₂/r²</b>（k=9×10⁹ N·m²/C²）</p>
+<h4>二、电场强度</h4>
+<p><b>定义式：</b>E=F/q（N/C）<b>点电荷：</b>E=kQ/r²</p>
+<p><b>方向：</b>正电荷受力方向。电场线从正电荷出发到负电荷终止。</p>
+<h4>三、电势与电势差</h4>
+<p><b>电势φ：</b>沿电场线方向电势降低。<b>电势差：</b>U_AB=φ_A-φ_B</p>
+<p><b>电场力做功：</b>W_AB=qU_AB</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 E=F/q是定义式（适用于任何电场），E=kQ/r²是决定式（仅适用于点电荷）。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习5-1.</b> 两个点电荷电量均加倍，距离加倍，库仑力变为原来的（  ）</p>
+                <div class="options"><span class="opt">A. 1/4</span><span class="opt">B. 1/2</span><span class="opt">C. 1倍</span><span class="opt">D. 2倍</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>F'=k·(2q₁)(2q₂)/(2r)²=4kq₁q₂/4r²=kq₁q₂/r²=F。不变。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习5-2.</b> 关于电场线，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 电场线是电荷的运动轨迹</span><span class="opt">B. 电场线从负电荷出发到正电荷终止</span><span class="opt">C. 电场线密处电场强度大</span><span class="opt">D. 两条电场线可以相交</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>C正确。A：电场线不是轨迹；B：应从正电荷到负电荷；D：不能相交（每点电场方向唯一）。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec6">
+            <h2>课时6：带电粒子在电场中的运动 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、加速电场</h4>
+<p style="font-size:1.2em;text-align:center;"><b>qU = ½mv² - ½mv₀²</b></p>
+<h4>二、偏转电场（类平抛）</h4>
+<p><b>水平（匀速）：</b>L=v₀t  <b>竖直（匀加速）：</b>a=qE/m=qU/(md)</p>
+<p><b>偏转距离：</b>y=½at²=qUL²/(2mdv₀²)</p>
+<p><b>偏转角：</b>tanθ=v_y/v₀=qUL/(mdv₀²)</p>
+<h4>三、示波管原理</h4>
+<p>电子经加速电场→偏转电场→荧光屏。偏转距离与偏转电压成正比。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 带电粒子在电场中的运动实质是“电学中的力学问题”——用F=qE求力，再用牛顿运动定律。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习6-1.</b> 电子经电压U加速后（初速为0），速度为（  ）</p>
+                <div class="options"><span class="opt">A. √(eU/m)</span><span class="opt">B. √(2eU/m)</span><span class="opt">C. 2eU/m</span><span class="opt">D. eU/m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>eU=½mv²→v=√(2eU/m)。注意动能定理中的½不能丢。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习6-2.</b> 带电粒子垂直进入匀强电场，运动性质是（  ）</p>
+                <div class="options"><span class="opt">A. 匀速直线</span><span class="opt">B. 匀加速直线</span><span class="opt">C. 类平抛运动</span><span class="opt">D. 匀速圆周</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>类似平抛：垂直于电场方向匀速，沿电场方向匀加速，轨迹为抛物线。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec7">
+            <h2>课时7：恒定电流与闭合电路欧姆定律 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、基本概念</h4>
+<p><b>电流：</b>I=q/t（标量！有方向但不遵循平行四边形定则）</p>
+<p><b>电阻：</b>R=ρL/S  <b>欧姆定律：</b>I=U/R</p>
+<h4>二、串并联电路</h4>
+<p><b>串联：</b>I相等，U=U₁+U₂，R=R₁+R₂，分压：U₁/U₂=R₁/R₂</p>
+<p><b>并联：</b>U相等，I=I₁+I₂，1/R=1/R₁+1/R₂，分流：I₁/I₂=R₂/R₁</p>
+<h4>三、闭合电路欧姆定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>I = E/(R+r)</b> 或 <b>E = U_外 + Ir</b></p>
+<p><b>路端电压：</b>U=E-Ir（I↑→U↓）</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 外电阻R=r时，电源输出功率最大：P_max=E²/(4r)。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习7-1.</b> 电源电动势E=6V，内阻r=1Ω，外电阻R=2Ω，路端电压为（  ）</p>
+                <div class="options"><span class="opt">A. 2V</span><span class="opt">B. 3V</span><span class="opt">C. 4V</span><span class="opt">D. 6V</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>I=E/(R+r)=6/3=2A。U=IR=2×2=4V（或U=E-Ir=6-2×1=4V）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习7-2.</b> 两个相同电阻并联后总电阻为（  ）（每个电阻为R）</p>
+                <div class="options"><span class="opt">A. 2R</span><span class="opt">B. R</span><span class="opt">C. R/2</span><span class="opt">D. R/4</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>并联：1/R_总=1/R+1/R=2/R→R_总=R/2。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec8">
+            <h2>课时8：电学实验 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、电表改装</h4>
+<p><b>电流表→电压表：</b>串联大电阻。（U=I_g(R_g+R)）</p>
+<p><b>电流表→大量程电流表：</b>并联小电阻（分流电阻）。</p>
+<h4>二、伏安法测电阻</h4>
+<p><b>内接法：</b>R_测=R_x+R_A（偏大），适合大电阻。</p>
+<p><b>外接法：</b>R_测=R_x//R_V（偏小），适合小电阻。</p>
+<p><b>判断：</b>R_x>√(R_A·R_V)用内接法；否则用外接法。</p>
+<h4>三、测电源电动势与内阻</h4>
+<p>U=E-Ir→作U-I图→<b>纵截距=E，斜率绝对值=r</b>。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 滑动变阻器分压式接法：电压从0开始调节；限流式：不能从0开始。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习8-1.</b> 将内阻R_g=100Ω、满偏I_g=1mA的电流表改为量程3V的电压表，需串联电阻（  ）</p>
+                <div class="options"><span class="opt">A. 2900Ω</span><span class="opt">B. 3000Ω</span><span class="opt">C. 100Ω</span><span class="opt">D. 300Ω</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>U=I_g(R_g+R)→3=0.001×(100+R)→R=2900Ω。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习8-2.</b> 测电源电动势和内阻时，U-I图像斜率表示（  ）</p>
+                <div class="options"><span class="opt">A. E</span><span class="opt">B. r</span><span class="opt">C. -E</span><span class="opt">D. -r</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>U=E-Ir，斜率=-r。纵截距=E。注意斜率是负值，斜率的绝对值=r。选D。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec9">
+            <h2>课时9：磁场与磁感线 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、磁场</h4>
+<p>磁体或电流周围存在磁场。磁场对放入其中的<b>磁体</b>或<b>电流</b>有力的作用。</p>
+<h4>二、磁感线</h4>
+<p><b>特点：</b>闭合曲线（外部N→S，内部S→N）；不相交；疏密表示磁场强弱。</p>
+<h4>三、常见电流的磁场（安培定则）</h4>
+<p><b>直线电流：</b>右手握导线，拇指→电流方向，四指→磁场方向（同心圆）。</p>
+<p><b>环形电流/螺线管：</b>右手握线圈，四指→电流方向，拇指→内部磁场方向（N极）。</p>
+<h4>四、安培分子电流假说</h4>
+<p>磁现象的电本质——磁铁和电流的磁场都源于电荷的运动。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 地磁场：地理北极附近是地磁S极（指南针N极指向地理北极=地磁S极）。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习9-1.</b> 关于磁感线，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 磁感线是真实存在的</span><span class="opt">B. 磁感线从S极出发到N极终止</span><span class="opt">C. 磁感线是闭合曲线</span><span class="opt">D. 磁感线可以相交</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>磁感线是假想的闭合曲线。C正确。A：假想的；B：外部N→S，内部S→N；D：不相交。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习9-2.</b> 通电直导线东西放置，电流自西向东。导线正下方的磁场方向为（  ）</p>
+                <div class="options"><span class="opt">A. 向北</span><span class="opt">B. 向南</span><span class="opt">C. 向东</span><span class="opt">D. 向西</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>安培定则：右手握导线，拇指指向电流方向（东），四指在导线下方指向南。所以导线正下方磁场向南。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec10">
+            <h2>课时10：磁感应强度与磁通量 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、磁感应强度 B</h4>
+<p><b>定义：</b>B=F/(IL)（B⊥L时），单位：特斯拉(T)。</p>
+<p><b>矢量：</b>方向=小磁针N极受力方向=该点磁场方向。</p>
+<h4>二、磁通量 Φ</h4>
+<p style="font-size:1.2em;text-align:center;"><b>Φ = BScosθ</b></p>
+<p>含义：穿过某面积的磁感线条数。单位：韦伯(Wb)，1Wb=1T·m²。</p>
+<p>θ为B与面积法线方向的夹角。θ=0时Φ=BS最大；θ=90°时Φ=0。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 Φ是标量但有正负（表示磁感线穿入还是穿出），合磁通=Φ_正-|Φ_负|。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习10-1.</b> 面积S=2m²垂直于B=0.5T的匀强磁场，磁通量为（  ）</p>
+                <div class="options"><span class="opt">A. 0</span><span class="opt">B. 0.5Wb</span><span class="opt">C. 1Wb</span><span class="opt">D. 2Wb</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>Φ=BS=0.5×2=1Wb。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习10-2.</b> 关于磁感应强度B，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. B与F成正比</span><span class="opt">B. B方向就是通电导线受力方向</span><span class="opt">C. B由磁场本身决定，与F、IL无关</span><span class="opt">D. 某处B=0，则通电导线不受力</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>B=F/(IL)是定义式，B由磁场本身决定。C正确。D：导线与B平行时（B≠0）也不受力。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec11">
+            <h2>课时11：电磁感应现象及应用 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、电磁感应现象</h4>
+<p><b>条件：</b>穿过闭合回路的<b>磁通量发生变化</b>。</p>
+<p>本质：磁生电——变化的磁场产生感应电动势。</p>
+<h4>二、法拉第电磁感应定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>E = n·ΔΦ/Δt</b></p>
+<p>n为线圈匝数，ΔΦ/Δt为磁通量变化率。</p>
+<h4>三、楞次定律</h4>
+<p><b>内容：</b>感应电流的磁场总是<b>阻碍</b>引起感应电流的磁通量变化。</p>
+<p><b>口诀：</b>“增反减同”——原磁通增加→感应磁场反向；减少→同向。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 楞次定律的实质是能量守恒——感应电流的“阻碍”作用反映了电磁感应中的能量转化。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习11-1.</b> 条形磁铁插入线圈过程中，线圈中感应电流的磁场方向（  ）</p>
+                <div class="options"><span class="opt">A. 与磁铁磁场同向</span><span class="opt">B. 与磁铁磁场反向</span><span class="opt">C. 先同向后反向</span><span class="opt">D. 无法判断</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>插入→穿过线圈的磁通增加→感应磁场阻碍增加→与原磁场反向（增反）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习11-2.</b> 导体切割磁感线产生的感应电动势E=（  ）（B、L、v两两垂直）</p>
+                <div class="options"><span class="opt">A. BLv</span><span class="opt">B. BLv/2</span><span class="opt">C. BLv²</span><span class="opt">D. B²Lv</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>E=BLv（动生电动势）。注意B、L、v需两两垂直，不垂直时取有效分量。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec12">
+            <h2>课时12：电磁波 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、麦克斯韦电磁场理论</h4>
+<p>① 变化的磁场产生电场；② <b>变化的电场产生磁场</b>。</p>
+<p><b>核心：</b>变化的电场和磁场相互激发，由近及远传播→<b>电磁波</b>。</p>
+<h4>二、电磁波的特点</h4>
+<p>① 横波；② 真空中速度v=c=3×10⁸m/s；③ v=λf</p>
+<p>④ 不需要介质，可在真空中传播。</p>
+<h4>三、电磁波谱</h4>
+<p>无线电波→红外线→可见光→紫外线→X射线→γ射线（频率递增）</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 赫兹实验首次验证了电磁波的存在，证实了麦克斯韦的预言。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习12-1.</b> 关于电磁波，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 电磁波是纵波</span><span class="opt">B. 电磁波在真空中不能传播</span><span class="opt">C. 电磁波在真空中速度等于光速</span><span class="opt">D. 电磁波频率越高波长越长</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>C正确：电磁波在真空中速度为c=3×10⁸m/s。A：横波；B：无需介质可在真空中传播；D：v=λf→f越高λ越短。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习12-2.</b> 按频率从低到高排列：可见光、γ射线、红外线、无线电波。正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 无线电波<红外线<可见光<γ射线</span><span class="opt">B. γ射线<可见光<红外线<无线电波</span><span class="opt">C. 红外线<无线电波<可见光<γ射线</span><span class="opt">D. 可见光<无线电波<红外线<γ射线</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>电磁波谱频率递增：无线电波→红外线→可见光→紫外线→X射线→γ射线。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec13">
+            <h2>课时13：动量与动量定理 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、动量</h4>
+<p style="font-size:1.2em;text-align:center;"><b>p = mv</b>（矢量，方向与v同向）</p>
+<h4>二、冲量</h4>
+<p><b>I = Ft</b>（矢量，方向与F同向）</p>
+<h4>三、动量定理</h4>
+<p style="font-size:1.2em;text-align:center;"><b>I = Δp = mv - mv₀</b></p>
+<p><b>合外力的冲量 = 物体动量的变化量。</b></p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 动量定理解释生活现象：为什么跳远要落在沙坑？延长作用时间→减小平均作用力（Δp相同→t↑→F↓）。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习13-1.</b> 质量0.5kg的球以6m/s飞来，被棒击后以10m/s反向飞出，作用时间0.01s，平均作用力（  ）</p>
+                <div class="options"><span class="opt">A. 200N</span><span class="opt">B. 500N</span><span class="opt">C. 800N</span><span class="opt">D. 1000N</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>取初速方向为正：Δp=mv_f-mv_i=0.5×(-10)-0.5×6=-8kg·m/s。|F|=|Δp|/t=8/0.01=800N。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习13-2.</b> 关于动量定理，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 动量的方向与受力方向相同</span><span class="opt">B. 物体动量变化越大，受力一定越大</span><span class="opt">C. 合外力冲量等于动量变化量</span><span class="opt">D. 冲量越大，做功一定越多</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>C是动量定理的核心表述。A：动量方向=v方向≠力方向；B：Δp大可能t也大，F不一定大；D：冲量与功性质不同。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec14">
+            <h2>课时14：动量守恒定律与碰撞 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、动量守恒定律</h4>
+<p style="font-size:1.2em;text-align:center;"><b>m₁v₁+m₂v₂ = m₁v₁'+m₂v₂'</b></p>
+<p><b>条件：</b>系统合外力为0（或内力>>外力）。</p>
+<h4>二、碰撞分类</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e3f2fd;"><th style="padding:6px;border:1px solid #ccc;">类型</th><th style="padding:6px;border:1px solid #ccc;">动量</th><th style="padding:6px;border:1px solid #ccc;">动能</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">弹性碰撞</td><td style="padding:6px;border:1px solid #ccc;">守恒</td><td style="padding:6px;border:1px solid #ccc;">守恒</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">非弹性碰撞</td><td style="padding:6px;border:1px solid #ccc;">守恒</td><td style="padding:6px;border:1px solid #ccc;">不守恒（减少）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">完全非弹性碰撞</td><td style="padding:6px;border:1px solid #ccc;">守恒</td><td style="padding:6px;border:1px solid #ccc;">损失最大（粘在一起）</td></tr>
+</table>
+<h4>三、反冲现象</h4>
+<p>系统初始静止，一部分向某方向运动→另一部分向反方向运动。m₁v₁+m₂v₂=0。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 碰撞问题的“三守恒”分析：动量必守恒→看动能是否守恒→判断碰撞类型。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习14-1.</b> 质量m的小球以v₀碰静止的相同小球（弹性正碰），碰后入射球速度为（  ）</p>
+                <div class="options"><span class="opt">A. v₀</span><span class="opt">B. v₀/2</span><span class="opt">C. 0</span><span class="opt">D. -v₀</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>等质量弹性正碰→速度交换。入射球停下，原来静止的球以v₀运动。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习14-2.</b> 子弹打入木块并留在其中（完全非弹性碰撞），系统（  ）不守恒</p>
+                <div class="options"><span class="opt">A. 动量</span><span class="opt">B. 动能</span><span class="opt">C. 速度</span><span class="opt">D. 以上都守恒</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>完全非弹性碰撞中动量守恒但动能不守恒（动能损失转化为内能）。B正确。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec15">
+            <h2>课时15：磁场对电流和电荷的作用 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、安培力（磁场对通电导线的作用力）</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F = BILsinθ</b>（B⊥L时最大F=BIL）</p>
+<p><b>方向：</b>左手定则——磁感线穿手心，四指→电流方向，拇指→安培力方向。</p>
+<h4>二、洛伦兹力（磁场对运动电荷的作用力）</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F = qvBsinθ</b>（B⊥v时最大F=qvB）</p>
+<p><b>特点：</b>永不做功（F⊥v）。方向也用左手定则（注意负电荷四指反向）。</p>
+<h4>三、带电粒子在匀强磁场中的圆周运动</h4>
+<p><b>qvB = mv²/R → R = mv/(qB)，T = 2πm/(qB)</b>（与速度无关！）</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 周期T与速度无关是回旋加速器的理论基础。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习15-1.</b> 质子以速度v垂直进入匀强磁场B，轨道半径为R。若速度变为2v，半径为（  ）</p>
+                <div class="options"><span class="opt">A. R/2</span><span class="opt">B. R</span><span class="opt">C. 2R</span><span class="opt">D. 4R</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>R=mv/(qB)∝v→v→2v则R→2R。（注意T与v无关保持不变）
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习15-2.</b> 关于洛伦兹力，正确的是（  ）</p>
+                <div class="options"><span class="opt">A. 洛伦兹力对运动电荷做正功</span><span class="opt">B. 洛伦兹力可以改变电荷速度大小</span><span class="opt">C. v∥B时洛伦兹力最大</span><span class="opt">D. 洛伦兹力方向始终垂直于v和B确定的平面</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>D正确。A：永不做功（F⊥v）；B：只改变方向不改变大小；C：v∥B时f=0（v⊥B时最大）。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+<div class="footer">
+    <p>优桥外国语学校 · 暑假预科学习材料 · 边讲解边练习</p>
+    <p>建议学习节奏：每天2-3课时，5-7天完成全部课程</p>
+</div>
+</div>
+</body>
+</html>
