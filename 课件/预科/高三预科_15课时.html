@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新高三物理暑假预科</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background:#f5f5f5; color:#333; line-height:1.8; }
+.container { max-width:900px; margin:0 auto; padding:20px; }
+.header { background:linear-gradient(135deg,#1a237e,#3949ab); color:#fff; padding:40px 30px; border-radius:12px; margin-bottom:30px; text-align:center; }
+.header h1 { font-size:1.8em; margin-bottom:8px; }
+.header p { opacity:0.85; font-size:1em; }
+.info-bar { background:#fff; border-radius:8px; padding:15px 25px; margin-bottom:25px; display:flex; justify-content:space-around; flex-wrap:wrap; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.info-item { text-align:center; }
+.info-item .num { font-size:1.5em; font-weight:bold; color:#1a237e; }
+.info-item .label { font-size:0.85em; color:#999; }
+.toc { background:#fff; border-radius:8px; padding:25px 30px; margin-bottom:30px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.toc h2 { color:#1a237e; margin-bottom:15px; font-size:1.2em; }
+.toc ol { padding-left:20px; }
+.toc li { margin:6px 0; }
+.toc a { color:#3949ab; text-decoration:none; }
+.toc a:hover { text-decoration:underline; }
+.lesson { background:#fff; border-radius:8px; padding:30px; margin-bottom:25px; box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+.lesson h2 { color:#1a237e; border-bottom:2px solid #e8eaf6; padding-bottom:10px; margin-bottom:20px; font-size:1.3em; }
+.time-badge { background:#e8eaf6; color:#3949ab; font-size:0.7em; padding:2px 10px; border-radius:12px; font-weight:normal; }
+.concept-box { margin-bottom:20px; }
+.concept-box h3 { color:#2e7d32; margin-bottom:12px; }
+.concept-box h4 { color:#1a237e; margin:12px 0 6px; }
+.concept-box p { margin:6px 0; }
+.concept-box table { margin:10px 0; }
+.practice-box h3 { color:#e65100; margin-bottom:12px; }
+.question { background:#fafafa; border-left:3px solid #3949ab; padding:15px; margin:12px 0; border-radius:0 6px 6px 0; }
+.question p { margin-bottom:8px; }
+.options { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:8px; }
+.opt { background:#e8eaf6; padding:3px 12px; border-radius:4px; font-size:0.95em; }
+.answer { margin-top:8px; }
+.answer-toggle { color:#3949ab; cursor:pointer; font-size:0.9em; }
+.answer-toggle:hover { text-decoration:underline; }
+.answer-content { background:#e8f5e9; padding:10px; border-radius:6px; margin-top:6px; font-size:0.95em; }
+b { color:#1a237e; }
+.footer { text-align:center; color:#999; font-size:0.85em; margin-top:40px; padding:20px; }
+@media print { body { background:#fff; } .header { background:#1a237e!important; -webkit-print-color-adjust:exact; } }
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+    <h1>新高三物理暑假预科</h1>
+    <p>高考一轮复习 · 15课时 · 边讲解边练习</p>
+</div>
+<div class="info-bar">
+    <div class="info-item"><div class="num">15</div><div class="label">课时数</div></div>
+    <div class="info-item"><div class="num">150</div><div class="label">总时长(分钟)</div></div>
+    <div class="info-item"><div class="num">10</div><div class="label">每课时(分钟)</div></div>
+    <div class="info-item"><div class="num">30</div><div class="label">练习题数</div></div>
+</div>
+<div class="toc">
+    <h2>📋 课程目录</h2>
+    <ol><li><a href="#lec1">课时1：匀变速直线运动基本公式与选用</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec2">课时2：匀变速直线运动的重要推论</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec3">课时3：匀变速直线运动的特殊问题</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec4">课时4：自由落体与竖直上抛综合</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec5">课时5：匀变速直线运动高考真题精练</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec6">课时6：v-t图像深度解析</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec7">课时7：x-t图像与a-t图像</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec8">课时8：追及相遇问题（一）——同向追及</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec9">课时9：追及相遇问题（二）——综合应用</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec10">课时10：图像与追及相遇高考综合</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec11">课时11：受力分析基本功</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec12">课时12：共点力静态平衡</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec13">课时13：动态平衡（一）——图解法</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec14">课时14：动态平衡（二）——相似三角形与拉密定理</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+<li><a href="#lec15">课时15：相互作用高考综合</a> <span style="color:#999;font-size:0.85em;">(约10分钟)</span></li>
+</ol>
+</div>
+
+        <div class="lesson" id="lec1">
+            <h2>课时1：匀变速直线运动基本公式与选用 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>核心公式体系</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e8eaf6;"><th style="padding:6px;border:1px solid #ccc;">公式</th><th style="padding:6px;border:1px solid #ccc;">表达式</th><th style="padding:6px;border:1px solid #ccc;">缺什么量</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">速度公式</td><td style="padding:6px;border:1px solid #ccc;"><b>v=v₀+at</b></td><td style="padding:6px;border:1px solid #ccc;">缺x</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">位移公式</td><td style="padding:6px;border:1px solid #ccc;"><b>x=v₀t+½at²</b></td><td style="padding:6px;border:1px solid #ccc;">缺v</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">速度-位移</td><td style="padding:6px;border:1px solid #ccc;"><b>v²-v₀²=2ax</b></td><td style="padding:6px;border:1px solid #ccc;">缺t</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">平均速度</td><td style="padding:6px;border:1px solid #ccc;"><b>x=(v₀+v)t/2</b></td><td style="padding:6px;border:1px solid #ccc;">缺a</td></tr>
+</table>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 <b>选择策略：</b>审题→找出已知和未知→选缺那个不需要的量的公式。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习1-1.</b> 物体以v₀=5m/s、a=2m/s²匀加速，位移为14m时速度是（  ）</p>
+                <div class="options"><span class="opt">A. 7m/s</span><span class="opt">B. 8m/s</span><span class="opt">C. 9m/s</span><span class="opt">D. 10m/s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>缺t→用v²-v₀²=2ax：v²=25+2×2×14=81→v=9m/s。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习1-2.</b> 汽车刹车，v₀=72km/h=20m/s，a=-4m/s²，6s内位移是（  ）</p>
+                <div class="options"><span class="opt">A. 48m</span><span class="opt">B. 50m</span><span class="opt">C. 72m</span><span class="opt">D. 96m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>先算刹车时间：t₀=20/4=5s。6s>5s已停→x=v₀²/(2a)=400/8=50m。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec2">
+            <h2>课时2：匀变速直线运动的重要推论 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、中间时刻速度与中间位置速度</h4>
+<p><b>中间时刻：</b>vₜ/₂ = (v₀+v)/2 = v̄（等于平均速度）</p>
+<p><b>中间位置：</b>vₓ/₂ = √[(v₀²+v²)/2]</p>
+<p>匀变速中：<b>vₓ/₂ > vₜ/₂</b>（中间位置速度大于中间时刻速度）</p>
+<h4>二、逐差相等</h4>
+<p style="font-size:1.2em;text-align:center;"><b>Δx = x₂-x₁ = x₃-x₂ = … = aT²</b></p>
+<p><b>推广：</b>xₘ-xₙ = (m-n)aT²</p>
+<h4>三、初速度为零的比例关系</h4>
+<p>① 1T末、2T末、3T末…速度比 = <b>1:2:3…</b></p>
+<p>② 1T内、2T内、3T内…位移比 = <b>1:4:9…</b></p>
+<p>③ 第1T、第2T、第3T…位移比 = <b>1:3:5…</b></p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习2-1.</b> 匀加速运动，第1s内位移2m，第3s内位移6m，加速度为（  ）</p>
+                <div class="options"><span class="opt">A. 1m/s²</span><span class="opt">B. 2m/s²</span><span class="opt">C. 3m/s²</span><span class="opt">D. 4m/s²</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>Δx=aT²(3-1)=6-2→a×2=4→a=2m/s²。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习2-2.</b> 物体从静止开始匀加速，前3s位移9m，第4s内位移为（  ）</p>
+                <div class="options"><span class="opt">A. 5m</span><span class="opt">B. 7m</span><span class="opt">C. 9m</span><span class="opt">D. 11m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>x₃=½a×3²=9→a=2m/s²。x₄=½×2×4²=16m。第4s内=x₄-x₃=16-9=7m。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec3">
+            <h2>课时3：匀变速直线运动的特殊问题 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、刹车问题（陷阱！）</h4>
+<p><b>关键：</b>先求刹车时间t₀=v₀/|a|。若给定t>t₀，视为t₀时刻已停止。</p>
+<h4>二、往返运动（竖直上抛等）</h4>
+<p><b>对称性：</b>上升时间=下落时间；上升过程与下落过程对称（同高度v大小相等，方向相反）。</p>
+<p><b>全程法：</b>取v₀方向为正，a=-g，全程用匀变速公式统一处理。</p>
+<h4>三、多过程问题</h4>
+<p><b>方法：</b>画出运动示意图→划分阶段→分别列式→找连接量（v是桥梁）。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 <b>过程分解法：</b>多过程问题的核心是找到“衔接速度”——前一过程的末速度=后一过程的初速度。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习3-1.</b> 以v₀=30m/s竖直上抛（g=10m/s²），抛出后5s内位移为（  ）</p>
+                <div class="options"><span class="opt">A. 25m</span><span class="opt">B. 50m</span><span class="opt">C. 75m</span><span class="opt">D. 100m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>取向上为正：x=v₀t-½gt²=30×5-½×10×25=150-125=25m（在抛出点上方25m处）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习3-2.</b> 物体先以2m/s²加速4s，再以1m/s²减速直到停止，总位移为（  ）</p>
+                <div class="options"><span class="opt">A. 16m</span><span class="opt">B. 24m</span><span class="opt">C. 32m</span><span class="opt">D. 48m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>加速：v=2×4=8m/s，x₁=½×2×16=16m。减速：t₂=v/a₂=8s，x₂=½×8×8=32m（或x₂=v²/(2a₂)=64/2=32m）。总位移=16+32=48m。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec4">
+            <h2>课时4：自由落体与竖直上抛综合 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、自由落体运动（v₀=0, a=g）</h4>
+<p>v=gt, h=½gt², v²=2gh</p>
+<p><b>水滴问题：</b>等时间间隔下落的多个水滴，相邻水滴间距比=1:3:5:7…</p>
+<h4>二、竖直上抛运动</h4>
+<p><b>分段法：</b>上升（匀减速a=-g）+最高点v=0+下降（自由落体）</p>
+<p><b>全程法：</b>x=v₀t-½gt², v=v₀-gt（取v₀方向为正）</p>
+<p><b>最高点：</b>t上=v₀/g, H=v₀²/(2g)</p>
+<h4>三、竖直上抛对称性应用</h4>
+<p>① 上升和下降经过同一位置，速度大小相等、方向相反</p>
+<p>② 上升和下降经过同一段高度，时间相等</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习4-1.</b> 从塔顶释放一小球A，1s后释放B，两球在空中相遇时（  ）（不计空气阻力）</p>
+                <div class="options"><span class="opt">A. A球速度大</span><span class="opt">B. B球速度大</span><span class="opt">C. 两球速度相等</span><span class="opt">D. A球在B球下方</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>相遇时A已下落t秒，B已下落t-1秒。v_A=gt>v_B=g(t-1)，A球速度更大。相遇时A在B下方（A多下落1秒，位移更大）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习4-2.</b> 竖直上抛物体到达离地15m高时速度大小为10m/s（g=10m/s²），初速度可能为（  ）</p>
+                <div class="options"><span class="opt">A. 15m/s或5m/s</span><span class="opt">B. 20m/s或10m/s</span><span class="opt">C. 20m/s或0m/s</span><span class="opt">D. 25m/s或15m/s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>v²-v₀²=-2gh→100-v₀²=-2×10×15=-300→v₀²=400→v₀=20m/s。注意也可能是下降经过：v²-v₀²=-2gh→100-v₀²=-300→v₀²=400→v₀=±20m/s。初速取正20m/s。但实际上如果上升时v=10，初速20；如果下降时v=10，初速也是20。这个题答案是20m/s，B是对的。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec5">
+            <h2>课时5：匀变速直线运动高考真题精练 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、高考考查点</h4>
+<p>① 基本公式的灵活运用；② 刹车问题的实际情境处理；③ 多过程运动分析；④ 与v-t图像的结合。</p>
+<h4>二、解题策略总结</h4>
+<p><b>“审→画→列→解→验”五步法：</b></p>
+<p>① 审题：画出关键信息（v₀、a、t、x、v）→② 画运动示意图→③ 选公式列方程→④ 解方程→⑤ 验证合理性（刹车时间等）。</p>
+<h4>三、常见失分点</h4>
+<p><b>⚠️ 刹车问题未判断停车时间；⚠️ 竖直上抛没考虑往返；⚠️ 正负号混用。</b></p>
+<p style="background:#e8f5e9;padding:8px;border-radius:4px;">✅ <b>本专题核心能力：</b>从“套公式”升级到“选公式、用推论、避陷阱”。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习5-1.</b> （高考真题改编）一物体做匀加速运动，通过一段位移Δx所用时间为t₁，紧接着通过下一段Δx所用时间为t₂。加速度a=（  ）</p>
+                <div class="options"><span class="opt">A. 2Δx(t₁-t₂)/[t₁t₂(t₁+t₂)]</span><span class="opt">B. 2Δx(t₁+t₂)/[t₁t₂(t₁-t₂)]</span><span class="opt">C. Δx(t₁-t₂)/[t₁t₂(t₁+t₂)]</span><span class="opt">D. Δx/(t₁t₂)</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>第一段平均速度=Δx/t₁=v₀+a·t₁/2。第二段平均速度=Δx/t₂=v₀+a·t₁+a·t₂/2。两式相减整理得a=2Δx(t₁-t₂)/[t₁t₂(t₁+t₂)]。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习5-2.</b> 物体做匀减速直线运动，第1s内位移8m，最后1s内位移0.5m，总位移为（  ）</p>
+                <div class="options"><span class="opt">A. 28m</span><span class="opt">B. 32m</span><span class="opt">C. 36m</span><span class="opt">D. 72m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>逆向思维：最后1s→½a·1²=0.5→a=1m/s²。第1s内：v₀·1-½·1·1²=8→v₀=8.5m/s。停车t₀=v₀/a=8.5s。总位移=v₀²/(2a)=72.25/2≈36.1m。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec6">
+            <h2>课时6：v-t图像深度解析 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、v-t图像的物理意义</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e8eaf6;"><th style="padding:6px;border:1px solid #ccc;">图像要素</th><th style="padding:6px;border:1px solid #ccc;">物理量</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">纵截距</td><td style="padding:6px;border:1px solid #ccc;">初速度v₀</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">斜率</td><td style="padding:6px;border:1px solid #ccc;">加速度a（正负表方向）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">面积</td><td style="padding:6px;border:1px solid #ccc;">位移（t轴上方为正，下方为负）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">交点</td><td style="padding:6px;border:1px solid #ccc;">两物体速度相等（关键临界点！）</td></tr>
+</table>
+<h4>二、常见图像识别</h4>
+<p>水平线→匀速；斜线→匀变速；抛物线→变加速（a线性变化）。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 <b>追及相遇中v相等的时刻是关键</b>——此时距离取极值（最远或最近）。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习6-1.</b> v-t图像中，图线与t轴围成的梯形面积为（  ）</p>
+                <div class="options"><span class="opt">A. 路程</span><span class="opt">B. 位移</span><span class="opt">C. 速度变化量</span><span class="opt">D. 加速度</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>v-t图像中面积=位移（需考虑正负）。若要求路程，需取面积的绝对值之和。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习6-2.</b> 甲乙v-t图，甲斜率大于乙且都是正斜率，说明（  ）</p>
+                <div class="options"><span class="opt">A. 甲速度大</span><span class="opt">B. 甲加速度大</span><span class="opt">C. 甲位移大</span><span class="opt">D. 甲在前</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>v-t图像斜率=加速度。斜率大→加速度大。速度看纵坐标高低；位移看面积大小。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec7">
+            <h2>课时7：x-t图像与a-t图像 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、x-t图像</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e8eaf6;"><th style="padding:6px;border:1px solid #ccc;">要素</th><th style="padding:6px;border:1px solid #ccc;">物理意义</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">纵截距</td><td style="padding:6px;border:1px solid #ccc;">初始位置</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">斜率</td><td style="padding:6px;border:1px solid #ccc;"><b>速度v</b>（正负表方向）</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">交点</td><td style="padding:6px;border:1px solid #ccc;">两物体<b>相遇</b></td></tr>
+</table>
+<h4>二、a-t图像</h4>
+<p>图线与t轴围成的<b>面积 = 速度变化量Δv</b>。</p>
+<p>a不变→v-t是直线；a线性变化→v-t是抛物线。</p>
+<h4>三、图像转换技巧</h4>
+<p>x-t→斜率→v-t；v-t→斜率→a-t；a-t→面积→Δv→v-t。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 三种图像本质统一：描述同一运动的不同侧面，信息可相互推导。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习7-1.</b> x-t图像中图线为抛物线，物体做（  ）</p>
+                <div class="options"><span class="opt">A. 匀速直线运动</span><span class="opt">B. 匀变速直线运动</span><span class="opt">C. 变加速运动</span><span class="opt">D. 静止</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>x-t图像中二次函数（抛物线）对应匀变速直线运动（x=v₀t+½at²）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习7-2.</b> a-t图像为水平直线a=2m/s²，初速度v₀=0，4s末速度为（  ）</p>
+                <div class="options"><span class="opt">A. 2m/s</span><span class="opt">B. 4m/s</span><span class="opt">C. 8m/s</span><span class="opt">D. 16m/s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>a不变→v=v₀+at=0+2×4=8m/s。或面积法：Δv=a·t=2×4=8m/s。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec8">
+            <h2>课时8：追及相遇问题（一）——同向追及 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、追及相遇的实质</h4>
+<p>两物体<b>同时到达同一位置</b>→位移关系：<b>x_A = x_B + x₀</b>（x₀为初始距离）</p>
+<h4>二、速度相等——关键临界条件</h4>
+<p>v_A = v_B时：① 若之前未追上→此时<b>距离最远</b>；② 若此时刚好追上→恰能追上一次</p>
+<h4>三、同向追及分类</h4>
+<p><b>匀加速追匀速：</b>一定能追上。v相等时距离最远。</p>
+<p><b>匀速追匀减速：</b>注意减速物体是否已停止。</p>
+<p><b>匀减速追匀速：</b>可能追不上——条件为v相等时Δx≤x₀。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 <b>三步法：</b>① 判断v相等时能否追上；②找位移关系；③列方程求解。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习8-1.</b> 甲以10m/s匀速行驶在前，乙从静止以2m/s²匀加速在后面追赶，初始相距50m。乙追上甲约需（  ）</p>
+                <div class="options"><span class="opt">A. 5s</span><span class="opt">B. 10s</span><span class="opt">C. 13.7s</span><span class="opt">D. 20s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>x_乙=t²，x_甲=10t。追上：t²=10t+50→t²-10t-50=0→t=(10+√300)/2≈13.7s。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习8-2.</b> 追及问题中，v_A=v_B的时刻是（  ）</p>
+                <div class="options"><span class="opt">A. 两物体相遇的时刻</span><span class="opt">B. 两物体距离极值的时刻</span><span class="opt">C. 两物体加速度相等的时刻</span><span class="opt">D. 以上都不对</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>v相等时若未追上，则距离取极值：匀加速追匀速→最远；匀减速追匀速→最近。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec9">
+            <h2>课时9：追及相遇问题（二）——综合应用 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、避免碰撞的条件</h4>
+<p>v_A=v_B时，Δx < x₀（相对位移小于初始距离）。</p>
+<h4>二、追及问题的图像解法</h4>
+<p>在v-t图像中，两图线间面积差=相对位移。</p>
+<p>在x-t图像中，两图线交点=相遇时刻。</p>
+<h4>三、经典情境</h4>
+<p>① 前车刹车、后车反应→后车多走反应距离</p>
+<p>② 十字路口绿灯亮后汽车加速、自行车匀速通过</p>
+<p>③ 接力赛中交棒时机</p>
+<p style="background:#e8f5e9;padding:8px;border-radius:4px;">✅ <b>通用思路：</b>画出运动示意图→写出位移关系→解方程→验证解的物理意义。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习9-1.</b> 前车以5m/s匀速行驶，后车以20m/s行驶发现前车时相距100m，后车以5m/s²刹车。是否相撞？（  ）</p>
+                <div class="options"><span class="opt">A. 相撞</span><span class="opt">B. 不相撞</span><span class="opt">C. 条件不足</span><span class="opt">D. 取决于反应时间</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>v相等时：20-5t=5→t=3s。前车x₁=5×3=15m。后车x₂=20×3-½×5×9=60-22.5=37.5m。x₂-x₁=22.5m<100m→不相撞。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习9-2.</b> 两物体从同地同向出发，A以2m/s²匀加速，B以8m/s匀速。A追上B需要（  ）</p>
+                <div class="options"><span class="opt">A. 2s</span><span class="opt">B. 4s</span><span class="opt">C. 6s</span><span class="opt">D. 8s</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>½×2×t²=8t→t²=8t→t=0或t=8s。t=8s时追上。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec10">
+            <h2>课时10：图像与追及相遇高考综合 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、图像与追及的结合</h4>
+<p>高考常考：给v-t图像→判断是否相遇、何时相遇、何时相距最远。</p>
+<h4>二、解题模板</h4>
+<p>① 从图像提取：初速度、加速度、运动性质</p>
+<p>② 写出两物体的运动方程</p>
+<p>③ 列位移关系：x_A=x_B+x₀</p>
+<p>④ 解方程→判断根的存在性和物理意义</p>
+<h4>三、多物体追及</h4>
+<p>三个以上物体时，逐对分析或画v-t图综合判断。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 <b>图像法优势：</b>v-t图像中两图线与t轴围成面积的差=相对位移，一目了然。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习10-1.</b> 甲以v=4m/s匀速在前，乙以a=1m/s²从静止开始追甲，初始相距16m。v相等时两者相距（  ）</p>
+                <div class="options"><span class="opt">A. 8m</span><span class="opt">B. 16m</span><span class="opt">C. 20m</span><span class="opt">D. 24m</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：D</b><br>v相等：4=1×t→t=4s。x_甲=4×4=16m，x_乙=½×1×16=8m。初始相距16m→t=4s时相距=16+16-8=24m（此时最远）。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习10-2.</b> 给v-t图，两直线相交，交点表示（  ）</p>
+                <div class="options"><span class="opt">A. 两物体相遇</span><span class="opt">B. 两物体速度相同</span><span class="opt">C. 两物体加速度相同</span><span class="opt">D. 两物体位移相同</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>v-t图像交点→纵坐标v相同→两物体速度相等。相遇看x-t图像交点或v-t图像面积相等。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec11">
+            <h2>课时11：受力分析基本功 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、受力分析原则</h4>
+<p>① <b>重力必有</b>（在地球表面）</p>
+<p>② <b>弹力看接触</b>（有几个接触面就可能有几个弹力）</p>
+<p>③ <b>摩擦力看趋势</b>（有弹力的接触面才可能有摩擦）</p>
+<p>④ <b>不遗漏、不添加</b></p>
+<h4>二、受力分析步骤</h4>
+<p><b>明确对象→画重力→逐面分析弹力→逐面分析摩擦力→检查</b></p>
+<h4>三、整体法与隔离法</h4>
+<p><b>整体法：</b>系统内物体间相互作用力为内力，不求时用整体。</p>
+<p><b>隔离法：</b>要求系统内某两物体间作用力时，隔离其中一个。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 通常<a href="#">先整体后隔离</a>：整体求加速度→隔离求内力。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习11-1.</b> 物体在斜面上静止，受几个力？（  ）</p>
+                <div class="options"><span class="opt">A. 1个</span><span class="opt">B. 2个</span><span class="opt">C. 3个</span><span class="opt">D. 4个</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>重力、斜面支持力、静摩擦力，共3个力。若无摩擦则物体会下滑。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习11-2.</b> 两物体A、B叠放在水平面上，F推A（A在下），A、B一起匀速，B受几个力？（  ）</p>
+                <div class="options"><span class="opt">A. 1个</span><span class="opt">B. 2个</span><span class="opt">C. 3个</span><span class="opt">D. 4个</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>B匀速→合力为0。B受重力、A对B的支持力。B与A无相对运动趋势→无摩擦力。共2个力。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec12">
+            <h2>课时12：共点力静态平衡 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、平衡条件</h4>
+<p>ΣF=0→ΣF_x=0且ΣF_y=0</p>
+<h4>二、三力平衡的三种解法</h4>
+<p>① <b>合成法：</b>任意两力合力与第三力等大反向</p>
+<p>② <b>分解法：</b>将某个力沿另外两力方向分解</p>
+<p>③ <b>正交分解法：</b>建坐标系，分别列ΣF_x=0、ΣF_y=0</p>
+<h4>三、常见模型</h4>
+<p><b>斜面模型：</b>N=mgcosθ, f=mgsinθ（匀速或静止）</p>
+<p><b>绳杆模型：</b>绳张力处处相等，杆弹力可沿任意方向</p>
+<p><b>三力汇交：</b>三力平衡时必共面且作用线交于一点</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习12-1.</b> 重G的球用绳挂在光滑墙上，绳与墙成θ角，绳拉力为（  ）</p>
+                <div class="options"><span class="opt">A. G/cosθ</span><span class="opt">B. G/sinθ</span><span class="opt">C. Gcosθ</span><span class="opt">D. Gsinθ</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>球受三力：G竖直向下、墙弹力水平、绳拉力T斜向上。三力平衡：Tcosθ=G→T=G/cosθ。墙弹力=Gtanθ。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习12-2.</b> 物体在倾角30°的斜面上匀速下滑，动摩擦因数μ=（  ）</p>
+                <div class="options"><span class="opt">A. 0.5</span><span class="opt">B. √3/3</span><span class="opt">C. √3</span><span class="opt">D. 1/√3</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>匀速→mgsinθ=μmgcosθ→μ=tanθ=tan30°=√3/3。选B。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec13">
+            <h2>课时13：动态平衡（一）——图解法 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、动态平衡特征</h4>
+<p>物体缓慢移动（可视为任意时刻平衡），某个力大小或方向在变化。</p>
+<h4>二、图解法（三力平衡，一力恒定，一力方向不变）</h4>
+<p><b>适用条件：</b>① 三力平衡；② 一个力大小方向不变（通常为G）；③ 一个力方向不变。</p>
+<p><b>步骤：</b>画初始平衡三角形→根据条件旋转变化力→观察各力大小变化趋势。</p>
+<h4>三、典型情景</h4>
+<p><b>斜面+挡板模型：</b>挡板缓慢转动，球对挡板压力的变化。</p>
+<p><b>绳拉小球：</b>绳长不变，缓慢改变悬点位置。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 图解法的本质：力的矢量三角形中，各边长度对应各力大小。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习13-1.</b> 球用绳OA挂在墙上，绳与竖直方向夹角θ增大（球缓慢下降），绳拉力T（  ）</p>
+                <div class="options"><span class="opt">A. 增大</span><span class="opt">B. 减小</span><span class="opt">C. 不变</span><span class="opt">D. 先增大后减小</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>图解法：G不变，墙弹力方向不变（水平），绳拉力方向变化（θ增大）。画矢量三角形→θ增大，T增大。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习13-2.</b> 动态平衡中，一力大小方向不变，另一力方向不变。第三个力的大小（  ）</p>
+                <div class="options"><span class="opt">A. 一定不变</span><span class="opt">B. 可能先减小后增大</span><span class="opt">C. 一定减小</span><span class="opt">D. 一定增大</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>第三个力的变化取决于方向——若其方向从与恒定力同向转到反向的过程中，可能先减小（到垂直时最小）后增大。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec14">
+            <h2>课时14：动态平衡（二）——相似三角形与拉密定理 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、相似三角形法</h4>
+<p><b>适用：</b>三力平衡，但各力方向都变化（不满足图解法条件）。</p>
+<p><b>方法：</b>利用力的矢量三角形与几何三角形<b>相似</b>→对应边成比例。</p>
+<h4>二、拉密定理</h4>
+<p style="font-size:1.2em;text-align:center;"><b>F₁/sinα₁ = F₂/sinα₂ = F₃/sinα₃</b></p>
+<p>α₁是F₂与F₃的夹角，以此类推。</p>
+<h4>三、辅助圆法</h4>
+<p>一力恒定，另两力夹角不变→画圆分析（圆周角定理）。</p>
+<p style="background:#fff3cd;padding:8px;border-radius:4px;">💡 相似三角形法常用于"绳长不变+悬挂点可移动"的情境。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习14-1.</b> 一轻绳跨过光滑滑轮，两端各悬挂质量m₁、m₂的重物。平衡时，绳中张力T与m₁、m₂的关系满足拉密定理。若m₁=m₂，两段绳夹角为（  ）</p>
+                <div class="options"><span class="opt">A. 60°</span><span class="opt">B. 90°</span><span class="opt">C. 120°</span><span class="opt">D. 180°</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>对称：T相等。竖直方向：2Tcos(θ/2)=mg→但这里两段绳张力相等，合力竖直。设夹角θ：2Tcos(θ/2)=mg。每个T=mg，所以2mgcos(θ/2)=mg→cos(θ/2)=1/2→θ/2=60°→θ=120°。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习14-2.</b> 动态平衡问题中，可用相似三角形法的前提是（  ）</p>
+                <div class="options"><span class="opt">A. 有一个力大小方向不变</span><span class="opt">B. 有一个力方向不变</span><span class="opt">C. 力的矢量三角形与几何三角形相似</span><span class="opt">D. 力的大小都不变</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：C</b><br>相似三角形法的核心是找到力矢量三角形与某个几何三角形相似。C正确。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="lesson" id="lec15">
+            <h2>课时15：相互作用高考综合 <span class="time-badge">约10分钟</span></h2>
+            <div class="concept-box">
+                <h3>📖 精讲</h3>
+                
+<h4>一、高考考点分布</h4>
+<p>受力分析（必考）→静态平衡（常考）→动态平衡（高频）→临界极值问题（难点）。</p>
+<h4>二、解题体系</h4>
+<table style="width:100%;border-collapse:collapse;">
+<tr style="background:#e8eaf6;"><th style="padding:6px;border:1px solid #ccc;">问题类型</th><th style="padding:6px;border:1px solid #ccc;">首选方法</th></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">三力静态平衡</td><td style="padding:6px;border:1px solid #ccc;">合成法或正交分解</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">多力静态平衡</td><td style="padding:6px;border:1px solid #ccc;">正交分解法</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">三力动态（一力方向不变）</td><td style="padding:6px;border:1px solid #ccc;">图解法</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">三力动态（方向都变）</td><td style="padding:6px;border:1px solid #ccc;">相似三角形/拉密定理</td></tr>
+<tr><td style="padding:6px;border:1px solid #ccc;">含摩擦力的临界问题</td><td style="padding:6px;border:1px solid #ccc;">设最大静摩擦=μN，列不等式</td></tr>
+</table>
+<p style="background:#e8f5e9;padding:8px;border-radius:4px;">✅ <b>本专题核心能力：</b>受力分析不重不漏→方法选择准确→计算精确。</p>
+
+            </div>
+            <div class="practice-box">
+                <h3>✏️ 精练</h3>
+                
+            <div class="question">
+                <p><b>练习15-1.</b> 光滑半球面正上方一定点系一轻绳，绳另一端系小球放在半球面上。小球缓慢上移过程中，绳拉力和支持力变化为（  ）</p>
+                <div class="options"><span class="opt">A. T减小，N不变</span><span class="opt">B. T增大，N减小</span><span class="opt">C. T减小，N减小</span><span class="opt">D. T增大，N增大</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：A</b><br>相似三角形法：力的三角形∽几何三角形（绳长-半径-定点高度）。小球上移→绳变短→T减小；N与G的比值=半径/高度不变→N不变。
+                    </div>
+                </div>
+            </div>
+            <div class="question">
+                <p><b>练习15-2.</b> （高考真题型）三根长度相同的轻杆铰接成三角形，顶点各系质量m的小球，求杆中弹力大小为（  ）（杆质量不计）</p>
+                <div class="options"><span class="opt">A. mg</span><span class="opt">B. mg/√3</span><span class="opt">C. mg/2</span><span class="opt">D. mg/3</span></div>
+                <div class="answer">
+                    <span class="answer-toggle" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">点击查看答案与解析 ▼</span>
+                    <div class="answer-content" style="display:none;">
+                        <b>答案：B</b><br>对称性：每个杆受力相等。顶点小球受两杆弹力+重力，三力平衡夹角120°→每个杆力=mg/√3。
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+<div class="footer">
+    <p>优桥外国语学校 · 暑假预科学习材料 · 边讲解边练习</p>
+    <p>建议学习节奏：每天2-3课时，5-7天完成全部课程</p>
+</div>
+</div>
+</body>
+</html>
