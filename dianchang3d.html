@@ -87,6 +87,8 @@
     <input type="range" id="q2" min="-2" max="2" step="0.1" value="-1">
     <label>间距 d<span id="vd">1.00</span></label>
     <input type="range" id="dd" min="0.4" max="1.8" step="0.05" value="1">
+    <label>场线数 / 单位电荷<span id="vn">21</span></label>
+    <input type="range" id="nl" min="4" max="48" step="2" value="21">
   </div>
   <div class="sec">
     <div class="h">显示</div>
@@ -94,6 +96,7 @@
     <label class="chk"><input type="checkbox" id="sEq" checked> 等势线（剖面）</label>
     <label class="chk"><input type="checkbox" id="sShell"> 等势面（三维壳层）</label>
     <label class="chk"><input type="checkbox" id="sGrid" checked> 参考平面</label>
+    <label class="chk"><input type="checkbox" id="sPlane"> 仅剖面场线（过电荷平面）</label>
   </div>
   <div class="sec">
     <div class="h">粒子</div>
@@ -110,6 +113,12 @@
   </div>
   <div class="sec">
     <div class="h">视角</div>
+    <div class="btns" style="margin-bottom:8px">
+      <button data-v="iso" class="on">立体</button>
+      <button data-v="top">俯视截面</button>
+      <button data-v="front">正视</button>
+      <button data-v="reset">复位</button>
+    </div>
     <label class="chk"><input type="checkbox" id="sAuto" checked> 自动旋转</label>
     <label>轨迹速度<span id="vs">0.5×</span></label>
     <input type="range" id="ps" min="0.1" max="1" step="0.1" value="0.5">
@@ -135,7 +144,7 @@ function resize(){
 }
 
 /* ---------- 相机 ---------- */
-const cam = {yaw:0.55, pitch:0.34, dist:4.0, tx:0, ty:0, tz:0};
+const cam = {yaw:0.78, pitch:0.52, dist:4.0, tx:0, ty:0, tz:0};
 let focal = 1200;
 let dirty = true;
 
@@ -186,6 +195,20 @@ function fieldMag(p){ const e=fieldAt(p,[0,0,0]); return Math.hypot(e[0],e[1],e[
 
 /* ---------- 电场线 ---------- */
 let lines3d = [];
+let lineN = 21;
+let planeOnly = false;
+
+function seedDirs(n){
+  if(planeOnly){
+    const out=[];
+    for(let i=0;i<n;i++){
+      const th=2*Math.PI*(i+0.5)/n;
+      out.push([Math.cos(th), 0, Math.sin(th)]);
+    }
+    return out;
+  }
+  return fibSphere(n);
+}
 
 function fibSphere(n){
   const out=[]; const ga=Math.PI*(3-Math.sqrt(5));
@@ -202,12 +225,18 @@ function traceLine(start, dir){
   const pts=[];
   let p=[start[0],start[1],start[2]];
   const e=[0,0,0];
-  const h=0.022;
-  for(let s=0;s<900;s++){
+  for(let s=0;s<1400;s++){
     pts.push(p);
     fieldAt(p,e);
     const m=Math.hypot(e[0],e[1],e[2]);
     if(m<1e-7) break;
+    // 自适应步长：靠近电荷时收紧，保证能绕进去而不是擦身而过
+    let rmin=1e9;
+    for(const c of charges){
+      const rr=Math.hypot(p[0]-c.x,p[1]-c.y,p[2]-c.z);
+      if(rr<rmin) rmin=rr;
+    }
+    const h=Math.max(0.0012, Math.min(0.022, 0.20*rmin));
     // 归一化方向 + RK2
     const ux=dir*e[0]/m, uy=dir*e[1]/m, uz=dir*e[2]/m;
     const mx=p[0]+ux*h*0.5, my=p[1]+uy*h*0.5, mz=p[2]+uz*h*0.5;
@@ -215,7 +244,7 @@ function traceLine(start, dir){
     const m2=Math.hypot(e[0],e[1],e[2]);
     if(m2<1e-7) break;
     p=[p[0]+dir*e[0]/m2*h, p[1]+dir*e[1]/m2*h, p[2]+dir*e[2]/m2*h];
-    if(Math.hypot(p[0],p[1],p[2])>2.6) { pts.push(p); break; }
+    if(Math.hypot(p[0],p[1],p[2])>4.2) { pts.push(p); break; }
     let hit=false;
     for(const c of charges){
       if(Math.hypot(p[0]-c.x,p[1]-c.y,p[2]-c.z) < 0.045){ hit=true; break; }
@@ -225,6 +254,16 @@ function traceLine(start, dir){
   return pts;
 }
 
+// 端点必须落在电荷上或已飞出边界，否则丢弃（避免线段悬空）
+function lineEndsOK(pts){
+  const e=pts[pts.length-1];
+  if(Math.hypot(e[0],e[1],e[2]) > 3.6) return true;
+  for(const c of charges){
+    if(Math.hypot(e[0]-c.x,e[1]-c.y,e[2]-c.z) < 0.09) return true;
+  }
+  return false;
+}
+
 function buildLines(){
   lines3d.length=0;
   let qmax=0, qpos=0;
@@ -232,22 +271,22 @@ function buildLines(){
   if(qmax<0.05) return;
   for(const c of charges){
     if(c.q<=0.05) continue;
-    const n=Math.max(8, Math.min(34, Math.round(21*c.q/qmax)));
-    const seeds=fibSphere(n);
+    const n=Math.max(3, Math.min(64, Math.round(lineN*c.q/qmax)));
+    const seeds=seedDirs(n);
     for(const s of seeds){
       const st=[c.x+s[0]*0.055, c.y+s[1]*0.055, c.z+s[2]*0.055];
       const pts=traceLine(st, 1);
-      if(pts.length>6) lines3d.push(pts);
+      if(pts.length>6 && lineEndsOK(pts)) lines3d.push(pts);
     }
   }
   if(qpos<0.05){
     for(const c of charges){
       if(c.q>=-0.05) continue;
-      const n=Math.max(8, Math.min(34, Math.round(21*Math.abs(c.q)/qmax)));
-      for(const s of fibSphere(n)){
+      const n=Math.max(3, Math.min(64, Math.round(lineN*Math.abs(c.q)/qmax)));
+      for(const s of seedDirs(n)){
         const st=[c.x+s[0]*0.055, c.y+s[1]*0.055, c.z+s[2]*0.055];
         const pts=traceLine(st, -1);
-        if(pts.length>6) lines3d.push(pts);
+        if(pts.length>6 && lineEndsOK(pts)) lines3d.push(pts);
       }
     }
   }
@@ -270,7 +309,7 @@ function buildContours(){
       g[i*GN+j]=potAt([x,0,z]);
     }
   }
-  const base=[0.6,1.2,2.4,4.8,9.6];
+  const base=[0.5,1.0,2.0,4.0];
   const levels=[];
   for(const b of base){ levels.push(b*qmax); levels.push(-b*qmax); }
 
@@ -289,10 +328,16 @@ function buildContours(){
         if(cross(v10,v11)) pts.push(ip(v10,v11,[x1,z0],[x1,z1]));
         if(cross(v01,v11)) pts.push(ip(v01,v11,[x0,z1],[x1,z1]));
         if(cross(v00,v01)) pts.push(ip(v00,v01,[x0,z0],[x0,z1]));
-        if(pts.length===2) eqSegs.push([pts[0][0],0,pts[0][1],pts[1][0],0,pts[1][1]]);
-        else if(pts.length===4){
+        if(pts.length===2){
           eqSegs.push([pts[0][0],0,pts[0][1],pts[1][0],0,pts[1][1]]);
-          eqSegs.push([pts[2][0],0,pts[2][1],pts[3][0],0,pts[3][1]]);
+        } else if(pts.length===4){
+          // 鞍点消歧：看格心与角点同侧，决定连法
+          const vc=(v00+v10+v11+v01)*0.25;
+          let a,b,c2,d2;
+          if((v00>lev)===(vc>lev)){ a=3; b=0; c2=1; d2=2; }
+          else { a=0; b=1; c2=2; d2=3; }
+          eqSegs.push([pts[a][0],0,pts[a][1],pts[b][0],0,pts[b][1]]);
+          eqSegs.push([pts[c2][0],0,pts[c2][1],pts[d2][0],0,pts[d2][1]]);
         }
       }
     }
@@ -414,7 +459,7 @@ function drawLines(){
       const cur=project(pts[i]);
       if(prev&&cur){
         const dz=Math.min(1, Math.max(0, (cur[2]-1.4)/3.2));
-        const a=0.92-0.42*dz;
+        const a=0.95-0.33*dz;
         ctx.strokeStyle='rgba(255,212,136,'+a.toFixed(3)+')';
         ctx.lineWidth=Math.min(2.4, Math.max(1.05, 2.0*cur[3]/700));
         ctx.beginPath(); ctx.moveTo(prev[0],prev[1]); ctx.lineTo(cur[0],cur[1]); ctx.stroke();
@@ -698,6 +743,9 @@ document.querySelectorAll('[data-p]').forEach(b=>{
 document.getElementById('sLines').addEventListener('change',e=>{ui.sLines=e.target.checked;dirty=true;});
 document.getElementById('sEq').addEventListener('change',e=>{ui.sEq=e.target.checked;dirty=true;});
 document.getElementById('sGrid').addEventListener('change',e=>{ui.sGrid=e.target.checked;dirty=true;});
+document.getElementById('sPlane').addEventListener('change',e=>{
+  planeOnly=e.target.checked; rebuild();
+});
 document.getElementById('sShell').addEventListener('change',e=>{
   ui.sShell=e.target.checked;
   if(ui.sShell && shellPts.length===0) buildShells();
@@ -715,6 +763,14 @@ document.getElementById('ps').addEventListener('input',e=>{
   pspeed=parseFloat(e.target.value);
   document.getElementById('vs').textContent=pspeed.toFixed(1)+'×';
 });
+document.getElementById('nl').addEventListener('input',e=>{
+  lineN=parseInt(e.target.value,10);
+  document.getElementById('vn').textContent=lineN;
+  scheduleRebuild();
+});
+document.querySelectorAll('[data-v]').forEach(b=>{
+  b.addEventListener('click',()=>setView(b.dataset.v));
+});
 document.getElementById('fire').addEventListener('click',()=>{
   const q1=charges[0];
   fireFrom([q1.x+0.32, 0, 0]);
@@ -729,23 +785,52 @@ document.getElementById('tog').addEventListener('click',()=>{
 });
 
 /* ---------- 启动 ---------- */
+function setView(v){
+  if(v==='iso'){ cam.yaw=0.78; cam.pitch=0.52; }
+  else if(v==='top'){ cam.yaw=0; cam.pitch=1.545; }
+  else if(v==='front'){ cam.yaw=0; cam.pitch=0.025; }
+  else if(v==='reset'){ cam.yaw=0.78; cam.pitch=0.52; cam.dist=(W<820?3.45:4.0); }
+  if(v!=='reset') document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on', b.dataset.v===v));
+  dirty=true;
+}
+
 window.addEventListener('resize',()=>{ resize(); dirty=true; });
 resize();
 if(W<820) cam.dist=3.45;
 syncParams();
-if(location.hash.indexOf('shell')>=0){
-  ui.sShell=true; document.getElementById('sShell').checked=true; buildShells();
+
+// 哈希参数：#clean&p=dipole&view=top&n=14&shell
+const HS=location.hash.slice(1);
+const HK={};
+HS.split('&').forEach(function(kv){
+  if(!kv) return;
+  const i=kv.indexOf('=');
+  if(i<0) HK[kv]=true; else HK[kv.slice(0,i)]=kv.slice(i+1);
+});
+
+if(HK.clean){
+  ui.sAuto=false;
+  cam.dist = 5.15;
+  document.getElementById('sAuto').checked=false;
+  ['title','panel','hud','tip'].forEach(function(id){
+    const el=document.getElementById(id); if(el) el.style.display='none';
+  });
 }
-if(location.hash.indexOf('same')>=0){
-  document.getElementById('q2').value=1; syncParams();
+if(HK.n){
+  lineN=Math.max(3, Math.min(64, parseInt(HK.n,10)||21));
+  document.getElementById('nl').value=lineN;
+  document.getElementById('vn').textContent=lineN;
 }
-if(location.hash.indexOf('udip')>=0){
-  document.getElementById('q1').value=2; syncParams();
+if(HK.plane){
+  planeOnly=true;
+  const cb=document.getElementById('sPlane'); if(cb) cb.checked=true;
 }
-if(location.hash.indexOf('fire')>=0){
-  fireFrom([-0.25,0,0.55]);
-  fireFrom([0.05,0.45,0.2]);
-}
+if(HK.p) setPreset(HK.p); else syncParams();
+if(HK.shell){ ui.sShell=true; document.getElementById('sShell').checked=true; buildShells(); }
+if(HK.view) setView(HK.view);
+if(HK.zoom) cam.dist=parseFloat(HK.zoom)||cam.dist;
+if(HK.fire) fireFrom([-0.25,0,0.55]);
+
 render();
 requestAnimationFrame(loop);
 
@@ -775,6 +860,15 @@ if(location.hash.indexOf('test')>=0){
   r.en0=+en0.toFixed(4);
   r.en1=+(0.5*sp*sp+p.q*potAt(p.p)).toFixed(4);
   r.drift=+Math.abs(r.en1-en0).toFixed(5);
+  r.stuck=0; r.stuckPts=[];
+  for(const pts of lines3d){
+    const e=pts[pts.length-1];
+    if(Math.hypot(e[0],e[1],e[2])<2.3){
+      let near=false;
+      for(const c of charges) if(Math.hypot(e[0]-c.x,e[1]-c.y,e[2]-c.z)<0.12) near=true;
+      if(!near){ r.stuck++; if(r.stuckPts.length<4) r.stuckPts.push([+e[0].toFixed(2),+e[1].toFixed(2),+e[2].toFixed(2)]); }
+    }
+  }
   document.title='TEST '+JSON.stringify(r);
 }
 
