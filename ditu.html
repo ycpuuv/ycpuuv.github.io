@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>地图试验台 · 高德 JS API</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1117;overflow:hidden}
+  #map{position:absolute;inset:0}
+  #panel{
+    position:absolute;top:12px;left:12px;width:310px;max-height:calc(100% - 24px);
+    overflow:auto;background:rgba(18,20,28,.94);backdrop-filter:blur(10px);
+    border:1px solid #2a2e3a;border-radius:12px;padding:14px;color:#dfe3ec;
+    box-shadow:0 8px 30px rgba(0,0,0,.45);z-index:10;font-size:13px;line-height:1.6
+  }
+  h1{font-size:15px;color:#e8c49a;margin-bottom:4px;font-weight:600}
+  .sub{color:#7d8496;font-size:11.5px;margin-bottom:12px}
+  label{display:block;color:#9aa3b5;font-size:11.5px;margin:10px 0 4px}
+  input{width:100%;background:#0b0d13;border:1px solid #2f3542;border-radius:7px;
+    color:#dfe3ec;padding:8px 9px;font-size:12.5px;font-family:Consolas,Menlo,monospace;outline:none}
+  input:focus{border-color:#8a6a45}
+  .row{display:flex;gap:7px;margin-top:10px}
+  button{
+    flex:1;background:#1c2130;border:1px solid #333a4a;color:#cfd6e4;border-radius:7px;
+    padding:8px 6px;font-size:12.5px;cursor:pointer;transition:.15s
+  }
+  button:hover{background:#252c3d;border-color:#4a5468}
+  button.on{background:#8a6a45;border-color:#a8814f;color:#fff}
+  button.primary{background:#c8965a;border-color:#d8a76c;color:#1a1206;font-weight:600}
+  button.primary:hover{background:#d8a76c}
+  .hint{color:#6b7280;font-size:11px;margin-top:10px;line-height:1.7}
+  .hint code{background:#0b0d13;padding:1px 4px;border-radius:3px;color:#9aa3b5}
+  #log{margin-top:12px;border-top:1px solid #262b36;padding-top:10px;
+    font-size:11.5px;color:#8b93a6;max-height:140px;overflow:auto}
+  #log div{padding:3px 0;border-bottom:1px dashed #21262f;word-break:break-all}
+  #log b{color:#e8c49a;font-weight:500}
+  .err{color:#e0695e}
+  #addr{color:#cfd6e4;font-size:12px;margin-top:8px;min-height:18px}
+  #ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    color:#4b5261;gap:8px;pointer-events:none;z-index:1}
+  .ph-t{font-size:16px;letter-spacing:.05em}
+  .ph-s{font-size:12.5px}
+  #toggle{display:none;position:absolute;top:12px;right:12px;z-index:20;width:auto;padding:8px 14px;
+    background:rgba(18,20,28,.94);border:1px solid #2a2e3a;color:#cfd6e4;border-radius:8px}
+  @media(max-width:720px){
+    #panel{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:50vh;font-size:12.5px}
+    #toggle{display:block}
+    #panel.hide{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="ph">
+  <div class="ph-t">还没加载地图</div>
+  <div class="ph-s">左边的 Key 填上，点「加载地图」</div>
+</div>
+<button id="toggle">面板</button>
+
+<div id="panel">
+  <h1>地图试验台</h1>
+  <div class="sub">高德 JS API 2.0 · 填 Key 就能玩</div>
+
+  <label>Web端(JS API) Key</label>
+  <input id="key" placeholder="粘贴你的 Key" autocomplete="off">
+  <label>安全密钥 jscode</label>
+  <input id="sec" placeholder="粘贴安全密钥" autocomplete="off">
+
+  <div class="row">
+    <button class="primary" id="load">加载地图</button>
+    <button id="forget">清掉</button>
+  </div>
+
+  <div class="row">
+    <button id="sat">卫星图</button>
+    <button id="traf">路况</button>
+    <button id="line">连线模式</button>
+  </div>
+  <div class="row">
+    <button id="undo">撤销一点</button>
+    <button id="clear">清空</button>
+  </div>
+
+  <div class="row" style="margin-top:12px">
+    <input id="q" placeholder="搜地址，如：运城中学" style="flex:2">
+    <button id="go" style="flex:1">搜</button>
+  </div>
+
+  <div id="addr"></div>
+  <div id="log"></div>
+
+  <div class="hint">
+    玩法：<b>点地图</b>打点，会显示经纬度和地址；开「连线模式」能连成轨迹。<br>
+    Key 只存在你自己这台设备的浏览器里。<br>
+    白名单里加上 <code>ycpuuv.github.io</code>，否则报域名错误。
+  </div>
+</div>
+
+<script src="https://webapi.amap.com/loader.js"></script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const LS_KEY = "amap_demo_key", LS_SEC = "amap_demo_sec";
+  let map = null, geocoder = null, searcher = null;
+  let markers = [], path = [], polyline = null, lineMode = false;
+  let satLayer = null, trafLayer = null;
+
+  $("key").value = localStorage.getItem(LS_KEY) || "";
+  $("sec").value = localStorage.getItem(LS_SEC) || "";
+
+  function log(msg, cls) {
+    const d = document.createElement("div");
+    if (cls) d.className = cls;
+    d.innerHTML = msg;
+    $("log").prepend(d);
+  }
+
+  $("forget").onclick = () => {
+    localStorage.removeItem(LS_KEY); localStorage.removeItem(LS_SEC);
+    $("key").value = ""; $("sec").value = "";
+    log("已清掉本机保存的 Key");
+  };
+
+  $("load").onclick = () => {
+    const k = $("key").value.trim(), s = $("sec").value.trim();
+    if (!k) { log("先填 Key", "err"); return; }
+    localStorage.setItem(LS_KEY, k); localStorage.setItem(LS_SEC, s);
+
+    window._AMapSecurityConfig = { securityJsCode: s };
+    $("load").textContent = "加载中…";
+
+    AMapLoader.load({
+      key: k,
+      version: "2.0",
+      plugins: ["AMap.Scale", "AMap.ToolBar", "AMap.Geocoder", "AMap.PlaceSearch"]
+    }).then(AMap => {
+      $("load").textContent = "已加载";
+      $("load").classList.add("on");
+      if (map) { map.destroy(); markers = []; path = []; polyline = null; }
+
+      map = new AMap.Map("map", {
+        viewMode: "2D",
+        zoom: 12,
+        center: [111.0039, 35.0263],   // 运城
+        mapStyle: "amap://styles/darkblue"
+      });
+      map.addControl(new AMap.Scale());
+      map.addControl(new AMap.ToolBar({ position: "RB" }));
+
+      geocoder = new AMap.Geocoder({ radius: 500, extensions: "all" });
+      searcher = new AMap.PlaceSearch({ pageSize: 10, extensions: "all" });
+
+      map.on("click", e => {
+        const lng = +e.lnglat.getLng().toFixed(6);
+        const lat = +e.lnglat.getLat().toFixed(6);
+        addPoint(lng, lat);
+      });
+
+      $("ph").style.display = "none";
+      if (window.innerWidth < 720) $("panel").classList.add("hide");
+      log("地图已就绪，点地图任意位置试试");
+    }).catch(err => {
+      $("load").textContent = "重新加载";
+      const m = (err && (err.message || err.info)) || String(err);
+      log("加载失败：<b>" + m + "</b>", "err");
+      if (/SECURITY|SCODE/i.test(m)) log("→ 安全密钥填错，或这个 Key 是 2021-12 之后申请却没配密钥", "err");
+      if (/PLAT|PLATFORM/i.test(m)) log("→ Key 的平台选错了，要选「Web端(JS API)」", "err");
+      if (/DOMAIN|REFERER/i.test(m)) log("→ 域名白名单没配 ycpuuv.github.io", "err");
+      console.error(err);
+    });
+  };
+
+  function addPoint(lng, lat) {
+    const mk = new AMap.Marker({
+      position: [lng, lat],
+      map,
+      title: lng + ", " + lat
+    });
+    markers.push(mk);
+
+    if (lineMode) {
+      path.push([lng, lat]);
+      if (path.length > 1) {
+        if (polyline) polyline.setPath(path);
+        else polyline = new AMap.Polyline({
+          path,
+          strokeColor: "#e0a45c",
+          strokeWeight: 4,
+          strokeOpacity: .9,
+          showDir: true,
+          lineJoin: "round",
+          map
+        });
+      }
+    }
+
+    $("addr").textContent = "查地址中…";
+    geocoder.getAddress([lng, lat], (status, result) => {
+      if (status === "complete" && result.regeocode) {
+        const a = result.regeocode.formattedAddress;
+        $("addr").textContent = a;
+        log("<b>" + lng + ", " + lat + "</b><br>" + a);
+      } else {
+        $("addr").textContent = lng + ", " + lat;
+        log("<b>" + lng + ", " + lat + "</b>");
+      }
+    });
+  }
+
+  $("sat").onclick = () => {
+    if (!map) return;
+    if (!satLayer) satLayer = new AMap.TileLayer.Satellite();
+    const on = $("sat").classList.toggle("on");
+    on ? map.add(satLayer) : map.remove(satLayer);
+  };
+
+  $("traf").onclick = () => {
+    if (!map) return;
+    if (!trafLayer) trafLayer = new AMap.TileLayer.Traffic({ autoRefresh: true, interval: 180 });
+    const on = $("traf").classList.toggle("on");
+    on ? map.add(trafLayer) : map.remove(trafLayer);
+  };
+
+  $("line").onclick = () => {
+    lineMode = $("line").classList.toggle("on");
+    log(lineMode ? "连线模式：开（点地图会连成折线）" : "连线模式：关");
+  };
+
+  $("undo").onclick = () => {
+    if (markers.length) { map.remove(markers.pop()); path.pop(); }
+    if (polyline) path.length > 1 ? polyline.setPath(path) : (map.remove(polyline), polyline = null);
+    log("撤销一个点");
+  };
+
+  $("clear").onclick = () => {
+    if (!map) return;
+    map.remove(markers); map.remove(polyline);
+    markers = []; path = []; polyline = null;
+    $("addr").textContent = "";
+    log("已清空");
+  };
+
+  $("go").onclick = () => {
+    if (!map) { log("先加载地图", "err"); return; }
+    const kw = $("q").value.trim();
+    if (!kw) return;
+    searcher.search(kw, (status, result) => {
+      if (status === "complete" && result.poiList && result.poiList.pois.length) {
+        const p = result.poiList.pois[0];
+        map.setZoomAndCenter(15, p.location);
+        new AMap.Marker({ position: p.location, map, title: p.name });
+        $("addr").textContent = p.name + " · " + p.address;
+        log("找到：<b>" + p.name + "</b><br>" + p.address);
+      } else {
+        log("没找到「" + kw + "」", "err");
+      }
+    });
+  };
+
+  $("q").addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
+
+  $("toggle").onclick = () => $("panel").classList.toggle("hide");
+
+  if ($("key").value) log("上次的 Key 还在，点「加载地图」即可");
+})();
+</script>
+</body>
+</html>
