@@ -53,7 +53,7 @@ h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing
 <div class="container">
   <a class="back" href="jiaoxue.html">← 教学资源</a>
   <h1>试题库</h1>
-  <div class="sub">按年级 · 试卷与课后答案</div>
+  <div class="sub">按年级 · 试卷 / 答案 / 答题卡 / 课后答案</div>
 
   <div class="tabs" id="tabs"></div>
   <div id="body"></div>
@@ -69,8 +69,10 @@ h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing
   var DATA = null, cur = "高一";
   var GRADES = ["高一", "高二", "高三"];
   var SECTIONS = [
-    { key: "试卷", ico: "试卷" },
-    { key: "课后答案", ico: "答案" }
+    { key: "试卷", ico: "卷" },
+    { key: "答案", ico: "答" },
+    { key: "答题卡", ico: "卡" },
+    { key: "课后答案", ico: "课" }
   ];
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
@@ -90,12 +92,13 @@ h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing
     var box = document.getElementById("body");
     var g = DATA && DATA[cur] ? DATA[cur] : {};
     var html = "";
+    var shown = 0;
     SECTIONS.forEach(function (s) {
       var arr = g[s.key] || [];
-      html += '<div class="sec">' + s.key + '<span class="n">' + (arr.length ? arr.length : "") + "</span></div>";
-      if (!arr.length) {
-        html += '<div class="empty">还没有上传' + s.key + '</div>';
-      } else {
+      if (!arr.length) return;          /* 空的分区不显示 */
+      shown++;
+      html += '<div class="sec">' + s.key + '<span class="n">' + arr.length + "</span></div>";
+      {
         arr.forEach(function (it) {
           html += '<a class="item" href="' + encodeURI(it.f) + '" target="_blank" rel="noopener">' +
             '<div class="ico">' + s.ico + "</div>" +
@@ -105,12 +108,22 @@ h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing
         });
       }
     });
+    if (!shown) html = '<div class="empty">这个年级还没有上传资料</div>';
     box.innerHTML = html;
   }
 
   fetch("shiti/list.json?v=" + Date.now())
     .then(function (r) { return r.json(); })
-    .then(function (d) { DATA = d; renderTabs(); renderBody(); })
+    .then(function (d) {
+      DATA = d;
+      /* 默认打开第一个有内容的年级 */
+      GRADES.some(function (g) {
+        var o = d[g] || {};
+        if (SECTIONS.some(function (s) { return (o[s.key] || []).length; })) { cur = g; return true; }
+        return false;
+      });
+      renderTabs(); renderBody();
+    })
     .catch(function () {
       DATA = { "高一": { "试卷": [], "课后答案": [] },
                "高二": { "试卷": [], "课后答案": [] },
