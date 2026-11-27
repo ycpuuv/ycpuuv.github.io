@@ -14,26 +14,37 @@ body{font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-se
   font-size:12px;padding:6px 0;transition:.2s}
 .back:hover{color:#d4a373;gap:10px}
 h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing:1px}
-.sub{font-size:12.5px;color:#6e6e86;margin-bottom:18px;letter-spacing:.5px}
+.sub{font-size:12.5px;color:#6e6e86;margin-bottom:16px;letter-spacing:.5px}
 
-.tabs{display:flex;gap:8px;margin:0 0 22px}
-.tab{flex:1;text-align:center;padding:11px 0;border-radius:9px;background:#0e0e18;
+.modes{display:flex;margin:0 0 16px;background:#0c0c16;border:1px solid #1c1c2a;
+  border-radius:10px;padding:4px}
+.mode{flex:1;text-align:center;padding:11px 0;border-radius:7px;color:#8a8a9c;font-size:14.5px;
+  cursor:pointer;transition:.18s;-webkit-tap-highlight-color:transparent;letter-spacing:.5px}
+.mode.on{background:rgba(212,163,115,.15);color:#e8c49a;font-weight:600}
+
+.tabs{display:flex;gap:8px;margin:0}
+.tab{flex:1;text-align:center;padding:10px 0;border-radius:9px;background:#0e0e18;
   border:1px solid #1e1e2c;color:#8a8a9c;font-size:14px;cursor:pointer;transition:.18s;
   -webkit-tap-highlight-color:transparent}
 .tab:hover{border-color:#2e2e42;color:#b8b8c6}
 .tab.on{background:rgba(212,163,115,.13);border-color:#8a6a45;color:#e8c49a;font-weight:600}
 
+.termtop{font-size:11.5px;color:#7a7a92;letter-spacing:.8px;margin:16px 0 0 4px;
+  padding-left:9px;border-left:2px solid #3a3a50}
+
 .sec{font-size:12.5px;color:#7c7c94;margin:22px 0 8px 4px;letter-spacing:1px;
   display:flex;align-items:center;gap:6px}
 .sec::before{content:'';width:3px;height:3px;background:#d4a373;border-radius:50%;display:inline-block}
 .sec .n{color:#4a4a5c;margin-left:2px}
+.term{font-size:11.5px;color:#6f6f88;letter-spacing:.8px;margin:14px 0 8px 4px;
+  padding-left:9px;border-left:2px solid #3a3a50}
 
 .item{display:flex;align-items:center;gap:12px;background:#0e0e18;border:1px solid #1a1a28;
   border-radius:10px;padding:13px 14px;margin-bottom:8px;text-decoration:none;color:inherit;
   transition:.18s;-webkit-tap-highlight-color:transparent}
 .item:hover{border-color:#3a2f24;background:#12121e;transform:translateY(-1px)}
 .ico{width:34px;height:34px;flex-shrink:0;border-radius:7px;display:flex;align-items:center;
-  justify-content:center;font-size:10px;font-weight:700;letter-spacing:.5px;
+  justify-content:center;font-size:13px;font-weight:600;
   background:rgba(212,163,115,.1);color:#c89b6c;border:1px solid rgba(212,163,115,.22)}
 .info{flex:1;min-width:0}
 .nm{font-size:15px;color:#e4e4ec;line-height:1.45;margin-bottom:3px;
@@ -53,8 +64,9 @@ h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing
 <div class="container">
   <a class="back" href="jiaoxue.html">← 教学资源</a>
   <h1>试题库</h1>
-  <div class="sub">按年级 · 试卷 / 答案 / 答题卡 / 课后答案</div>
+  <div class="sub">试题与课后答案分开放</div>
 
+  <div class="modes" id="modes"></div>
   <div class="tabs" id="tabs"></div>
   <div id="body"></div>
 
@@ -66,71 +78,117 @@ h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing
 
 <script>
 (function () {
-  var DATA = null, cur = "高一";
+  var DATA = null;
   var GRADES = ["高一", "高二", "高三"];
-  var SECTIONS = [
-    { key: "试卷", ico: "卷" },
-    { key: "答案", ico: "答" },
-    { key: "答题卡", ico: "卡" },
-    { key: "课后答案", ico: "课" }
+  var MODES = [
+    { key: "试题", secs: [
+        { key: "试卷", ico: "卷" },
+        { key: "答案", ico: "答" },
+        { key: "答题卡", ico: "卡" }] },
+    { key: "课后答案", secs: [
+        { key: "课后答案", ico: "课" }] }
   ];
+  var mode = "试题", cur = "高三";
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
     return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
+  function secsOf() {
+    for (var i = 0; i < MODES.length; i++) if (MODES[i].key === mode) return MODES[i].secs;
+    return [];
+  }
+  function countOf(g) {
+    var o = (DATA && DATA[g]) || {}, n = 0;
+    secsOf().forEach(function (s) { n += (o[s.key] || []).length; });
+    return n;
+  }
+
+  function renderModes() {
+    var el = document.getElementById("modes");
+    el.innerHTML = MODES.map(function (m) {
+      return '<div class="mode' + (m.key === mode ? " on" : "") + '" data-m="' + m.key + '">' +
+             m.key + "</div>";
+    }).join("");
+    Array.prototype.forEach.call(el.children, function (c) {
+      c.onclick = function () {
+        mode = c.dataset.m;
+        if (countOf(cur) === 0) {
+          var best = cur;
+          GRADES.forEach(function (g) { if (countOf(g) > countOf(best)) best = g; });
+          cur = best;
+        }
+        renderAll();
+      };
+    });
+  }
+
   function renderTabs() {
     var t = document.getElementById("tabs");
     t.innerHTML = GRADES.map(function (g) {
-      return '<div class="tab' + (g === cur ? " on" : "") + '" data-g="' + g + '">' + g + "</div>";
+      var n = countOf(g);
+      return '<div class="tab' + (g === cur ? " on" : "") + '" data-g="' + g + '">' + g +
+             (n ? '<span style="opacity:.45;font-size:11px"> ' + n + "</span>" : "") + "</div>";
     }).join("");
     Array.prototype.forEach.call(t.children, function (el) {
-      el.onclick = function () { cur = el.dataset.g; renderTabs(); renderBody(); };
+      el.onclick = function () { cur = el.dataset.g; renderAll(); };
     });
   }
 
   function renderBody() {
     var box = document.getElementById("body");
-    var g = DATA && DATA[cur] ? DATA[cur] : {};
+    var g = (DATA && DATA[cur]) || {};
+    var secs = secsOf();
+
+    var terms = [];
+    secs.forEach(function (s) {
+      (g[s.key] || []).forEach(function (it) {
+        if (it.term && terms.indexOf(it.term) < 0) terms.push(it.term);
+      });
+    });
+
     var html = "";
+    if (terms.length === 1) html += '<div class="termtop">' + esc(terms[0]) + "</div>";
+
     var shown = 0;
-    SECTIONS.forEach(function (s) {
+    secs.forEach(function (s) {
       var arr = g[s.key] || [];
-      if (!arr.length) return;          /* 空的分区不显示 */
+      if (!arr.length) return;
       shown++;
       html += '<div class="sec">' + s.key + '<span class="n">' + arr.length + "</span></div>";
-      {
-        arr.forEach(function (it) {
-          html += '<a class="item" href="' + encodeURI(it.f) + '" target="_blank" rel="noopener">' +
-            '<div class="ico">' + s.ico + "</div>" +
-            '<div class="info"><div class="nm">' + esc(it.t) + "</div>" +
-            '<div class="meta">' + esc(it.d || "") + (it.s ? " · " + esc(it.s) : "") + "</div></div>" +
-            '<div class="arw">↓</div></a>';
-        });
-      }
+      var lastTerm = terms.length === 1 ? terms[0] : null;
+      arr.forEach(function (it) {
+        var tm = it.term || "";
+        if (terms.length > 1 && tm !== lastTerm) {
+          lastTerm = tm;
+          if (tm) html += '<div class="term">' + esc(tm) + "</div>";
+        }
+        html += '<a class="item" href="' + encodeURI(it.f) + '" target="_blank" rel="noopener">' +
+          '<div class="ico">' + s.ico + "</div>" +
+          '<div class="info"><div class="nm">' + esc(it.t) + "</div>" +
+          '<div class="meta">' + esc(it.d || "") + (it.s ? " · " + esc(it.s) : "") + "</div></div>" +
+          '<div class="arw">↓</div></a>';
+      });
     });
-    if (!shown) html = '<div class="empty">这个年级还没有上传资料</div>';
+
+    if (!shown) html += '<div class="empty">这个年级还没有上传' + mode + "</div>";
     box.innerHTML = html;
   }
+
+  function renderAll() { renderModes(); renderTabs(); renderBody(); }
 
   fetch("shiti/list.json?v=" + Date.now())
     .then(function (r) { return r.json(); })
     .then(function (d) {
       DATA = d;
-      /* 默认打开资料最多的年级 */
       var best = -1;
       GRADES.forEach(function (g) {
         var o = d[g] || {}, n = 0;
-        SECTIONS.forEach(function (s) { n += (o[s.key] || []).length; });
+        ["试卷", "答案", "答题卡", "课后答案"].forEach(function (k) { n += (o[k] || []).length; });
         if (n > best) { best = n; cur = g; }
       });
-      renderTabs(); renderBody();
+      renderAll();
     })
-    .catch(function () {
-      DATA = { "高一": { "试卷": [], "课后答案": [] },
-               "高二": { "试卷": [], "课后答案": [] },
-               "高三": { "试卷": [], "课后答案": [] } };
-      renderTabs(); renderBody();
-    });
+    .catch(function () { DATA = {}; renderAll(); });
 })();
 </script>
 </body>
