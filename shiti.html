@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>试题库 · 云室工作站</title>
+<style>
+body{font-family:'Inter','Noto Serif SC','PingFang SC','Microsoft YaHei',sans-serif;
+  background:#0b0b14;color:#d4d4dc;min-height:100vh;margin:0;
+  background-image:radial-gradient(ellipse at 15% 0%,rgba(212,163,115,.05) 0%,transparent 55%),
+                   radial-gradient(ellipse at 85% 100%,rgba(92,141,137,.04) 0%,transparent 50%)}
+.container{max-width:620px;margin:0 auto;padding:28px 18px 60px}
+.back{display:inline-flex;align-items:center;gap:6px;color:#5c5c72;text-decoration:none;
+  font-size:12px;padding:6px 0;transition:.2s}
+.back:hover{color:#d4a373;gap:10px}
+h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing:1px}
+.sub{font-size:12.5px;color:#6e6e86;margin-bottom:18px;letter-spacing:.5px}
+
+.tabs{display:flex;gap:8px;margin:0 0 22px}
+.tab{flex:1;text-align:center;padding:11px 0;border-radius:9px;background:#0e0e18;
+  border:1px solid #1e1e2c;color:#8a8a9c;font-size:14px;cursor:pointer;transition:.18s;
+  -webkit-tap-highlight-color:transparent}
+.tab:hover{border-color:#2e2e42;color:#b8b8c6}
+.tab.on{background:rgba(212,163,115,.13);border-color:#8a6a45;color:#e8c49a;font-weight:600}
+
+.sec{font-size:12.5px;color:#7c7c94;margin:22px 0 8px 4px;letter-spacing:1px;
+  display:flex;align-items:center;gap:6px}
+.sec::before{content:'';width:3px;height:3px;background:#d4a373;border-radius:50%;display:inline-block}
+.sec .n{color:#4a4a5c;margin-left:2px}
+
+.item{display:flex;align-items:center;gap:12px;background:#0e0e18;border:1px solid #1a1a28;
+  border-radius:10px;padding:13px 14px;margin-bottom:8px;text-decoration:none;color:inherit;
+  transition:.18s;-webkit-tap-highlight-color:transparent}
+.item:hover{border-color:#3a2f24;background:#12121e;transform:translateY(-1px)}
+.ico{width:34px;height:34px;flex-shrink:0;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:700;letter-spacing:.5px;
+  background:rgba(212,163,115,.1);color:#c89b6c;border:1px solid rgba(212,163,115,.22)}
+.info{flex:1;min-width:0}
+.nm{font-size:15px;color:#e4e4ec;line-height:1.45;margin-bottom:3px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta{font-size:12px;color:#74748c;letter-spacing:.3px}
+.arw{color:#3f3f52;font-size:15px;flex-shrink:0}
+.item:hover .arw{color:#d4a373}
+
+.empty{background:#0d0d17;border:1px dashed #1e1e2c;border-radius:10px;padding:22px;
+  text-align:center;color:#4a4a5c;font-size:12.5px;line-height:1.8;margin-bottom:8px}
+
+.tip{margin-top:34px;padding-top:16px;border-top:1px solid #16161f;
+  font-size:11.5px;color:#4a4a5c;line-height:1.9}
+</style>
+</head>
+<body>
+<div class="container">
+  <a class="back" href="jiaoxue.html">← 教学资源</a>
+  <h1>试题库</h1>
+  <div class="sub">按年级 · 试卷与课后答案</div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="body"></div>
+
+  <div class="tip">
+    手机点开可直接预览，长按可保存。<br>
+    有问题找吕老师。
+  </div>
+</div>
+
+<script>
+(function () {
+  var DATA = null, cur = "高一";
+  var GRADES = ["高一", "高二", "高三"];
+  var SECTIONS = [
+    { key: "试卷", ico: "试卷" },
+    { key: "课后答案", ico: "答案" }
+  ];
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function renderTabs() {
+    var t = document.getElementById("tabs");
+    t.innerHTML = GRADES.map(function (g) {
+      return '<div class="tab' + (g === cur ? " on" : "") + '" data-g="' + g + '">' + g + "</div>";
+    }).join("");
+    Array.prototype.forEach.call(t.children, function (el) {
+      el.onclick = function () { cur = el.dataset.g; renderTabs(); renderBody(); };
+    });
+  }
+
+  function renderBody() {
+    var box = document.getElementById("body");
+    var g = DATA && DATA[cur] ? DATA[cur] : {};
+    var html = "";
+    SECTIONS.forEach(function (s) {
+      var arr = g[s.key] || [];
+      html += '<div class="sec">' + s.key + '<span class="n">' + (arr.length ? arr.length : "") + "</span></div>";
+      if (!arr.length) {
+        html += '<div class="empty">还没有上传' + s.key + '</div>';
+      } else {
+        arr.forEach(function (it) {
+          html += '<a class="item" href="' + encodeURI(it.f) + '" target="_blank" rel="noopener">' +
+            '<div class="ico">' + s.ico + "</div>" +
+            '<div class="info"><div class="nm">' + esc(it.t) + "</div>" +
+            '<div class="meta">' + esc(it.d || "") + (it.s ? " · " + esc(it.s) : "") + "</div></div>" +
+            '<div class="arw">↓</div></a>';
+        });
+      }
+    });
+    box.innerHTML = html;
+  }
+
+  fetch("shiti/list.json?v=" + Date.now())
+    .then(function (r) { return r.json(); })
+    .then(function (d) { DATA = d; renderTabs(); renderBody(); })
+    .catch(function () {
+      DATA = { "高一": { "试卷": [], "课后答案": [] },
+               "高二": { "试卷": [], "课后答案": [] },
+               "高三": { "试卷": [], "课后答案": [] } };
+      renderTabs(); renderBody();
+    });
+})();
+</script>
+</body>
+</html>
