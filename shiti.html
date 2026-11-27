@@ -116,11 +116,12 @@ h1{font-size:19px;font-weight:600;margin:10px 0 4px;color:#c8c8d0;letter-spacing
     .then(function (r) { return r.json(); })
     .then(function (d) {
       DATA = d;
-      /* 默认打开第一个有内容的年级 */
-      GRADES.some(function (g) {
-        var o = d[g] || {};
-        if (SECTIONS.some(function (s) { return (o[s.key] || []).length; })) { cur = g; return true; }
-        return false;
+      /* 默认打开资料最多的年级 */
+      var best = -1;
+      GRADES.forEach(function (g) {
+        var o = d[g] || {}, n = 0;
+        SECTIONS.forEach(function (s) { n += (o[s.key] || []).length; });
+        if (n > best) { best = n; cur = g; }
       });
       renderTabs(); renderBody();
     })
